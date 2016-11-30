@@ -1,0 +1,1 @@
+FAILED: SemanticException [Error 10249]: Unsupported SubQuery Expression Subquery could only be used in WHERE and HAVING clause

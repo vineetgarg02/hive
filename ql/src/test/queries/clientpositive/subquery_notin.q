@@ -159,3 +159,6 @@ select * from part  where (p_size-1) NOT IN (select min(p_size) from part group 
 -- union, uncorr
 explain select * from src where key NOT IN (select p_name from part UNION ALL select p_brand from part);
 select * from src where key NOT IN (select p_name from part UNION ALL select p_brand from part);
+
+
+select count(*) as c from part as e where p_size + 100 not in ( select p_type from part where p_brand = e.p_brand);

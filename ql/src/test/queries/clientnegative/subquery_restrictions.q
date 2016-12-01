@@ -13,10 +13,10 @@ group by src.key in (select key from src s1 where s1.key > '9') ;
 --select * from part where (select p_size from part) IN (1,2);
 
 --Restriction.3.m The predicate operators supported are In, Not In, exists and Not exists.
-----select * fro part where p_brand > (select key from src)  
+----select * from part where p_brand > (select key from src);  
 
 --Check.4.h For Exists and Not Exists, the Sub Query must have 1 or more correlated predicates.
----select * from src where exists (select * from part);
+select * from src where exists (select * from part);
 
 --Check.5.h multiple columns in subquery select
 select * from src where src.key in (select * from src s1 where s1.key > '9');

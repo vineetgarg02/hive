@@ -56,6 +56,7 @@ import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.common.type.HiveIntervalDayTime;
 import org.apache.hadoop.hive.common.type.HiveIntervalYearMonth;
 import org.apache.hadoop.hive.common.type.HiveVarchar;
+import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.exec.FunctionRegistry;
 import org.apache.hadoop.hive.ql.optimizer.calcite.CalciteSemanticException;
 import org.apache.hadoop.hive.ql.optimizer.calcite.CalciteSemanticException.UnsupportedFeature;
@@ -174,6 +175,15 @@ public class RexNodeConverter {
   private RexNode convert(final ExprNodeSubQueryDesc subQueryDesc) throws  SemanticException {
     if(subQueryDesc.getType() == ExprNodeSubQueryDesc.IN)
     {
+     /*
+      * Check.5.h :: For In and Not In the SubQuery must implicitly or
+      * explicitly only contain one select item.
+      */
+      if(subQueryDesc.getRexSubQuery().getRowType().getFieldCount() > 1)
+      {
+        throw new SemanticException(ErrorMsg.INVALID_SUBQUERY_EXPRESSION.getMsg(
+                "SubQuery can contain only 1 item in Select List."));
+      }
       //create RexNode for LHS
       RexNode rexNodeLhs = convert(subQueryDesc.getSubQueryLhs());
 

@@ -1409,7 +1409,8 @@ public class TypeCheckProcFactory {
         return desc;
       }
 
-      assert(expr.getChildren().size() == 3); //TOK_SUBQUERY_EXPR should have exact 3 children
+      //TOK_SUBQUERY_EXPR should have either 2 or 3 children
+      assert(expr.getChildren().size() == 3 || expr.getChildren().size() == 2);
       assert(expr.getChild(0).getType() == HiveParser.TOK_SUBQUERY_OP); //First child should be operand
 
       ASTNode subqueryOp = (ASTNode) expr.getChild(0);
@@ -1427,7 +1428,7 @@ public class TypeCheckProcFactory {
       if(subqueryToRelNode == null)
       {
         throw new SemanticException(ErrorMsg.UNSUPPORTED_SUBQUERY_EXPRESSION.getMsg(
-                        "Subquery could only be used in WHERE and HAVING clause"));
+                        " Currently SubQuery expressions are only allowed as Where and Having Clause predicates"));
       }
 
       //For now because subquery is only supported in filter we will create subquery expression of boolean type

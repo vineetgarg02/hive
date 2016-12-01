@@ -1,6 +1,5 @@
 set hive.mapred.mode=nonstrict;
 set hive.explain.user=false;
-set hive.in.test=true;
 
 -- SORT_QUERY_RESULTS
 
@@ -175,5 +174,21 @@ select * from part  where (p_size-1) IN (select min(p_size) from part group by p
 -- union, uncorr
 explain select * from src where key IN (select p_name from part UNION ALL select p_brand from part);
 select * from src where key IN (select p_name from part UNION ALL select p_brand from part);
+
+-- corr, subquery has another subquery in from
+select p_mfgr, b.p_name, p_size from part b where b.p_name in 
+  (select p_name from (select p_mfgr, p_name, p_size as r from part) a where r < 10 and b.p_mfgr = a.p_mfgr ) order by p_mfgr,p_size;
+
+
+----------------------------------------------------
+-- TEST PLAN
+----------------------------------------------------
+-- join in subquery, correlated predicate with only one table
+-- join in subquery, correlated predicate with both inner tables, same outer var
+-- join in subquery, correlated predicate with both inner tables, different outer var
+-- join in subquery, join condition involves correlated var
+-- join in subquery, where one of the table has correlated predicate i.e it has to be executed before JOIN
+-- subquery within from ? 
+
 
 

@@ -1971,7 +1971,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
       return filterRel;
     }
 
-    private void subqueryRestritionCheck(QB qb, ASTNode searchCond, RelNode srcRel, boolean forHavingClause ) throws SemanticException {
+    private void subqueryRestritionCheck(QB qb, ASTNode searchCond, RelNode srcRel, boolean forHavingClause, Map<String, RelNode> aliasToRel ) throws SemanticException {
         List<ASTNode> subQueriesInOriginalTree = SubQueryUtils.findSubQueries(searchCond);
         if (subQueriesInOriginalTree.size() > 0) {
 
@@ -2010,7 +2010,6 @@ public class CalcitePlanner extends SemanticAnalyzer {
 
           String havingInputAlias = null;
 
-          Map<String, RelNode> aliasToRel = new HashMap<>();
           if (forHavingClause) {
             havingInputAlias = "gby_sq" + sqIdx;
             aliasToRel.put(havingInputAlias, srcRel);
@@ -2023,10 +2022,11 @@ public class CalcitePlanner extends SemanticAnalyzer {
           // explicitly only contain one select item.
         }
     }
-    private boolean genSubQueryRelNode(QB qb, ASTNode node, RelNode srcRel, boolean forHavingClause, Map<ASTNode, RelNode> subQueryToRelNode) throws SemanticException {
+    private boolean genSubQueryRelNode(QB qb, ASTNode node, RelNode srcRel, boolean forHavingClause, Map<ASTNode, RelNode> subQueryToRelNode,
+                                       Map<String, RelNode> aliasToRel) throws SemanticException {
 
         //disallow subqueries which HIVE doesn't currently support
-        subqueryRestritionCheck(qb, node, srcRel, forHavingClause);
+        subqueryRestritionCheck(qb, node, srcRel, forHavingClause, aliasToRel);
         Deque<ASTNode> stack = new ArrayDeque<ASTNode>();
         stack.push(node);
 
@@ -2061,7 +2061,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
         Map<String, RelNode> aliasToRel, ImmutableMap<String, Integer> outerNameToPosMap, RowResolver outerRR, boolean forHavingClause) throws SemanticException {
 
       Map<ASTNode, RelNode> subQueryToRelNode = new HashMap<>();
-      boolean isSubQuery = genSubQueryRelNode(qb, searchCond, srcRel, forHavingClause, subQueryToRelNode);
+      boolean isSubQuery = genSubQueryRelNode(qb, searchCond, srcRel, forHavingClause, subQueryToRelNode, aliasToRel);
       if(isSubQuery) {
         ExprNodeDesc subQueryExpr = genExprNodeDesc(searchCond, relToHiveRR.get(srcRel), outerRR, subQueryToRelNode, forHavingClause);
 

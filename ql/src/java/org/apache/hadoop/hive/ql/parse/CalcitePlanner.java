@@ -964,6 +964,8 @@ public class CalcitePlanner extends SemanticAnalyzer {
     private final Map<String, PrunedPartitionList>        partitionCache;
     private final ColumnAccessInfo columnAccessInfo;
     private Map<HiveProject, Table> viewProjectToTableSchema;
+    private int subqueryId; //correlated vars across subqueries within same query needs to have different ID
+                              // this will be used in RexNodeConverter to create cor var
 
     // TODO: Do we need to keep track of RR, ColNameToPosMap for every op or
     // just last one.
@@ -980,6 +982,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
       RelNode calciteGenPlan = null;
       RelNode calcitePreCboPlan = null;
       RelNode calciteOptimizedPlan = null;
+      subqueryId = -1;
 
       /*
        * recreate cluster, so that it picks up the additional traitDef
@@ -1959,7 +1962,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
       ImmutableMap<String, Integer> hiveColNameCalcitePosMap = this.relToHiveColNameCalcitePosMap
           .get(srcRel);
       RexNode convertedFilterExpr = new RexNodeConverter(cluster, srcRel.getRowType(),
-          outerNameToPosMap, hiveColNameCalcitePosMap, relToHiveRR.get(srcRel), outerRR, 0, true).convert(filterCondn);
+          outerNameToPosMap, hiveColNameCalcitePosMap, relToHiveRR.get(srcRel), outerRR, 0, true, subqueryId).convert(filterCondn);
       RexNode factoredFilterExpr = RexUtil
           .pullFactors(cluster.getRexBuilder(), convertedFilterExpr);
       RelNode filterRel = new HiveFilter(cluster, cluster.traitSetOf(HiveRelNode.CONVENTION),
@@ -2043,6 +2046,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
               Phase1Ctx ctx_1 = initPhase1Ctx();
               doPhase1((ASTNode)next.getChild(1), qbSQ, ctx_1, null);
               getMetaData(qbSQ);
+              subqueryId++;
               RelNode subQueryRelNode = genLogicalPlan(qbSQ, false,  relToHiveColNameCalcitePosMap.get(srcRel), relToHiveRR.get(srcRel));
               subQueryToRelNode.put(next, subQueryRelNode);
               isSubQuery = true;
@@ -2068,7 +2072,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
         ImmutableMap<String, Integer> hiveColNameCalcitePosMap = this.relToHiveColNameCalcitePosMap
                 .get(srcRel);
         RexNode convertedFilterLHS = new RexNodeConverter(cluster, srcRel.getRowType(),
-                outerNameToPosMap, hiveColNameCalcitePosMap, relToHiveRR.get(srcRel), outerRR, 0, true).convert(subQueryExpr);
+                outerNameToPosMap, hiveColNameCalcitePosMap, relToHiveRR.get(srcRel), outerRR, 0, true, subqueryId).convert(subQueryExpr);
 
         RelNode filterRel = new HiveFilter(cluster, cluster.traitSetOf(HiveRelNode.CONVENTION),
                 srcRel, convertedFilterLHS);

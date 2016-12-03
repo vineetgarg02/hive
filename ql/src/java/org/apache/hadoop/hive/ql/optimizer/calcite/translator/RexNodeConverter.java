@@ -122,20 +122,23 @@ public class RexNodeConverter {
   private final boolean                 flattenExpr;
   private final RowResolver             outerRR;
   private final ImmutableMap<String, Integer> outerNameToPosMap;
+  private int correlatedId;
 
   //Constructor used by HiveRexExecutorImpl
   public RexNodeConverter(RelOptCluster cluster) {
     this(cluster, new ArrayList<InputCtx>(), false);
   }
 
+  //subqueries will need outer querire's row resolver
   public RexNodeConverter(RelOptCluster cluster, RelDataType inpDataType,
                           ImmutableMap<String, Integer> outerNameToPosMap,
-      ImmutableMap<String, Integer> nameToPosMap, RowResolver hiveRR, RowResolver outerRR, int offset, boolean flattenExpr) {
+      ImmutableMap<String, Integer> nameToPosMap, RowResolver hiveRR, RowResolver outerRR, int offset, boolean flattenExpr, int correlatedId) {
     this.cluster = cluster;
     this.inputCtxs = ImmutableList.of(new InputCtx(inpDataType, nameToPosMap, hiveRR , offset));
     this.flattenExpr = flattenExpr;
     this.outerRR = outerRR;
     this.outerNameToPosMap = outerNameToPosMap;
+    this.correlatedId = correlatedId;
   }
 
   public RexNodeConverter(RelOptCluster cluster, RelDataType inpDataType,
@@ -505,7 +508,7 @@ public class RexNodeConverter {
       //RelDataType colType = TypeConverter.convert(col.getTypeInfo(), cluster.getRexBuilder().getTypeFactory());
       RelDataType rowType = TypeConverter.getType(cluster, this.outerRR, null);
       int pos = this.outerNameToPosMap.get(col.getColumn());
-      CorrelationId colCorr = new CorrelationId(0);
+      CorrelationId colCorr = new CorrelationId(this.correlatedId);
       RexNode corExpr = cluster.getRexBuilder().makeCorrel(rowType, colCorr);
       return cluster.getRexBuilder().makeFieldAccess(corExpr, pos);
     }

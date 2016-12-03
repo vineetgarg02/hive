@@ -73,8 +73,7 @@ import org.apache.calcite.util.ReflectiveVisitor;
 import org.apache.calcite.util.Stacks;
 import org.apache.calcite.util.Util;
 import org.apache.calcite.util.mapping.Mappings;
-import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveAggregate;
-import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveJoin;
+import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.*;
 import org.apache.hadoop.hive.ql.parse.SemanticAnalyzer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -91,8 +90,6 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
 import com.google.common.collect.SortedSetMultimap;
-import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveFilter;
-import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveProject;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.optimizer.calcite.HiveRelShuttleImpl;
 
@@ -1042,7 +1039,18 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
 
   private RelNode getCorRel(Correlation corVar) {
     final RelNode r = cm.mapCorVarToCorRel.get(corVar.corr);
-    return r.getInput(0);
+
+    //HIVE could create plans such as scan->filter->project->filter->project
+    // e.g. in case of VIEWS, where filter has subqueries within it
+    // calcite then might push down filter on top of TableScan and just
+    // underneath LogicalCorrelate. In which case appropropriate correlated
+    // producer would be LogicalCorrelate's input's input
+    // example is in subquery_views.q test
+    RelNode ret = r.getInput(0);
+    if(!(ret instanceof HiveTableScan)) {
+      return ret.getInput(0);
+    }
+    return ret;
   }
 
   private void decorrelateInputWithValueGenerator(RelNode rel) {

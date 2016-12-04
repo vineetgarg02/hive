@@ -1,5 +1,4 @@
 set hive.mapred.mode=nonstrict;
-set hive.in.test=true;
 
 -- non agg, non corr
 explain

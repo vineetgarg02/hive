@@ -1037,6 +1037,9 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
     return r;
   }
 
+
+  //this returns the source of corVar i.e. Rel which produces cor var
+  // value. Therefore it is always LogicalCorrelate's left input which is outer query
   private RelNode getCorRel(Correlation corVar) {
     final RelNode r = cm.mapCorVarToCorRel.get(corVar.corr);
 
@@ -1047,9 +1050,9 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
     // producer would be LogicalCorrelate's input's input
     // example is in subquery_views.q test
     RelNode ret = r.getInput(0);
-    if(!(ret instanceof HiveTableScan)) {
-      return ret.getInput(0);
-    }
+    //if(!(ret instanceof HiveTableScan)) {
+     // return ret.getInput(0);
+    //}
     return ret;
   }
 

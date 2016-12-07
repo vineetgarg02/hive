@@ -539,7 +539,7 @@ public class QBSubQuery implements ISubQueryJoinInfo {
     if ( sharedAlias != null) {
       ASTNode whereClause = SubQueryUtils.subQueryWhere(insertClause);
 
-      if ( whereClause != null ) {
+      /*if ( whereClause != null ) {
         ASTNode u = SubQueryUtils.hasUnQualifiedColumnReferences(whereClause);
         if ( u != null ) {
           subQueryAST.setOrigin(originalSQASTOrigin);
@@ -547,7 +547,7 @@ public class QBSubQuery implements ISubQueryJoinInfo {
               u, "SubQuery cannot use the table alias: " + sharedAlias + "; " +
                   "this is also an alias in the Outer Query and SubQuery contains a unqualified column reference"));
         }
-      }
+      } */
     }
 
     /*

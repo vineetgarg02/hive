@@ -159,5 +159,23 @@ select * from part  where (p_size-1) NOT IN (select min(p_size) from part group 
 explain select * from src where key NOT IN (select p_name from part UNION ALL select p_brand from part);
 select * from src where key NOT IN (select p_name from part UNION ALL select p_brand from part);
 
-
+explain select count(*) as c from part as e where p_size + 100 not in ( select p_type from part where p_brand = e.p_brand);
 select count(*) as c from part as e where p_size + 100 not in ( select p_type from part where p_brand = e.p_brand);
+
+--nullability tests
+CREATE TABLE t1 (c1 INT, c2 CHAR(100));
+INSERT INTO t1 VALUES (null,null), (1,''), (2,'abcde'), (100,'abcdefghij');
+
+CREATE TABLE t2 (c1 INT);
+INSERT INTO t2 VALUES (null), (2), (100);
+
+-- uncorr
+explain SELECT c1 FROM t1 WHERE c1 NOT IN (SELECT c1 FROM t2);
+SELECT c1 FROM t1 WHERE c1 NOT IN (SELECT c1 FROM t2);
+
+-- corr
+explain SELECT c1 FROM t1 WHERE c1 NOT IN (SELECT c1 FROM t2 where t1.c2=t2.c1);
+SELECT c1 FROM t1 WHERE c1 NOT IN (SELECT c1 FROM t2 where t1.c1=t2.c1);
+
+DROP TABLE t1;
+DROP TABLE t2;

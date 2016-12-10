@@ -179,3 +179,52 @@ SELECT c1 FROM t1 WHERE c1 NOT IN (SELECT c1 FROM t2 where t1.c1=t2.c1);
 
 DROP TABLE t1;
 DROP TABLE t2;
+
+-- corr, nullability, should not produce any result
+create table t1(a int, b int);
+insert into t1 values(1,0), (1,0),(1,0);
+
+create table t2(a int, b int);
+insert into t2 values(2,1), (3,1), (NULL,1);
+
+explain select t1.a from t1 where t1.b NOT IN (select t2.a from t2 where t2.b=t1.a);
+select t1.a from t1 where t1.b NOT IN (select t2.a from t2 where t2.b=t1.a);
+drop table t1;
+drop table t2;
+
+
+-- coor, nullability, should produce result
+create table t7(i int, j int);
+insert into t7 values(null, 5), (4, 15);
+
+create table fixOb(i int, j int);
+insert into fixOb values(-1, 5), (-1, 15);
+
+explain select * from fixOb where j NOT IN (select i from t7 where t7.j=fixOb.j);
+select * from fixOb where j NOT IN (select i from t7 where t7.j=fixOb.j);
+
+drop table t7;
+drop table fixOb;
+
+create table t(i int, j int);
+insert into t values(1,2), (4,5), (7, NULL);
+
+
+-- case with empty inner result (t1.j=t.j=NULL) and null subquery key(t.j = NULL)
+explain select t.i from t where t.j NOT IN (select t1.i from t t1 where t1.j=t.j);
+select t.i from t where t.j NOT IN (select t1.i from t t1 where t1.j=t.j);
+
+-- case with empty inner result (t1.j=t.j=NULL) and non-null subquery key(t.i is never null)
+explain select t.i from t where t.i NOT IN (select t1.i from t t1 where t1.j=t.j);
+select t.i from t where t.i NOT IN (select t1.i from t t1 where t1.j=t.j);
+
+-- case with non-empty inner result and null subquery key(t.j is null)
+explain select t.i from t where t.j NOT IN (select t1.i from t t1 );
+select t.i from t where t.j NOT IN (select t1.i from t t1 );
+
+-- case with non-empty inner result and non-null subquery key(t.i is never null)
+explain select t.i from t where t.i NOT IN (select t1.i from t t1 );
+select t.i from t where t.i NOT IN (select t1.i from t t1 );
+
+drop table t1;
+

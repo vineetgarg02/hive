@@ -161,6 +161,24 @@ where b.p_name not in
 POSTHOOK: type: QUERY
 POSTHOOK: Input: default@part
 #### A masked pattern was here ####
+Manufacturer#1	almond aquamarine burnished black steel	28
+Manufacturer#1	almond antique chartreuse lavender yellow	34
+Manufacturer#1	almond aquamarine pink moccasin thistle	42
+Manufacturer#2	almond antique violet chocolate turquoise	14
+Manufacturer#2	almond aquamarine sandy cyan gainsboro	18
+Manufacturer#2	almond aquamarine rose maroon antique	25
+Manufacturer#2	almond antique violet turquoise frosted	40
+Manufacturer#3	almond antique forest lavender goldenrod	14
+Manufacturer#3	almond antique chartreuse khaki white	17
+Manufacturer#3	almond antique metallic orange dim	19
+Manufacturer#3	almond antique olive coral navajo	45
+Manufacturer#4	almond antique gainsboro frosted violet	10
+Manufacturer#4	almond azure aquamarine papaya violet	12
+Manufacturer#4	almond aquamarine floral ivory bisque	27
+Manufacturer#4	almond antique violet mint lemon	39
+Manufacturer#5	almond azure blanched chiffon midnight	23
+Manufacturer#5	almond antique blue firebrick mint	31
+Manufacturer#5	almond aquamarine dodger light gainsboro	46
 PREHOOK: query: -- agg, non corr
 select p_name, p_size 
 from 
@@ -229,6 +247,26 @@ from part b where b.p_size not in
 POSTHOOK: type: QUERY
 POSTHOOK: Input: default@part
 #### A masked pattern was here ####
+Manufacturer#5	almond antique blue firebrick mint	31
+Manufacturer#3	almond antique chartreuse khaki white	17
+Manufacturer#1	almond antique chartreuse lavender yellow	34
+Manufacturer#3	almond antique forest lavender goldenrod	14
+Manufacturer#4	almond antique gainsboro frosted violet	10
+Manufacturer#5	almond antique medium spring khaki	6
+Manufacturer#3	almond antique metallic orange dim	19
+Manufacturer#3	almond antique olive coral navajo	45
+Manufacturer#1	almond antique salmon chartreuse burlywood	6
+Manufacturer#2	almond antique violet chocolate turquoise	14
+Manufacturer#4	almond antique violet mint lemon	39
+Manufacturer#2	almond antique violet turquoise frosted	40
+Manufacturer#1	almond aquamarine burnished black steel	28
+Manufacturer#5	almond aquamarine dodger light gainsboro	46
+Manufacturer#4	almond aquamarine floral ivory bisque	27
+Manufacturer#1	almond aquamarine pink moccasin thistle	42
+Manufacturer#2	almond aquamarine rose maroon antique	25
+Manufacturer#2	almond aquamarine sandy cyan gainsboro	18
+Manufacturer#4	almond azure aquamarine papaya violet	12
+Manufacturer#5	almond azure blanched chiffon midnight	23
 PREHOOK: query: -- non agg, non corr, Group By in Parent Query
 select li.l_partkey, count(*) 
 from lineitem li 
@@ -293,6 +331,8 @@ having b.p_mfgr not in
 POSTHOOK: type: QUERY
 POSTHOOK: Input: default@part
 #### A masked pattern was here ####
+Manufacturer#1	1173.15
+Manufacturer#2	1690.68
 PREHOOK: query: -- agg, non corr, having
 select b.p_mfgr, min(p_retailprice) 
 from part b 

@@ -178,7 +178,7 @@ public abstract class HiveSubQueryRemoveRule extends RelOptRule{
                 switch (logic) {
                     case TRUE_FALSE_UNKNOWN:
                     case UNKNOWN_AS_TRUE:
-                        if (!variablesSet.isEmpty()) {
+                        //if (!variablesSet.isEmpty()) {
                             // We have not yet figured out how to include "ct" in a query if
                             // the source relation "e.rel" is correlated. So, dodge the issue:
                             // we pretend that the join key is NOT NULL.
@@ -192,15 +192,22 @@ public abstract class HiveSubQueryRemoveRule extends RelOptRule{
                             //     SELECT mgr
                             //     FROM emp AS e2
                             //     WHERE
-                            logic = RelOptUtil.Logic.TRUE_FALSE;
-                            break;
-                        }
+                         //   logic = RelOptUtil.Logic.TRUE_FALSE;
+                          //  break;
+                        //}
                         builder.aggregate(builder.groupKey(),
                                 builder.count(false, "c"),
                                 builder.aggregateCall(SqlStdOperatorTable.COUNT, false, null, "ck",
                                         builder.fields()));
                         builder.as("ct");
-                        builder.join(JoinRelType.INNER, builder.literal(true), variablesSet);
+                        if( !variablesSet.isEmpty())
+                        {
+                            //builder.join(JoinRelType.INNER, builder.literal(true), variablesSet);
+                            builder.join(JoinRelType.LEFT, builder.literal(true), variablesSet);
+                        }
+                        else
+                            builder.join(JoinRelType.INNER, builder.literal(true), variablesSet);
+
                         offset += 2;
                         builder.push(e.rel);
                         break;
@@ -248,6 +255,13 @@ public abstract class HiveSubQueryRemoveRule extends RelOptRule{
                         operands.add(
                                 builder.equals(builder.field("ct", "c"), builder.literal(0)),
                                 builder.literal(false));
+                        //now that we are using LEFT OUTER JOIN to join inner count, count(*)
+                        // with outer table, we wouldn't be able to tell if count is zero
+                        // for inner table since inner join with correlated values will get rid
+                        // of all values where join cond is not true (i.e where actual inner table
+                        // will produce zero result). To  handle this case we need to check both
+                        // count is zero or count is null
+                        operands.add((builder.isNull(builder.field("ct", "c"))), builder.literal(false));
                         break;
                 }
                 operands.add(builder.isNotNull(builder.field("dt", "i")),
@@ -256,6 +270,8 @@ public abstract class HiveSubQueryRemoveRule extends RelOptRule{
                     //Calcite creates null literal with Null type here but because HIVE doesn't support null type
                     // it is appropriately typed boolean
                     operands.add(builder.or(keyIsNulls), e.rel.getCluster().getRexBuilder().makeNullLiteral(SqlTypeName.BOOLEAN));
+                    // we are creating filter here so should not be returning NULL. Not sure why Calcite return NULL
+                    //operands.add(builder.or(keyIsNulls), builder.literal(false));
                 }
                 Boolean b = true;
                 switch (logic) {

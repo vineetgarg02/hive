@@ -2740,6 +2740,8 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
     ShowCompactResponse rsp = db.showCompactions();
 
     // Write the results into the file
+    final String noVal = " --- ";
+
     DataOutputStream os = getOutputStream(desc.getResFile());
     try {
       // Write a header
@@ -2756,6 +2758,10 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
       os.writeBytes("Worker");
       os.write(separator);
       os.writeBytes("Start Time");
+      os.write(separator);
+      os.writeBytes("Duration(ms)");
+      os.write(separator);
+      os.writeBytes("HadoopJobId");
       os.write(terminator);
 
       if (rsp.getCompacts() != null) {
@@ -2765,16 +2771,20 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
           os.writeBytes(e.getTablename());
           os.write(separator);
           String part = e.getPartitionname();
-          os.writeBytes(part == null ? "NULL" : part);
+          os.writeBytes(part == null ? noVal : part);
           os.write(separator);
           os.writeBytes(e.getType().toString());
           os.write(separator);
           os.writeBytes(e.getState());
           os.write(separator);
           String wid = e.getWorkerid();
-          os.writeBytes(wid == null ? "NULL" : wid);
+          os.writeBytes(wid == null ? noVal : wid);
           os.write(separator);
-          os.writeBytes(Long.toString(e.getStart()));
+          os.writeBytes(e.isSetStart() ? Long.toString(e.getStart()) : noVal);
+          os.write(separator);
+          os.writeBytes(e.isSetEndTime() ? Long.toString(e.getEndTime() - e.getStart()) : noVal);
+          os.write(separator);
+          os.writeBytes(e.isSetHadoopJobId() ?  e.getHadoopJobId() : noVal);
           os.write(terminator);
         }
       }
@@ -4084,6 +4094,22 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
     LOG.info("creating table " + tbl.getDbName() + "." + tbl.getTableName() + " on " +
             tbl.getDataLocation());
 
+    if (crtTbl.getReplicationSpec().isInReplicationScope() && (!crtTbl.getReplaceMode())){
+      // if this is a replication spec, then replace-mode semantics might apply.
+      // if we're already asking for a table replacement, then we can skip this check.
+      // however, otherwise, if in replication scope, and we've not been explicitly asked
+      // to replace, we should check if the object we're looking at exists, and if so,
+      // trigger replace-mode semantics.
+      Table existingTable = db.getTable(tbl.getDbName(), tbl.getTableName(), false);
+      if (existingTable != null){
+        if (!crtTbl.getReplicationSpec().allowEventReplacementInto(existingTable)){
+          return 0; // no replacement, the existing table state is newer than our update.
+        } else {
+          crtTbl.setReplaceMode(true); // we replace existing table.
+        }
+      }
+    }
+
     // create the table
     if (crtTbl.getReplaceMode()){
       // replace-mode creates are really alters using CreateTableDesc.
@@ -4389,11 +4415,7 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
           String targetGroup = targetStatus == null ? null : targetStatus.getGroup();
           FileUtils.moveToTrash(fs, location, conf);
           fs.mkdirs(location);
-          try {
-            HdfsUtils.setFullFileStatus(conf, status, targetGroup, fs, location, false);
-          } catch (Exception e) {
-            LOG.warn("Error setting permissions of " + location, e);
-          }
+          HdfsUtils.setFullFileStatus(conf, status, targetGroup, fs, location, false);
         } else {
           FileStatus[] statuses = fs.listStatus(location, FileUtils.HIDDEN_FILES_PATH_FILTER);
           if (statuses == null || statuses.length == 0) {

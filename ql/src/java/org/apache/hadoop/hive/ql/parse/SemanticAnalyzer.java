@@ -253,7 +253,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
   // Max characters when auto generating the column name with func name
   private static final int AUTOGEN_COLALIAS_PRFX_MAXLENGTH = 20;
 
-  private static final String VALUES_TMP_TABLE_NAME_PREFIX = "Values__Tmp__Table__";
+  public static final String VALUES_TMP_TABLE_NAME_PREFIX = "Values__Tmp__Table__";
 
   static final String MATERIALIZATION_MARKER = "$MATERIALIZATION";
 
@@ -2036,8 +2036,11 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       }
 
       ReadEntity parentViewInfo = PlanUtils.getParentViewInfo(getAliasId(alias, qb), viewAliasToInput);
-      PlanUtils.addInput(inputs,
-              new ReadEntity(tab, parentViewInfo, parentViewInfo == null),mergeIsDirect);
+      // Temporary tables created during the execution are not the input sources
+      if (!PlanUtils.isValuesTempTable(alias)) {
+        PlanUtils.addInput(inputs,
+                new ReadEntity(tab, parentViewInfo, parentViewInfo == null),mergeIsDirect);
+      }
     }
 
     LOG.info("Get metadata for subqueries");
@@ -2132,20 +2135,25 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
               ctx.setResDir(null);
               ctx.setResFile(null);
 
-              // allocate a temporary output dir on the location of the table
-              String tableName = getUnescapedName((ASTNode) ast.getChild(0));
-              String[] names = Utilities.getDbTableName(tableName);
               Path location;
-              try {
-                Warehouse wh = new Warehouse(conf);
-                //Use destination table's db location.
-                String destTableDb = qb.getTableDesc() != null? qb.getTableDesc().getDatabaseName(): null;
-                if (destTableDb == null) {
-                  destTableDb = names[0];
+              // If the CTAS query does specify a location, use the table location, else use the db location
+              if (qb.getTableDesc() != null && qb.getTableDesc().getLocation() != null) {
+                location = new Path(qb.getTableDesc().getLocation());
+              } else {
+                // allocate a temporary output dir on the location of the table
+                String tableName = getUnescapedName((ASTNode) ast.getChild(0));
+                String[] names = Utilities.getDbTableName(tableName);
+                try {
+                  Warehouse wh = new Warehouse(conf);
+                  //Use destination table's db location.
+                  String destTableDb = qb.getTableDesc() != null ? qb.getTableDesc().getDatabaseName() : null;
+                  if (destTableDb == null) {
+                    destTableDb = names[0];
+                  }
+                  location = wh.getDatabasePath(db.getDatabase(destTableDb));
+                } catch (MetaException e) {
+                  throw new SemanticException(e);
                 }
-                location = wh.getDatabasePath(db.getDatabase(destTableDb));
-              } catch (MetaException e) {
-                throw new SemanticException(e);
               }
               try {
                 fname = ctx.getExtTmpPathRelTo(
@@ -2172,6 +2180,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
           if (ast.getChildCount() >= 2 && ast.getChild(1).getText().toLowerCase().equals("local")) {
             isDfsFile = false;
           }
+          // Set the destination for the SELECT query inside the CTAS
           qb.getMetaData().setDestForAlias(name, fname, isDfsFile);
 
           CreateTableDesc directoryDesc = new CreateTableDesc();
@@ -7889,6 +7898,16 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
         join.getNoOuterJoin(), joinCondns, filterMap, joinKeys);
     desc.setReversedExprs(reversedExprs);
     desc.setFilterMap(join.getFilterMap());
+    // For outer joins, add filters that apply to more than one input
+    if (!join.getNoOuterJoin() && join.getPostJoinFilters().size() != 0) {
+      List<ExprNodeDesc> residualFilterExprs = new ArrayList<ExprNodeDesc>();
+      for (ASTNode cond : join.getPostJoinFilters()) {
+        residualFilterExprs.add(genExprNodeDesc(cond, outputRR));
+      }
+      desc.setResidualFilterExprs(residualFilterExprs);
+      // Clean post-conditions
+      join.getPostJoinFilters().clear();
+    }
 
     JoinOperator joinOp = (JoinOperator) OperatorFactory.getAndMakeChild(getOpContext(), desc,
         new RowSchema(outputRR.getColumnInfos()), rightOps);
@@ -8103,18 +8122,20 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     joinOp.getConf().setQBJoinTreeProps(joinTree);
     joinContext.put(joinOp, joinTree);
 
-    // Safety check for postconditions; currently we do not support them for outer join
-    if (joinTree.getPostJoinFilters().size() != 0 && !joinTree.getNoOuterJoin()) {
-      throw new SemanticException(ErrorMsg.INVALID_JOIN_CONDITION.getMsg());
-    }
-    Operator op = joinOp;
-    for(ASTNode condn : joinTree.getPostJoinFilters()) {
-      op = genFilterPlan(qb, condn, op, false);
-      if (LOG.isDebugEnabled()) {
-        LOG.debug("Generated " + op + " with post-filtering conditions after JOIN operator");
+    if (joinTree.getPostJoinFilters().size() != 0) {
+      // Safety check for postconditions
+      assert joinTree.getNoOuterJoin();
+      Operator op = joinOp;
+      for(ASTNode condn : joinTree.getPostJoinFilters()) {
+        op = genFilterPlan(qb, condn, op, false);
+        if (LOG.isDebugEnabled()) {
+          LOG.debug("Generated " + op + " with post-filtering conditions after JOIN operator");
+        }
       }
+      return op;
     }
-    return op;
+
+    return joinOp;
   }
 
   /**
@@ -11846,7 +11867,12 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
           if(locStats != null && locStats.isDir()) {
             FileStatus[] lStats = curFs.listStatus(locPath);
             if(lStats != null && lStats.length != 0) {
-              throw new SemanticException(ErrorMsg.CTAS_LOCATION_NONEMPTY.getMsg(location));
+              // Don't throw an exception if the target location only contains the staging-dirs
+              for (FileStatus lStat : lStats) {
+                if (!lStat.getPath().getName().startsWith(HiveConf.getVar(conf, HiveConf.ConfVars.STAGINGDIR))) {
+                  throw new SemanticException(ErrorMsg.CTAS_LOCATION_NONEMPTY.getMsg(location));
+                }
+              }
             }
           }
         } catch (FileNotFoundException nfe) {

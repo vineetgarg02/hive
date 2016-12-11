@@ -200,3 +200,22 @@ explain select p_partkey from
 	(select p_size, p_partkey from part where p_name in (select p.p_name from part p left outer join part pp on p.p_type = pp.p_type where pp.p_size = part.p_size)) subq;
 select p_partkey from 
 	(select p_size, p_partkey from part where p_name in (select p.p_name from part p left outer join part pp on p.p_type = pp.p_type where pp.p_size = part.p_size)) subq;
+
+
+create table tempty(i int);
+create table tnull(i int);
+insert into tnull values(NULL) , (NULL);
+
+-- empty inner table, non-null sq key, expected empty result
+select * from part where p_size IN (select i from tempty);
+
+-- empty inner table, null sq key, expected empty result
+select * from tnull where i IN (select i from tempty);
+
+-- null inner table, non-null sq key
+select * from part where p_size IN (select i from tnull);
+
+-- null inner table, null sq key
+select * from tnull where i IN (select i from tnull);
+
+drop table tempty;

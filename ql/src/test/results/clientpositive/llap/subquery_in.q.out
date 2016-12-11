@@ -4799,3 +4799,82 @@ POSTHOOK: Input: default@part
 85768
 86428
 90681
+PREHOOK: query: create table tempty(i int)
+PREHOOK: type: CREATETABLE
+PREHOOK: Output: database:default
+PREHOOK: Output: default@tempty
+POSTHOOK: query: create table tempty(i int)
+POSTHOOK: type: CREATETABLE
+POSTHOOK: Output: database:default
+POSTHOOK: Output: default@tempty
+PREHOOK: query: create table tnull(i int)
+PREHOOK: type: CREATETABLE
+PREHOOK: Output: database:default
+PREHOOK: Output: default@tnull
+POSTHOOK: query: create table tnull(i int)
+POSTHOOK: type: CREATETABLE
+POSTHOOK: Output: database:default
+POSTHOOK: Output: default@tnull
+PREHOOK: query: insert into tnull values(NULL) , (NULL)
+PREHOOK: type: QUERY
+PREHOOK: Input: default@values__tmp__table__1
+PREHOOK: Output: default@tnull
+POSTHOOK: query: insert into tnull values(NULL) , (NULL)
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@values__tmp__table__1
+POSTHOOK: Output: default@tnull
+POSTHOOK: Lineage: tnull.i EXPRESSION [(values__tmp__table__1)values__tmp__table__1.FieldSchema(name:tmp_values_col1, type:string, comment:), ]
+PREHOOK: query: -- empty inner table, non-null sq key, expected empty result
+select * from part where p_size IN (select i from tempty)
+PREHOOK: type: QUERY
+PREHOOK: Input: default@part
+PREHOOK: Input: default@tempty
+#### A masked pattern was here ####
+POSTHOOK: query: -- empty inner table, non-null sq key, expected empty result
+select * from part where p_size IN (select i from tempty)
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@part
+POSTHOOK: Input: default@tempty
+#### A masked pattern was here ####
+PREHOOK: query: -- empty inner table, null sq key, expected empty result
+select * from tnull where i IN (select i from tempty)
+PREHOOK: type: QUERY
+PREHOOK: Input: default@tempty
+PREHOOK: Input: default@tnull
+#### A masked pattern was here ####
+POSTHOOK: query: -- empty inner table, null sq key, expected empty result
+select * from tnull where i IN (select i from tempty)
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@tempty
+POSTHOOK: Input: default@tnull
+#### A masked pattern was here ####
+PREHOOK: query: -- null inner table, non-null sq key
+select * from part where p_size IN (select i from tnull)
+PREHOOK: type: QUERY
+PREHOOK: Input: default@part
+PREHOOK: Input: default@tnull
+#### A masked pattern was here ####
+POSTHOOK: query: -- null inner table, non-null sq key
+select * from part where p_size IN (select i from tnull)
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@part
+POSTHOOK: Input: default@tnull
+#### A masked pattern was here ####
+PREHOOK: query: -- null inner table, null sq key
+select * from tnull where i IN (select i from tnull)
+PREHOOK: type: QUERY
+PREHOOK: Input: default@tnull
+#### A masked pattern was here ####
+POSTHOOK: query: -- null inner table, null sq key
+select * from tnull where i IN (select i from tnull)
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@tnull
+#### A masked pattern was here ####
+PREHOOK: query: drop table tempty
+PREHOOK: type: DROPTABLE
+PREHOOK: Input: default@tempty
+PREHOOK: Output: default@tempty
+POSTHOOK: query: drop table tempty
+POSTHOOK: type: DROPTABLE
+POSTHOOK: Input: default@tempty
+POSTHOOK: Output: default@tempty

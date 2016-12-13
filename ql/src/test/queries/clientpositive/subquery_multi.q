@@ -22,9 +22,11 @@ LOAD DATA LOCAL INPATH 'data/files/part_tiny_nulls.txt' overwrite into table par
 insert into part_null values(78487,NULL,'Manufacturer#6','Brand#52','LARGE BRUSHED BRASS', 23, 'MED BAG',1464.48,'hely blith');
 
 -- Both IN are always true so should return all rows
+explain select * from part_null where p_size IN (select p_size from part_null) AND p_brand IN (select p_brand from part_null);
 select * from part_null where p_size IN (select p_size from part_null) AND p_brand IN (select p_brand from part_null);
 
 -- NOT IN has null value so should return 0 rows
+explain select * from part_null where p_name IN (select p_name from part_null) AND p_brand NOT IN (select p_name from part_null);
 select * from part_null where p_name IN (select p_name from part_null) AND p_brand NOT IN (select p_name from part_null);
 
 -- NOT IN is always true and IN is false for where p_name is NULL, hence should return all but one row

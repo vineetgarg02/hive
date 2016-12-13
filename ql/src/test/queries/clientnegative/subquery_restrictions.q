@@ -29,7 +29,6 @@ where src.key in (select key from src s1 where s1.key > '9') or src.value is not
 ;
 
 --Restriction.8.m We allow only 1 SubQuery expression per Query
-select * from part where p_size IN (select p_size from part) AND p_brand IN (select p_brand from part);
 
 --Restriction 9.m nested subquery
 select *

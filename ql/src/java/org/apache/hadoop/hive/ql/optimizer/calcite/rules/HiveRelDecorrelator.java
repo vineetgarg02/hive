@@ -1050,9 +1050,6 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
     // producer would be LogicalCorrelate's input's input
     // example is in subquery_views.q test
     RelNode ret = r.getInput(0);
-    //if(!(ret instanceof HiveTableScan)) {
-     // return ret.getInput(0);
-    //}
     return ret;
   }
 

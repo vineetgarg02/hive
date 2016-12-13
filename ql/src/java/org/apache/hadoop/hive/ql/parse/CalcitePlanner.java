@@ -984,7 +984,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
       RelNode calciteGenPlan = null;
       RelNode calcitePreCboPlan = null;
       RelNode calciteOptimizedPlan = null;
-      subqueryId = -1;
+      subqueryId = 0;
 
       /*
        * recreate cluster, so that it picks up the additional traitDef
@@ -2000,11 +2000,11 @@ public class CalcitePlanner extends SemanticAnalyzer {
         /*
          * Restriction.8.m :: We allow only 1 SubQuery expression per Query.
          */
-          if (subQueriesInOriginalTree.size() > 1) {
+          /*if (subQueriesInOriginalTree.size() > 1) {
 
             throw new SemanticException(ErrorMsg.UNSUPPORTED_SUBQUERY_EXPRESSION.getMsg(
                     subQueriesInOriginalTree.get(1), "Only 1 SubQuery expression is supported."));
-          }
+          } */
 
           //we do not care about the transformation or rewriting of AST which following statement does
           // we only care about the restriction checks they perform.
@@ -2057,7 +2057,6 @@ public class CalcitePlanner extends SemanticAnalyzer {
               Phase1Ctx ctx_1 = initPhase1Ctx();
               doPhase1((ASTNode)next.getChild(1), qbSQ, ctx_1, null);
               getMetaData(qbSQ);
-              subqueryId++;
               RelNode subQueryRelNode = genLogicalPlan(qbSQ, false,  relToHiveColNameCalcitePosMap.get(srcRel), relToHiveRR.get(srcRel));
               subQueryToRelNode.put(next, subQueryRelNode);
               isSubQuery = true;
@@ -2091,6 +2090,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
         this.relToHiveColNameCalcitePosMap.put(filterRel, this.relToHiveColNameCalcitePosMap
                 .get(srcRel));
         relToHiveRR.put(filterRel, relToHiveRR.get(srcRel));
+        this.subqueryId++;
         return filterRel;
       }
       else {

@@ -52,7 +52,7 @@ import org.apache.hadoop.hive.ql.lib.NodeProcessor;
 import org.apache.hadoop.hive.ql.lib.NodeProcessorCtx;
 import org.apache.hadoop.hive.ql.lib.Rule;
 import org.apache.hadoop.hive.ql.lib.RuleRegExp;
-import org.apache.hadoop.hive.ql.lib.SubQueryWalker;
+import org.apache.hadoop.hive.ql.lib.ExpressionWalker;
 import org.apache.hadoop.hive.ql.optimizer.ConstantPropagateProcFactory;
 import org.apache.hadoop.hive.ql.plan.ExprNodeColumnDesc;
 import org.apache.hadoop.hive.ql.plan.ExprNodeColumnListDesc;
@@ -219,7 +219,7 @@ public class TypeCheckProcFactory {
     // rule and passes the context along
     Dispatcher disp = new DefaultRuleDispatcher(tf.getDefaultExprProcessor(),
         opRules, tcCtx);
-    GraphWalker ogw = new SubQueryWalker(disp);
+    GraphWalker ogw = new ExpressionWalker(disp);
 
     // Create a list of top nodes
     ArrayList<Node> topNodes = Lists.<Node>newArrayList(expr);
@@ -1433,12 +1433,12 @@ public class TypeCheckProcFactory {
 
       //For now because subquery is only supported in filter we will create subquery expression of boolean type
       if(isEXISTS) {
-        return new ExprNodeSubQueryDesc(TypeInfoFactory.booleanTypeInfo, subqueryToRelNode.get(expr), ExprNodeSubQueryDesc.EXISTS);
+        return new ExprNodeSubQueryDesc(TypeInfoFactory.booleanTypeInfo, subqueryToRelNode.get(expr), ExprNodeSubQueryDesc.SubqueryType.EXISTS);
       }
       if(isIN) {
         assert(nodeOutputs[2] != null);
         ExprNodeDesc lhs = (ExprNodeDesc)nodeOutputs[2];
-        return new ExprNodeSubQueryDesc(TypeInfoFactory.booleanTypeInfo, subqueryToRelNode.get(expr), ExprNodeSubQueryDesc.IN, lhs);
+        return new ExprNodeSubQueryDesc(TypeInfoFactory.booleanTypeInfo, subqueryToRelNode.get(expr), ExprNodeSubQueryDesc.SubqueryType.IN, lhs);
       }
 
       /*

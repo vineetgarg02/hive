@@ -24,10 +24,18 @@ import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.calcite.rel.RelNode;
 
 /**
- * A constant expression.
+ * This encapsulate subquery expression which consists of
+ *  Relnode for subquery
+ *  type (IN, EXISTS )
+ *  LHS operand
  */
 public class ExprNodeSubQueryDesc extends ExprNodeDesc implements Serializable {
   private static final long serialVersionUID = 1L;
+
+  public static enum SubqueryType{
+    IN,
+    EXISTS,
+  };
 
   public static final int IN=1;
   public static final int EXISTS=2;
@@ -37,15 +45,15 @@ public class ExprNodeSubQueryDesc extends ExprNodeDesc implements Serializable {
    */
   private RelNode rexSubQuery;
   private ExprNodeDesc subQueryLhs;
-  private int type;
+  private SubqueryType type;
 
-  public ExprNodeSubQueryDesc(TypeInfo typeInfo, RelNode subQuery, int type) {
+  public ExprNodeSubQueryDesc(TypeInfo typeInfo, RelNode subQuery, SubqueryType type) {
     super(typeInfo);
     this.rexSubQuery = subQuery;
     this.subQueryLhs = null;
     this.type = type;
   }
-  public ExprNodeSubQueryDesc(TypeInfo typeInfo, RelNode subQuery, int type, ExprNodeDesc lhs) {
+  public ExprNodeSubQueryDesc(TypeInfo typeInfo, RelNode subQuery, SubqueryType type, ExprNodeDesc lhs) {
     super(typeInfo);
     this.rexSubQuery = subQuery;
     this.subQueryLhs = lhs;
@@ -53,7 +61,7 @@ public class ExprNodeSubQueryDesc extends ExprNodeDesc implements Serializable {
 
   }
 
-  public int getType() {
+  public SubqueryType getType() {
     return type;
   }
 

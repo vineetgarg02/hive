@@ -39,6 +39,9 @@ public class TypeCheckCtx implements NodeProcessorCtx {
 
   /**
    * RowResolver of outer query. This is used to resolve co-rrelated columns in Filter
+   * TODO:
+   *  this currently will only be able to resolve reference to parent query's column
+   *  this will not work for references to grand-parent column
    */
   private RowResolver outerRR;
 

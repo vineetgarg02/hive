@@ -53,6 +53,10 @@ import org.apache.hadoop.hive.ql.optimizer.calcite.HiveReplicatedRelBuilder;
 /**
  * NOTE: this rule is replicated from Calcite's SubqueryRemoveRule
  * Transform that converts IN, EXISTS and scalar sub-queries into joins.
+ * TODO:
+ *  Reason this is replicated instead of using Calcite's is
+ *    Calcite creates null literal with null type but hive needs it to be properly typed
+ *    Need fix for Calcite-1493
  *
  * <p>Sub-queries are represented by {@link RexSubQuery} expressions.
  *
@@ -178,23 +182,6 @@ public abstract class HiveSubQueryRemoveRule extends RelOptRule{
                 switch (logic) {
                     case TRUE_FALSE_UNKNOWN:
                     case UNKNOWN_AS_TRUE:
-                        //if (!variablesSet.isEmpty()) {
-                            // We have not yet figured out how to include "ct" in a query if
-                            // the source relation "e.rel" is correlated. So, dodge the issue:
-                            // we pretend that the join key is NOT NULL.
-                            //
-                            // We will get wrong results in correlated IN where the join
-                            // key has nulls. E.g.
-                            //
-                            //   SELECT *
-                            //   FROM emp
-                            //   WHERE mgr NOT IN (
-                            //     SELECT mgr
-                            //     FROM emp AS e2
-                            //     WHERE
-                         //   logic = RelOptUtil.Logic.TRUE_FALSE;
-                          //  break;
-                        //}
                         builder.aggregate(builder.groupKey(),
                                 builder.count(false, "c"),
                                 builder.aggregateCall(SqlStdOperatorTable.COUNT, false, null, "ck",

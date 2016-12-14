@@ -111,6 +111,11 @@ import java.util.logging.Level;
 /**
  * NOTE: this whole logic is replicated from Calcite's RelDecorrelator
  *  and is exteneded to make it suitable for HIVE
+ *  TODO:
+ *    We should get rid of this and replace it with Calcite's RelDecorrelator
+ *    once that works with Join, Project etc instead of LogicalJoin, LogicalProject.
+ *    Also we need to have CALCITE-1511 fixed
+ *
  * RelDecorrelator replaces all correlated expressions (corExp) in a relational
  * expression (RelNode) tree with non-correlated expressions that are produced
  * from joining the RelNode that produces the corExp with the RelNode that
@@ -360,6 +365,50 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
    *
    * @param rel Sort to be rewritten
    */
+  public Frame decorrelateRel(HiveSortLimit rel) {
+    //
+    // Rewrite logic:
+    //
+    // 1. change the collations field to reference the new input.
+    //
+
+    // Sort itself should not reference cor vars.
+    assert !cm.mapRefRelToCorVar.containsKey(rel);
+
+    // Sort only references field positions in collations field.
+    // The collations field in the newRel now need to refer to the
+    // new output positions in its input.
+    // Its output does not change the input ordering, so there's no
+    // need to call propagateExpr.
+
+    final RelNode oldInput = rel.getInput();
+    final Frame frame = getInvoke(oldInput, rel);
+    if (frame == null) {
+      // If input has not been rewritten, do not rewrite this rel.
+      return null;
+    }
+    final RelNode newInput = frame.r;
+
+    Mappings.TargetMapping mapping =
+            Mappings.target(
+                    frame.oldToNewOutputPos,
+                    oldInput.getRowType().getFieldCount(),
+                    newInput.getRowType().getFieldCount());
+
+    RelCollation oldCollation = rel.getCollation();
+    RelCollation newCollation = RexUtil.apply(mapping, oldCollation);
+
+    final RelNode newSort = HiveSortLimit.create(newInput, newCollation, rel.offset, rel.fetch);
+
+    // Sort does not change input ordering
+    return register(rel, newSort, frame.oldToNewOutputPos,
+            frame.corVarOutputPos);
+  }
+  /**
+   * Rewrite Sort.
+   *
+   * @param rel Sort to be rewritten
+   */
   public Frame decorrelateRel(Sort rel) {
     //
     // Rewrite logic:
@@ -393,8 +442,7 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
     RelCollation oldCollation = rel.getCollation();
     RelCollation newCollation = RexUtil.apply(mapping, oldCollation);
 
-    final Sort newSort =
-            LogicalSort.create(newInput, newCollation, rel.offset, rel.fetch);
+    final RelNode newSort = HiveSortLimit.create(newInput, newCollation, rel.offset, rel.fetch);
 
     // Sort does not change input ordering
     return register(rel, newSort, frame.oldToNewOutputPos,
@@ -416,7 +464,7 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
    *
    * @param rel Aggregate to rewrite
    */
-  public Frame decorrelateRel(LogicalAggregate rel) {
+  public Frame decorrelateRel(LogicalAggregate rel) throws SemanticException{
     if (rel.getGroupType() != Aggregate.Group.SIMPLE) {
       throw new AssertionError(Bug.CALCITE_461_FIXED);
     }
@@ -507,8 +555,8 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
 
     // This Project will be what the old input maps to,
     // replacing any previous mapping from old input).
-    RelNode newProject =
-            RelOptUtil.createProject(newInput, projects, false);
+
+    RelNode newProject = HiveProject.create(newInput, Pair.left(projects), Pair.right(projects));
 
     // update mappings:
     // oldInput ----> newInput
@@ -697,8 +745,7 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
 
       // This Project will be what the old input maps to,
       // replacing any previous mapping from old input).
-      RelNode newProject =
-              RelOptUtil.createProject(newInput, projects, false);
+      RelNode newProject = HiveProject.create(newInput, Pair.left(projects), Pair.right(projects));
 
       // update mappings:
       // oldInput ----> newInput
@@ -857,7 +904,7 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
    *
    * @param rel the project rel to rewrite
    */
-  public Frame decorrelateRel(LogicalProject rel) {
+  public Frame decorrelateRel(LogicalProject rel) throws SemanticException{
     //
     // Rewrite logic:
     //
@@ -909,8 +956,7 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
       newPos++;
     }
 
-    RelNode newProject =
-            RelOptUtil.createProject(frame.r, projects, false);
+    RelNode newProject = HiveProject.create(frame.r, Pair.left(projects), Pair.right(projects));
 
     return register(rel, newProject, mapOldToNewOutputPos,
             mapCorVarToOutputPos);
@@ -1043,16 +1089,7 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
   private RelNode getCorRel(Correlation corVar) {
     final RelNode r = cm.mapCorVarToCorRel.get(corVar.corr);
 
-    //HIVE could create plans such as scan->filter->project->filter->project
-    // e.g. in case of VIEWS, where filter has subqueries within it
-    // calcite then might push down filter on top of TableScan and just
-    // underneath LogicalCorrelate. In which case appropropriate correlated
-    // producer would be LogicalCorrelate's input's input
-    // example is in subquery_views.q test
     RelNode ret = r.getInput(0);
-    //if(!(ret instanceof HiveTableScan)) {
-     // return ret.getInput(0);
-    //}
     return ret;
   }
 
@@ -1177,10 +1214,9 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
 
     // Replace the filter expression to reference output of the join
     // Map filter to the new filter over join
-    RelNode newFilter =
-            RelOptUtil.createFilter(
-                    frame.r,
-                    decorrelateExpr(rel.getCondition()));
+    RelNode newFilter = new HiveFilter(rel.getCluster(), rel.getTraitSet(), frame.r,
+            decorrelateExpr(rel.getCondition()));
+
 
     // Filter does not change the input ordering.
     // Filter rel does not permute the input.
@@ -1371,10 +1407,8 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
       return null;
     }
 
-    final RelNode newJoin =
-            LogicalJoin.create(leftFrame.r, rightFrame.r,
-                    decorrelateExpr(rel.getCondition()),
-                    ImmutableSet.<CorrelationId>of(), rel.getJoinType());
+    final RelNode newJoin = HiveJoin.getJoin(rel.getCluster(), leftFrame.r,
+            rightFrame.r, decorrelateExpr(rel.getCondition()), rel.getJoinType() );
 
     // Create the mapping between the output of the old correlation rel
     // and the new join rel

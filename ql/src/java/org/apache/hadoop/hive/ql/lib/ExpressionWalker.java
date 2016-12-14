@@ -24,7 +24,7 @@ import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.plan.OperatorDesc;
 
-public class SubQueryWalker extends DefaultGraphWalker {
+public class ExpressionWalker extends DefaultGraphWalker {
 
   /**
    * Constructor.
@@ -32,12 +32,16 @@ public class SubQueryWalker extends DefaultGraphWalker {
    * @param disp
    * dispatcher to call for each op encountered
    */
-  public SubQueryWalker (Dispatcher disp) {
+  public ExpressionWalker (Dispatcher disp) {
     super(disp);
   }
 
 
-  //we bypass SUBQUERY EXPRESSION's children because we will later process this subquery seperately
+  /**
+   * We should bypass subquery since we have already processed and created logical plan
+   * (in genLogicalPlan) for subquery at this point.
+   * SubQueryExprProcessor will use generated plan and creates appropriate ExprNodeSubQueryDesc.
+   */
   private boolean shouldByPass(Node childNode, Node parentNode) {
     if(parentNode instanceof ASTNode && ((ASTNode)parentNode).getType() == HiveParser.TOK_SUBQUERY_EXPR )
     {

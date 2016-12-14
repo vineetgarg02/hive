@@ -95,6 +95,11 @@ import java.util.TreeSet;
 
 /**
  * Builder for relational expressions.
+ * TODO:
+ *  Note that this is copied from Calcite's RelBulder
+ *  because CALCITE-1493 hasn't been fixed yet
+ *  This should be deleted and replaced with RelBuilder in SubqueryRemoveRule
+ *  once CALCITE-1493 is fixed.
  *
  * <p>{@code RelBuilder} does not make possible anything that you could not
  * also accomplish by calling the factory methods of the particular relational
@@ -170,21 +175,6 @@ public class HiveReplicatedRelBuilder {
                     RelFactories.DEFAULT_TABLE_SCAN_FACTORY);
   }
 
-  /** Creates a {@link RelBuilderFactory}, a partially-created RelBuilder.
-   * Just add a {@link RelOptCluster} and a {@link RelOptSchema} */
-  /*public static RelBuilderFactory proto(final Context context) {
-    RelBuilderFactory builderFactory = new RelBuilderFactory() {
-      public RelBuilder create(RelOptCluster cluster, RelOptSchema schema) {
-        return new RelBuilder(context, cluster, schema);
-      }
-    }
-    return builderFactory;
-  }*/
-
-  /** Creates a {@link RelBuilderFactory} that uses a given set of factories. */
-  /*public static RelBuilderFactory proto(Object... factories) {
-    return proto(Contexts.of(factories));*/
-
     /** Creates a RelBuilder. */
   public static HiveReplicatedRelBuilder create(FrameworkConfig config) {
     final RelOptCluster[] clusters = {null};
@@ -210,24 +200,6 @@ public class HiveReplicatedRelBuilder {
   public RexBuilder getRexBuilder() {
     return cluster.getRexBuilder();
   }
-
-
-  /** Creates a {@link RelBuilderFactory}, a partially-created RelBuilder.
-   * Just add a {@link RelOptCluster} and a {@link RelOptSchema} */
-  /*public static RelBuilderFactory proto(final Context context) {
-    return new RelBuilderFactory() {
-      public HiveReplicatedRelBuilder create(RelOptCluster cluster, RelOptSchema schema) {
-        return new HiveReplicatedRelBuilder(context, cluster, schema);
-      }
-    };
-  } */
-
-  /** Creates a {@link RelBuilderFactory} that uses a given set of factories. */
-  //public static RelBuilderFactory proto(Object... factories) {
-   // return proto(Contexts.of(factories));
-  //}
-
-  // Methods for manipulating the stack
 
   /** Adds a relational expression to be the input to the next relational
    * expression constructed.

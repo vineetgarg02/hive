@@ -308,6 +308,10 @@ public class CalcitePlanner extends SemanticAnalyzer {
         boolean reAnalyzeAST = false;
         final boolean materializedView = getQB().isMaterializedView();
 
+        // currently semi-join optimization doesn't work with subqueries
+        // so this will be turned off for if we find subqueries and will later be
+        // restored to its original state
+        boolean originalSemiOptVal = this.conf.getBoolVar(ConfVars.SEMIJOIN_CONVERSION);
         try {
           if (this.conf.getBoolVar(HiveConf.ConfVars.HIVE_CBO_RETPATH_HIVEOP)) {
             sinkOp = getOptimizedHiveOPDag();
@@ -407,6 +411,8 @@ public class CalcitePlanner extends SemanticAnalyzer {
             super.genResolvedParseTree(ast, new PlannerContext());
             skipCalcitePlan = true;
           }
+          // restore semi-join opt flag
+          this.conf.setBoolVar(ConfVars.SEMIJOIN_CONVERSION, originalSemiOptVal);
         }
       } else {
         this.ctx.setCboInfo("Plan not optimized by CBO.");
@@ -2091,6 +2097,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
         this.relToHiveColNameCalcitePosMap.put(filterRel, this.relToHiveColNameCalcitePosMap
                 .get(srcRel));
         relToHiveRR.put(filterRel, relToHiveRR.get(srcRel));
+        conf.setBoolVar(ConfVars.SEMIJOIN_CONVERSION, false); // semi-join opt doesn't work with subqueries
         return filterRel;
       }
       else {

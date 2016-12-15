@@ -35,6 +35,7 @@ import org.apache.calcite.rex.RexShuttle;
 import org.apache.calcite.rex.RexSubQuery;
 import org.apache.calcite.rex.RexUtil;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql2rel.RelDecorrelator;
 import org.apache.calcite.tools.RelBuilder;
@@ -182,6 +183,12 @@ public abstract class HiveSubQueryRemoveRule extends RelOptRule{
                 switch (logic) {
                     case TRUE_FALSE_UNKNOWN:
                     case UNKNOWN_AS_TRUE:
+                        // Since EXISTS/NOT EXISTS are not affected by presence of
+                        // null keys we do not need to generate count(*), count(c)
+                        if (e.getKind() == SqlKind.EXISTS) {
+                            logic = RelOptUtil.Logic.TRUE_FALSE;
+                            break;
+                        }
                         builder.aggregate(builder.groupKey(),
                                 builder.count(false, "c"),
                                 builder.aggregateCall(SqlStdOperatorTable.COUNT, false, null, "ck",

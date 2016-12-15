@@ -61,8 +61,9 @@ public class HiveFilter extends Filter implements HiveRelNode {
         if (rn instanceof RexFieldAccess)
         {
           final RexNode ref = ((RexFieldAccess) rn).getReferenceExpr();
-          assert(ref instanceof RexCorrelVariable);
-          allVars.add(((RexCorrelVariable) ref).id);
+          if (ref instanceof RexCorrelVariable) {
+              allVars.add(((RexCorrelVariable) ref).id);
+          }
         }
         else {
           findCorrelatedVar(rn, allVars);

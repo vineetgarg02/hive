@@ -48,7 +48,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.hadoop.hive.ql.optimizer.calcite.HiveReplicatedRelBuilder;
+import org.apache.hadoop.hive.ql.optimizer.calcite.HiveSubQRemoveRelBuilder;
 
 /**
  * NOTE: this rule is replicated from Calcite's SubqueryRemoveRule
@@ -75,7 +75,7 @@ public abstract class HiveSubQueryRemoveRule extends RelOptRule{
                 public void onMatch(RelOptRuleCall call) {
                     final Filter filter = call.rel(0);
                     //final RelBuilder builder = call.builder();
-                    final HiveReplicatedRelBuilder builder = new HiveReplicatedRelBuilder(null, call.rel(0).getCluster(), null);
+                    final HiveSubQRemoveRelBuilder builder = new HiveSubQRemoveRelBuilder(null, call.rel(0).getCluster(), null);
                     final RexSubQuery e =
                             RexUtil.SubQueryFinder.find(filter.getCondition());
                     assert e != null;
@@ -101,7 +101,7 @@ public abstract class HiveSubQueryRemoveRule extends RelOptRule{
 
     protected RexNode apply(RexSubQuery e, Set<CorrelationId> variablesSet,
                             RelOptUtil.Logic logic,
-                            HiveReplicatedRelBuilder builder, int inputCount, int offset) {
+                            HiveSubQRemoveRelBuilder builder, int inputCount, int offset) {
         switch (e.getKind()) {
             case SCALAR_QUERY:
                 builder.push(e.rel);
@@ -282,7 +282,7 @@ public abstract class HiveSubQueryRemoveRule extends RelOptRule{
 
     /** Returns a reference to a particular field, by offset, across several
      * inputs on a {@link RelBuilder}'s stack. */
-    private RexInputRef field(HiveReplicatedRelBuilder builder, int inputCount, int offset) {
+    private RexInputRef field(HiveSubQRemoveRelBuilder builder, int inputCount, int offset) {
         for (int inputOrdinal = 0;;) {
             final RelNode r = builder.peek(inputCount, inputOrdinal);
             if (offset < r.getRowType().getFieldCount()) {
@@ -295,7 +295,7 @@ public abstract class HiveSubQueryRemoveRule extends RelOptRule{
 
     /** Returns a list of expressions that project the first {@code fieldCount}
      * fields of the top input on a {@link RelBuilder}'s stack. */
-    private static List<RexNode> fields(HiveReplicatedRelBuilder builder, int fieldCount) {
+    private static List<RexNode> fields(HiveSubQRemoveRelBuilder builder, int fieldCount) {
         final List<RexNode> projects = new ArrayList<>();
         for (int i = 0; i < fieldCount; i++) {
             projects.add(builder.field(i));

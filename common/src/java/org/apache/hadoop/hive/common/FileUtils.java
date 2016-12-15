@@ -900,13 +900,30 @@ public final class FileUtils {
    * @return
    */
   public static boolean isPathWithinSubtree(Path path, Path subtree) {
-    while(path!=null){
+    return isPathWithinSubtree(path, subtree, subtree.depth());
+  }
+
+  private static boolean isPathWithinSubtree(Path path, Path subtree, int subtreeDepth) {
+    while(path != null){
+      if (subtreeDepth > path.depth()) {
+        return false;
+      }
       if(subtree.equals(path)){
         return true;
       }
-      path=path.getParent();
+      path = path.getParent();
     }
     return false;
+  }
+
+  public static void populateParentPaths(Set<Path> parents, Path path) {
+    if (parents == null) {
+      return;
+    }
+    while(path != null) {
+      parents.add(path);
+      path = path.getParent();
+    }
   }
 
   /**

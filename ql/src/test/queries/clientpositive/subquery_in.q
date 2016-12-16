@@ -220,15 +220,3 @@ select * from tnull where i IN (select i from tnull);
 
 drop table tempty;
 
--- semi-join conversion doesn't work with subquery so subquery code turns it off
---  test to make sure subquery code restores the value of semi-join conversion flag
-set hive.enable.semijoin.conversion;
-explain select p_partkey from part where p_name in
-	(select p.p_name from part p left outer join part pp on p.p_type = pp.p_type where pp.p_size = part.p_size and p.p_type=part.p_type);
-set hive.enable.semijoin.conversion;
-
-set hive.enable.semijoin.conversion=false;
-explain select p_partkey from part where p_name in
-	(select p.p_name from part p left outer join part pp on p.p_type = pp.p_type where pp.p_size = part.p_size and p.p_type=part.p_type);
-set hive.enable.semijoin.conversion;
-

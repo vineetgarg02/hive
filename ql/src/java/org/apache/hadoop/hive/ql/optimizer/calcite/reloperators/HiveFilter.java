@@ -25,11 +25,16 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttle;
 import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
-import org.apache.calcite.rex.*;
+import org.apache.calcite.rex.RexCall;
+import org.apache.calcite.rex.RexCorrelVariable;
+import org.apache.calcite.rex.RexFieldAccess;
+import org.apache.calcite.rex.RexSubQuery;
+import org.apache.calcite.rex.RexNode;
 import org.apache.hadoop.hive.ql.optimizer.calcite.HiveRelShuttle;
 import org.apache.hadoop.hive.ql.optimizer.calcite.TraitsUtil;
 import org.apache.calcite.rel.core.CorrelationId;
-import java.util.*;
+import java.util.Set;
+import java.util.HashSet;
 
 public class HiveFilter extends Filter implements HiveRelNode {
 
@@ -52,20 +57,16 @@ public class HiveFilter extends Filter implements HiveRelNode {
     return mq.getNonCumulativeCost(this);
   }
 
-  private void findCorrelatedVar(RexNode node, Set<CorrelationId> allVars)
-  {
-    if(node instanceof RexCall)
-    {
+  private void findCorrelatedVar(RexNode node, Set<CorrelationId> allVars) {
+    if(node instanceof RexCall) {
       RexCall nd = (RexCall)node;
       for (RexNode rn : nd.getOperands()) {
-        if (rn instanceof RexFieldAccess)
-        {
+        if (rn instanceof RexFieldAccess) {
           final RexNode ref = ((RexFieldAccess) rn).getReferenceExpr();
           if (ref instanceof RexCorrelVariable) {
               allVars.add(((RexCorrelVariable) ref).id);
           }
-        }
-        else {
+        } else {
           findCorrelatedVar(rn, allVars);
         }
       }
@@ -74,32 +75,29 @@ public class HiveFilter extends Filter implements HiveRelNode {
 
   //traverse the given node to find all correlated variables
   // Note that correlated variables are supported in Filter only i.e. Where & Having
-  private void traverseFilter(RexNode node, Set<CorrelationId> allVars)
-  {
-      if(node instanceof RexSubQuery)
-      {
-          //we expect correlated variables in HiveFilter only for now. Also check for case where operator has 0 inputs .e.g TableScan
+  private void traverseFilter(RexNode node, Set<CorrelationId> allVars) {
+      if(node instanceof RexSubQuery) {
+          //we expect correlated variables in HiveFilter only for now.
+          // Also check for case where operator has 0 inputs .e.g TableScan
           RelNode input = ((RexSubQuery)node).rel.getInput(0);
-          while( input != null && !(input instanceof HiveFilter) && input.getInputs().size() >=1)
-          {
+          while(input != null && !(input instanceof HiveFilter)
+                  && input.getInputs().size() >=1) {
               //we don't expect corr vars withing JOIN or UNION for now
               // we only expect cor vars in top level filter
-              if( input.getInputs().size() > 1)
+              if(input.getInputs().size() > 1) {
                   return;
+              }
               input = input.getInput(0);
           }
-          if(input != null && input instanceof HiveFilter   )
-          {
+          if(input != null && input instanceof HiveFilter) {
               findCorrelatedVar(((HiveFilter)input).getCondition(), allVars);
           }
           return;
       }
       //AND, NOT etc
-      if(node instanceof RexCall)
-      {
+      if(node instanceof RexCall) {
           int numOperands = ((RexCall)node).getOperands().size();
-          for(int i=0; i<numOperands; i++)
-          {
+          for(int i=0; i<numOperands; i++) {
               RexNode op = ((RexCall)node).getOperands().get(i);
               traverseFilter(op, allVars);
           }
@@ -114,8 +112,7 @@ public class HiveFilter extends Filter implements HiveRelNode {
   }
 
   public RelNode accept(RelShuttle shuttle) {
-    if (shuttle instanceof HiveRelShuttle)
-    {
+    if (shuttle instanceof HiveRelShuttle) {
       return ((HiveRelShuttle)shuttle).visit(this);
     }
     return shuttle.visit(this);

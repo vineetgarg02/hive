@@ -120,7 +120,9 @@ public class RexNodeConverter {
   private final RelOptCluster           cluster;
   private final ImmutableList<InputCtx> inputCtxs;
   private final boolean                 flattenExpr;
-  private final RowResolver             outerRR; //outerRR belongs to outer query and is required to resolve correlated references
+
+  //outerRR belongs to outer query and is required to resolve correlated references
+  private final RowResolver             outerRR;
   private final ImmutableMap<String, Integer> outerNameToPosMap;
   private int correlatedId;
 
@@ -176,14 +178,12 @@ public class RexNodeConverter {
   }
 
   private RexNode convert(final ExprNodeSubQueryDesc subQueryDesc) throws  SemanticException {
-    if(subQueryDesc.getType() == ExprNodeSubQueryDesc.SubqueryType.IN)
-    {
+    if(subQueryDesc.getType() == ExprNodeSubQueryDesc.SubqueryType.IN) {
      /*
       * Check.5.h :: For In and Not In the SubQuery must implicitly or
       * explicitly only contain one select item.
       */
-      if(subQueryDesc.getRexSubQuery().getRowType().getFieldCount() > 1)
-      {
+      if(subQueryDesc.getRexSubQuery().getRowType().getFieldCount() > 1) {
         throw new SemanticException(ErrorMsg.INVALID_SUBQUERY_EXPRESSION.getMsg(
                 "SubQuery can contain only 1 item in Select List."));
       }
@@ -191,11 +191,11 @@ public class RexNodeConverter {
       RexNode rexNodeLhs = convert(subQueryDesc.getSubQueryLhs());
 
       //create RexSubQuery node
-      RexNode rexSubQuery = RexSubQuery.in(subQueryDesc.getRexSubQuery(), ImmutableList.<RexNode>of(rexNodeLhs) );
+      RexNode rexSubQuery = RexSubQuery.in(subQueryDesc.getRexSubQuery(),
+                                              ImmutableList.<RexNode>of(rexNodeLhs) );
       return  rexSubQuery;
     }
-    else if( subQueryDesc.getType() == ExprNodeSubQueryDesc.SubqueryType.EXISTS)
-    {
+    else if( subQueryDesc.getType() == ExprNodeSubQueryDesc.SubqueryType.EXISTS) {
       RexNode subQueryNode = RexSubQuery.exists(subQueryDesc.getRexSubQuery());
       return subQueryNode;
     }

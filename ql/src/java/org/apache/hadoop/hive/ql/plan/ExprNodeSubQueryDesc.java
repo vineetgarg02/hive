@@ -25,7 +25,7 @@ import org.apache.calcite.rel.RelNode;
 
 /**
  * This encapsulate subquery expression which consists of
- *  Relnode for subquery
+ *  Relnode for subquery.
  *  type (IN, EXISTS )
  *  LHS operand
  */
@@ -41,7 +41,7 @@ public class ExprNodeSubQueryDesc extends ExprNodeDesc implements Serializable {
   public static final int EXISTS=2;
 
   /**
-   * RexNode corresponding to subquery
+   * RexNode corresponding to subquery.
    */
   private RelNode rexSubQuery;
   private ExprNodeDesc subQueryLhs;
@@ -53,7 +53,8 @@ public class ExprNodeSubQueryDesc extends ExprNodeDesc implements Serializable {
     this.subQueryLhs = null;
     this.type = type;
   }
-  public ExprNodeSubQueryDesc(TypeInfo typeInfo, RelNode subQuery, SubqueryType type, ExprNodeDesc lhs) {
+  public ExprNodeSubQueryDesc(TypeInfo typeInfo, RelNode subQuery,
+                              SubqueryType type, ExprNodeDesc lhs) {
     super(typeInfo);
     this.rexSubQuery = subQuery;
     this.subQueryLhs = lhs;

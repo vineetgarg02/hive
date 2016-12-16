@@ -268,8 +268,7 @@ public class HiveOpConverter {
 
     //now that we let Calcite process subqueries we might have more than one
     // tablescan with same alias.
-    if(topOps.get(tableAlias) != null)
-    {
+    if(topOps.get(tableAlias) != null) {
       tableAlias = tableAlias +  this.uniqueCounter ;
     }
     topOps.put(tableAlias, ts);

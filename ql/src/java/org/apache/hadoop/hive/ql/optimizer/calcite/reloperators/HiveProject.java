@@ -200,8 +200,7 @@ public class HiveProject extends Project implements HiveRelNode {
 
   //required for HiveRelDecorrelator
   @Override public RelNode accept(RelShuttle shuttle) {
-    if(shuttle instanceof HiveRelShuttle)
-    {
+    if(shuttle instanceof HiveRelShuttle) {
       return ((HiveRelShuttle)shuttle).visit(this);
     }
     return shuttle.visit(this);

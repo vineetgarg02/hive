@@ -1,12 +1,13 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to you under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,23 +22,20 @@ import org.apache.calcite.plan.RelOptRuleCall;
 import org.apache.calcite.plan.RelOptRuleOperand;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.core.Correlate;
 import org.apache.calcite.rel.core.CorrelationId;
 import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.core.RelFactories;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rex.LogicVisitor;
-import org.apache.calcite.rex.RexCorrelVariable;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexShuttle;
 import org.apache.calcite.rex.RexSubQuery;
 import org.apache.calcite.rex.RexUtil;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.type.SqlTypeName;
-import org.apache.calcite.sql2rel.RelDecorrelator;
-import org.apache.calcite.tools.RelBuilder;
 import org.apache.calcite.tools.RelBuilderFactory;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.calcite.util.Pair;
@@ -48,11 +46,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.hadoop.hive.ql.optimizer.calcite.HiveReplicatedRelBuilder;
+import org.apache.hadoop.hive.ql.optimizer.calcite.HiveRelFactories;
+import org.apache.hadoop.hive.ql.optimizer.calcite.HiveSubQRemoveRelBuilder;
 
 /**
  * NOTE: this rule is replicated from Calcite's SubqueryRemoveRule
  * Transform that converts IN, EXISTS and scalar sub-queries into joins.
+ * TODO:
+ *  Reason this is replicated instead of using Calcite's is
+ *    Calcite creates null literal with null type but hive needs it to be properly typed
+ *    Need fix for Calcite-1493
  *
  * <p>Sub-queries are represented by {@link RexSubQuery} expressions.
  *
@@ -67,11 +70,11 @@ public abstract class HiveSubQueryRemoveRule extends RelOptRule{
             new HiveSubQueryRemoveRule(
                     operand(Filter.class, null, RexUtil.SubQueryFinder.FILTER_PREDICATE,
                             any()),
-                    RelFactories.LOGICAL_BUILDER, "SubQueryRemoveRule:Filter") {
+                    HiveRelFactories.HIVE_BUILDER, "SubQueryRemoveRule:Filter") {
                 public void onMatch(RelOptRuleCall call) {
                     final Filter filter = call.rel(0);
                     //final RelBuilder builder = call.builder();
-                    final HiveReplicatedRelBuilder builder = new HiveReplicatedRelBuilder(null, call.rel(0).getCluster(), null);
+                    final HiveSubQRemoveRelBuilder builder = new HiveSubQRemoveRelBuilder(null, call.rel(0).getCluster(), null);
                     final RexSubQuery e =
                             RexUtil.SubQueryFinder.find(filter.getCondition());
                     assert e != null;
@@ -97,7 +100,7 @@ public abstract class HiveSubQueryRemoveRule extends RelOptRule{
 
     protected RexNode apply(RexSubQuery e, Set<CorrelationId> variablesSet,
                             RelOptUtil.Logic logic,
-                            HiveReplicatedRelBuilder builder, int inputCount, int offset) {
+                            HiveSubQRemoveRelBuilder builder, int inputCount, int offset) {
         switch (e.getKind()) {
             case SCALAR_QUERY:
                 builder.push(e.rel);
@@ -178,23 +181,12 @@ public abstract class HiveSubQueryRemoveRule extends RelOptRule{
                 switch (logic) {
                     case TRUE_FALSE_UNKNOWN:
                     case UNKNOWN_AS_TRUE:
-                        //if (!variablesSet.isEmpty()) {
-                            // We have not yet figured out how to include "ct" in a query if
-                            // the source relation "e.rel" is correlated. So, dodge the issue:
-                            // we pretend that the join key is NOT NULL.
-                            //
-                            // We will get wrong results in correlated IN where the join
-                            // key has nulls. E.g.
-                            //
-                            //   SELECT *
-                            //   FROM emp
-                            //   WHERE mgr NOT IN (
-                            //     SELECT mgr
-                            //     FROM emp AS e2
-                            //     WHERE
-                         //   logic = RelOptUtil.Logic.TRUE_FALSE;
-                          //  break;
-                        //}
+                        // Since EXISTS/NOT EXISTS are not affected by presence of
+                        // null keys we do not need to generate count(*), count(c)
+                        if (e.getKind() == SqlKind.EXISTS) {
+                            logic = RelOptUtil.Logic.TRUE_FALSE;
+                            break;
+                        }
                         builder.aggregate(builder.groupKey(),
                                 builder.count(false, "c"),
                                 builder.aggregateCall(SqlStdOperatorTable.COUNT, false, null, "ck",
@@ -295,7 +287,7 @@ public abstract class HiveSubQueryRemoveRule extends RelOptRule{
 
     /** Returns a reference to a particular field, by offset, across several
      * inputs on a {@link RelBuilder}'s stack. */
-    private RexInputRef field(HiveReplicatedRelBuilder builder, int inputCount, int offset) {
+    private RexInputRef field(HiveSubQRemoveRelBuilder builder, int inputCount, int offset) {
         for (int inputOrdinal = 0;;) {
             final RelNode r = builder.peek(inputCount, inputOrdinal);
             if (offset < r.getRowType().getFieldCount()) {
@@ -308,7 +300,7 @@ public abstract class HiveSubQueryRemoveRule extends RelOptRule{
 
     /** Returns a list of expressions that project the first {@code fieldCount}
      * fields of the top input on a {@link RelBuilder}'s stack. */
-    private static List<RexNode> fields(HiveReplicatedRelBuilder builder, int fieldCount) {
+    private static List<RexNode> fields(HiveSubQRemoveRelBuilder builder, int fieldCount) {
         final List<RexNode> projects = new ArrayList<>();
         for (int i = 0; i < fieldCount; i++) {
             projects.add(builder.field(i));

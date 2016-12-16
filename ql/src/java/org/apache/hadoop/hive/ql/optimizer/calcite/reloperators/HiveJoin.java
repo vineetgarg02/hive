@@ -235,8 +235,7 @@ public class HiveJoin extends Join implements HiveRelNode {
 
   //required for HiveRelDecorrelator
   public RelNode accept(RelShuttle shuttle) {
-    if (shuttle instanceof HiveRelShuttle)
-    {
+    if (shuttle instanceof HiveRelShuttle) {
       return ((HiveRelShuttle)shuttle).visit(this);
     }
     return shuttle.visit(this);

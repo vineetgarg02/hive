@@ -18,13 +18,11 @@
 
 package org.apache.hadoop.hive.ql.lib;
 
-import org.apache.hadoop.hive.ql.exec.Operator;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
-import org.apache.hadoop.hive.ql.plan.OperatorDesc;
 
-public class SubQueryWalker extends DefaultGraphWalker {
+public class ExpressionWalker extends DefaultGraphWalker {
 
   /**
    * Constructor.
@@ -32,21 +30,24 @@ public class SubQueryWalker extends DefaultGraphWalker {
    * @param disp
    * dispatcher to call for each op encountered
    */
-  public SubQueryWalker (Dispatcher disp) {
+  public ExpressionWalker(Dispatcher disp) {
     super(disp);
   }
 
 
-  //we bypass SUBQUERY EXPRESSION's children because we will later process this subquery seperately
+  /**
+   * We should bypass subquery since we have already processed and created logical plan
+   * (in genLogicalPlan) for subquery at this point.
+   * SubQueryExprProcessor will use generated plan and creates appropriate ExprNodeSubQueryDesc.
+   */
   private boolean shouldByPass(Node childNode, Node parentNode) {
-    if(parentNode instanceof ASTNode && ((ASTNode)parentNode).getType() == HiveParser.TOK_SUBQUERY_EXPR )
-    {
+    if(parentNode instanceof ASTNode
+            && ((ASTNode)parentNode).getType() == HiveParser.TOK_SUBQUERY_EXPR) {
       ASTNode parentOp = (ASTNode)parentNode;
       //subquery either in WHERE <LHS> IN <SUBQUERY> form OR WHERE EXISTS <SUBQUERY> form
       //in first case LHS should not be bypassed
       assert(parentOp.getChildCount() == 2 || parentOp.getChildCount()==3);
-      if(parentOp.getChildCount() == 3 && (ASTNode)childNode == parentOp.getChild(2) )
-      {
+      if(parentOp.getChildCount() == 3 && (ASTNode)childNode == parentOp.getChild(2)) {
         return false;
       }
       return true;
@@ -82,11 +83,9 @@ public class SubQueryWalker extends DefaultGraphWalker {
       // Add a single child and restart the loop
       for (Node childNode : node.getChildren()) {
         if (!getDispatchedList().contains(childNode)) {
-          if(shouldByPass(childNode, node))
-          {
+          if(shouldByPass(childNode, node)) {
             retMap.put(childNode, null);
-          }
-          else {
+          } else {
             opStack.push(childNode);
           }
           break;
@@ -94,5 +93,5 @@ public class SubQueryWalker extends DefaultGraphWalker {
       }
     } // end while
   }
-
 }
+

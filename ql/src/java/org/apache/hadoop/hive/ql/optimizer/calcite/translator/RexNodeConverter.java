@@ -120,6 +120,8 @@ public class RexNodeConverter {
   private final RelOptCluster           cluster;
   private final ImmutableList<InputCtx> inputCtxs;
   private final boolean                 flattenExpr;
+
+  //outerRR belongs to outer query and is required to resolve correlated references
   private final RowResolver             outerRR;
   private final ImmutableMap<String, Integer> outerNameToPosMap;
   private int correlatedId;
@@ -129,7 +131,7 @@ public class RexNodeConverter {
     this(cluster, new ArrayList<InputCtx>(), false);
   }
 
-  //subqueries will need outer querire's row resolver
+  //subqueries will need outer query's row resolver
   public RexNodeConverter(RelOptCluster cluster, RelDataType inpDataType,
                           ImmutableMap<String, Integer> outerNameToPosMap,
       ImmutableMap<String, Integer> nameToPosMap, RowResolver hiveRR, RowResolver outerRR, int offset, boolean flattenExpr, int correlatedId) {
@@ -176,14 +178,12 @@ public class RexNodeConverter {
   }
 
   private RexNode convert(final ExprNodeSubQueryDesc subQueryDesc) throws  SemanticException {
-    if(subQueryDesc.getType() == ExprNodeSubQueryDesc.IN)
-    {
+    if(subQueryDesc.getType() == ExprNodeSubQueryDesc.SubqueryType.IN) {
      /*
       * Check.5.h :: For In and Not In the SubQuery must implicitly or
       * explicitly only contain one select item.
       */
-      if(subQueryDesc.getRexSubQuery().getRowType().getFieldCount() > 1)
-      {
+      if(subQueryDesc.getRexSubQuery().getRowType().getFieldCount() > 1) {
         throw new SemanticException(ErrorMsg.INVALID_SUBQUERY_EXPRESSION.getMsg(
                 "SubQuery can contain only 1 item in Select List."));
       }
@@ -191,23 +191,23 @@ public class RexNodeConverter {
       RexNode rexNodeLhs = convert(subQueryDesc.getSubQueryLhs());
 
       //create RexSubQuery node
-      RexNode rexSubQuery = RexSubQuery.in(subQueryDesc.getRexSubQuery(), ImmutableList.<RexNode>of(rexNodeLhs) );
+      RexNode rexSubQuery = RexSubQuery.in(subQueryDesc.getRexSubQuery(),
+                                              ImmutableList.<RexNode>of(rexNodeLhs) );
       return  rexSubQuery;
     }
-    else if( subQueryDesc.getType() == ExprNodeSubQueryDesc.EXISTS)
-    {
+    else if( subQueryDesc.getType() == ExprNodeSubQueryDesc.SubqueryType.EXISTS) {
       RexNode subQueryNode = RexSubQuery.exists(subQueryDesc.getRexSubQuery());
       return subQueryNode;
     }
     else {
-      assert(true);
-      return null;
+      throw new SemanticException(ErrorMsg.INVALID_SUBQUERY_EXPRESSION.getMsg(
+              "Currently only IN and EXISTS type of subqueries are supported"));
     }
   }
 
   private RexNode convert(final ExprNodeFieldDesc fieldDesc) throws SemanticException {
     RexNode rexNode = convert(fieldDesc.getDesc());
-    if (rexNode instanceof RexCall) {
+    if (rexNode.getType().isStruct()) {
       // regular case of accessing nested field in a column
       return cluster.getRexBuilder().makeFieldAccess(rexNode, fieldDesc.getFieldName(), true);
     } else {
@@ -502,11 +502,12 @@ public class RexNodeConverter {
     // id and type should be retrieved from outerRR
     InputCtx ic = getInputCtx(col);
     if(ic == null) {
-      //we have co related column
-        //build data type from outer rr
-        //make field access passing index
-      //RelDataType colType = TypeConverter.convert(col.getTypeInfo(), cluster.getRexBuilder().getTypeFactory());
+      // we have correlated column, build data type from outer rr
       RelDataType rowType = TypeConverter.getType(cluster, this.outerRR, null);
+      if (this.outerNameToPosMap.get(col.getColumn()) == null) {
+        throw new SemanticException(ErrorMsg.INVALID_COLUMN_NAME.getMsg(col.getColumn()));
+      }
+
       int pos = this.outerNameToPosMap.get(col.getColumn());
       CorrelationId colCorr = new CorrelationId(this.correlatedId);
       RexNode corExpr = cluster.getRexBuilder().makeCorrel(rowType, colCorr);

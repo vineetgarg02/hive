@@ -1,12 +1,13 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to you under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,13 +31,20 @@ import org.apache.calcite.plan.hep.HepRelVertex;
 import org.apache.calcite.rel.BiRel;
 import org.apache.calcite.rel.RelCollation;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.core.*;
+import org.apache.calcite.rel.core.Aggregate;
+import org.apache.calcite.rel.core.AggregateCall;
+import org.apache.calcite.rel.core.Correlate;
+import org.apache.calcite.rel.core.CorrelationId;
+import org.apache.calcite.rel.core.JoinRelType;
+import org.apache.calcite.rel.core.Project;
+import org.apache.calcite.rel.core.RelFactories;
+import org.apache.calcite.rel.core.Sort;
+import org.apache.calcite.rel.core.Values;
 import org.apache.calcite.rel.logical.LogicalAggregate;
 import org.apache.calcite.rel.logical.LogicalCorrelate;
 import org.apache.calcite.rel.logical.LogicalFilter;
 import org.apache.calcite.rel.logical.LogicalJoin;
 import org.apache.calcite.rel.logical.LogicalProject;
-import org.apache.calcite.rel.logical.LogicalSort;
 import org.apache.calcite.rel.metadata.RelMdUtil;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rel.rules.FilterCorrelateRule;
@@ -73,7 +81,11 @@ import org.apache.calcite.util.ReflectiveVisitor;
 import org.apache.calcite.util.Stacks;
 import org.apache.calcite.util.Util;
 import org.apache.calcite.util.mapping.Mappings;
-import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.*;
+import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveAggregate;
+import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveFilter;
+import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveJoin;
+import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveProject;
+import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveSortLimit;
 import org.apache.hadoop.hive.ql.parse.SemanticAnalyzer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -106,11 +118,15 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.logging.Level;
 
 /**
  * NOTE: this whole logic is replicated from Calcite's RelDecorrelator
  *  and is exteneded to make it suitable for HIVE
+ *  TODO:
+ *    We should get rid of this and replace it with Calcite's RelDecorrelator
+ *    once that works with Join, Project etc instead of LogicalJoin, LogicalProject.
+ *    Also we need to have CALCITE-1511 fixed
+ *
  * RelDecorrelator replaces all correlated expressions (corExp) in a relational
  * expression (RelNode) tree with non-correlated expressions that are produced
  * from joining the RelNode that produces the corExp with the RelNode that
@@ -360,6 +376,50 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
    *
    * @param rel Sort to be rewritten
    */
+  public Frame decorrelateRel(HiveSortLimit rel) {
+    //
+    // Rewrite logic:
+    //
+    // 1. change the collations field to reference the new input.
+    //
+
+    // Sort itself should not reference cor vars.
+    assert !cm.mapRefRelToCorVar.containsKey(rel);
+
+    // Sort only references field positions in collations field.
+    // The collations field in the newRel now need to refer to the
+    // new output positions in its input.
+    // Its output does not change the input ordering, so there's no
+    // need to call propagateExpr.
+
+    final RelNode oldInput = rel.getInput();
+    final Frame frame = getInvoke(oldInput, rel);
+    if (frame == null) {
+      // If input has not been rewritten, do not rewrite this rel.
+      return null;
+    }
+    final RelNode newInput = frame.r;
+
+    Mappings.TargetMapping mapping =
+            Mappings.target(
+                    frame.oldToNewOutputPos,
+                    oldInput.getRowType().getFieldCount(),
+                    newInput.getRowType().getFieldCount());
+
+    RelCollation oldCollation = rel.getCollation();
+    RelCollation newCollation = RexUtil.apply(mapping, oldCollation);
+
+    final RelNode newSort = HiveSortLimit.create(newInput, newCollation, rel.offset, rel.fetch);
+
+    // Sort does not change input ordering
+    return register(rel, newSort, frame.oldToNewOutputPos,
+            frame.corVarOutputPos);
+  }
+  /**
+   * Rewrite Sort.
+   *
+   * @param rel Sort to be rewritten
+   */
   public Frame decorrelateRel(Sort rel) {
     //
     // Rewrite logic:
@@ -393,8 +453,7 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
     RelCollation oldCollation = rel.getCollation();
     RelCollation newCollation = RexUtil.apply(mapping, oldCollation);
 
-    final Sort newSort =
-            LogicalSort.create(newInput, newCollation, rel.offset, rel.fetch);
+    final RelNode newSort = HiveSortLimit.create(newInput, newCollation, rel.offset, rel.fetch);
 
     // Sort does not change input ordering
     return register(rel, newSort, frame.oldToNewOutputPos,
@@ -416,7 +475,7 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
    *
    * @param rel Aggregate to rewrite
    */
-  public Frame decorrelateRel(LogicalAggregate rel) {
+  public Frame decorrelateRel(LogicalAggregate rel) throws SemanticException{
     if (rel.getGroupType() != Aggregate.Group.SIMPLE) {
       throw new AssertionError(Bug.CALCITE_461_FIXED);
     }
@@ -507,8 +566,8 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
 
     // This Project will be what the old input maps to,
     // replacing any previous mapping from old input).
-    RelNode newProject =
-            RelOptUtil.createProject(newInput, projects, false);
+
+    RelNode newProject = HiveProject.create(newInput, Pair.left(projects), Pair.right(projects));
 
     // update mappings:
     // oldInput ----> newInput
@@ -697,8 +756,7 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
 
       // This Project will be what the old input maps to,
       // replacing any previous mapping from old input).
-      RelNode newProject =
-              RelOptUtil.createProject(newInput, projects, false);
+      RelNode newProject = HiveProject.create(newInput, Pair.left(projects), Pair.right(projects));
 
       // update mappings:
       // oldInput ----> newInput
@@ -857,7 +915,7 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
    *
    * @param rel the project rel to rewrite
    */
-  public Frame decorrelateRel(LogicalProject rel) {
+  public Frame decorrelateRel(LogicalProject rel) throws SemanticException{
     //
     // Rewrite logic:
     //
@@ -909,8 +967,7 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
       newPos++;
     }
 
-    RelNode newProject =
-            RelOptUtil.createProject(frame.r, projects, false);
+    RelNode newProject = HiveProject.create(frame.r, Pair.left(projects), Pair.right(projects));
 
     return register(rel, newProject, mapOldToNewOutputPos,
             mapCorVarToOutputPos);
@@ -1043,12 +1100,6 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
   private RelNode getCorRel(Correlation corVar) {
     final RelNode r = cm.mapCorVarToCorRel.get(corVar.corr);
 
-    //HIVE could create plans such as scan->filter->project->filter->project
-    // e.g. in case of VIEWS, where filter has subqueries within it
-    // calcite then might push down filter on top of TableScan and just
-    // underneath LogicalCorrelate. In which case appropropriate correlated
-    // producer would be LogicalCorrelate's input's input
-    // example is in subquery_views.q test
     RelNode ret = r.getInput(0);
     return ret;
   }
@@ -1174,10 +1225,9 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
 
     // Replace the filter expression to reference output of the join
     // Map filter to the new filter over join
-    RelNode newFilter =
-            RelOptUtil.createFilter(
-                    frame.r,
-                    decorrelateExpr(rel.getCondition()));
+    RelNode newFilter = new HiveFilter(rel.getCluster(), rel.getTraitSet(), frame.r,
+            decorrelateExpr(rel.getCondition()));
+
 
     // Filter does not change the input ordering.
     // Filter rel does not permute the input.
@@ -1368,10 +1418,8 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
       return null;
     }
 
-    final RelNode newJoin =
-            LogicalJoin.create(leftFrame.r, rightFrame.r,
-                    decorrelateExpr(rel.getCondition()),
-                    ImmutableSet.<CorrelationId>of(), rel.getJoinType());
+    final RelNode newJoin = HiveJoin.getJoin(rel.getCluster(), leftFrame.r,
+            rightFrame.r, decorrelateExpr(rel.getCondition()), rel.getJoinType() );
 
     // Create the mapping between the output of the old correlation rel
     // and the new join rel

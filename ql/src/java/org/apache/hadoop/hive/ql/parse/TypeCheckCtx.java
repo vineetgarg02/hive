@@ -39,13 +39,16 @@ public class TypeCheckCtx implements NodeProcessorCtx {
 
   /**
    * RowResolver of outer query. This is used to resolve co-rrelated columns in Filter
+   * TODO:
+   *  this currently will only be able to resolve reference to parent query's column
+   *  this will not work for references to grand-parent column
    */
   private RowResolver outerRR;
 
   /**
-   * Map from astnode of a subquery to it's logical plan
+   * Map from astnode of a subquery to it's logical plan.
    */
-  private Map<ASTNode, RelNode> subqueryToRelNode ;
+  private Map<ASTNode, RelNode> subqueryToRelNode;
 
   private final boolean useCaching;
 
@@ -62,7 +65,7 @@ public class TypeCheckCtx implements NodeProcessorCtx {
   private String error;
 
   /**
-   * The node that generated the potential typecheck error
+   * The node that generated the potential typecheck error.
    */
   private ASTNode errorSrcNode;
 

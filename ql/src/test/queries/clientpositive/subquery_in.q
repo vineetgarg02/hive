@@ -219,3 +219,4 @@ select * from part where p_size IN (select i from tnull);
 select * from tnull where i IN (select i from tnull);
 
 drop table tempty;
+

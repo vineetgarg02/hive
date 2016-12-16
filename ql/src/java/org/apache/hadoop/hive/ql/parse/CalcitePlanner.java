@@ -2068,9 +2068,6 @@ public class CalcitePlanner extends SemanticAnalyzer {
               doPhase1((ASTNode)next.getChild(1), qbSQ, ctx1, null);
               getMetaData(qbSQ);
               RelNode subQueryRelNode = genLogicalPlan(qbSQ, false,  relToHiveColNameCalcitePosMap.get(srcRel), relToHiveRR.get(srcRel));
-              subqueryId++;
-              RelNode subQueryRelNode = genLogicalPlan(qbSQ, false,  relToHiveColNameCalcitePosMap.get(srcRel),
-                      relToHiveRR.get(srcRel));
               subQueryToRelNode.put(next, subQueryRelNode);
               isSubQuery = true;
               break;

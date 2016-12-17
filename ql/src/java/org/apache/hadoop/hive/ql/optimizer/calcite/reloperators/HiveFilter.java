@@ -117,5 +117,5 @@ public class HiveFilter extends Filter implements HiveRelNode {
     }
     return shuttle.visit(this);
   }
-
 }
+

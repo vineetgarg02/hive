@@ -57,4 +57,9 @@ select * from part_null where p_name IN (select p_name from part where part.p_ty
 
 --mix corr var in more than 3 queries (two reffering to same outer var)
 
+-- NESTED QUERIES
+
+-- both queries are correlated
+explain select * from part_null where p_name IN (select p_name from part where part.p_type = part_null.p_type AND p_brand IN (select p_brand from part pp where part.p_type = pp.p_type));
+
 

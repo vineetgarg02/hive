@@ -182,11 +182,7 @@ public class SubQueryUtils {
       if (r) {
         return root;
       }
-      /*
-       *  Restriction.7.h :: SubQuery predicates can appear only as top level conjuncts.
-       */
-      throw new SemanticException(ErrorMsg.UNSUPPORTED_SUBQUERY_EXPRESSION.getMsg(
-          subQuery, "Only SubQuery expressions that are top level conjuncts are allowed"));
+      return root;
     }
   }
 

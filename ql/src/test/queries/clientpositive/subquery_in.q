@@ -120,6 +120,10 @@ where li.l_linenumber = 1 and
  li.l_orderkey in (select l_orderkey from lineitem where l_shipmode = 'AIR' and l_linenumber = li.l_linenumber)
 ;
 
+-- corr, agg in outer and inner
+explain select sum(l_extendedprice) from lineitem, part where p_partkey = l_partkey and l_quantity IN (select avg(l_quantity) from lineitem where l_partkey = p_partkey);
+select sum(l_extendedprice) from lineitem, part where p_partkey = l_partkey and l_quantity IN (select avg(l_quantity) from lineitem where l_partkey = p_partkey);
+
 
 --where has multiple conjuction
 explain select * from part where p_brand <> 'Brand#14' AND p_size IN (select min(p_size) from part p where p.p_type = part.p_type group by p_type) AND p_size <> 340;

@@ -113,6 +113,15 @@ group by key, value
 having count(*) in (select count(*) from src s1 where s1.key > '9' group by s1.key )
 ;
 
+-- both having and where corr
+explain
+select key, value, count(*)
+from src b
+where b.key in (select key from src where src.value = b.value)
+group by key, value
+having count(*) in (select count(*) from src s1 where s1.key > '9' and s1.value = b.value group by s1.key )
+;
+
 -- non agg, non corr, windowing
 explain
 select p_mfgr, p_name, avg(p_size) 

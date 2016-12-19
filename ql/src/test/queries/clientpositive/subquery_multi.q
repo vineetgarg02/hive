@@ -47,7 +47,12 @@ drop table tnull;
 drop table tempty;:
 drop table part_null;
 
+explain select * from part_null where EXISTS( select p_comment from part where part.p_type = part_null.p_type) AND (EXISTS (select p_name from part where part.p_type = part_null.p_type) OR EXISTS (select p_brand from part where part.p_type = part_null.p_type));
+
+-- EXISTS, OR, corr
+explain select * from part_null where EXISTS (select p_name from part where part.p_type = part_null.p_type) OR EXISTS (select p_brand from part where part.p_type = part_null.p_type);
 --same corr var in more than 3 queries (all reffering to same outer var)
+
 explain select * from part_null where p_name IN (select p_name from part where part.p_type = part_null.p_type) AND p_brand IN (select p_brand from part where part.p_type = part_null.p_type);
 
 -- (subq1) AND (subq2 OR pred)

@@ -79,7 +79,7 @@ public abstract class HiveSubQueryRemoveRule extends RelOptRule{
                             RexUtil.SubQueryFinder.find(filter.getCondition());
                     assert e != null;
                     final RelOptUtil.Logic logic =
-                            LogicVisitor.find(RelOptUtil.Logic.TRUE,
+                            LogicVisitor.find(RelOptUtil.Logic.UNKNOWN_AS_FALSE,
                                     ImmutableList.of(filter.getCondition()), e);
                     builder.push(filter.getInput());
                     final int fieldCount = builder.peek().getRowType().getFieldCount();

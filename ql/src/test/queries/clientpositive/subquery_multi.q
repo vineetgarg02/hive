@@ -17,7 +17,7 @@ CREATE TABLE part_null(
 ROW FORMAT DELIMITED FIELDS TERMINATED BY ","
 ;
 
-LOAD DATA LOCAL INPATH 'data/files/part_tiny_nulls.txt' overwrite into table part_null;
+LOAD DATA LOCAL INPATH '../../data/files/part_tiny_nulls.txt' overwrite into table part_null;
 
 insert into part_null values(78487,NULL,'Manufacturer#6','Brand#52','LARGE BRUSHED BRASS', 23, 'MED BAG',1464.48,'hely blith');
 
@@ -30,18 +30,38 @@ explain select * from part_null where p_name IN (select p_name from part_null) A
 select * from part_null where p_name IN (select p_name from part_null) AND p_brand NOT IN (select p_name from part_null);
 
 -- NOT IN is always true and IN is false for where p_name is NULL, hence should return all but one row
+explain select * from part_null where p_name IN (select p_name from part_null) AND p_brand NOT IN (select p_type from part_null);
 select * from part_null where p_name IN (select p_name from part_null) AND p_brand NOT IN (select p_type from part_null);
 
 -- NOT IN has one NULL value so this whole query should not return any row
-select * from part_null where p_brand IN (select c from tnull) AND p_brand NOT IN (select p_name from part_null);
+explain select * from part_null where p_brand IN (select p_brand from part_null) AND p_brand NOT IN (select p_name from part_null);
+select * from part_null where p_brand IN (select p_brand from part_null) AND p_brand NOT IN (select p_name from part_null);
 
 -- NOT IN is always true irrespective of p_name being null/non-null since inner query is empty
 -- second query is always true so this should return all rows
+explain select * from part_null where p_name NOT IN (select c from tempty) AND p_brand IN (select p_brand from part_null);
 select * from part_null where p_name NOT IN (select c from tempty) AND p_brand IN (select p_brand from part_null);
 
+explain select * from part_null where p_size IN (select p_size from part_null) AND EXISTS (select i from tnull);
+select * from part_null where p_size IN (select p_size from part_null) AND EXISTS (select i from tnull);
+
+explain select * from part_null where p_size IN (select p_size from part_null) AND EXISTS (select c from tnull);
+select * from part_null where p_size IN (select p_size from part_null) AND EXISTS (select c from tempty);
+
+explain select * from part_null where p_size IN (select p_size from part_null) AND NOT EXISTS (select i from tnull);
 select * from part_null where p_size IN (select p_size from part_null) AND NOT EXISTS (select i from tnull);
 
-select * from part_null where p_name NOT IN (select p_name from part_null) AND EXISTS (select i from tnull);
+-- OR
+
+--Both IN are always true so should return all rows
+explain select * from part_null where p_size IN (select p_size from part_null) OR p_brand IN (select p_brand from part_null);
+select * from part_null where p_size IN (select p_size from part_null) OR p_brand IN (select p_brand from part_null);
+
+-- nullability
+explain select * from part_null where p_name IN (select p_name from part_null) OR p_brand IN (select c from tnull);
+select * from part_null where p_name IN (select p_name from part_null) OR p_brand IN (select c from tnull);
+
+select * from part_null where p_name IN (select p_name from part_null) OR p_brand NOT IN (select c from tnull);
 
 drop table tnull;
 drop table tempty;:

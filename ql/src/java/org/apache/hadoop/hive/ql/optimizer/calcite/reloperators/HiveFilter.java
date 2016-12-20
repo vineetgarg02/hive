@@ -18,13 +18,10 @@
 package org.apache.hadoop.hive.ql.optimizer.calcite.reloperators;
 
 import org.apache.calcite.plan.RelOptCluster;
-import org.apache.calcite.plan.RelOptCost;
-import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttle;
 import org.apache.calcite.rel.core.Filter;
-import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexCorrelVariable;
 import org.apache.calcite.rex.RexFieldAccess;
@@ -35,7 +32,7 @@ import org.apache.hadoop.hive.ql.optimizer.calcite.TraitsUtil;
 import org.apache.calcite.rel.core.CorrelationId;
 import java.util.Set;
 import java.util.HashSet;
-
+ 
 public class HiveFilter extends Filter implements HiveRelNode {
 
   public HiveFilter(RelOptCluster cluster, RelTraitSet traits, RelNode child, RexNode condition) {
@@ -50,11 +47,6 @@ public class HiveFilter extends Filter implements HiveRelNode {
 
   @Override
   public void implement(Implementor implementor) {
-  }
-
-  @Override
-  public RelOptCost computeSelfCost(RelOptPlanner planner, RelMetadataQuery mq) {
-    return mq.getNonCumulativeCost(this);
   }
 
   private void findCorrelatedVar(RexNode node, Set<CorrelationId> allVars) {
@@ -117,5 +109,5 @@ public class HiveFilter extends Filter implements HiveRelNode {
     }
     return shuttle.visit(this);
   }
-}
 
+}

@@ -111,9 +111,6 @@ where `b`.`key` not in
   from `default`.`src` `a` 	 	 
   where `b`.`value` = `a`.`value`  and `a`.`key` = `b`.`key` and `a`.`value` > 'val_11'	 	 
   ), tableType:VIRTUAL_VIEW, rewriteEnabled:false)		 
-Warning: Shuffle Join MERGEJOIN[67][tables = [$hdt$_0, $hdt$_1]] in Stage 'Reducer 2' is a cross product
-Warning: Shuffle Join MERGEJOIN[69][tables = [$hdt$_1, $hdt$_2]] in Stage 'Reducer 9' is a cross product
->>>>>>> upstream/master
 PREHOOK: query: explain
 select * 
 from cv2 where cv2.key in (select key from cv2 c where c.key < '11')

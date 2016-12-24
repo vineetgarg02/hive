@@ -103,6 +103,16 @@ select * from part_null where p_name IN ( select p_name from part where part.p_t
 explain select * from part_null where p_name IN (select p_name from part where part.p_type = part_null.p_type) AND p_brand NOT IN (select p_type from part where part.p_size = part_null.p_size);
 select * from part_null where p_name IN (select p_name from part where part.p_type = part_null.p_type) AND p_brand NOT IN (select p_type from part where part.p_size = part_null.p_size);
 
+explain select count(*)
+from src
+where src.key in (select key from src s1 where s1.key > '9') or src.value is not null
+;
+
+select count(*)
+from src
+where src.key in (select key from src s1 where s1.key > '9') or src.value is not null
+;
+
 -- NESTED QUERIES
 -- both queries are correlated
 explain select * from part_null where p_name IN (select p_name from part where part.p_type = part_null.p_type AND p_brand IN (select p_brand from part pp where part.p_type = pp.p_type));

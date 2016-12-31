@@ -87,7 +87,7 @@ public abstract class HiveSubQueryRemoveRule extends RelOptRule{
                     // This will generate in-efficient plan
                     // TODO: get rid of this once CALCITE-1546 is fixed
                     if(filter.getCondition().getKind() == SqlKind.OR ){
-                        preLogic = RelOptUtil.Logic.UNKNOWN_AS_FALSE;
+                        //preLogic = RelOptUtil.Logic.UNKNOWN_AS_FALSE;
                     }
 
                     final RelOptUtil.Logic logic =

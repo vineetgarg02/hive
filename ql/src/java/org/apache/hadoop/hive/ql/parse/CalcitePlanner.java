@@ -2090,6 +2090,8 @@ public class CalcitePlanner extends SemanticAnalyzer {
           List<ASTNode> subQueries = SubQueryUtils.findSubQueries(clonedSearchCond);
           ASTNode subQueryAST = subQueries.get(0);
 
+          SubQueryUtils.rewriteParentQueryWhere(clonedSearchCond, subQueryAST);
+
           QBSubQuery subQuery = SubQueryUtils.buildSubQuery(qb.getId(), sqIdx, subQueryAST,
                   originalSubQueryAST, ctx);
 

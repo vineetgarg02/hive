@@ -61,40 +61,6 @@ select * from part_null where p_name IN (select p_name from part_null) AND NOT E
 explain select * from part_null where p_name IN ( select p_name from part where part.p_type = part_null.p_type) AND p_brand NOT IN (select p_container from part where part.p_type = part_null.p_type AND p_brand IN (select p_brand from part pp where part.p_type = pp.p_type));
 select * from part_null where p_name IN ( select p_name from part where part.p_type = part_null.p_type) AND p_brand NOT IN (select p_container from part where part.p_type = part_null.p_type AND p_brand IN (select p_brand from part pp where part.p_type = pp.p_type));
 
--- exists, corr, OR
-explain select * from part_null where EXISTS( select p_comment from part where part.p_type = part_null.p_type) AND (EXISTS (select p_name from part where part.p_type = part_null.p_type) OR EXISTS (select p_brand from part where part.p_type = part_null.p_type));
-select * from part_null where EXISTS( select p_comment from part where part.p_type = part_null.p_type) AND (EXISTS (select p_name from part where part.p_type = part_null.p_type) OR EXISTS (select p_brand from part where part.p_type = part_null.p_type));
-
-explain select * from part_null where p_comment IN ( select p_comment from part where part.p_type = part_null.p_type) AND (p_name NOT IN (select p_name from part where part.p_type = part_null.p_type) OR p_brand IN (select p_brand from part where part.p_type = part_null.p_type));
-select * from part_null where p_comment IN ( select p_comment from part where part.p_type = part_null.p_type) AND (p_name NOT IN (select p_name from part where part.p_type = part_null.p_type) OR p_brand IN (select p_brand from part where part.p_type = part_null.p_type));
-
-explain select * from part_null where p_brand IN ( select p_brand from part where part.p_type = part_null.p_type) AND (p_name NOT IN (select p_name from part where part.p_type = part_null.p_type) OR EXISTS (select * from tempty));
-select * from part_null where p_brand IN ( select p_brand from part where part.p_type = part_null.p_type) AND (p_name NOT IN (select p_name from part where part.p_type = part_null.p_type) OR EXISTS (select * from tempty));
-
--- OR
-explain select * from part_null where p_name <> 'handpump' OR p_brand NOT IN (select c from tnull);
-select * from part_null where p_name <> 'handpump' OR p_brand NOT IN (select c from tnull);
-
---Both IN are always true so should return all rows
-explain select * from part_null where p_size IN (select p_size from part_null) OR p_brand IN (select p_brand from part_null);
-select * from part_null where p_size IN (select p_size from part_null) OR p_brand IN (select p_brand from part_null);
-
--- nullability
-explain select * from part_null where p_name IN (select p_name from part_null) OR p_brand IN (select c from tnull);
-select * from part_null where p_name IN (select p_name from part_null) OR p_brand IN (select c from tnull);
-
--- OR, not in , uncorr
-explain select * from part_null where p_name IN (select p_name from part_null) OR p_brand NOT IN (select c from tnull);
-select * from part_null where p_name IN (select p_name from part_null) OR p_brand NOT IN (select c from tnull);
-
--- both having and where, corr
-explain select key, value, count(*) from src b where b.key IN (select key from src where src.value = b.value) OR EXISTS (select * from tempty)
-    group by key, value
-    having count(*) in (select count(*) from src s1 where s1.key > '9' and s1.value = b.value group by s1.key ) AND EXISTS(select * from tnull);
-select key, value, count(*) from src b where b.key IN (select key from src where src.value = b.value) OR EXISTS (select * from tempty)
-    group by key, value
-    having count(*) in (select count(*) from src s1 where s1.key > '9' and s1.value = b.value group by s1.key ) AND EXISTS(select * from tnull);
-
 -- one query has multiple corr
 explain select * from part_null where p_name IN ( select p_name from part where part.p_type = part_null.p_type AND part.p_container=part_null.p_container) AND p_brand NOT IN (select p_container from part where part.p_type = part_null.p_type AND p_brand IN (select p_brand from part pp where part.p_type = pp.p_type));
 select * from part_null where p_name IN ( select p_name from part where part.p_type = part_null.p_type AND part.p_container=part_null.p_container) AND p_brand NOT IN (select p_container from part where part.p_type = part_null.p_type AND p_brand IN (select p_brand from part pp where part.p_type = pp.p_type));
@@ -102,16 +68,6 @@ select * from part_null where p_name IN ( select p_name from part where part.p_t
 --diff corr var (all reffering to diff outer var)
 explain select * from part_null where p_name IN (select p_name from part where part.p_type = part_null.p_type) AND p_brand NOT IN (select p_type from part where part.p_size = part_null.p_size);
 select * from part_null where p_name IN (select p_name from part where part.p_type = part_null.p_type) AND p_brand NOT IN (select p_type from part where part.p_size = part_null.p_size);
-
-explain select count(*)
-from src
-where src.key in (select key from src s1 where s1.key > '9') or src.value is not null
-;
-
-select count(*)
-from src
-where src.key in (select key from src s1 where s1.key > '9') or src.value is not null
-;
 
 -- NESTED QUERIES
 -- both queries are correlated
@@ -140,6 +96,10 @@ from src b
 where b.key in (select key from src where src.value = b.value)
 group by key, value
 having count(*) in (select count(*) from src s1 where s1.key > '9' and exists (select * from src s2 where s1.value = s2.value) group by s1.key ) ;
+
+-- subquery pred only refer to parent query column
+explain select * from part where p_name IN (select p_name from part p where part.p_type <> '1');
+select * from part where p_name IN (select p_name from part p where part.p_type <> '1');
 
 drop table tnull;
 drop table tempty;

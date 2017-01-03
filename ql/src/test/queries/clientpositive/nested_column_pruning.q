@@ -1,4 +1,5 @@
 set hive.fetch.task.conversion = none;
+set hive.exec.dynamic.partition.mode = nonstrict;
 
 -- First, create source tables
 DROP TABLE IF EXISTS dummy;
@@ -10,13 +11,15 @@ CREATE TABLE nested_tbl_1 (
   a int,
   s1 struct<f1: boolean, f2: string, f3: struct<f4: int, f5: double>, f6: int>,
   s2 struct<f7: string, f8: struct<f9 : boolean, f10: array<int>, f11: map<string, boolean>>>,
-  s3 struct<f12: array<struct<f13:string, f14:int>>>
+  s3 struct<f12: array<struct<f13:string, f14:int>>>,
+  s4 map<string, struct<f15:int>>
 ) STORED AS PARQUET;
 
 INSERT INTO TABLE nested_tbl_1 SELECT
   1, named_struct('f1', false, 'f2', 'foo', 'f3', named_struct('f4', 4, 'f5', cast(5.0 as double)), 'f6', 4),
   named_struct('f7', 'f7', 'f8', named_struct('f9', true, 'f10', array(10, 11), 'f11', map('key1', true, 'key2', false))),
-  named_struct('f12', array(named_struct('f13', 'foo', 'f14', 14), named_struct('f13', 'bar', 'f14', 28)))
+  named_struct('f12', array(named_struct('f13', 'foo', 'f14', 14), named_struct('f13', 'bar', 'f14', 28))),
+  map('key1', named_struct('f15', 1), 'key2', named_struct('f15', 2))
 FROM dummy;
 
 DROP TABLE IF EXISTS nested_tbl_2;
@@ -25,7 +28,8 @@ CREATE TABLE nested_tbl_2 LIKE nested_tbl_1;
 INSERT INTO TABLE nested_tbl_2 SELECT
   2, named_struct('f1', true, 'f2', 'bar', 'f3', named_struct('f4', 4, 'f5', cast(6.5 as double)), 'f6', 4),
   named_struct('f7', 'f72', 'f8', named_struct('f9', false, 'f10', array(20, 22), 'f11', map('key3', true, 'key4', false))),
-  named_struct('f12', array(named_struct('f13', 'bar', 'f14', 28), named_struct('f13', 'foo', 'f14', 56)))
+  named_struct('f12', array(named_struct('f13', 'bar', 'f14', 28), named_struct('f13', 'foo', 'f14', 56))),
+  map('key3', named_struct('f15', 3), 'key4', named_struct('f15', 4))
 FROM dummy;
 
 -- Testing only select statements
@@ -110,3 +114,34 @@ SELECT t1.s1.f3.f5, t2.s2.f8
 FROM nested_tbl_1 t1 JOIN nested_tbl_1 t2
 ON t1.s1.f3.f4 = t2.s1.f6
 WHERE t2.s2.f8.f9 == TRUE;
+
+-- Testing insert with aliases
+
+DROP TABLE IF EXISTS nested_tbl_3;
+CREATE TABLE nested_tbl_3 (f1 boolean, f2 string) PARTITIONED BY (f3 int) STORED AS PARQUET;
+
+INSERT OVERWRITE TABLE nested_tbl_3 PARTITION(f3)
+SELECT s1.f1 AS f1, S1.f2 AS f2, s1.f6 AS f3
+FROM nested_tbl_1;
+
+SELECT * FROM nested_tbl_3;
+
+-- Testing select struct field from elements in array or map
+
+EXPLAIN
+SELECT count(s1.f6), s3.f12[0].f14
+FROM nested_tbl_1
+GROUP BY s3.f12[0].f14;
+
+SELECT count(s1.f6), s3.f12[0].f14
+FROM nested_tbl_1
+GROUP BY s3.f12[0].f14;
+
+EXPLAIN
+SELECT count(s1.f6), s4['key1'].f15
+FROM nested_tbl_1
+GROUP BY s4['key1'].f15;
+
+SELECT count(s1.f6), s4['key1'].f15
+FROM nested_tbl_1
+GROUP BY s4['key1'].f15;

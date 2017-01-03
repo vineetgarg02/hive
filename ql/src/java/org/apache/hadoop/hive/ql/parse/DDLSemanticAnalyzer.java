@@ -1637,7 +1637,7 @@ public class DDLSemanticAnalyzer extends BaseSemanticAnalyzer {
       if (!((inputFormatClass.equals(RCFileInputFormat.class) ||
           (inputFormatClass.equals(OrcInputFormat.class))))) {
         throw new SemanticException(
-            "Only RCFile and ORCFile Formats are supportted right now.");
+            "Only RCFile and ORCFile Formats are supported right now.");
       }
       mergeDesc.setInputFormatClass(inputFormatClass);
 
@@ -3132,7 +3132,7 @@ public class DDLSemanticAnalyzer extends BaseSemanticAnalyzer {
     return result;
   }
 
-  private static ExprNodeGenericFuncDesc makeBinaryPredicate(
+  public static ExprNodeGenericFuncDesc makeBinaryPredicate(
       String fn, ExprNodeDesc left, ExprNodeDesc right) throws SemanticException {
       return new ExprNodeGenericFuncDesc(TypeInfoFactory.booleanTypeInfo,
           FunctionRegistry.getFunctionInfo(fn).getGenericUDF(), Lists.newArrayList(left, right));

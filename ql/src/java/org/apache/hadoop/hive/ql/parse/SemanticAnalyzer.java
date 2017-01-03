@@ -3046,7 +3046,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
                 ParseDriver.adaptor.addChild(child1, ParseDriver.adaptor.create(
                         HiveParser.Identifier, VirtualColumn.GROUPINGID.getName()));
                 ASTNode child2 = (ASTNode) ParseDriver.adaptor.create(HiveParser.IntegralLiteral,
-                        String.valueOf(IntMath.mod(-i, grpByAstExprs.size())));
+                        String.valueOf(IntMath.mod(-i-1, grpByAstExprs.size())));
                 root.setChild(1, child1);
                 root.addChild(child2);
                 found.setValue(true);
@@ -7174,7 +7174,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     } catch (HiveException e) {
       throw new SemanticException(e.getMessage());
     }
-    LOG.info("Generate an operator pipleline to autogather column stats for table " + tableName
+    LOG.info("Generate an operator pipeline to autogather column stats for table " + tableName
         + " in query " + ctx.getCmd());
     ColumnStatsAutoGatherContext columnStatsAutoGatherContext = null;
     columnStatsAutoGatherContext = new ColumnStatsAutoGatherContext(this, conf, curr, table, partSpec, isInsertInto, ctx);
@@ -8060,18 +8060,6 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
           outputRR.addMappingOnly(nm2[0], nm2[1], newColInfo);
         }
         index[i] = kindex;
-        continue;
-      }
-      int vindex;
-      if (exprBack == null) {
-        vindex = -1;
-      } else if (ExprNodeDescUtils.isConstant(exprBack)) {
-        vindex = reduceValuesBack.indexOf(exprBack);
-      } else {
-        vindex = ExprNodeDescUtils.indexOf(exprBack, reduceValuesBack);
-      }
-      if (vindex >= 0) {
-        index[i] = -vindex - 1;
         continue;
       }
       index[i] = -reduceValues.size() - 1;
@@ -11824,7 +11812,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
         }
       } catch (HiveException e) {
         // should not occur since second parameter to getTableWithQN is false
-        throw new IllegalStateException("Unxpected Exception thrown: " + e.getMessage(), e);
+        throw new IllegalStateException("Unexpected Exception thrown: " + e.getMessage(), e);
       }
     }
 

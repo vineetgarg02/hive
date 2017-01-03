@@ -65,7 +65,7 @@ import static org.apache.parquet.hadoop.metadata.CompressionCodecName.GZIP;
 import static org.apache.parquet.schema.MessageTypeParser.parseMessageType;
 import static org.junit.Assert.assertEquals;
 
-public class TestVectorizedColumnReaderBase {
+public class VectorizedColumnReaderTestBase {
 
   protected final static int nElements = 2500;
   protected final static int UNIQUE_NUM = 10;

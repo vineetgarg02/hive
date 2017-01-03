@@ -24,7 +24,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 
-public class TestVectorizedDictionaryEncodingColumnReader extends TestVectorizedColumnReaderBase {
+public class TestVectorizedDictionaryEncodingColumnReader extends VectorizedColumnReaderTestBase {
   static boolean isDictionaryEncoding = true;
 
   @BeforeClass

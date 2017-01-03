@@ -1712,7 +1712,7 @@ public final class Utilities {
     return -1;
   }
 
-  public static String getNameMessage(Exception e) {
+  public static String getNameMessage(Throwable e) {
     return e.getClass().getName() + "(" + e.getMessage() + ")";
   }
 
@@ -3379,7 +3379,7 @@ public final class Utilities {
       }
     }
     throw new IllegalStateException("Failed to create a temp dir under "
-    + baseDir + " Giving up after " + MAX_ATTEMPS + " attemps");
+    + baseDir + " Giving up after " + MAX_ATTEMPS + " attempts");
 
   }
 

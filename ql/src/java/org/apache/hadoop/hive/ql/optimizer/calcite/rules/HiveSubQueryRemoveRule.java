@@ -80,18 +80,8 @@ public abstract class HiveSubQueryRemoveRule extends RelOptRule{
                             RexUtil.SubQueryFinder.find(filter.getCondition());
                     assert e != null;
 
-                    RelOptUtil.Logic preLogic = RelOptUtil.Logic.TRUE;
-                    // Calcite has a bug in Logic visitor where it determine
-                    // wrong LOGIC for OR with NOT sub-queries. Setting preLogic to UNKNOWN_AS_FALSE
-                    // is a workaround which seems to work
-                    // This will generate in-efficient plan
-                    // TODO: get rid of this once CALCITE-1546 is fixed
-                    if(filter.getCondition().getKind() == SqlKind.OR ){
-                        //preLogic = RelOptUtil.Logic.UNKNOWN_AS_FALSE;
-                    }
-
                     final RelOptUtil.Logic logic =
-                            LogicVisitor.find(preLogic,
+                            LogicVisitor.find(RelOptUtil.Logic.TRUE,
                                     ImmutableList.of(filter.getCondition()), e);
                     builder.push(filter.getInput());
                     final int fieldCount = builder.peek().getRowType().getFieldCount();

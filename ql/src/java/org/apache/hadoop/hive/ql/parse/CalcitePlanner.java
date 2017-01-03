@@ -2077,18 +2077,20 @@ public class CalcitePlanner extends SemanticAnalyzer {
     private void subqueryRestrictionCheck(QB qb, ASTNode searchCond, RelNode srcRel,
                                          boolean forHavingClause, Map<String, RelNode> aliasToRel ) throws SemanticException {
         List<ASTNode> subQueriesInOriginalTree = SubQueryUtils.findSubQueries(searchCond);
-        if (subQueriesInOriginalTree.size() > 0) {
+
+        ASTNode clonedSearchCond = (ASTNode) SubQueryUtils.adaptor.dupTree(searchCond);
+        List<ASTNode> subQueries = SubQueryUtils.findSubQueries(clonedSearchCond);
+        for(int i=0; i<subQueriesInOriginalTree.size(); i++){
+        //if (subQueriesInOriginalTree.size() > 0) {
 
           //we do not care about the transformation or rewriting of AST
           // which following statement does
           // we only care about the restriction checks they perform.
           // We plan to get rid of these restrictions later
           int sqIdx = qb.incrNumSubQueryPredicates();
-          ASTNode originalSubQueryAST = subQueriesInOriginalTree.get(0);
+          ASTNode originalSubQueryAST = subQueriesInOriginalTree.get(i);
 
-          ASTNode clonedSearchCond = (ASTNode) SubQueryUtils.adaptor.dupTree(searchCond);
-          List<ASTNode> subQueries = SubQueryUtils.findSubQueries(clonedSearchCond);
-          ASTNode subQueryAST = subQueries.get(0);
+          ASTNode subQueryAST = subQueries.get(i);
 
           SubQueryUtils.rewriteParentQueryWhere(clonedSearchCond, subQueryAST);
 

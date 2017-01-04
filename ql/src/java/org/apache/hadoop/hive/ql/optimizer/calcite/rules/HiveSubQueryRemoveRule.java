@@ -74,10 +74,12 @@ public abstract class HiveSubQueryRemoveRule extends RelOptRule{
                 public void onMatch(RelOptRuleCall call) {
                     final Filter filter = call.rel(0);
                     //final RelBuilder builder = call.builder();
+                    //TODO: replace HiveSubQRemoveRelBuilder with calcite's once calcite 1.11.0 is released
                     final HiveSubQRemoveRelBuilder builder = new HiveSubQRemoveRelBuilder(null, call.rel(0).getCluster(), null);
                     final RexSubQuery e =
                             RexUtil.SubQueryFinder.find(filter.getCondition());
                     assert e != null;
+
                     final RelOptUtil.Logic logic =
                             LogicVisitor.find(RelOptUtil.Logic.TRUE,
                                     ImmutableList.of(filter.getCondition()), e);

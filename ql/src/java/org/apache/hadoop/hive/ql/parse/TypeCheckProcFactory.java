@@ -1436,21 +1436,21 @@ public class TypeCheckProcFactory {
       // only single subquery expr is supported
       assert(subqueryRel.getRowType().getFieldCount() == 1);
 
-      // figure out subquery expression column's type
-      TypeInfo subExprType = TypeConverter.convert(subqueryRel.getRowType().getFieldList().get(0).getType());
       //For now because subquery is only supported in filter
       // we will create subquery expression of boolean type
       if(isEXISTS) {
-        return new ExprNodeSubQueryDesc(subExprType, subqueryRel,
+        return new ExprNodeSubQueryDesc(TypeInfoFactory.booleanTypeInfo, subqueryRel,
                 ExprNodeSubQueryDesc.SubqueryType.EXISTS);
       }
       else if(isIN) {
         assert(nodeOutputs[2] != null);
         ExprNodeDesc lhs = (ExprNodeDesc)nodeOutputs[2];
-        return new ExprNodeSubQueryDesc(subExprType, subqueryRel,
+        return new ExprNodeSubQueryDesc(TypeInfoFactory.booleanTypeInfo, subqueryRel,
                 ExprNodeSubQueryDesc.SubqueryType.IN, lhs);
       }
       else if(isScalar){
+        // figure out subquery expression column's type
+        TypeInfo subExprType = TypeConverter.convert(subqueryRel.getRowType().getFieldList().get(0).getType());
         return new ExprNodeSubQueryDesc(subExprType, subqueryRel,
                 ExprNodeSubQueryDesc.SubqueryType.SCALAR);
       }

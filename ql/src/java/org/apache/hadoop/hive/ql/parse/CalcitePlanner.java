@@ -2135,7 +2135,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
                                        Map<String, RelNode> aliasToRel) throws SemanticException {
 
         //disallow subqueries which HIVE doesn't currently support
-        subqueryRestritionCheck(qb, node, srcRel, forHavingClause, aliasToRel);
+        //subqueryRestritionCheck(qb, node, srcRel, forHavingClause, aliasToRel);
         Deque<ASTNode> stack = new ArrayDeque<ASTNode>();
         stack.push(node);
 

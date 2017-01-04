@@ -107,7 +107,9 @@ public abstract class HiveSubQueryRemoveRule extends RelOptRule{
                 final RelMetadataQuery mq = RelMetadataQuery.instance();
                 final Boolean unique = mq.areColumnsUnique(builder.peek(),
                         ImmutableBitSet.of());
-                if (unique == null || !unique) {
+                //TODO: need to add check to determine if subquery expression
+                // returns single row/column
+                if (/*unique == null || !unique*/ false) {
                     builder.aggregate(builder.groupKey(),
                             builder.aggregateCall(SqlStdOperatorTable.SINGLE_VALUE, false, null,
                                     null, builder.field(0)));

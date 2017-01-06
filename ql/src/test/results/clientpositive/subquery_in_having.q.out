@@ -2126,7 +2126,7 @@ STAGE PLANS:
                         arguments: _col1
                         name: first_value
                         window function: GenericUDAFFirstValueEvaluator
-                        window frame: PRECEDING(MAX)~
+                        window frame: PRECEDING(MAX)~CURRENT
             Statistics: Num rows: 15 Data size: 3173 Basic stats: COMPLETE Column stats: NONE
             Select Operator
               expressions: first_value_window_0 (type: string)
@@ -3047,32 +3047,6 @@ STAGE PLANS:
             Group By Operator
               keys: _col1 (type: string)
               mode: complete
-        Select Operator
-          expressions: VALUE._col1 (type: string), KEY.reducesinkkey0 (type: string), KEY.reducesinkkey1 (type: int)
-          outputColumnNames: _col1, _col2, _col5
-          Statistics: Num rows: 15 Data size: 3173 Basic stats: COMPLETE Column stats: NONE
-          PTF Operator
-            Function definitions:
-                Input definition
-                  input alias: ptf_0
-                  output shape: _col1: string, _col2: string, _col5: int
-                  type: WINDOWING
-                Windowing table definition
-                  input alias: ptf_1
-                  name: windowingtablefunction
-                  order by: _col5 ASC NULLS FIRST
-                  partition by: _col2
-                  raw input shape:
-                  window functions:
-                      window function definition
-                        alias: first_value_window_0
-                        arguments: _col1
-                        name: first_value
-                        window function: GenericUDAFFirstValueEvaluator
-                        window frame: PRECEDING(MAX)~CURRENT
-            Statistics: Num rows: 15 Data size: 3173 Basic stats: COMPLETE Column stats: NONE
-            Select Operator
-              expressions: first_value_window_0 (type: string)
               outputColumnNames: _col0
               Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
               File Output Operator

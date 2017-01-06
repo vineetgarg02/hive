@@ -1433,8 +1433,6 @@ public class TypeCheckProcFactory {
       }
 
       RelNode subqueryRel = subqueryToRelNode.get(expr);
-      // only single subquery expr is supported
-      assert(subqueryRel.getRowType().getFieldCount() == 1);
 
       //For now because subquery is only supported in filter
       // we will create subquery expression of boolean type
@@ -1449,6 +1447,11 @@ public class TypeCheckProcFactory {
                 ExprNodeSubQueryDesc.SubqueryType.IN, lhs);
       }
       else if(isScalar){
+        // only single subquery expr is supported
+        if(subqueryRel.getRowType().getFieldCount() != 1) {
+            throw new SemanticException(ErrorMsg.INVALID_SUBQUERY_EXPRESSION.getMsg(
+                    "More than one column expression in subquery"));
+        }
         // figure out subquery expression column's type
         TypeInfo subExprType = TypeConverter.convert(subqueryRel.getRowType().getFieldList().get(0).getType());
         return new ExprNodeSubQueryDesc(subExprType, subqueryRel,

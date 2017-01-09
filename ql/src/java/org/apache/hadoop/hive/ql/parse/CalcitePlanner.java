@@ -2081,8 +2081,6 @@ public class CalcitePlanner extends SemanticAnalyzer {
         ASTNode clonedSearchCond = (ASTNode) SubQueryUtils.adaptor.dupTree(searchCond);
         List<ASTNode> subQueries = SubQueryUtils.findSubQueries(clonedSearchCond);
         for(int i=0; i<subQueriesInOriginalTree.size(); i++){
-        //if (subQueriesInOriginalTree.size() > 0) {
-
           //we do not care about the transformation or rewriting of AST
           // which following statement does
           // we only care about the restriction checks they perform.

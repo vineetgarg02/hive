@@ -115,6 +115,17 @@ public abstract class HiveSubQueryRemoveRule extends RelOptRule{
                         ImmutableBitSet.of());
                 //TODO: need to add check to determine if subquery expression
                 // returns single row/column
+                builder.aggregate(builder.groupKey(),
+                        builder.count(false, "c"));
+                if( !variablesSet.isEmpty())
+                {
+                    //builder.join(JoinRelType.INNER, builder.literal(true), variablesSet);
+                    builder.join(JoinRelType.LEFT, builder.literal(true), variablesSet);
+                }
+                else
+                    builder.join(JoinRelType.INNER, builder.literal(true), variablesSet);
+                builder.push(e.rel);
+                offset += 1;
                 if (/*unique == null || !unique*/ false) {
                     builder.aggregate(builder.groupKey(),
                             builder.aggregateCall(SqlStdOperatorTable.SINGLE_VALUE, false, null,

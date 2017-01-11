@@ -25,7 +25,6 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.CorrelationId;
 import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.core.JoinRelType;
-import org.apache.calcite.rel.core.RelFactories;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rex.LogicVisitor;
 import org.apache.calcite.rex.RexInputRef;
@@ -33,8 +32,13 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexShuttle;
 import org.apache.calcite.rex.RexSubQuery;
 import org.apache.calcite.rex.RexUtil;
+import org.apache.calcite.sql.SqlFunctionCategory;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import org.apache.calcite.sql.SqlFunction;
 import org.apache.calcite.sql.SqlKind;
+import org.apache.calcite.sql.type.InferTypes;
+import org.apache.calcite.sql.type.OperandTypes;
+import org.apache.calcite.sql.type.ReturnTypes;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.tools.RelBuilderFactory;
 import org.apache.calcite.util.ImmutableBitSet;
@@ -49,6 +53,8 @@ import java.util.Set;
 import org.apache.hadoop.hive.ql.optimizer.calcite.HiveRelFactories;
 import org.apache.hadoop.hive.ql.optimizer.calcite.HiveSubQRemoveRelBuilder;
 import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveFilter;
+import org.apache.hadoop.hive.ql.optimizer.calcite.translator.SqlFunctionConverter;
+import scala.reflect.internal.Trees;
 
 /**
  * NOTE: this rule is replicated from Calcite's SubqueryRemoveRule
@@ -109,6 +115,9 @@ public abstract class HiveSubQueryRemoveRule extends RelOptRule{
                             HiveSubQRemoveRelBuilder builder, int inputCount, int offset) {
         switch (e.getKind()) {
             case SCALAR_QUERY:
+                final List<RexNode> parentQueryFields = new ArrayList<>();
+                parentQueryFields.addAll(builder.fields());
+
                 builder.push(e.rel);
                 final RelMetadataQuery mq = RelMetadataQuery.instance();
                 final Boolean unique = mq.areColumnsUnique(builder.peek(),
@@ -116,7 +125,12 @@ public abstract class HiveSubQueryRemoveRule extends RelOptRule{
                 //TODO: need to add check to determine if subquery expression
                 // returns single row/column
                 builder.aggregate(builder.groupKey(),
-                        builder.count(false, "c"));
+                        builder.count(false, "cnt"));
+
+                SqlFunction countCheck = new SqlFunction("sq_count_check", SqlKind.OTHER_FUNCTION, ReturnTypes.BIGINT,
+                        InferTypes.RETURN_TYPE, OperandTypes.NUMERIC, SqlFunctionCategory.USER_DEFINED_FUNCTION);
+                builder.project(builder.call(countCheck, builder.field("cnt")));
+
                 if( !variablesSet.isEmpty())
                 {
                     //builder.join(JoinRelType.INNER, builder.literal(true), variablesSet);
@@ -124,8 +138,9 @@ public abstract class HiveSubQueryRemoveRule extends RelOptRule{
                 }
                 else
                     builder.join(JoinRelType.INNER, builder.literal(true), variablesSet);
+                //offset += 1;
+                //builder.project(parentQueryFields);
                 builder.push(e.rel);
-                offset += 1;
                 if (/*unique == null || !unique*/ false) {
                     builder.aggregate(builder.groupKey(),
                             builder.aggregateCall(SqlStdOperatorTable.SINGLE_VALUE, false, null,

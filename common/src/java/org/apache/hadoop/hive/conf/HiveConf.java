@@ -320,7 +320,8 @@ public class HiveConf extends Configuration {
   }
 
   public static final String HIVE_LLAP_DAEMON_SERVICE_PRINCIPAL_NAME = "hive.llap.daemon.service.principal";
-
+  public static final String HIVE_SERVER2_AUTHENTICATION_LDAP_USERMEMBERSHIPKEY_NAME =
+      "hive.server2.authentication.ldap.userMembershipKey";
 
   /**
    * dbVars are the parameters can be set per database. If these
@@ -438,7 +439,7 @@ public class HiveConf extends Configuration {
     REPLDIR("hive.repl.rootdir","/user/hive/repl/",
         "HDFS root dir for all replication dumps."),
     REPLCMENABLED("hive.repl.cm.enabled", false,
-        "Turn on ChangeManager, so delete files will goes to cmrootdir."),
+        "Turn on ChangeManager, so delete files will go to cmrootdir."),
     REPLCMDIR("hive.repl.cmrootdir","/user/hive/cmroot/",
         "Root dir for ChangeManager, used for deleted files."),
     REPLCMRETIAN("hive.repl.cm.retain","24h",
@@ -2519,8 +2520,14 @@ public class HiveConf extends Configuration {
         "LDAP attribute name whose values are unique in this LDAP server.\n" +
         "For example: uid or CN."),
     HIVE_SERVER2_PLAIN_LDAP_GROUPMEMBERSHIP_KEY("hive.server2.authentication.ldap.groupMembershipKey", "member",
-        "LDAP attribute name on the user entry that references a group, the user belongs to.\n" +
+        "LDAP attribute name on the group object that contains the list of distinguished names\n" +
+        "for the user, group, and contact objects that are members of the group.\n" +
         "For example: member, uniqueMember or memberUid"),
+    HIVE_SERVER2_PLAIN_LDAP_USERMEMBERSHIP_KEY(HIVE_SERVER2_AUTHENTICATION_LDAP_USERMEMBERSHIPKEY_NAME, null,
+        "LDAP attribute name on the user object that contains groups of which the user is\n" +
+        "a direct member, except for the primary group, which is represented by the\n" +
+        "primaryGroupId.\n" +
+        "For example: memberOf"),
     HIVE_SERVER2_PLAIN_LDAP_GROUPCLASS_KEY("hive.server2.authentication.ldap.groupClassKey", "groupOfNames",
         "LDAP attribute name on the group entry that is to be used in LDAP group searches.\n" +
         "For example: group, groupOfNames or groupOfUniqueNames."),
@@ -3560,8 +3567,7 @@ public class HiveConf extends Configuration {
       result = !name.equals("spark.app.name");
     } else if (name.startsWith("yarn")) { // YARN property in Spark on YARN mode.
       String sparkMaster = get("spark.master");
-      if (sparkMaster != null &&
-        (sparkMaster.equals("yarn-client") || sparkMaster.equals("yarn-cluster"))) {
+      if (sparkMaster != null && sparkMaster.startsWith("yarn")) {
         result = true;
       }
     } else if (name.startsWith("hive.spark")) { // Remote Spark Context property.

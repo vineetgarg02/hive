@@ -1,3 +1,5 @@
+set hive.mapred.mode=nonstrict;
+
 explain select  a.ca_state state, count(*) cnt
  from customer_address a
      ,customer c

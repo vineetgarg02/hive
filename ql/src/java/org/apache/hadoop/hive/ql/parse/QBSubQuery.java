@@ -876,17 +876,6 @@ public class QBSubQuery implements ISubQueryJoinInfo {
       Conjunct conjunct = conjunctAnalyzer.analyzeConjunct(conjunctAST);
 
       /*
-       *  Restriction.11.m :: A SubQuery predicate that refers to an Outer
-       *  Query column must be a valid Join predicate.
-       */
-      /*if ( conjunct.eitherSideRefersBoth() ) {
-        throw new SemanticException(ErrorMsg.UNSUPPORTED_SUBQUERY_EXPRESSION.getMsg(
-            conjunctAST,
-            "SubQuery expression refers to both Parent and SubQuery expressions and " +
-            "is not a valid join condition."));
-      }*/
-
-      /*
        * Check.12.h :: SubQuery predicates cannot only refer to Outer Query columns.
        */
       if ( conjunct.refersOuterOnly() ) {

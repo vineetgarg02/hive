@@ -227,8 +227,8 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
   private RelNode decorrelate(RelNode root) {
     // first adjust count() expression if any
     HepProgram program = HepProgram.builder()
-            .addRuleInstance(new AdjustProjectForCountAggregateRule(false))
-            .addRuleInstance(new AdjustProjectForCountAggregateRule(true))
+            //.addRuleInstance(new AdjustProjectForCountAggregateRule(false))
+            //.addRuleInstance(new AdjustProjectForCountAggregateRule(true))
             .addRuleInstance(FilterJoinRule.FILTER_ON_JOIN)
             .addRuleInstance(FilterProjectTransposeRule.INSTANCE)
             .addRuleInstance(FilterCorrelateRule.INSTANCE)

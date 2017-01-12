@@ -53,8 +53,6 @@ import java.util.Set;
 import org.apache.hadoop.hive.ql.optimizer.calcite.HiveRelFactories;
 import org.apache.hadoop.hive.ql.optimizer.calcite.HiveSubQRemoveRelBuilder;
 import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveFilter;
-import org.apache.hadoop.hive.ql.optimizer.calcite.translator.SqlFunctionConverter;
-import scala.reflect.internal.Trees;
 
 /**
  * NOTE: this rule is replicated from Calcite's SubqueryRemoveRule

@@ -127,7 +127,11 @@ public abstract class HiveSubQueryRemoveRule extends RelOptRule{
 
                 SqlFunction countCheck = new SqlFunction("sq_count_check", SqlKind.OTHER_FUNCTION, ReturnTypes.BIGINT,
                         InferTypes.RETURN_TYPE, OperandTypes.NUMERIC, SqlFunctionCategory.USER_DEFINED_FUNCTION);
-                builder.project(builder.call(countCheck, builder.field("cnt")));
+                //builder.project(builder.call(countCheck, builder.field("cnt")));
+
+                builder.filter(builder.call(SqlStdOperatorTable.LESS_THAN_OR_EQUAL,
+                        builder.call(countCheck, builder.field("cnt")),
+                        builder.literal(1)));
 
                 if( !variablesSet.isEmpty())
                 {
@@ -145,6 +149,7 @@ public abstract class HiveSubQueryRemoveRule extends RelOptRule{
                                     null, builder.field(0)));
                 }
                 builder.join(JoinRelType.LEFT, builder.literal(true), variablesSet);
+                offset++;
                 return field(builder, inputCount, offset);
 
             case IN:

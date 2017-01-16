@@ -104,13 +104,12 @@ explain select p_partkey from part where p_name like (select max(p.p_name) from 
 select p_partkey from part where p_name like (select max(p.p_name) from part p left outer join part pp on p.p_type = pp.p_type where pp.p_size = part.p_size);
 
 -- mix of NOT IN and scalar
-explain select * from part_null where p_name NOT LIKE (select min(p_name) from part_null) AND p_brand NOT IN (select p_name from part_null);
-select * from part_null where p_name NOT LIKE (select min(p_name) from part_null) AND p_brand NOT IN (select p_name from part_null);
+explain select * from part_null where p_name NOT LIKE (select min(p_name) from part_null) AND p_brand NOT IN (select p_name from part);
+select * from part_null where p_name NOT LIKE (select min(p_name) from part_null) AND p_brand NOT IN (select p_name from part);
 
--- scalar, IN and scalar corr
-explain select * from part_null where p_name NOT LIKE (select min(p_name) from part_null) AND p_brand NOT IN (select p_name from part_null) AND p_size <> (select count(p_size) from part where part.p_type > part_null.p_type);
-select * from part_null where p_name NOT LIKE (select min(p_name) from part_null) AND p_brand NOT IN (select p_name from part_null) AND p_size <> (select count(p_size) from part where part.p_type > part_null.p_type);
-
+-- mix of NOT IN and corr scalar
+explain select * from part_null where p_brand NOT IN (select p_name from part) AND p_name NOT LIKE (select min(p_name) from part_null pp where part_null.p_type = pp.p_type);
+select * from part_null where p_brand NOT IN (select p_name from part) AND p_name NOT LIKE (select min(p_name) from part_null pp where part_null.p_type = pp.p_type);
 
 -- non corr, with join in parent query
 explain select p.p_partkey, li.l_suppkey 
@@ -138,8 +137,8 @@ explain select sum(l_extendedprice) from lineitem, part where p_partkey = l_part
 select sum(l_extendedprice) from lineitem, part where p_partkey = l_partkey and l_quantity > (select avg(l_quantity) from lineitem where l_partkey = p_partkey);
 
 -- nested with scalar
--- explain select * from part_null where p_name IN (select p_name from part where part.p_type = part_null.p_type AND p_brand NOT LIKE (select min(p_brand) from part pp where part.p_type = pp.p_type));
--- select * from part_null where p_name IN (select p_name from part where part.p_type = part_null.p_type AND p_brand NOT LIKE (select min(p_brand) from part pp where part.p_type = pp.p_type));
+explain select * from part_null where p_name IN (select p_name from part where part.p_type = part_null.p_type AND p_brand NOT LIKE (select min(p_brand) from part pp where part.p_type = pp.p_type));
+select * from part_null where p_name IN (select p_name from part where part.p_type = part_null.p_type AND p_brand NOT LIKE (select min(p_brand) from part pp where part.p_type = pp.p_type));
 
 drop table tnull;
 drop table part_null;

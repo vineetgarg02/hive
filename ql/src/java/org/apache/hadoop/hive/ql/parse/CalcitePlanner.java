@@ -135,16 +135,8 @@ import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.ql.metadata.VirtualColumn;
-import org.apache.hadoop.hive.ql.optimizer.calcite.CalciteSemanticException;
+import org.apache.hadoop.hive.ql.optimizer.calcite.*;
 import org.apache.hadoop.hive.ql.optimizer.calcite.CalciteSemanticException.UnsupportedFeature;
-import org.apache.hadoop.hive.ql.optimizer.calcite.HiveCalciteUtil;
-import org.apache.hadoop.hive.ql.optimizer.calcite.HiveDefaultRelMetadataProvider;
-import org.apache.hadoop.hive.ql.optimizer.calcite.HivePlannerContext;
-import org.apache.hadoop.hive.ql.optimizer.calcite.HiveRelFactories;
-import org.apache.hadoop.hive.ql.optimizer.calcite.HiveRexExecutorImpl;
-import org.apache.hadoop.hive.ql.optimizer.calcite.HiveTypeSystemImpl;
-import org.apache.hadoop.hive.ql.optimizer.calcite.RelOptHiveTable;
-import org.apache.hadoop.hive.ql.optimizer.calcite.TraitsUtil;
 import org.apache.hadoop.hive.ql.optimizer.calcite.cost.HiveAlgorithmsConf;
 import org.apache.hadoop.hive.ql.optimizer.calcite.cost.HiveVolcanoPlanner;
 import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveAggregate;
@@ -423,13 +415,16 @@ public class CalcitePlanner extends SemanticAnalyzer {
               this.ctx.setCboInfo("Plan not optimized by CBO.");
             }
           }
-          if (!conf.getBoolVar(ConfVars.HIVE_IN_TEST) || isMissingStats
-              || e instanceof CalciteSemanticException) {
-            reAnalyzeAST = true;
+          if( e instanceof CalciteSubquerySemanticException) {
+            throw new SemanticException(e);
+          }
+          else if (!conf.getBoolVar(ConfVars.HIVE_IN_TEST) || isMissingStats
+              || e instanceof CalciteSemanticException ) {
+              reAnalyzeAST = true;
           } else if (e instanceof SemanticException) {
             // although, its likely to be a valid exception, we will retry
             // with cbo off anyway.
-            reAnalyzeAST = true;
+              reAnalyzeAST = true;
           } else if (e instanceof RuntimeException) {
             throw (RuntimeException) e;
           } else {
@@ -2260,6 +2255,29 @@ public class CalcitePlanner extends SemanticAnalyzer {
       return filterRel;
     }
 
+    private boolean topLevelConjunctCheck(ASTNode searchCond, boolean [] orEncountered, int [] subqueryCount) {
+      if( searchCond.getType() == HiveParser.KW_OR) {
+        orEncountered[0] = true;
+        if(subqueryCount[0] > 1) {
+          return false;
+        }
+      }
+      if( searchCond.getType() == HiveParser.TOK_SUBQUERY_EXPR) {
+        subqueryCount[0] = subqueryCount[0] + 1;
+        if(subqueryCount[0] > 1 && orEncountered[0]) {
+          return false;
+        }
+        return true;
+      }
+      for(int i=0; i<searchCond.getChildCount(); i++){
+          boolean validSubQuery = topLevelConjunctCheck((ASTNode)searchCond.getChild(i), orEncountered, subqueryCount);
+          if(!validSubQuery) {
+            return false;
+          }
+      }
+      return true;
+    }
+
     private void subqueryRestrictionCheck(QB qb, ASTNode searchCond, RelNode srcRel,
                                          boolean forHavingClause, Map<String, RelNode> aliasToRel ) throws SemanticException {
         List<ASTNode> subQueriesInOriginalTree = SubQueryUtils.findSubQueries(searchCond);
@@ -2275,7 +2293,18 @@ public class CalcitePlanner extends SemanticAnalyzer {
           ASTNode originalSubQueryAST = subQueriesInOriginalTree.get(i);
 
           ASTNode subQueryAST = subQueries.get(i);
-          SubQueryUtils.rewriteParentQueryWhere(clonedSearchCond, subQueryAST);
+          //SubQueryUtils.rewriteParentQueryWhere(clonedSearchCond, subQueryAST);
+          boolean [] orInSubquery = {false};
+          int [] subqueryCount = {0};
+          if(!topLevelConjunctCheck(clonedSearchCond, orInSubquery, subqueryCount)){
+          /*
+           *  Restriction.7.h :: SubQuery predicates can appear only as top level conjuncts.
+           */
+
+            throw new CalciteSubquerySemanticException(ErrorMsg.UNSUPPORTED_SUBQUERY_EXPRESSION.getMsg(
+                    subQueryAST, "Only SubQuery expressions that are top level conjuncts are allowed"));
+
+          }
 
           QBSubQuery subQuery = SubQueryUtils.buildSubQuery(qb.getId(), sqIdx, subQueryAST,
                   originalSubQueryAST, ctx);
@@ -2297,7 +2326,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
                                        Map<String, RelNode> aliasToRel) throws SemanticException {
 
         //disallow subqueries which HIVE doesn't currently support
-        //subqueryRestritionCheck(qb, node, srcRel, forHavingClause, aliasToRel);
+        subqueryRestrictionCheck(qb, node, srcRel, forHavingClause, aliasToRel);
         Deque<ASTNode> stack = new ArrayDeque<ASTNode>();
         stack.push(node);
 

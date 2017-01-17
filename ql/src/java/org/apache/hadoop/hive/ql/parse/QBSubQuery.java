@@ -29,6 +29,7 @@ import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.exec.ColumnInfo;
 import org.apache.hadoop.hive.ql.lib.Node;
 import org.apache.hadoop.hive.ql.lib.NodeProcessor;
+import org.apache.hadoop.hive.ql.optimizer.calcite.CalciteSubquerySemanticException;
 import org.apache.hadoop.hive.ql.parse.SubQueryDiagnostic.QBSubQueryRewrite;
 import org.apache.hadoop.hive.ql.parse.SubQueryUtils.ISubQueryJoinInfo;
 import org.apache.hadoop.hive.ql.parse.TypeCheckProcFactory.DefaultExprProcessor;
@@ -43,9 +44,14 @@ public class QBSubQuery implements ISubQueryJoinInfo {
     EXISTS,
     NOT_EXISTS,
     IN,
-    NOT_IN;
+    NOT_IN,
+    SCALAR;
 
     public static SubQueryType get(ASTNode opNode) throws SemanticException {
+      if(opNode == null) {
+        return SCALAR;
+      }
+
       switch(opNode.getType()) {
       case HiveParser.KW_EXISTS:
         return EXISTS;
@@ -548,29 +554,6 @@ public class QBSubQuery implements ISubQueryJoinInfo {
      * Specification doc for details.
      * Similarly a not exists on a SubQuery with a implied GBY will always return false.
      */
-    boolean noImplicityGby = true;
-    if ( insertClause.getChild(1).getChildCount() > 3 &&
-            insertClause.getChild(1).getChild(3).getType() == HiveParser.TOK_GROUPBY ) {
-      if((ASTNode) insertClause.getChild(1).getChild(3) != null){
-        noImplicityGby = false;
-      }
-    }
-    if ( operator.getType() == SubQueryType.EXISTS  &&
-            hasAggreateExprs &&
-            noImplicityGby) {
-      throw new SemanticException(ErrorMsg.INVALID_SUBQUERY_EXPRESSION.getMsg(
-              subQueryAST,
-              "An Exists predicate on SubQuery with implicit Aggregation(no Group By clause) " +
-                      "cannot be rewritten. (predicate will always return true)."));
-    }
-    if ( operator.getType() == SubQueryType.NOT_EXISTS  &&
-            hasAggreateExprs &&
-            noImplicityGby) {
-      throw new SemanticException(ErrorMsg.INVALID_SUBQUERY_EXPRESSION.getMsg(
-              subQueryAST,
-              "A Not Exists predicate on SubQuery with implicit Aggregation(no Group By clause) " +
-                      "cannot be rewritten. (predicate will always return false)."));
-    }
 
     ASTNode whereClause = SubQueryUtils.subQueryWhere(insertClause);
 
@@ -594,11 +577,26 @@ public class QBSubQuery implements ISubQueryJoinInfo {
       }
     }
 
+    boolean noImplicityGby = true;
+    if ( insertClause.getChild(1).getChildCount() > 3 &&
+            insertClause.getChild(1).getChild(3).getType() == HiveParser.TOK_GROUPBY ) {
+      if((ASTNode) insertClause.getChild(1).getChild(3) != null){
+        noImplicityGby = false;
+      }
+    }
+    if ( hasAggreateExprs &&
+            noImplicityGby && hasCorrelation) {
+      throw new CalciteSubquerySemanticException(ErrorMsg.INVALID_SUBQUERY_EXPRESSION.getMsg(
+              subQueryAST,
+              "A predicate on SubQuery with implicit Aggregation(no Group By clause) " +
+                      "cannot be rewritten. (predicate will always return true)."));
+    }
+
     /*
      * Restriction.14.h :: Correlated Sub Queries cannot contain Windowing clauses.
      */
     if (  hasWindowing && hasCorrelation) {
-      throw new SemanticException(ErrorMsg.UNSUPPORTED_SUBQUERY_EXPRESSION.getMsg(
+      throw new CalciteSubquerySemanticException(ErrorMsg.UNSUPPORTED_SUBQUERY_EXPRESSION.getMsg(
               subQueryAST, "Correlated Sub Queries cannot contain Windowing clauses."));
     }
   }

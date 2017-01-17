@@ -127,8 +127,9 @@ public abstract class HiveSubQueryRemoveRule extends RelOptRule{
 
                 SqlFunction countCheck = new SqlFunction("sq_count_check", SqlKind.OTHER_FUNCTION, ReturnTypes.BIGINT,
                         InferTypes.RETURN_TYPE, OperandTypes.NUMERIC, SqlFunctionCategory.USER_DEFINED_FUNCTION);
-                //builder.project(builder.call(countCheck, builder.field("cnt")));
 
+                // we create FILTER (sq_count_check(count()) <= 1) instead of PROJECT because RelFieldTrimmer
+                //  ends up getting rid of Project since it is not used further up the tree
                 builder.filter(builder.call(SqlStdOperatorTable.LESS_THAN_OR_EQUAL,
                         builder.call(countCheck, builder.field("cnt")),
                         builder.literal(1)));
@@ -140,14 +141,7 @@ public abstract class HiveSubQueryRemoveRule extends RelOptRule{
                 }
                 else
                     builder.join(JoinRelType.INNER, builder.literal(true), variablesSet);
-                //offset += 1;
-                //builder.project(parentQueryFields);
                 builder.push(e.rel);
-                if (/*unique == null || !unique*/ false) {
-                    builder.aggregate(builder.groupKey(),
-                            builder.aggregateCall(SqlStdOperatorTable.SINGLE_VALUE, false, null,
-                                    null, builder.field(0)));
-                }
                 builder.join(JoinRelType.LEFT, builder.literal(true), variablesSet);
                 offset++;
                 return field(builder, inputCount, offset);

@@ -60,6 +60,7 @@ import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.exec.FunctionRegistry;
 import org.apache.hadoop.hive.ql.optimizer.calcite.CalciteSemanticException;
 import org.apache.hadoop.hive.ql.optimizer.calcite.CalciteSemanticException.UnsupportedFeature;
+import org.apache.hadoop.hive.ql.optimizer.calcite.CalciteSubquerySemanticException;
 import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveExtractDate;
 import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveFloorDate;
 import org.apache.hadoop.hive.ql.parse.ParseUtils;
@@ -184,7 +185,7 @@ public class RexNodeConverter {
       * explicitly only contain one select item.
       */
       if(subQueryDesc.getRexSubQuery().getRowType().getFieldCount() > 1) {
-        throw new SemanticException(ErrorMsg.INVALID_SUBQUERY_EXPRESSION.getMsg(
+        throw new CalciteSubquerySemanticException(ErrorMsg.INVALID_SUBQUERY_EXPRESSION.getMsg(
                 "SubQuery can contain only 1 item in Select List."));
       }
       //create RexNode for LHS
@@ -201,7 +202,7 @@ public class RexNodeConverter {
     }
     else if( subQueryDesc.getType() == ExprNodeSubQueryDesc.SubqueryType.SCALAR){
       if(subQueryDesc.getRexSubQuery().getRowType().getFieldCount() > 1) {
-        throw new SemanticException(ErrorMsg.INVALID_SUBQUERY_EXPRESSION.getMsg(
+        throw new CalciteSubquerySemanticException(ErrorMsg.INVALID_SUBQUERY_EXPRESSION.getMsg(
                 "SubQuery can contain only 1 item in Select List."));
       }
       //create RexSubQuery node
@@ -210,7 +211,7 @@ public class RexNodeConverter {
     }
 
     else {
-      throw new SemanticException(ErrorMsg.INVALID_SUBQUERY_EXPRESSION.getMsg(
+      throw new CalciteSubquerySemanticException(ErrorMsg.INVALID_SUBQUERY_EXPRESSION.getMsg(
               "Invalid subquery"));
     }
   }

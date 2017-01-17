@@ -206,8 +206,18 @@ explain select p_partkey from
 select p_partkey from 
 	(select p_size, p_partkey from part where p_name in (select p.p_name from part p left outer join part pp on p.p_type = pp.p_type where pp.p_size = part.p_size)) subq;
 
+create table t(i int);
+insert into t values(1);
+insert into t values(0);
 
 create table tempty(i int);
+
+-- uncorr sub with aggregate which produces result irrespective of zero rows
+explain select * from t where i IN (select count(*) from tempty);
+select * from t where i IN (select count(*) from tempty);
+
+drop table t;
+
 create table tnull(i int);
 insert into tnull values(NULL) , (NULL);
 

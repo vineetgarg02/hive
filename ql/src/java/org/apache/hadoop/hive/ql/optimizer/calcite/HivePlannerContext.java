@@ -18,17 +18,21 @@
 package org.apache.hadoop.hive.ql.optimizer.calcite;
 
 import org.apache.calcite.plan.Context;
+import org.apache.calcite.rel.RelNode;
 import org.apache.hadoop.hive.ql.optimizer.calcite.cost.HiveAlgorithmsConf;
 import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveRulesRegistry;
+import java.util.Set;
 
 
 public class HivePlannerContext implements Context {
   private HiveAlgorithmsConf algoConfig;
   private HiveRulesRegistry registry;
+  private Set<RelNode> corrScalarRexSQWithAgg;
 
-  public HivePlannerContext(HiveAlgorithmsConf algoConfig, HiveRulesRegistry registry) {
+  public HivePlannerContext(HiveAlgorithmsConf algoConfig, HiveRulesRegistry registry, Set<RelNode> corrScalarRexSQWithAgg) {
     this.algoConfig = algoConfig;
     this.registry = registry;
+    this.corrScalarRexSQWithAgg = corrScalarRexSQWithAgg;
   }
 
   public <T> T unwrap(Class<T> clazz) {
@@ -37,6 +41,9 @@ public class HivePlannerContext implements Context {
     }
     if (clazz.isInstance(registry)) {
       return clazz.cast(registry);
+    }
+    if(clazz.isInstance(corrScalarRexSQWithAgg)) {
+      return clazz.cast(corrScalarRexSQWithAgg);
     }
     return null;
   }

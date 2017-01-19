@@ -71,10 +71,6 @@ select count(*) as c from part as e where p_size + 100 < (select max(p_partkey) 
 explain select * from part where p_size > (select avg(p_size) from part_null where part_null.p_type = part.p_type);
 select * from part where p_size > (select avg(p_size) from part_null where part_null.p_type = part.p_type);
 
--- corr, non-equi corr predicate
-explain select * from part where p_size > (select avg(p_size) from part_null where part_null.p_type > part.p_type);
-select * from part where p_size > (select avg(p_size) from part_null where part_null.p_type > part.p_type);
-
 -- mix of corr and uncorr
 explain select * from part where p_size BETWEEN (select min(p_size) from part_null where part_null.p_type = part.p_type) AND (select max(p_size) from part_null);
 select * from part where p_size BETWEEN (select min(p_size) from part_null where part_null.p_type = part.p_type) AND (select max(p_size) from part_null);
@@ -84,8 +80,8 @@ explain select * from part where p_size >= (select min(p_size) from part_null wh
 select * from part where p_size >= (select min(p_size) from part_null where part_null.p_type = part.p_type) AND p_retailprice <= (select max(p_retailprice) from part_null);
 
 -- mix of scalar and IN corr 
-explain select * from part where p_brand <> (select p_brand from part order by p_brand limit 1) AND p_size IN (select min(p_size) from part p where p.p_type = part.p_type group by p_type) AND p_size <> 340;
-select * from part where p_brand <> (select p_brand from part order by p_brand limit 1) AND p_size IN (select min(p_size) from part p where p.p_type = part.p_type group by p_type) AND p_size <> 340;
+explain select * from part where p_brand <> (select min(p_brand) from part ) AND p_size IN (select (p_size) from part p where p.p_type = part.p_type ) AND p_size <> 340;
+select * from part where p_brand <> (select min(p_brand) from part ) AND p_size IN (select (p_size) from part p where p.p_type = part.p_type ) AND p_size <> 340;
 
 -- multiple corr var with scalar query
 explain select * from part where p_size <> (select count(p_name) from part p where p.p_size = part.p_size AND part.p_partkey= p.p_partkey );
@@ -127,11 +123,12 @@ li.l_orderkey <> (select min(l_orderkey) from lineitem where l_shipmode = 'AIR' 
 explain select p.p_partkey, li.l_suppkey 
 from (select distinct l_partkey as p_partkey from lineitem) p join lineitem li on p.p_partkey = li.l_partkey 
 where li.l_linenumber = 1 and
- li.l_orderkey <> (select min(l_orderkey) from lineitem where l_shipmode = 'AIR' and l_linenumber <> li.l_linenumber);
+ li.l_orderkey <> (select min(l_orderkey) from lineitem where l_shipmode = 'AIR' and l_linenumber = li.l_linenumber);
 select p.p_partkey, li.l_suppkey 
 from (select distinct l_partkey as p_partkey from lineitem) p join lineitem li on p.p_partkey = li.l_partkey 
 where li.l_linenumber = 1 and
-li.l_orderkey <> (select min(l_orderkey) from lineitem where l_shipmode = 'AIR' and l_linenumber <> li.l_linenumber);
+li.l_orderkey <> (select min(l_orderkey) from lineitem where l_shipmode = 'AIR' and l_linenumber = li.l_linenumber);
+
 -- corr, aggregate in outer
 explain select sum(l_extendedprice) from lineitem, part where p_partkey = l_partkey and l_quantity > (select avg(l_quantity) from lineitem where l_partkey = p_partkey);
 select sum(l_extendedprice) from lineitem, part where p_partkey = l_partkey and l_quantity > (select avg(l_quantity) from lineitem where l_partkey = p_partkey);
@@ -143,3 +140,38 @@ select * from part_null where p_name IN (select p_name from part where part.p_ty
 drop table tnull;
 drop table part_null;
 drop table tempty;
+
+
+create table EMPS(EMPNO int,NAME string,DEPTNO int,GENDER string,CITY string,EMPID int,AGE int,SLACKER boolean,MANAGER boolean,JOINEDAT date);
+
+insert into EMPS values (100,'Fred',10,NULL,NULL,30,25,true,false,'1996-08-03');
+insert into EMPS values (110,'Eric',20,'M','San Francisco',3,80,NULL,false,'2001-01-01') ;
+insert into EMPS values (110,'John',40,'M','Vancouver',2,NULL,false,true,'2002-05-03');
+insert into EMPS values (120,'Wilma',20,'F',NULL,1,5,NULL,true,'2005-09-07');
+insert into EMPS values (130,'Alice',40,'F','Vancouver',2,NULL,false,true,'2007-01-01');
+
+create table DEPTS(deptno int, name string);
+insert into DEPTS values( 10,'Sales');
+insert into DEPTS values( 20,'Marketing');
+insert into DEPTS values( 30,'Accounts');
+
+-- corr, scalar, with count aggregate
+explain select * from emps where deptno <> (select count(deptno) from depts where depts.name = emps.name);
+select * from emps where deptno <> (select count(deptno) from depts where depts.name = emps.name);
+
+explain select * from emps where name > (select min(name) from depts where depts.deptno=emps.deptno);
+select * from emps where name > (select min(name) from depts where depts.deptno=emps.deptno);
+
+-- corr, scalar multiple subq with count aggregate
+explain select * from emps where deptno <> (select count(deptno) from depts where depts.name = emps.name) and empno > (select count(name) from depts where depts.deptno = emps.deptno);
+select * from emps where deptno <> (select count(deptno) from depts where depts.name = emps.name) and empno > (select count(name) from depts where depts.deptno = emps.deptno);
+
+-- mix of corr, uncorr with aggregate
+explain select * from emps where deptno <> (select sum(deptno) from depts where depts.name = emps.name) and empno > (select count(name) from depts);
+select * from emps where deptno <> (select count(deptno) from depts where depts.name = emps.name) and empno > (select count(name) from depts);
+
+drop table DEPTS;
+drop table EMPS;
+
+
+

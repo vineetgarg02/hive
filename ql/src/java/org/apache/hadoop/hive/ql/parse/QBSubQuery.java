@@ -511,7 +511,8 @@ public class QBSubQuery implements ISubQueryJoinInfo {
 
   void subqueryRestrictionsCheck(RowResolver parentQueryRR,
                                  boolean forHavingClause,
-                                 String outerQueryAlias)
+                                 String outerQueryAlias,
+                                 boolean[] isCorrScalarAgg)
           throws SemanticException {
     ASTNode insertClause = getChildFromSubqueryAST("Insert", HiveParser.TOK_INSERT);
 
@@ -546,14 +547,7 @@ public class QBSubQuery implements ISubQueryJoinInfo {
       hasAggreateExprs = hasAggreateExprs | ( r == 1 );
     }
 
-    /*
-     * Restriction.13.m :: In the case of an implied Group By on a
-     * correlated SubQuery, the SubQuery always returns 1 row.
-     * An exists on a SubQuery with an implied GBy will always return true.
-     * Whereas Algebraically transforming to a Join may not return true. See
-     * Specification doc for details.
-     * Similarly a not exists on a SubQuery with a implied GBY will always return false.
-     */
+
 
     ASTNode whereClause = SubQueryUtils.subQueryWhere(insertClause);
 
@@ -566,17 +560,18 @@ public class QBSubQuery implements ISubQueryJoinInfo {
 
     ConjunctAnalyzer conjunctAnalyzer = new ConjunctAnalyzer(parentQueryRR,
             forHavingClause, outerQueryAlias);
-    ASTNode sqNewSearchCond = null;
 
     boolean hasCorrelation = false;
+    boolean hasNonEquiJoinPred = false;
     for(ASTNode conjunctAST : conjuncts) {
       Conjunct conjunct = conjunctAnalyzer.analyzeConjunct(conjunctAST);
       if(conjunct.isCorrelated()){
        hasCorrelation = true;
-       break;
+      }
+      if ( conjunct.eitherSideRefersBoth() ) {
+        hasNonEquiJoinPred = true;
       }
     }
-
     boolean noImplicityGby = true;
     if ( insertClause.getChild(1).getChildCount() > 3 &&
             insertClause.getChild(1).getChild(3).getType() == HiveParser.TOK_GROUPBY ) {
@@ -584,13 +579,37 @@ public class QBSubQuery implements ISubQueryJoinInfo {
         noImplicityGby = false;
       }
     }
-    if ( hasAggreateExprs &&
-            noImplicityGby && hasCorrelation) {
-      throw new CalciteSubquerySemanticException(ErrorMsg.INVALID_SUBQUERY_EXPRESSION.getMsg(
-              subQueryAST,
-              "A predicate on SubQuery with implicit Aggregation(no Group By clause) " +
-                      "cannot be rewritten. (predicate will always return true)."));
-    }
+    /*
+     * Restriction.13.m :: In the case of an implied Group By on a
+     * correlated SubQuery, the SubQuery always returns 1 row.
+     * An exists on a SubQuery with an implied GBy will always return true.
+     * Whereas Algebraically transforming to a Join may not return true. See
+     * Specification doc for details.
+     * Similarly a not exists on a SubQuery with a implied GBY will always return false.
+     */
+      if (hasAggreateExprs &&
+              noImplicityGby ) {
+
+        if( hasCorrelation && (operator.getType() == SubQueryType.EXISTS
+                || operator.getType() == SubQueryType.NOT_EXISTS
+                || operator.getType() == SubQueryType.IN
+                || operator.getType() == SubQueryType.NOT_IN)) {
+          throw new CalciteSubquerySemanticException(ErrorMsg.INVALID_SUBQUERY_EXPRESSION.getMsg(
+                subQueryAST,
+                "A predicate on EXISTS/NOT EXISTS/IN/NOT IN SubQuery with implicit Aggregation(no Group By clause) " +
+                        "cannot be rewritten."));
+        }
+        else if(operator.getType() == SubQueryType.SCALAR && hasNonEquiJoinPred) {
+          // throw an error if predicates are not equal
+            throw new CalciteSubquerySemanticException(ErrorMsg.INVALID_SUBQUERY_EXPRESSION.getMsg(
+                    subQueryAST,
+                    "Scalar subqueries with aggregate cannot have non-equi join predicate"));
+        }
+        else if(operator.getType() == SubQueryType.SCALAR && hasCorrelation) {
+            isCorrScalarAgg[0] = true;
+        }
+
+      }
 
     /*
      * Restriction.14.h :: Correlated Sub Queries cannot contain Windowing clauses.

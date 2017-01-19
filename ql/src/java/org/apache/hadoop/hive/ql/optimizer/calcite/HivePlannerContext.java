@@ -32,6 +32,9 @@ public class HivePlannerContext implements Context {
   public HivePlannerContext(HiveAlgorithmsConf algoConfig, HiveRulesRegistry registry, Set<RelNode> corrScalarRexSQWithAgg) {
     this.algoConfig = algoConfig;
     this.registry = registry;
+    // this is to keep track if a subquery is correlated and contains aggregate
+    // this is computed in CalcitePlanner while planning and is later required by subuery remove rule
+    // hence this is passed using HivePlannerContext
     this.corrScalarRexSQWithAgg = corrScalarRexSQWithAgg;
   }
 

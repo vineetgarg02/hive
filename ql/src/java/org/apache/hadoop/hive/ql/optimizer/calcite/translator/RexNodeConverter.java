@@ -212,7 +212,7 @@ public class RexNodeConverter {
 
     else {
       throw new CalciteSubquerySemanticException(ErrorMsg.INVALID_SUBQUERY_EXPRESSION.getMsg(
-              "Invalid subquery"));
+              "Invalid subquery: " + subQueryDesc.getType()));
     }
   }
 

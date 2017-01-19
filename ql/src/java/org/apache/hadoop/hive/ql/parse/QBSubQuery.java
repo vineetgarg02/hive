@@ -509,10 +509,16 @@ public class QBSubQuery implements ISubQueryJoinInfo {
         originalSQASTOrigin.getUsageNode());
   }
 
-  void subqueryRestrictionsCheck(RowResolver parentQueryRR,
+  /**
+   * @param parentQueryRR
+   * @param forHavingClause
+   * @param outerQueryAlias
+   * @return true if it is correlated scalar subquery with an aggregate
+   * @throws SemanticException
+   */
+  boolean subqueryRestrictionsCheck(RowResolver parentQueryRR,
                                  boolean forHavingClause,
-                                 String outerQueryAlias,
-                                 boolean[] isCorrScalarAgg)
+                                 String outerQueryAlias)
           throws SemanticException {
     ASTNode insertClause = getChildFromSubqueryAST("Insert", HiveParser.TOK_INSERT);
 
@@ -552,7 +558,7 @@ public class QBSubQuery implements ISubQueryJoinInfo {
     ASTNode whereClause = SubQueryUtils.subQueryWhere(insertClause);
 
     if ( whereClause == null ) {
-      return;
+      return false;
     }
     ASTNode searchCond = (ASTNode) whereClause.getChild(0);
     List<ASTNode> conjuncts = new ArrayList<ASTNode>();
@@ -568,7 +574,7 @@ public class QBSubQuery implements ISubQueryJoinInfo {
       if(conjunct.isCorrelated()){
        hasCorrelation = true;
       }
-      if ( conjunct.eitherSideRefersBoth() ) {
+      if ( conjunct.eitherSideRefersBoth() && conjunctAST.getType() != HiveParser.EQUAL) {
         hasNonEquiJoinPred = true;
       }
     }
@@ -579,6 +585,15 @@ public class QBSubQuery implements ISubQueryJoinInfo {
         noImplicityGby = false;
       }
     }
+
+    /*
+     * Restriction.14.h :: Correlated Sub Queries cannot contain Windowing clauses.
+     */
+    if (  hasWindowing && hasCorrelation) {
+      throw new CalciteSubquerySemanticException(ErrorMsg.UNSUPPORTED_SUBQUERY_EXPRESSION.getMsg(
+              subQueryAST, "Correlated Sub Queries cannot contain Windowing clauses."));
+    }
+
     /*
      * Restriction.13.m :: In the case of an implied Group By on a
      * correlated SubQuery, the SubQuery always returns 1 row.
@@ -606,18 +621,12 @@ public class QBSubQuery implements ISubQueryJoinInfo {
                     "Scalar subqueries with aggregate cannot have non-equi join predicate"));
         }
         else if(operator.getType() == SubQueryType.SCALAR && hasCorrelation) {
-            isCorrScalarAgg[0] = true;
+            return true;
         }
 
       }
 
-    /*
-     * Restriction.14.h :: Correlated Sub Queries cannot contain Windowing clauses.
-     */
-    if (  hasWindowing && hasCorrelation) {
-      throw new CalciteSubquerySemanticException(ErrorMsg.UNSUPPORTED_SUBQUERY_EXPRESSION.getMsg(
-              subQueryAST, "Correlated Sub Queries cannot contain Windowing clauses."));
-    }
+    return false;
   }
 
   void validateAndRewriteAST(RowResolver outerQueryRR,

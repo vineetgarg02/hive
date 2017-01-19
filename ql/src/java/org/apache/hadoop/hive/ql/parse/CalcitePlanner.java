@@ -115,6 +115,7 @@ import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.calcite.util.ImmutableIntList;
 import org.apache.calcite.util.Pair;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hive.common.ObjectPair;
 import org.apache.hadoop.hive.conf.Constants;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
@@ -416,6 +417,9 @@ public class CalcitePlanner extends SemanticAnalyzer {
             }
           }
           if( e instanceof CalciteSubquerySemanticException) {
+            // non-cbo path retries to execute subqueries and throws completely different exception/error
+            // to eclipse the original error message
+            // so avoid executing subqueries on non-cbo
             throw new SemanticException(e);
           }
           else if (!conf.getBoolVar(ConfVars.HIVE_IN_TEST) || isMissingStats
@@ -2259,22 +2263,22 @@ public class CalcitePlanner extends SemanticAnalyzer {
       return filterRel;
     }
 
-    private boolean topLevelConjunctCheck(ASTNode searchCond, boolean [] orEncountered, int [] subqueryCount) {
+    private boolean topLevelConjunctCheck(ASTNode searchCond, ObjectPair<Boolean, Integer> subqInfo) {
       if( searchCond.getType() == HiveParser.KW_OR) {
-        orEncountered[0] = true;
-        if(subqueryCount[0] > 1) {
+        subqInfo.setFirst(Boolean.TRUE);
+        if(subqInfo.getSecond() > 1) {
           return false;
         }
       }
       if( searchCond.getType() == HiveParser.TOK_SUBQUERY_EXPR) {
-        subqueryCount[0] = subqueryCount[0] + 1;
-        if(subqueryCount[0] > 1 && orEncountered[0]) {
+        subqInfo.setSecond(subqInfo.getSecond() + 1);
+        if(subqInfo.getSecond()> 1 && subqInfo.getFirst()) {
           return false;
         }
         return true;
       }
       for(int i=0; i<searchCond.getChildCount(); i++){
-          boolean validSubQuery = topLevelConjunctCheck((ASTNode)searchCond.getChild(i), orEncountered, subqueryCount);
+          boolean validSubQuery = topLevelConjunctCheck((ASTNode)searchCond.getChild(i), subqInfo);
           if(!validSubQuery) {
             return false;
           }
@@ -2299,9 +2303,10 @@ public class CalcitePlanner extends SemanticAnalyzer {
 
           ASTNode subQueryAST = subQueries.get(i);
           //SubQueryUtils.rewriteParentQueryWhere(clonedSearchCond, subQueryAST);
-          boolean [] orInSubquery = {false};
-          int [] subqueryCount = {0};
-          if(!topLevelConjunctCheck(clonedSearchCond, orInSubquery, subqueryCount)){
+          Boolean orInSubquery = new Boolean(false);
+          Integer subqueryCount = new Integer(0);
+          ObjectPair<Boolean, Integer> subqInfo = new ObjectPair<Boolean, Integer>(false, 0);
+          if(!topLevelConjunctCheck(clonedSearchCond, subqInfo)){
           /*
            *  Restriction.7.h :: SubQuery predicates can appear only as top level conjuncts.
            */
@@ -2323,9 +2328,8 @@ public class CalcitePlanner extends SemanticAnalyzer {
             aliasToRel.put(havingInputAlias, srcRel);
           }
 
-          boolean [] isCorrScalarWithAgg = {false};
-          subQuery.subqueryRestrictionsCheck(inputRR, forHavingClause, havingInputAlias, isCorrScalarWithAgg);
-          if(isCorrScalarWithAgg[0]) {
+          boolean isCorrScalarWithAgg = subQuery.subqueryRestrictionsCheck(inputRR, forHavingClause, havingInputAlias);
+          if(isCorrScalarWithAgg) {
             corrScalarQueries.add(originalSubQueryAST);
           }
       }

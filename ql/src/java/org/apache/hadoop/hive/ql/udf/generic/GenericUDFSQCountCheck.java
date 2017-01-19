@@ -62,9 +62,7 @@ public class GenericUDFSQCountCheck extends GenericUDF {
   @Override
   public Object evaluate(DeferredObject[] arguments) throws HiveException {
     Object valObject = arguments[0].get();
-    if (valObject == null) {
-      return null;
-    }
+    assert(valObject != null);
     Long val = getLongValue(arguments, 0, converters);
     assert(val >= 0);
     if(val > 1) {

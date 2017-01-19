@@ -92,10 +92,7 @@ public abstract class HiveSubQueryRemoveRule extends RelOptRule{
 
                     assert(filter instanceof HiveFilter);
                     Set<RelNode> corrScalarQueries = filter.getCluster().getPlanner().getContext().unwrap(Set.class);
-                    boolean isCorrScalarQuery = false;
-                    if(corrScalarQueries.contains(e.rel)) {
-                       isCorrScalarQuery = true;
-                    }
+                    boolean isCorrScalarQuery = corrScalarQueries.contains(e.rel);
 
                     final RexNode target = apply(e, ((HiveFilter)filter).getVariablesSet(e), logic,
                             builder, 1, fieldCount, isCorrScalarQuery);
@@ -140,6 +137,8 @@ public abstract class HiveSubQueryRemoveRule extends RelOptRule{
         switch (e.getKind()) {
             case SCALAR_QUERY:
                 if(isCorrScalarAgg) {
+                    // Transformation :
+                    // Outer Query Left Join (inner query) on correlated predicate and preserve rows only from left side.
                     builder.push(e.rel);
                     final List<RexNode> parentQueryFields = new ArrayList<>();
                     parentQueryFields.addAll(builder.fields());
@@ -164,6 +163,8 @@ public abstract class HiveSubQueryRemoveRule extends RelOptRule{
                     return builder.call(SqlStdOperatorTable.CASE, operands.build());
                 }
 
+                //Transformation is to left join for correlated predicates and inner join otherwise,
+                // but do a count on inner side before that to make sure it generates atmost 1 row.
                 builder.push(e.rel);
                 // returns single row/column
                 builder.aggregate(builder.groupKey(),
@@ -180,7 +181,6 @@ public abstract class HiveSubQueryRemoveRule extends RelOptRule{
 
                 if( !variablesSet.isEmpty())
                 {
-                    //builder.join(JoinRelType.INNER, builder.literal(true), variablesSet);
                     builder.join(JoinRelType.LEFT, builder.literal(true), variablesSet);
                 }
                 else

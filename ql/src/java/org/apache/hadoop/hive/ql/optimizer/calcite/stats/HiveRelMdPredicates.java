@@ -165,7 +165,7 @@ public class HiveRelMdPredicates implements MetadataHandler<BuiltInMetadata.Pred
             rexBuilder.makeInputRef(project, expr.i), expr.e));
       }
     }
-    return RelOptPredicateList.of(projectPullUpPredicates);
+    return RelOptPredicateList.of(rexBuilder, projectPullUpPredicates);
   }
 
   /** Infers predicates for a {@link org.apache.calcite.rel.core.Join}. */
@@ -183,7 +183,7 @@ public class HiveRelMdPredicates implements MetadataHandler<BuiltInMetadata.Pred
             RexUtil.composeConjunction(rB, rightInfo.pulledUpPredicates,
                 false));
 
-    return jI.inferPredicates(false);
+    return jI.inferPredicates(false, rB);
   }
 
   /**
@@ -219,7 +219,7 @@ public class HiveRelMdPredicates implements MetadataHandler<BuiltInMetadata.Pred
         aggPullUpPredicates.add(r);
       }
     }
-    return RelOptPredicateList.of(aggPullUpPredicates);
+    return RelOptPredicateList.of(agg.getCluster().getRexBuilder(), aggPullUpPredicates);
   }
 
   /**
@@ -271,7 +271,7 @@ public class HiveRelMdPredicates implements MetadataHandler<BuiltInMetadata.Pred
     if (!disjPred.isAlwaysTrue()) {
       preds.add(disjPred);
     }
-    return RelOptPredicateList.of(preds);
+    return RelOptPredicateList.of(union.getCluster().getRexBuilder(), preds);
   }
 
   /**
@@ -404,7 +404,8 @@ public class HiveRelMdPredicates implements MetadataHandler<BuiltInMetadata.Pred
      * </ol>
      */
     public RelOptPredicateList inferPredicates(
-        boolean includeEqualityInference) {
+        boolean includeEqualityInference,
+        RexBuilder rB) {
       final List<RexNode> inferredPredicates = new ArrayList<>();
       final List<RexNode> nonFieldsPredicates = new ArrayList<>();
       final Set<String> allExprsDigests = new HashSet<>(this.allExprsDigests);
@@ -476,13 +477,13 @@ public class HiveRelMdPredicates implements MetadataHandler<BuiltInMetadata.Pred
           pulledUpPredicates = Iterables.concat(leftPreds, rightPreds,
                 RelOptUtil.conjunctions(joinRel.getCondition()), inferredPredicates);
         }
-        return RelOptPredicateList.of(
+        return RelOptPredicateList.of(rB,
           pulledUpPredicates, leftInferredPredicates, rightInferredPredicates);
       case LEFT:    
-        return RelOptPredicateList.of(    
+        return RelOptPredicateList.of(rB,
           leftPreds, EMPTY_LIST, rightInferredPredicates);
       case RIGHT:   
-        return RelOptPredicateList.of(    
+        return RelOptPredicateList.of(rB,
           rightPreds, leftInferredPredicates, EMPTY_LIST);
       default:
         assert inferredPredicates.size() == 0;

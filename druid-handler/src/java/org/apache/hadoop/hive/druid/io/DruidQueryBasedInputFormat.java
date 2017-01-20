@@ -320,9 +320,25 @@ public class DruidQueryBasedInputFormat extends InputFormat<NullWritable, DruidW
     return splits;
   }
 
+  /**
+   * Extract the total time span covered by these intervals. It does not check
+   * if the intervals overlap.
+   * @param intervals list of intervals
+   * @return total time span covered by these intervals
+   */
+  private static long extractTotalTime(List<Interval> intervals) {
+    long totalTime = 0;
+    for (Interval interval : intervals) {
+      totalTime += interval.getEndMillis() - interval.getStartMillis();
+    }
+    return totalTime;
+  }
+
+
+
   private static List<List<Interval>> createSplitsIntervals(List<Interval> intervals, int numSplits
   ) {
-    final long totalTime = DruidDateTimeUtils.extractTotalTime(intervals);
+    final long totalTime = extractTotalTime(intervals);
     long startTime = intervals.get(0).getStartMillis();
     long endTime = startTime;
     long currTime = 0;

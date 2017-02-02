@@ -2410,7 +2410,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
         this.subqueryId++;
 
         // semi-join opt doesn't work with subqueries
-        conf.setBoolVar(ConfVars.SEMIJOIN_CONVERSION, false);
+        //conf.setBoolVar(ConfVars.SEMIJOIN_CONVERSION, false);
         return filterRel;
       } else {
         return genFilterRelNode(searchCond, srcRel, outerNameToPosMap, outerRR, forHavingClause);

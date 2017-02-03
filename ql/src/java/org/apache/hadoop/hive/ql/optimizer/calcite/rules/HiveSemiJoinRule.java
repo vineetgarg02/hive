@@ -108,6 +108,8 @@ public class HiveSemiJoinRule extends RelOptRule {
             newRightKeys, rexBuilder);
 
     RelNode semi = null;
+    //HIVE-15458: we need to add a Project on top of Join since SemiJoin with Join as it's right input
+    // is not expected further down the pipeline. see jira for more details
     if(aggregate.getInput() instanceof HepRelVertex
           && ((HepRelVertex)aggregate.getInput()).getCurrentRel() instanceof  Join) {
         Join rightJoin = (Join)(((HepRelVertex)aggregate.getInput()).getCurrentRel());
@@ -115,7 +117,6 @@ public class HiveSemiJoinRule extends RelOptRule {
         for(int i=0; i<rightJoin.getRowType().getFieldCount(); i++){
           projects.add(rexBuilder.makeInputRef(rightJoin, i));
         }
-        //RelNode topProject =  call.builder().project(projects, rightJoin.getRowType().getFieldNames()).build();
        RelNode topProject =  call.builder().push(rightJoin).project(projects, rightJoin.getRowType().getFieldNames(), true).build();
       semi = call.builder().push(left).push(topProject).semiJoin(newCondition).build();
     }

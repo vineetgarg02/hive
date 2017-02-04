@@ -18,6 +18,8 @@
 
 package org.apache.hadoop.hive.llap.io.api.impl;
 
+import java.util.ArrayList;
+
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
@@ -89,7 +91,7 @@ class LlapRecordReader
   private final ExecutorService executor;
   private final int columnCount;
 
-  private TypeDescription fileSchema;
+  private SchemaEvolution evolution;
 
   public LlapRecordReader(JobConf job, FileSplit split, List<Integer> includedCols,
       String hostName, ColumnVectorProducer cvp, ExecutorService executor,
@@ -98,7 +100,6 @@ class LlapRecordReader
     this.executor = executor;
     this.jobConf = job;
     this.split = split;
-    this.columnIds = includedCols;
     this.sarg = ConvertAstToSearchArg.createFromConf(job);
     this.columnNames = ColumnProjectionUtils.getReadColumnNames(job);
     final String fragmentId = LlapTezUtils.getFragmentId(job);
@@ -122,12 +123,13 @@ class LlapRecordReader
     rbCtx = ctx != null ? ctx : LlapInputFormat.createFakeVrbCtx(mapWork);
     if (includedCols == null) {
       // Assume including everything means the VRB will have everything.
-      this.columnCount = rbCtx.getRowColumnTypeInfos().length;
-    } else {
-      this.columnCount = columnIds.size();
+      includedCols = new ArrayList<>(rbCtx.getRowColumnTypeInfos().length);
+      for (int i = 0; i < rbCtx.getRowColumnTypeInfos().length; ++i) {
+        includedCols.add(i);
+      }
     }
-
-
+    this.columnIds = includedCols;
+    this.columnCount = columnIds.size();
 
     int partitionColumnCount = rbCtx.getPartitionColumnCount();
     if (partitionColumnCount > 0) {
@@ -145,7 +147,7 @@ class LlapRecordReader
     feedback = rp = cvp.createReadPipeline(this, split, columnIds, sarg, columnNames,
         counters, schema, sourceInputFormat, sourceSerDe, reporter, job,
         mapWork.getPathToPartitionInfo());
-    fileSchema = rp.getFileSchema();
+    evolution = rp.getSchemaEvolution();
     includedColumns = rp.getIncludedColumns();
   }
 
@@ -166,11 +168,9 @@ class LlapRecordReader
   }
 
   private boolean checkOrcSchemaEvolution() {
-    SchemaEvolution schemaEvolution = new SchemaEvolution(
-        fileSchema, rp.getReaderSchema(), includedColumns);
     for (int i = 0; i < columnCount; ++i) {
       int colId = columnIds == null ? i : columnIds.get(i);
-      if (!schemaEvolution.isPPDSafeConversion(colId)) {
+      if (!evolution.isPPDSafeConversion(colId)) {
         LlapIoImpl.LOG.warn("Unsupported schema evolution! Disabling Llap IO for {}", split);
         return false;
       }
@@ -214,7 +214,7 @@ class LlapRecordReader
     // VRB was created from VrbCtx, so we already have pre-allocated column vectors
     for (int i = 0; i < cvb.cols.length; ++i) {
       // Return old CVs (if any) to caller. We assume these things all have the same schema.
-      cvb.swapColumnVector(i, value.cols, columnIds == null ? i : columnIds.get(i));
+      cvb.swapColumnVector(i, value.cols, columnIds.get(i));
     }
     value.selectedInUse = false;
     value.size = cvb.size;

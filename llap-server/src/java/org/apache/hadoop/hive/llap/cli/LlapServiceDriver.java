@@ -87,7 +87,7 @@ public class LlapServiceDriver {
   protected static final Logger LOG = LoggerFactory.getLogger(LlapServiceDriver.class.getName());
 
   private static final String[] DEFAULT_AUX_CLASSES = new String[] {
-  "org.apache.hive.hcatalog.data.JsonSerDe" };
+  "org.apache.hive.hcatalog.data.JsonSerDe","org.apache.hadoop.hive.druid.DruidStorageHandler" };
   private static final String HBASE_SERDE_CLASS = "org.apache.hadoop.hive.hbase.HBaseSerDe";
   private static final String[] NEEDED_CONFIGS = LlapDaemonConfiguration.DAEMON_CONFIGS;
   private static final String[] OPTIONAL_CONFIGS = LlapDaemonConfiguration.SSL_DAEMON_CONFIGS;
@@ -196,8 +196,8 @@ public class LlapServiceDriver {
     final FileSystem fs = FileSystem.get(conf);
     final FileSystem lfs = FileSystem.getLocal(conf).getRawFileSystem();
 
-    final ExecutorService executor =
-        Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() / 2,
+    int threadCount = Math.max(1, Runtime.getRuntime().availableProcessors() / 2);
+    final ExecutorService executor = Executors.newFixedThreadPool(threadCount,
             new ThreadFactoryBuilder().setNameFormat("llap-pkg-%d").build());
     final CompletionService<Void> asyncRunner = new ExecutorCompletionService<Void>(executor);
 

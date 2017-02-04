@@ -16,7 +16,6 @@
  */
 package org.apache.hadoop.hive.ql.optimizer.calcite.rules;
 
-import org.apache.avro.generic.GenericData;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptRule;
 import org.apache.calcite.plan.RelOptRuleCall;
@@ -34,7 +33,6 @@ import org.apache.calcite.tools.RelBuilderFactory;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.calcite.util.ImmutableIntList;
 import org.apache.hadoop.hive.ql.optimizer.calcite.HiveRelFactories;
-import org.apache.hadoop.hive.ql.optimizer.calcite.HiveRelOptUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,6 +84,11 @@ public class HiveSemiJoinRule extends RelOptRule {
         ImmutableBitSet.range(aggregate.getGroupCount()))) {
       // Rule requires that aggregate key to be the same as the join key.
       // By the way, neither a super-set nor a sub-set would work.
+      return;
+    }
+    if(join.getJoinType() == JoinRelType.LEFT) {
+      // since for LEFT join we are only interested in rows from LEFT we can get rid of right side
+      call.transformTo(call.builder().push(left).project(project.getProjects(), project.getRowType().getFieldNames()).build());
       return;
     }
     if (join.getJoinType() != JoinRelType.INNER) {

@@ -1141,8 +1141,14 @@ public class HiveConf extends Configuration {
         "If the bucketing/sorting properties of the table exactly match the grouping key, whether to perform \n" +
         "the group by in the mapper by using BucketizedHiveInputFormat. The only downside to this\n" +
         "is that it limits the number of mappers to the number of files."),
+    HIVE_GROUPBY_POSITION_ALIAS("hive.groupby.position.alias", false,
+        "Whether to enable using Column Position Alias in Group By"),
+    HIVE_ORDERBY_POSITION_ALIAS("hive.orderby.position.alias", true,
+        "Whether to enable using Column Position Alias in Order By"),
+    @Deprecated
     HIVE_GROUPBY_ORDERBY_POSITION_ALIAS("hive.groupby.orderby.position.alias", false,
-        "Whether to enable using Column Position Alias in Group By or Order By"),
+        "Whether to enable using Column Position Alias in Group By or Order By (deprecated).\n" +
+        "Use " + HIVE_ORDERBY_POSITION_ALIAS.varname + " or " + HIVE_GROUPBY_POSITION_ALIAS.varname + " instead"),
     HIVE_NEW_JOB_GROUPING_SET_CARDINALITY("hive.new.job.grouping.set.cardinality", 30,
         "Whether a new map-reduce job should be launched for grouping sets/rollups/cubes.\n" +
         "For a query like: select a, b, c, count(1) from T group by a, b, c with rollup;\n" +
@@ -2835,7 +2841,12 @@ public class HiveConf extends Configuration {
     TEZ_EXEC_INPLACE_PROGRESS(
         "hive.tez.exec.inplace.progress",
         true,
-        "Updates tez job execution progress in-place in the terminal."),
+        "Updates tez job execution progress in-place in the terminal when hive-cli is used."),
+    HIVE_SERVER2_INPLACE_PROGRESS(
+        "hive.server2.in.place.progress",
+        true,
+        "Allows hive server 2 to send progress bar update information. This is currently available"
+            + " only if the execution engine is tez."),
     SPARK_EXEC_INPLACE_PROGRESS("hive.spark.exec.inplace.progress", true,
         "Updates spark job execution progress in-place in the terminal."),
     TEZ_CONTAINER_MAX_JAVA_HEAP_FRACTION("hive.tez.container.max.java.heap.fraction", 0.8f,

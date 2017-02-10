@@ -2922,6 +2922,9 @@ public class HiveConf extends Configuration {
         LLAP_ALLOCATOR_MAX_ALLOC + "."),
     LLAP_IO_ENCODE_VECTOR_SERDE_ENABLED("hive.llap.io.encode.vector.serde.enabled", true,
         "Whether LLAP should use vectorized SerDe reader to read text data when re-encoding."),
+    LLAP_IO_ENCODE_VECTOR_SERDE_ASYNC_ENABLED("hive.llap.io.encode.vector.serde.async.enabled",
+        true,
+        "Whether LLAP should use async mode in vectorized SerDe reader to read text data."),
     LLAP_IO_ENCODE_SLICE_ROW_COUNT("hive.llap.io.encode.slice.row.count", 100000,
         "Row count to use to separate cache slices when reading encoded data from row-based\n" +
         "inputs into LLAP cache, if this feature is enabled."),
@@ -3228,6 +3231,10 @@ public class HiveConf extends Configuration {
     SPARK_DYNAMIC_PARTITION_PRUNING_MAX_DATA_SIZE(
         "hive.spark.dynamic.partition.pruning.max.data.size", 100*1024*1024L,
         "Maximum total data size in dynamic pruning."),
+    SPARK_USE_GROUPBY_SHUFFLE(
+        "hive.spark.use.groupby.shuffle", true,
+        "Spark groupByKey transformation has better performance but uses unbounded memory." +
+            "Turn this off when there is a memory issue."),
     NWAYJOINREORDER("hive.reorder.nway.joins", true,
       "Runs reordering of tables within single n-way join (i.e.: picks streamtable)"),
     HIVE_MERGE_NWAY_JOINS("hive.merge.nway.joins", true,

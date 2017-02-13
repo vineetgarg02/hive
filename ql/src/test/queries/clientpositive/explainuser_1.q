@@ -166,43 +166,6 @@ having p_name in
   (select first_value(p_name) over(partition by p_mfgr order by p_size) from part)
 ;
 
-explain select * 
-from src_cbo 
-where src_cbo.key not in  
-  ( select key  from src_cbo s1 
-    where s1.key > '2'
-  ) order by key
-;
-
-explain select p_mfgr, b.p_name, p_size 
-from part b 
-where b.p_name not in 
-  (select p_name 
-  from (select p_mfgr, p_name, p_size as r from part) a 
-  where r < 10 and b.p_mfgr = a.p_mfgr 
-  )
-;
-
-explain select p_name, p_size 
-from 
-part where part.p_size not in 
-  (select avg(p_size) 
-  from (select p_size from part) a 
-  where p_size < 10
-  ) order by p_name
-;
-
-explain select b.p_mfgr, min(p_retailprice) 
-from part b 
-group by b.p_mfgr
-having b.p_mfgr not in 
-  (select p_mfgr 
-  from (select p_mfgr, min(p_retailprice) l, max(p_retailprice) r, avg(p_retailprice) a from part group by p_mfgr) a 
-  where min(p_retailprice) = l and r - l > 600
-  )
-  order by b.p_mfgr
-;
-
 explain select count(c_int) over(), sum(c_float) over(), max(c_int) over(), min(c_int) over(), row_number() over(), rank() over(), dense_rank() over(), percent_rank() over(), lead(c_int, 2, c_int) over(), lag(c_float, 2, c_float) over() from cbo_t1;
 explain select * from (select count(c_int) over(), sum(c_float) over(), max(c_int) over(), min(c_int) over(), row_number() over(), rank() over(), dense_rank() over(), percent_rank() over(), lead(c_int, 2, c_int) over(), lag(c_float, 2, c_float) over() from cbo_t1) cbo_t1;
 explain select i, a, h, b, c, d, e, f, g, a as x, a +1 as y from (select max(c_int) over (partition by key order by value range UNBOUNDED PRECEDING) a, min(c_int) over (partition by key order by value range current row) b, count(c_int) over(partition by key order by value range 1 PRECEDING) c, avg(value) over (partition by key order by value range between unbounded preceding and unbounded following) d, sum(value) over (partition by key order by value range between unbounded preceding and current row) e, avg(c_float) over (partition by key order by value range between 1 preceding and unbounded following) f, sum(c_float) over (partition by key order by value range between 1 preceding and current row) g, max(c_float) over (partition by key order by value range between 1 preceding and unbounded following) h, min(c_float) over (partition by key order by value range between 1 preceding and 1 following) i from cbo_t1) cbo_t1;

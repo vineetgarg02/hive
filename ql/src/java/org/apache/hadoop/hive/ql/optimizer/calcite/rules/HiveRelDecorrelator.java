@@ -1108,8 +1108,8 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
       // generator.
       if (map.size() == corVarList.size()) {
         map.putAll(frame.corDefOutputs);
-        return register(oldInput, oldInput,
-                identityMap(oldInput.getRowType().getFieldCount()), map);
+        return register(oldInput, frame.r,
+                frame.oldToNewOutputs, map);
       }
     }
 

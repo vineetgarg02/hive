@@ -219,12 +219,12 @@ explain select * from part where p_size in (select min(pp.p_size) from part pp w
 select * from part where p_size in (select min(pp.p_size) from part pp where pp.p_partkey > part.p_partkey);
 
 -- corr IN with COUNT aggregate
--- explain select * from part where p_size NOT IN (select count(*) from part pp where pp.p_type = part.p_type);
--- select * from part where p_size NOT IN (select count(*) from part pp where pp.p_type = part.p_type);
+explain select * from part where p_size NOT IN (select count(*) from part pp where pp.p_type = part.p_type);
+select * from part where p_size NOT IN (select count(*) from part pp where pp.p_type = part.p_type);
 
 -- corr IN with aggregate other than COUNT
--- explain select * from part where p_size not in (select avg(pp.p_size) from part pp where pp.p_partkey = part.p_partkey);
--- select * from part where p_size not in (select avg(pp.p_size) from part pp where pp.p_partkey = part.p_partkey);
+explain select * from part where p_size not in (select avg(pp.p_size) from part pp where pp.p_partkey = part.p_partkey);
+select * from part where p_size not in (select avg(pp.p_size) from part pp where pp.p_partkey = part.p_partkey);
 
 create table t(i int);
 insert into t values(1);

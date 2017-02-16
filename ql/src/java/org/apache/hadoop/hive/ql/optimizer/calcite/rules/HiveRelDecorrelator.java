@@ -270,7 +270,6 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
     return new Function2<RelNode, RelNode, Void>() {
       public Void apply(RelNode oldNode, RelNode newNode) {
         if (cm.mapRefRelToCorRef.containsKey(oldNode)) {
-
           final CorelMap corelMap = new CorelMapBuilder().build(newNode);
           // since after various rules original relnode could have different
           // corref (or might not have at all) we need to traverse the new node
@@ -1160,10 +1159,6 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
         }
         break;
       case AND:
-        // TODO: if there are multiple references to corr var
-        // e.g. cor0.var1 = var AND cor0.var2 > another_var
-        //  will it be correct to throw an exception even if correlation equivalent is found
-        //    for only one?
         for (RexNode operand : ((RexCall) e).getOperands()) {
           findCorrelationEquivalent(correlation, operand);
         }

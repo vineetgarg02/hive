@@ -27,6 +27,7 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.exec.AppMasterEventOperator;
 import org.apache.hadoop.hive.ql.exec.FetchTask;
 import org.apache.hadoop.hive.ql.exec.FileSinkOperator;
+import org.apache.hadoop.hive.ql.exec.FilterOperator;
 import org.apache.hadoop.hive.ql.exec.HashTableDummyOperator;
 import org.apache.hadoop.hive.ql.exec.MapJoinOperator;
 import org.apache.hadoop.hive.ql.exec.Operator;
@@ -264,7 +265,6 @@ public class GenTezUtils {
           for (ReduceSinkOperator rs : rsOpToTsOpMap.keySet()) {
             if (rsOpToTsOpMap.get(rs) == orig) {
               rsOpToTsOpMap.put(rs, (TableScanOperator) newRoot);
-              break;
             }
           }
         }
@@ -568,7 +568,8 @@ public class GenTezUtils {
             TypeInfoFactory.booleanTypeInfo, Boolean.TRUE);
     DynamicValuePredicateContext filterDynamicValuePredicatesCollection =
             new DynamicValuePredicateContext();
-    collectDynamicValuePredicates(ts.getConf().getFilterExpr(),
+    FilterDesc filterDesc = ((FilterOperator)(ts.getChildOperators().get(0))).getConf();
+    collectDynamicValuePredicates(filterDesc.getPredicate(),
             filterDynamicValuePredicatesCollection);
     for (ExprNodeDesc nodeToRemove : filterDynamicValuePredicatesCollection
             .childParentMapping.keySet()) {
@@ -593,8 +594,8 @@ public class GenTezUtils {
         ExprNodeDesc nodeParent = filterDynamicValuePredicatesCollection
                 .childParentMapping.get(nodeToRemove);
         if (nodeParent == null) {
-          // This was the only predicate, set filter expression to null
-          ts.getConf().setFilterExpr(null);
+          // This was the only predicate, set filter expression to const
+          filterDesc.setPredicate(constNode);
         } else {
           int i = nodeParent.getChildren().indexOf(nodeToRemove);
           nodeParent.getChildren().remove(i);

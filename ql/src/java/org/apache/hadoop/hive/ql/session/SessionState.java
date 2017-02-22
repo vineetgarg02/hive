@@ -51,6 +51,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hive.common.FileUtils;
 import org.apache.hadoop.hive.common.JavaUtils;
+import org.apache.hadoop.hive.common.log.ProgressMonitor;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.metastore.ObjectStore;
@@ -185,6 +186,7 @@ public class SessionState {
   private HiveAuthorizationProvider authorizer;
 
   private HiveAuthorizer authorizerV2;
+  private volatile ProgressMonitor progressMonitor;
 
   public enum AuthorizationMode{V1, V2};
 
@@ -1099,6 +1101,12 @@ public class SessionState {
       LOG.info(info + StringUtils.defaultString(detail));
     }
 
+    public void printInfoNoLog(String info) {
+      if (!getIsSilent()) {
+        getInfoStream().println(info);
+      }
+    }
+
     public void printError(String error) {
       printError(error, null);
     }
@@ -1558,6 +1566,7 @@ public class SessionState {
       // removes the threadlocal variables, closes underlying HMS connection
       Hive.closeCurrent();
     }
+    progressMonitor = null;
   }
 
   private void unCacheDataNucleusClassLoaders() {
@@ -1738,6 +1747,49 @@ public class SessionState {
   public String getReloadableAuxJars() {
     return StringUtils.join(preReloadableAuxJars, ',');
   }
+
+  public void updateProgressedPercentage(final double percentage) {
+    this.progressMonitor = new ProgressMonitor() {
+      @Override
+      public List<String> headers() {
+        return null;
+      }
+
+      @Override
+      public List<List<String>> rows() {
+        return null;
+      }
+
+      @Override
+      public String footerSummary() {
+        return null;
+      }
+
+      @Override
+      public long startTime() {
+        return 0;
+      }
+
+      @Override
+      public String executionStatus() {
+        return null;
+      }
+
+      @Override
+      public double progressedPercentage() {
+        return percentage;
+      }
+    };
+  }
+
+  public void updateProgressMonitor(ProgressMonitor progressMonitor) {
+    this.progressMonitor = progressMonitor;
+  }
+
+  public ProgressMonitor getProgressMonitor() {
+    return progressMonitor;
+  }
+
 }
 
 class ResourceMaps {

@@ -350,6 +350,45 @@ public class OrcInputFormat implements InputFormat<NullWritable, OrcStruct>,
   }
 
   /**
+   * Reverses genIncludedColumns; produces the table columns indexes from ORC included columns.
+   * @param readerSchema The ORC reader schema for the table.
+   * @param included The included ORC columns.
+   * @param isFullColumnMatch Whether full column match should be enforced (i.e. whether to expect
+   *          that all the sub-columns or a complex type column should be included or excluded
+   *          together in the included array. If false, any sub-column being included for a complex
+   *          type is sufficient for the entire complex column to be included in the result.
+   * @return The list of table column indexes.
+   */
+  public static List<Integer> genIncludedColumnsReverse(
+      TypeDescription readerSchema, boolean[] included, boolean isFullColumnMatch) {
+    assert included != null;
+    List<Integer> result = new ArrayList<>();
+    List<TypeDescription> children = readerSchema.getChildren();
+    for (int columnNumber = 0; columnNumber < children.size(); ++columnNumber) {
+      TypeDescription child = children.get(columnNumber);
+      int id = child.getId();
+      int maxId = child.getMaximumId();
+      if (id >= included.length || maxId >= included.length) {
+        throw new AssertionError("Inconsistent includes: " + included.length
+            + " elements; found column ID " + id);
+      }
+      boolean isIncluded = included[id];
+      for (int col = id + 1; col <= maxId; ++col) {
+        if (isFullColumnMatch && included[col] != isIncluded) {
+          throw new AssertionError("Inconsistent includes: root column IDs are [" + id + ", "
+              + maxId + "]; included[" + col + "] = " + included[col] + ", which is different "
+              + " from the previous IDs of the same root column.");
+        }
+        isIncluded = isIncluded || included[col];
+      }
+      if (isIncluded) {
+        result.add(columnNumber);
+      }
+    }
+    return result;
+  }
+
+  /**
    * Take the configuration and figure out which columns we need to include.
    * @param readerSchema the types for the reader
    * @param conf the configuration
@@ -1490,14 +1529,15 @@ public class OrcInputFormat implements InputFormat<NullWritable, OrcStruct>,
       stripeStats = orcTail.getStripeStatistics();
       fileTypes = orcTail.getTypes();
       TypeDescription fileSchema = OrcUtils.convertTypeFromProtobuf(fileTypes, 0);
+      Reader.Options readerOptions = new Reader.Options(context.conf);
       if (readerTypes == null) {
         readerIncluded = genIncludedColumns(fileSchema, context.conf);
-        evolution = new SchemaEvolution(fileSchema, readerIncluded);
+        evolution = new SchemaEvolution(fileSchema, readerOptions.include(readerIncluded));
       } else {
         // The reader schema always comes in without ACID columns.
         TypeDescription readerSchema = OrcUtils.convertTypeFromProtobuf(readerTypes, 0);
         readerIncluded = genIncludedColumns(readerSchema, context.conf);
-        evolution = new SchemaEvolution(fileSchema, readerSchema, readerIncluded);
+        evolution = new SchemaEvolution(fileSchema, readerSchema, readerOptions.include(readerIncluded));
         if (!isOriginal) {
           // The SchemaEvolution class has added the ACID metadata columns.  Let's update our
           // readerTypes so PPD code will work correctly.

@@ -23,7 +23,11 @@ import org.apache.hadoop.hive.ql.exec.Operator;
 import org.apache.hadoop.hive.ql.exec.UDFArgumentTypeException;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
+import org.apache.hadoop.hive.ql.plan.ColStatistics;
+import org.apache.hadoop.hive.ql.plan.Statistics;
+import org.apache.hadoop.hive.ql.plan.Statistics.State;
 import org.apache.hadoop.hive.serde2.io.DateWritable;
+import org.apache.hadoop.hive.serde2.io.HiveDecimalWritable;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.PrimitiveObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.*;
@@ -40,6 +44,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.util.List;
 
 /**
  * Generic UDF to generate Bloom Filter
@@ -71,6 +76,8 @@ public class GenericUDAFBloomFilter implements GenericUDAFResolver2 {
 
     // Bloom filter rest
     private ByteArrayOutputStream result = new ByteArrayOutputStream();
+
+    private transient byte[] scratchBuffer = new byte[HiveDecimal.SCRATCH_BUFFER_LEN_TO_BYTES];
 
     @Override
     public ObjectInspector init(Mode m, ObjectInspector[] parameters) throws HiveException {
@@ -167,9 +174,10 @@ public class GenericUDAFBloomFilter implements GenericUDAFResolver2 {
           bf.addDouble(vDouble);
           break;
         case DECIMAL:
-          HiveDecimal vDecimal = ((HiveDecimalObjectInspector)inputOI).
-                  getPrimitiveJavaObject(parameters[0]);
-          bf.addString(vDecimal.toString());
+          HiveDecimalWritable vDecimal = ((HiveDecimalObjectInspector)inputOI).
+                  getPrimitiveWritableObject(parameters[0]);
+          int startIdx = vDecimal.toBytes(scratchBuffer);
+          bf.addBytes(scratchBuffer, startIdx, scratchBuffer.length - startIdx);
           break;
         case DATE:
           DateWritable vDate = ((DateObjectInspector)inputOI).
@@ -241,10 +249,30 @@ public class GenericUDAFBloomFilter implements GenericUDAFResolver2 {
     }
 
     public long getExpectedEntries() {
+      long expectedEntries = -1;
       if (sourceOperator != null && sourceOperator.getStatistics() != null) {
-        return sourceOperator.getStatistics().getNumRows();
+        Statistics stats = sourceOperator.getStatistics();
+        expectedEntries = stats.getNumRows();
+
+        // Use NumDistinctValues if possible
+        switch (stats.getColumnStatsState()) {
+          case COMPLETE:
+          case PARTIAL:
+            // There should only be column stats for one column, use if that is the case.
+            List<ColStatistics> colStats = stats.getColumnStats();
+            if (colStats.size() == 1) {
+              long ndv = colStats.get(0).getCountDistint();
+              if (ndv > 0) {
+                expectedEntries = ndv;
+              }
+            }
+            break;
+          default:
+            break;
+        }
       }
-      return -1;
+
+      return expectedEntries;
     }
 
     public Operator<?> getSourceOperator() {

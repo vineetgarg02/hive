@@ -247,6 +247,8 @@ public enum ErrorMsg {
   TRUNCATE_FOR_NON_MANAGED_TABLE(10146, "Cannot truncate non-managed table {0}.", true),
   TRUNCATE_FOR_NON_NATIVE_TABLE(10147, "Cannot truncate non-native table {0}.", true),
   PARTSPEC_FOR_NON_PARTITIONED_TABLE(10148, "Partition spec for non partitioned table {0}.", true),
+  INVALID_TABLE_IN_ON_CLAUSE_OF_MERGE(10149, "No columns from target table ''{0}'' found in ON " +
+    "clause ''{1}'' of MERGE statement.", true),
 
   LOAD_INTO_STORED_AS_DIR(10195, "A stored-as-directories table cannot be used as target for LOAD"),
   ALTER_TBL_STOREDASDIR_NOT_SKEWED(10196, "This operation is only valid on skewed table."),
@@ -396,6 +398,9 @@ public enum ErrorMsg {
       "time."),
   DISTINCT_NOT_SUPPORTED(10285, "Distinct keyword is not support in current context"),
   NONACID_COMPACTION_NOT_SUPPORTED(10286, "Compaction is not allowed on non-ACID table {0}.{1}", true),
+  MASKING_FILTERING_ON_ACID_NOT_SUPPORTED(10287,
+      "Detected {0}.{1} has row masking/column filtering enabled, " +
+      "which is not supported for query involving ACID operations", true),
 
   UPDATEDELETE_PARSE_ERROR(10290, "Encountered parse error while parsing rewritten merge/update or " +
       "delete query"),

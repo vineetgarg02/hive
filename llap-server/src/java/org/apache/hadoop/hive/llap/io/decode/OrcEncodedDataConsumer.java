@@ -47,17 +47,13 @@ import org.apache.hadoop.hive.ql.io.orc.encoded.EncodedTreeReaderFactory.Settabl
 import org.apache.hadoop.hive.ql.io.orc.encoded.OrcBatchKey;
 import org.apache.hadoop.hive.ql.io.orc.encoded.Reader.OrcEncodedColumnBatch;
 import org.apache.hadoop.hive.ql.io.orc.RecordReaderImpl;
-import org.apache.orc.OrcUtils;
 import org.apache.orc.TypeDescription;
-import org.apache.orc.impl.PhysicalFsWriter;
+import org.apache.orc.impl.SchemaEvolution;
 import org.apache.orc.impl.TreeReaderFactory;
 import org.apache.orc.impl.TreeReaderFactory.StructTreeReader;
 import org.apache.orc.impl.TreeReaderFactory.TreeReader;
+import org.apache.orc.impl.WriterImpl;
 import org.apache.orc.OrcProto;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.Lists;
 
 
 public class OrcEncodedDataConsumer
@@ -71,7 +67,7 @@ public class OrcEncodedDataConsumer
   private final boolean skipCorrupt; // TODO: get rid of this
   private final QueryFragmentCounters counters;
   private boolean[] includedColumns;
-  private TypeDescription readerSchema;
+  private SchemaEvolution evolution;
 
   public OrcEncodedDataConsumer(
       Consumer<ColumnVectorBatch> consumer, int colCount, boolean skipCorrupt,
@@ -86,7 +82,7 @@ public class OrcEncodedDataConsumer
     assert fileMetadata == null;
     fileMetadata = f;
     stripes = new ArrayList<>(f.getStripeCount());
-    codec = PhysicalFsWriter.createCodec(f.getCompressionKind());
+    codec = WriterImpl.createCodec(fileMetadata.getCompressionKind());
   }
 
   public void setStripeMetadata(ConsumerStripeMetadata m) {
@@ -124,12 +120,16 @@ public class OrcEncodedDataConsumer
 
       if (columnReaders == null || !sameStripe) {
         int[] columnMapping = new int[schema.getChildren().size()];
+        TreeReaderFactory.Context context =
+            new TreeReaderFactory.ReaderContext()
+                .setSchemaEvolution(evolution)
+                .writerTimeZone(stripeMetadata.getWriterTimezone())
+                .skipCorrupt(skipCorrupt);
         StructTreeReader treeReader = EncodedTreeReaderFactory.createRootTreeReader(
-            schema, stripeMetadata.getEncodings(), batch, codec, skipCorrupt,
-            stripeMetadata.getWriterTimezone(), columnMapping);
+            schema, stripeMetadata.getEncodings(), batch, codec, context, columnMapping);
         this.columnReaders = treeReader.getChildReaders();
         this.columnMapping = Arrays.copyOf(columnMapping, columnReaders.length);
-        positionInStreams(columnReaders, batch, stripeMetadata);
+        positionInStreams(columnReaders, batch.getBatchKey(), stripeMetadata);
       } else {
         repositionInStreams(this.columnReaders, batch, sameStripe, stripeMetadata);
       }
@@ -220,8 +220,8 @@ public class OrcEncodedDataConsumer
   }
 
   private void positionInStreams(TreeReaderFactory.TreeReader[] columnReaders,
-      EncodedColumnBatch<OrcBatchKey> batch, ConsumerStripeMetadata stripeMetadata) throws IOException {
-    PositionProvider[] pps = createPositionProviders(columnReaders, batch, stripeMetadata);
+      OrcBatchKey batchKey, ConsumerStripeMetadata stripeMetadata) throws IOException {
+    PositionProvider[] pps = createPositionProviders(columnReaders, batchKey, stripeMetadata);
     if (pps == null) return;
     for (int i = 0; i < columnReaders.length; i++) {
       columnReaders[i].seek(pps);
@@ -231,10 +231,13 @@ public class OrcEncodedDataConsumer
   private void repositionInStreams(TreeReaderFactory.TreeReader[] columnReaders,
       EncodedColumnBatch<OrcBatchKey> batch, boolean sameStripe,
       ConsumerStripeMetadata stripeMetadata) throws IOException {
-    PositionProvider[] pps = createPositionProviders(columnReaders, batch, stripeMetadata);
+    PositionProvider[] pps = createPositionProviders(
+        columnReaders, batch.getBatchKey(), stripeMetadata);
     if (pps == null) return;
     for (int i = 0; i < columnReaders.length; i++) {
       TreeReader reader = columnReaders[i];
+      // Note: we assume this never happens for SerDe reader - the batch would never have vectors.
+      // That is always true now; but it wasn't some day, the below would throw in getColumnData.
       ((SettableTreeReader) reader).setBuffers(batch, sameStripe);
       // TODO: When hive moves to java8, make updateTimezone() as default method in
       // SettableTreeReader so that we can avoid this check.
@@ -263,7 +266,7 @@ public class OrcEncodedDataConsumer
   }
 
   private PositionProvider[] createPositionProviders(
-      TreeReaderFactory.TreeReader[] columnReaders, EncodedColumnBatch<OrcBatchKey> batch,
+      TreeReaderFactory.TreeReader[] columnReaders, OrcBatchKey batchKey,
       ConsumerStripeMetadata stripeMetadata) throws IOException {
     if (columnReaders.length == 0) return null;
     PositionProvider[] pps = null;
@@ -274,7 +277,7 @@ public class OrcEncodedDataConsumer
         pps[i] = singleRgPp;
       }
     } else {
-      int rowGroupIndex = batch.getBatchKey().rgIx;
+      int rowGroupIndex = batchKey.rgIx;
       if (rowGroupIndex == OrcEncodedColumnBatch.ALL_RGS) {
         throw new IOException("Cannot position readers without RG information");
       }
@@ -295,11 +298,6 @@ public class OrcEncodedDataConsumer
   }
 
   @Override
-  public TypeDescription getFileSchema() {
-    return OrcUtils.convertTypeFromProtobuf(fileMetadata.getTypes(), 0);
-  }
-
-  @Override
   public boolean[] getIncludedColumns() {
     return includedColumns;
   }
@@ -308,11 +306,11 @@ public class OrcEncodedDataConsumer
     this.includedColumns = includedColumns;
   }
 
-  public void setReaderSchema(TypeDescription readerSchema) {
-    this.readerSchema = readerSchema;
+  public void setSchemaEvolution(SchemaEvolution evolution) {
+    this.evolution = evolution;
   }
 
-  public TypeDescription getReaderSchema() {
-    return readerSchema;
+  public SchemaEvolution getSchemaEvolution() {
+    return evolution;
   }
 }

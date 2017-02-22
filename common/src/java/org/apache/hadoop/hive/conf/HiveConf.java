@@ -381,7 +381,7 @@ public class HiveConf extends Configuration {
     llapDaemonVarsSetLocal.add(ConfVars.LLAP_DAEMON_NUM_EXECUTORS.varname);
     llapDaemonVarsSetLocal.add(ConfVars.LLAP_DAEMON_RPC_PORT.varname);
     llapDaemonVarsSetLocal.add(ConfVars.LLAP_DAEMON_MEMORY_PER_INSTANCE_MB.varname);
-    llapDaemonVarsSetLocal.add(ConfVars.LLAP_DAEMON_HEADROOM_MEMORY_PER_INSTANCE_MB.varname);
+    llapDaemonVarsSetLocal.add(ConfVars.LLAP_DAEMON_XMX_HEADROOM.varname);
     llapDaemonVarsSetLocal.add(ConfVars.LLAP_DAEMON_VCPUS_PER_INSTANCE.varname);
     llapDaemonVarsSetLocal.add(ConfVars.LLAP_DAEMON_NUM_FILE_CLEANER_THREADS.varname);
     llapDaemonVarsSetLocal.add(ConfVars.LLAP_FILE_CLEANUP_DELAY_SECONDS.varname);
@@ -1079,8 +1079,10 @@ public class HiveConf extends Configuration {
                                                                  + " expressed as multiple of Local FS write cost"),
     HIVE_CBO_COST_MODEL_HDFS_READ("hive.cbo.costmodel.hdfs.read", "1.5", "Default cost of reading a byte from HDFS;"
                                                                  + " expressed as multiple of Local FS read cost"),
+    HIVE_CBO_SHOW_WARNINGS("hive.cbo.show.warnings", true,
+         "Toggle display of CBO warnings like missing column stats"),
     AGGR_JOIN_TRANSPOSE("hive.transpose.aggr.join", false, "push aggregates through join"),
-    SEMIJOIN_CONVERSION("hive.enable.semijoin.conversion", true, "convert group by followed by inner equi join into semijoin"),
+    SEMIJOIN_CONVERSION("hive.optimize.semijoin.conversion", true, "convert group by followed by inner equi join into semijoin"),
     HIVE_COLUMN_ALIGNMENT("hive.order.columnalignment", true, "Flag to control whether we want to try to align" +
         "columns in operators such as Aggregate or Join so that we try to reduce the number of shuffling stages"),
 
@@ -1139,8 +1141,14 @@ public class HiveConf extends Configuration {
         "If the bucketing/sorting properties of the table exactly match the grouping key, whether to perform \n" +
         "the group by in the mapper by using BucketizedHiveInputFormat. The only downside to this\n" +
         "is that it limits the number of mappers to the number of files."),
+    HIVE_GROUPBY_POSITION_ALIAS("hive.groupby.position.alias", false,
+        "Whether to enable using Column Position Alias in Group By"),
+    HIVE_ORDERBY_POSITION_ALIAS("hive.orderby.position.alias", true,
+        "Whether to enable using Column Position Alias in Order By"),
+    @Deprecated
     HIVE_GROUPBY_ORDERBY_POSITION_ALIAS("hive.groupby.orderby.position.alias", false,
-        "Whether to enable using Column Position Alias in Group By or Order By"),
+        "Whether to enable using Column Position Alias in Group By or Order By (deprecated).\n" +
+        "Use " + HIVE_ORDERBY_POSITION_ALIAS.varname + " or " + HIVE_GROUPBY_POSITION_ALIAS.varname + " instead"),
     HIVE_NEW_JOB_GROUPING_SET_CARDINALITY("hive.new.job.grouping.set.cardinality", 30,
         "Whether a new map-reduce job should be launched for grouping sets/rollups/cubes.\n" +
         "For a query like: select a, b, c, count(1) from T group by a, b, c with rollup;\n" +
@@ -1316,53 +1324,9 @@ public class HiveConf extends Configuration {
     HIVE_INT_TIMESTAMP_CONVERSION_IN_SECONDS("hive.int.timestamp.conversion.in.seconds", false,
         "Boolean/tinyint/smallint/int/bigint value is interpreted as milliseconds during the timestamp conversion.\n" +
         "Set this flag to true to interpret the value as seconds to be consistent with float/double." ),
-    HIVE_ORC_FILE_MEMORY_POOL("hive.exec.orc.memory.pool", 0.5f,
-        "Maximum fraction of heap that can be used by ORC file writers"),
-    HIVE_ORC_WRITE_FORMAT("hive.exec.orc.write.format", null,
-        "Define the version of the file to write. Possible values are 0.11 and 0.12.\n" +
-        "If this parameter is not defined, ORC will use the run length encoding (RLE)\n" +
-        "introduced in Hive 0.12. Any value other than 0.11 results in the 0.12 encoding."),
-    HIVE_ORC_DEFAULT_STRIPE_SIZE("hive.exec.orc.default.stripe.size",
-        64L * 1024 * 1024,
-        "Define the default ORC stripe size, in bytes."),
-    HIVE_ORC_DEFAULT_BLOCK_SIZE("hive.exec.orc.default.block.size", 256L * 1024 * 1024,
-        "Define the default file system block size for ORC files."),
 
-    HIVE_ORC_DICTIONARY_KEY_SIZE_THRESHOLD("hive.exec.orc.dictionary.key.size.threshold", 0.8f,
-        "If the number of keys in a dictionary is greater than this fraction of the total number of\n" +
-        "non-null rows, turn off dictionary encoding.  Use 1 to always use dictionary encoding."),
-    HIVE_ORC_DEFAULT_ROW_INDEX_STRIDE("hive.exec.orc.default.row.index.stride", 10000,
-        "Define the default ORC index stride in number of rows. (Stride is the number of rows\n" +
-        "an index entry represents.)"),
-    HIVE_ORC_ROW_INDEX_STRIDE_DICTIONARY_CHECK("hive.orc.row.index.stride.dictionary.check", true,
-        "If enabled dictionary check will happen after first row index stride (default 10000 rows)\n" +
-        "else dictionary check will happen before writing first stripe. In both cases, the decision\n" +
-        "to use dictionary or not will be retained thereafter."),
-    HIVE_ORC_DEFAULT_BUFFER_SIZE("hive.exec.orc.default.buffer.size", 256 * 1024,
-        "Define the default ORC buffer size, in bytes."),
     HIVE_ORC_BASE_DELTA_RATIO("hive.exec.orc.base.delta.ratio", 8, "The ratio of base writer and\n" +
         "delta writer in terms of STRIPE_SIZE and BUFFER_SIZE."),
-    HIVE_ORC_DEFAULT_BLOCK_PADDING("hive.exec.orc.default.block.padding", true,
-        "Define the default block padding, which pads stripes to the HDFS block boundaries."),
-    HIVE_ORC_BLOCK_PADDING_TOLERANCE("hive.exec.orc.block.padding.tolerance", 0.05f,
-        "Define the tolerance for block padding as a decimal fraction of stripe size (for\n" +
-        "example, the default value 0.05 is 5% of the stripe size). For the defaults of 64Mb\n" +
-        "ORC stripe and 256Mb HDFS blocks, the default block padding tolerance of 5% will\n" +
-        "reserve a maximum of 3.2Mb for padding within the 256Mb block. In that case, if the\n" +
-        "available size within the block is more than 3.2Mb, a new smaller stripe will be\n" +
-        "inserted to fit within that space. This will make sure that no stripe written will\n" +
-        "cross block boundaries and cause remote reads within a node local task."),
-    HIVE_ORC_DEFAULT_COMPRESS("hive.exec.orc.default.compress", "ZLIB", "Define the default compression codec for ORC file"),
-
-    HIVE_ORC_ENCODING_STRATEGY("hive.exec.orc.encoding.strategy", "SPEED", new StringSet("SPEED", "COMPRESSION"),
-        "Define the encoding strategy to use while writing data. Changing this will\n" +
-        "only affect the light weight encoding for integers. This flag will not\n" +
-        "change the compression level of higher level compression codec (like ZLIB)."),
-
-    HIVE_ORC_COMPRESSION_STRATEGY("hive.exec.orc.compression.strategy", "SPEED", new StringSet("SPEED", "COMPRESSION"),
-         "Define the compression strategy to use while writing data. \n" +
-         "This changes the compression level of higher level compression codec (like ZLIB)."),
-
     HIVE_ORC_SPLIT_STRATEGY("hive.exec.orc.split.strategy", "HYBRID", new StringSet("HYBRID", "BI", "ETL"),
         "This is not a user level config. BI strategy is used when the requirement is to spend less time in split generation" +
         " as opposed to query execution (split generation does not read or cache file footers)." +
@@ -1396,12 +1360,6 @@ public class HiveConf extends Configuration {
         "references for the cached object. Setting this to true can help avoid out of memory\n" +
         "issues under memory pressure (in some cases) at the cost of slight unpredictability in\n" +
         "overall query performance."),
-    HIVE_ORC_SKIP_CORRUPT_DATA("hive.exec.orc.skip.corrupt.data", false,
-        "If ORC reader encounters corrupt data, this value will be used to determine\n" +
-        "whether to skip the corrupt data or throw exception. The default behavior is to throw exception."),
-
-    HIVE_ORC_ZEROCOPY("hive.exec.orc.zerocopy", false,
-        "Use zerocopy reads with ORC. (This requires Hadoop 2.3 or later.)"),
 
     HIVE_LAZYSIMPLE_EXTENDED_BOOLEAN_LITERAL("hive.lazysimple.extended_boolean_literal", false,
         "LazySimpleSerde uses this property to determine if it treats 'T', 't', 'F', 'f',\n" +
@@ -1830,6 +1788,11 @@ public class HiveConf extends Configuration {
         "(true), and hive.exec.dynamic.partition.mode (nonstrict).\n" +
         "The default DummyTxnManager replicates pre-Hive-0.13 behavior and provides\n" +
         "no transactions."),
+    HIVE_TXN_STRICT_LOCKING_MODE("hive.txn.strict.locking.mode", true, "In strict mode non-ACID\n" +
+        "resources use standard R/W lock semantics, e.g. INSERT will acquire exclusive lock.\n" +
+        "In nonstrict mode, for non-ACID resources, INSERT will only acquire shared lock, which\n" +
+        "allows two concurrent writes to the same partition but still lets lock manager prevent\n" +
+        "DROP TABLE etc. when the table is being written to"),
     HIVE_TXN_TIMEOUT("hive.txn.timeout", "300s", new TimeValidator(TimeUnit.SECONDS),
         "time after which transactions are declared aborted if the client has not sent a heartbeat."),
     HIVE_TXN_HEARTBEAT_THREADPOOL_SIZE("hive.txn.heartbeat.threadpool.size", 5, "The number of " +
@@ -1947,6 +1910,10 @@ public class HiveConf extends Configuration {
     WRITE_SET_REAPER_INTERVAL("hive.writeset.reaper.interval", "60s",
       new TimeValidator(TimeUnit.MILLISECONDS), "Frequency of WriteSet reaper runs"),
 
+    MERGE_CARDINALITY_VIOLATION_CHECK("hive.merge.cardinality.check", true,
+      "Set to true to ensure that each SQL Merge statement ensures that for each row in the target\n" +
+        "table there is at most 1 matching row in the source table per SQL Specification."),
+
     // For Druid storage handler
     HIVE_DRUID_INDEXING_GRANULARITY("hive.druid.indexer.segments.granularity", "DAY",
             new PatternSet("YEAR", "MONTH", "WEEK", "DAY", "HOUR", "MINUTE", "SECOND"),
@@ -1986,7 +1953,7 @@ public class HiveConf extends Configuration {
             , "druid deep storage location."),
     DRUID_METADATA_BASE("hive.druid.metadata.base", "druid", "Default prefix for metadata tables"),
     DRUID_METADATA_DB_TYPE("hive.druid.metadata.db.type", "mysql",
-            new PatternSet("mysql", "postgres"), "Type of the metadata database."
+            new PatternSet("mysql", "postgresql"), "Type of the metadata database."
     ),
     DRUID_METADATA_DB_USERNAME("hive.druid.metadata.username", "",
             "Username to connect to Type of the metadata DB."
@@ -2360,7 +2327,14 @@ public class HiveConf extends Configuration {
     HIVE_SERVER2_TEZ_SESSION_MAX_INIT_THREADS("hive.server2.tez.sessions.init.threads", 16,
         "If hive.server2.tez.initialize.default.sessions is enabled, the maximum number of\n" +
         "threads to use to initialize the default sessions."),
-
+    HIVE_SERVER2_TEZ_SESSION_RESTRICTED_CONFIGS("hive.server2.tez.sessions.restricted.configs", "",
+    "The configuration settings that cannot be set when submitting jobs to HiveServer2. If\n" +
+    "any of these are set to values different from those in the server configuration, an\n" +
+    "exception will be thrown."),
+    HIVE_SERVER2_TEZ_SESSION_CUSTOM_QUEUE_ALLOWED("hive.server2.tez.sessions.custom.queue.allowed",
+      "true", new StringSet("true", "false", "ignore"),
+      "Whether Tez session pool should allow submitting queries to custom queues. The options\n" +
+      "are true, false (error out), ignore (accept the query but ignore the queue setting)."),
 
     // Operation log configuration
     HIVE_SERVER2_LOGGING_OPERATION_ENABLED("hive.server2.logging.operation.enabled", true,
@@ -2867,7 +2841,12 @@ public class HiveConf extends Configuration {
     TEZ_EXEC_INPLACE_PROGRESS(
         "hive.tez.exec.inplace.progress",
         true,
-        "Updates tez job execution progress in-place in the terminal."),
+        "Updates tez job execution progress in-place in the terminal when hive-cli is used."),
+    HIVE_SERVER2_INPLACE_PROGRESS(
+        "hive.server2.in.place.progress",
+        true,
+        "Allows hive server 2 to send progress bar update information. This is currently available"
+            + " only if the execution engine is tez."),
     SPARK_EXEC_INPLACE_PROGRESS("hive.spark.exec.inplace.progress", true,
         "Updates spark job execution progress in-place in the terminal."),
     TEZ_CONTAINER_MAX_JAVA_HEAP_FRACTION("hive.tez.container.max.java.heap.fraction", 0.8f,
@@ -2943,6 +2922,9 @@ public class HiveConf extends Configuration {
         LLAP_ALLOCATOR_MAX_ALLOC + "."),
     LLAP_IO_ENCODE_VECTOR_SERDE_ENABLED("hive.llap.io.encode.vector.serde.enabled", true,
         "Whether LLAP should use vectorized SerDe reader to read text data when re-encoding."),
+    LLAP_IO_ENCODE_VECTOR_SERDE_ASYNC_ENABLED("hive.llap.io.encode.vector.serde.async.enabled",
+        true,
+        "Whether LLAP should use async mode in vectorized SerDe reader to read text data."),
     LLAP_IO_ENCODE_SLICE_ROW_COUNT("hive.llap.io.encode.slice.row.count", 100000,
         "Row count to use to separate cache slices when reading encoded data from row-based\n" +
         "inputs into LLAP cache, if this feature is enabled."),
@@ -3090,11 +3072,11 @@ public class HiveConf extends Configuration {
     LLAP_DAEMON_MEMORY_PER_INSTANCE_MB("hive.llap.daemon.memory.per.instance.mb", 4096,
       "The total amount of memory to use for the executors inside LLAP (in megabytes).",
       "llap.daemon.memory.per.instance.mb"),
-    LLAP_DAEMON_HEADROOM_MEMORY_PER_INSTANCE_MB("hive.llap.daemon.headroom.memory.per.instance.mb", 512,
-      "The total amount of memory deducted from daemon memory required for other LLAP services. The remaining memory" +
-      " will be used by the executors. If the cache is off-heap, Executor memory + Headroom memory = Xmx. If the " +
-        "cache is on-heap, Executor memory + Cache memory + Headroom memory = Xmx. The headroom memory has to be " +
-        "minimum of 5% from the daemon memory."),
+    LLAP_DAEMON_XMX_HEADROOM("hive.llap.daemon.xmx.headroom", "5%",
+      "The total amount of heap memory set aside by LLAP and not used by the executors. Can\n" +
+      "be specified as size (e.g. '512Mb'), or percentage (e.g. '5%'). Note that the latter is\n" +
+      "derived from the total daemon XMX, which can be different from the total executor\n" +
+      "memory if the cache is on-heap; although that's not the default configuration."),
     LLAP_DAEMON_VCPUS_PER_INSTANCE("hive.llap.daemon.vcpus.per.instance", 4,
       "The total number of vcpus to use for the executors inside LLAP.",
       "llap.daemon.vcpus.per.instance"),
@@ -3211,6 +3193,9 @@ public class HiveConf extends Configuration {
             Constants.LLAP_LOGGER_NAME_CONSOLE),
         "logger used for llap-daemons."),
 
+    SPARK_USE_FILE_SIZE_FOR_MAPJOIN("hive.spark.use.file.size.for.mapjoin", false,
+        "If this is set to true, mapjoin optimization in Hive/Spark will use source file sizes associated"
+            + "with TableScan operator on the root of operator tree, instead of using operator statistics."),
     SPARK_CLIENT_FUTURE_TIMEOUT("hive.spark.client.future.timeout",
       "60s", new TimeValidator(TimeUnit.SECONDS),
       "Timeout for requests from Hive client to remote Spark driver."),
@@ -3249,6 +3234,10 @@ public class HiveConf extends Configuration {
     SPARK_DYNAMIC_PARTITION_PRUNING_MAX_DATA_SIZE(
         "hive.spark.dynamic.partition.pruning.max.data.size", 100*1024*1024L,
         "Maximum total data size in dynamic pruning."),
+    SPARK_USE_GROUPBY_SHUFFLE(
+        "hive.spark.use.groupby.shuffle", true,
+        "Spark groupByKey transformation has better performance but uses unbounded memory." +
+            "Turn this off when there is a memory issue."),
     NWAYJOINREORDER("hive.reorder.nway.joins", true,
       "Runs reordering of tables within single n-way join (i.e.: picks streamtable)"),
     HIVE_MERGE_NWAY_JOINS("hive.merge.nway.joins", true,
@@ -3327,7 +3316,7 @@ public class HiveConf extends Configuration {
             "See HIVE-15121 for details.");
 
     public final String varname;
-    private final String altName;
+    public final String altName;
     private final String defaultExpr;
 
     public final String defaultStrVal;
@@ -3483,13 +3472,13 @@ public class HiveConf extends Configuration {
       val = (val == null ? File.separator + "usr" : val)
           + File.separator + "bin" + File.separator + "hadoop";
       // Launch hadoop command file on windows.
-      return val + (Shell.WINDOWS ? ".cmd" : "");
+      return val;
     }
 
     private static String findYarnBinary() {
       String val = findHadoopHome();
       val = (val == null ? "yarn" : val + File.separator + "bin" + File.separator + "yarn");
-      return val + (Shell.WINDOWS ? ".cmd" : "");
+      return val;
     }
 
     private static String findHadoopHome() {
@@ -3849,6 +3838,11 @@ public class HiveConf extends Configuration {
     assert (var.valClass == String.class) : var.varname;
     return var.altName != null ? conf.get(var.varname, conf.get(var.altName, var.defaultStrVal))
       : conf.get(var.varname, var.defaultStrVal);
+  }
+
+  public static String getVarWithoutType(Configuration conf, ConfVars var) {
+    return var.altName != null ? conf.get(var.varname, conf.get(var.altName, var.defaultExpr))
+      : conf.get(var.varname, var.defaultExpr);
   }
 
   public static String getTrimmedVar(Configuration conf, ConfVars var) {
@@ -4525,5 +4519,27 @@ public class HiveConf extends Configuration {
     return "Hive-on-MR is deprecated in Hive 2 and may not be available in the future versions. "
         + "Consider using a different execution engine (i.e. " + HiveConf.getNonMrEngines()
         + ") or using Hive 1.X releases.";
+  }
+
+  private static final Object reverseMapLock = new Object();
+  private static HashMap<String, ConfVars> reverseMap = null;
+
+  public static HashMap<String, ConfVars> getOrCreateReverseMap() {
+    // This should be called rarely enough; for now it's ok to just lock every time.
+    synchronized (reverseMapLock) {
+      if (reverseMap != null) return reverseMap;
+    }
+    HashMap<String, ConfVars> vars = new HashMap<>();
+    for (ConfVars val : ConfVars.values()) {
+      vars.put(val.varname.toLowerCase(), val);
+      if (val.altName != null && !val.altName.isEmpty()) {
+        vars.put(val.altName.toLowerCase(), val);
+      }
+    }
+    synchronized (reverseMapLock) {
+      if (reverseMap != null) return reverseMap;
+      reverseMap = vars;
+      return reverseMap;
+    }
   }
 }

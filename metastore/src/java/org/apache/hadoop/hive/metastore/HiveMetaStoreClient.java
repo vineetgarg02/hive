@@ -739,9 +739,14 @@ public class HiveMetaStoreClient implements IMetaStoreClient {
         hook.commitCreateTable(tbl);
       }
       success = true;
-    } finally {
+    }
+    finally {
       if (!success && (hook != null)) {
-        hook.rollbackCreateTable(tbl);
+        try {
+          hook.rollbackCreateTable(tbl);
+        } catch (Exception e){
+          LOG.error("Create rollback failed with", e);
+        }
       }
     }
   }
@@ -2219,14 +2224,15 @@ public class HiveMetaStoreClient implements IMetaStoreClient {
   public void insertTable(Table table, boolean overwrite) throws MetaException {
     boolean failed = true;
     HiveMetaHook hook = getHook(table);
-    if (hook == null || !(hook instanceof HiveMetaHookV2)) {
+    if (hook == null || !(hook instanceof DefaultHiveMetaHook)) {
       return;
     }
-    HiveMetaHookV2 hiveMetaHook = (HiveMetaHookV2) hook;
+    DefaultHiveMetaHook hiveMetaHook = (DefaultHiveMetaHook) hook;
     try {
-      hiveMetaHook.preInsertTable(table, overwrite);
       hiveMetaHook.commitInsertTable(table, overwrite);
-    } finally {
+      failed = false;
+    }
+    finally {
       if (failed) {
         hiveMetaHook.rollbackInsertTable(table, overwrite);
       }

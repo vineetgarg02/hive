@@ -1340,7 +1340,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
       //Remove subquery
       LOG.debug("Plan before removing subquery:\n" + RelOptUtil.toString(calciteGenPlan));
       calciteGenPlan = hepPlan(calciteGenPlan, false, mdProvider.getMetadataProvider(), null,
-              HiveSubQueryRemoveRule.FILTER);
+              HiveSubQueryRemoveRule.FILTER, HiveSubQueryRemoveRule.PROJECT);
       LOG.debug("Plan just after removing subquery:\n" + RelOptUtil.toString(calciteGenPlan));
 
       calciteGenPlan = HiveRelDecorrelator.decorrelateQuery(calciteGenPlan);
@@ -2363,7 +2363,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
     }
 
     private void subqueryRestrictionCheck(QB qb, ASTNode searchCond, RelNode srcRel,
-                                         boolean forHavingClause, Map<String, RelNode> aliasToRel,
+                                         boolean forHavingClause,
                                           Set<ASTNode> corrScalarQueries) throws SemanticException {
         List<ASTNode> subQueriesInOriginalTree = SubQueryUtils.findSubQueries(searchCond);
 
@@ -2407,11 +2407,6 @@ public class CalcitePlanner extends SemanticAnalyzer {
 
           String havingInputAlias = null;
 
-          if (forHavingClause) {
-            havingInputAlias = "gby_sq" + sqIdx;
-            aliasToRel.put(havingInputAlias, srcRel);
-          }
-
           boolean isCorrScalarWithAgg = subQuery.subqueryRestrictionsCheck(inputRR, forHavingClause, havingInputAlias);
           if(isCorrScalarWithAgg) {
             corrScalarQueries.add(originalSubQueryAST);
@@ -2419,12 +2414,11 @@ public class CalcitePlanner extends SemanticAnalyzer {
       }
     }
     private boolean genSubQueryRelNode(QB qb, ASTNode node, RelNode srcRel, boolean forHavingClause,
-                                       Map<ASTNode, RelNode> subQueryToRelNode,
-                                       Map<String, RelNode> aliasToRel) throws SemanticException {
+                                       Map<ASTNode, RelNode> subQueryToRelNode) throws SemanticException {
 
         Set<ASTNode> corrScalarQueriesWithAgg = new HashSet<ASTNode>();
         //disallow subqueries which HIVE doesn't currently support
-        subqueryRestrictionCheck(qb, node, srcRel, forHavingClause, aliasToRel, corrScalarQueriesWithAgg);
+        subqueryRestrictionCheck(qb, node, srcRel, forHavingClause, corrScalarQueriesWithAgg);
         Deque<ASTNode> stack = new ArrayDeque<ASTNode>();
         stack.push(node);
 
@@ -2474,7 +2468,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
 
       Map<ASTNode, RelNode> subQueryToRelNode = new HashMap<>();
       boolean isSubQuery = genSubQueryRelNode(qb, searchCond, srcRel, forHavingClause,
-                                                subQueryToRelNode, aliasToRel);
+                                                subQueryToRelNode);
       if(isSubQuery) {
         ExprNodeDesc subQueryExpr = genExprNodeDesc(searchCond, relToHiveRR.get(srcRel),
                 outerRR, subQueryToRelNode, forHavingClause);
@@ -2818,11 +2812,12 @@ public class CalcitePlanner extends SemanticAnalyzer {
       // not necessary, it will be removed by NonBlockingOpDeDupProc Optimizer because it will match
       // SEL%SEL% rule.
       ASTNode selExprList = qb.getParseInfo().getSelForClause(detsClauseName);
+      SubQueryUtils.checkForTopLevelSubqueries(selExprList);
       if (selExprList.getToken().getType() == HiveParser.TOK_SELECTDI
           && selExprList.getChildCount() == 1 && selExprList.getChild(0).getChildCount() == 1) {
         ASTNode node = (ASTNode) selExprList.getChild(0).getChild(0);
         if (node.getToken().getType() == HiveParser.TOK_ALLCOLREF) {
-          srcRel = genSelectLogicalPlan(qb, srcRel, srcRel);
+          srcRel = genSelectLogicalPlan(qb, srcRel, srcRel, null,null);
           RowResolver rr = this.relToHiveRR.get(srcRel);
           qbp.setSelExprForClause(detsClauseName, SemanticAnalyzer.genSelectDIAST(rr));
         }
@@ -3449,7 +3444,8 @@ public class CalcitePlanner extends SemanticAnalyzer {
      *
      * @throws SemanticException
      */
-    private RelNode genSelectLogicalPlan(QB qb, RelNode srcRel, RelNode starSrcRel)
+    private RelNode genSelectLogicalPlan(QB qb, RelNode srcRel, RelNode starSrcRel,
+                                         ImmutableMap<String, Integer> outerNameToPosMap, RowResolver outerRR)
         throws SemanticException {
       // 0. Generate a Select Node for Windowing
       // Exclude the newly-generated select columns from */etc. resolution.
@@ -3463,6 +3459,9 @@ public class CalcitePlanner extends SemanticAnalyzer {
       QBParseInfo qbp = getQBParseInfo(qb);
       String selClauseName = qbp.getClauseNames().iterator().next();
       ASTNode selExprList = qbp.getSelForClause(selClauseName);
+
+      // make sure if there is subquery it is top level expression
+      SubQueryUtils.checkForTopLevelSubqueries(selExprList);
 
       final boolean cubeRollupGrpSetPresent = (!qbp.getDestRollups().isEmpty()
               || !qbp.getDestGroupingSets().isEmpty() || !qbp.getDestCubes().isEmpty());
@@ -3643,6 +3642,24 @@ public class CalcitePlanner extends SemanticAnalyzer {
           // Likely a malformed query eg, select hash(distinct c1) from t1;
           throw new CalciteSemanticException("Distinct without an aggregation.",
               UnsupportedFeature.Distinct_without_an_aggreggation);
+        } else if (expr.getType() == HiveParser.TOK_SUBQUERY_EXPR) {
+          Map<ASTNode, RelNode> subQueryToRelNode = new HashMap<>();
+          boolean isSubQuery = genSubQueryRelNode(qb, expr, srcRel, false,
+                  subQueryToRelNode);
+          assert(isSubQuery); //since we should get in here only if expr is subquery
+          ExprNodeDesc subQueryExpr = genExprNodeDesc(expr, relToHiveRR.get(srcRel),
+                  outerRR, subQueryToRelNode, false);
+          col_list.add(subQueryExpr);
+
+          ColumnInfo colInfo = new ColumnInfo(SemanticAnalyzer.getColumnInternalName(pos),
+                  subQueryExpr.getWritableObjectInspector(), tabAlias, false);
+          colInfo.setSkewedCol((subQueryExpr instanceof ExprNodeColumnDesc) ? ((ExprNodeColumnDesc) subQueryExpr)
+                  .isSkewedCol() : false);
+          if (!out_rwsch.putWithCheck(tabAlias, colAlias, null, colInfo)) {
+            throw new CalciteSemanticException("Cannot add column to RR: " + tabAlias + "."
+                    + colAlias + " => " + colInfo + " due to duplication, see previous warnings",
+                    UnsupportedFeature.Duplicates_in_RR);
+          }
         } else {
           // Case when this is an expression
           TypeCheckCtx tcCtx = new TypeCheckCtx(inputRR);
@@ -3686,8 +3703,12 @@ public class CalcitePlanner extends SemanticAnalyzer {
 
       // 7. Convert Hive projections to Calcite
       List<RexNode> calciteColLst = new ArrayList<RexNode>();
+
       RexNodeConverter rexNodeConv = new RexNodeConverter(cluster, srcRel.getRowType(),
-          buildHiveColNameToInputPosMap(col_list, inputRR), 0, false);
+              outerNameToPosMap, buildHiveColNameToInputPosMap(col_list, inputRR), relToHiveRR.get(srcRel),
+              outerRR, 0, true, subqueryId);
+      //RexNodeConverter rexNodeConv = new RexNodeConverter(cluster, srcRel.getRowType(),
+        //  buildHiveColNameToInputPosMap(col_list, inputRR), 0, false);
       for (ExprNodeDesc colExpr : col_list) {
         calciteColLst.add(rexNodeConv.convert(colExpr));
       }
@@ -3943,7 +3964,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
       srcRel = (gbHavingRel == null) ? srcRel : gbHavingRel;
 
       // 5. Build Rel for Select Clause
-      selectRel = genSelectLogicalPlan(qb, srcRel, starSrcRel);
+      selectRel = genSelectLogicalPlan(qb, srcRel, starSrcRel, outerNameToPosMap, outerRR);
       srcRel = (selectRel == null) ? srcRel : selectRel;
 
       // 6. Build Rel for OB Clause

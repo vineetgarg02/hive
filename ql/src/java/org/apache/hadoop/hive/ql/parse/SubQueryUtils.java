@@ -34,6 +34,7 @@ import org.apache.hadoop.hive.ql.parse.QBSubQuery.SubQueryType;
 import org.apache.hadoop.hive.ql.parse.QBSubQuery.SubQueryTypeDef;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDAFCount;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDAFResolver;
+import org.apache.hadoop.hive.ql.optimizer.calcite.CalciteSubquerySemanticException;
 
 public class SubQueryUtils {
 
@@ -650,6 +651,35 @@ public class SubQueryUtils {
         ParseDriver.adaptor.create(HiveParser.Number, "0"));
     
     return eq;
+  }
+
+  static void checkForSubqueries(ASTNode node) throws SemanticException {
+    if(node.getType() == HiveParser.TOK_SUBQUERY_EXPR) {
+      throw new CalciteSubquerySemanticException(ErrorMsg.UNSUPPORTED_SUBQUERY_EXPRESSION.getMsg(
+              "Invalid subquery. Subquery in SELECT could only be top-level expression"));
+    }
+    for(int i=0; i<node.getChildCount(); i++) {
+        checkForSubqueries((ASTNode)node.getChild(i));
+    }
+  }
+  /*
+   * Given a TOK_SELECT this checks IF there is a subquery
+   *  it is top level expression, else it throws an error
+   */
+  public static void checkForTopLevelSubqueries(ASTNode selExprList) throws SemanticException{
+    assert(selExprList.getType() == HiveParser.TOK_SELECT);
+    for(int i=0; i<selExprList.getChildCount(); i++) {
+      ASTNode selExpr = (ASTNode)selExprList.getChild(i);
+      assert(selExpr.getType() == HiveParser.TOK_SELEXPR);
+      //i don't think TOK_SELEXPR could have more than one child
+      assert(selExpr.getChildCount() == 1);
+
+      if(selExpr.getChild(0).getType() == HiveParser.TOK_SUBQUERY_EXPR) {
+        continue; //we are good since subquery is top level expression
+      }
+      // otherwise we need to make sure that there is no subquery at any level
+      checkForSubqueries((ASTNode)selExpr.getChild(0));
+    }
   }
   
   public static interface ISubQueryJoinInfo {

@@ -667,18 +667,33 @@ public class SubQueryUtils {
    *  it is top level expression, else it throws an error
    */
   public static void checkForTopLevelSubqueries(ASTNode selExprList) throws SemanticException{
-    assert(selExprList.getType() == HiveParser.TOK_SELECT);
+   // should be either SELECT or SELECT DISTINCT
+    assert(selExprList.getType() == HiveParser.TOK_SELECT
+            || selExprList.getType() == HiveParser.TOK_SELECTDI);
     for(int i=0; i<selExprList.getChildCount(); i++) {
       ASTNode selExpr = (ASTNode)selExprList.getChild(i);
-      assert(selExpr.getType() == HiveParser.TOK_SELEXPR);
-      //i don't think TOK_SELEXPR could have more than one child
-      assert(selExpr.getChildCount() == 1);
+      // could get either query hint or select expr
+      assert(selExpr.getType() == HiveParser.TOK_SELEXPR
+        || selExpr.getType() == HiveParser.QUERY_HINT);
 
-      if(selExpr.getChild(0).getType() == HiveParser.TOK_SUBQUERY_EXPR) {
+      if(selExpr.getType() == HiveParser.QUERY_HINT) {
+        // skip query hints
+        continue;
+      }
+
+      if(selExpr.getChildCount() == 1
+        && selExpr.getChild(0).getType() == HiveParser.TOK_SUBQUERY_EXPR) {
+        if(selExprList.getType() == HiveParser.TOK_SELECTDI) {
+          throw new CalciteSubquerySemanticException(ErrorMsg.UNSUPPORTED_SUBQUERY_EXPRESSION.getMsg(
+                  "Invalid subquery. Subquery with DISTINCT clause is not supported!"));
+
+        }
         continue; //we are good since subquery is top level expression
       }
       // otherwise we need to make sure that there is no subquery at any level
-      checkForSubqueries((ASTNode)selExpr.getChild(0));
+      for(int j=0; j<selExpr.getChildCount(); j++) {
+        checkForSubqueries((ASTNode) selExpr.getChild(j));
+      }
     }
   }
   

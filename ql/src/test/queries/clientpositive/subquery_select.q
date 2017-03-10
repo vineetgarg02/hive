@@ -81,3 +81,21 @@ where b.key in
         (select (select max(key) from src sc where sc.value = a.value)
          from src a
          where b.value = a.value and a.key > '9' );
+
+CREATE table tnull(i int);
+insert into tnull values(null);
+
+-- IN query returns unknown/NULL instead of true/false
+explain select p_size, p_size IN (select i from tnull) from part;
+select p_size, p_size IN (select i from tnull) from part;
+
+CREATE TABLE tempty(i int);
+
+explain select p_size, (select count(*) from tempty) from part;
+select p_size, (select count(*) from tempty) from part;
+
+explain select p_size, (select max(i) from tempty) from part;
+select p_size, (select max(i) from tempty) from part;
+
+DROP table tempty;
+DROP table tnull;

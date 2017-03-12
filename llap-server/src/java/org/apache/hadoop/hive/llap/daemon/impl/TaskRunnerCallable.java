@@ -150,7 +150,7 @@ public class TaskRunnerCallable extends CallableWithNdc<TaskRunner2Result> {
     // Register with the AMReporter when the callable is setup. Unregister once it starts running.
     if (amReporter != null && jobToken != null) {
       this.amReporter.registerTask(request.getAmHost(), request.getAmPort(),
-          vertex.getUser(), jobToken, fragmentInfo.getQueryInfo().getQueryIdentifier(), attemptId);
+          vertex.getTokenIdentifier(), jobToken, fragmentInfo.getQueryInfo().getQueryIdentifier(), attemptId);
     }
     this.metrics = metrics;
     this.requestId = taskSpec.getTaskAttemptID().toString();
@@ -188,7 +188,8 @@ public class TaskRunnerCallable extends CallableWithNdc<TaskRunner2Result> {
 
       // Unregister from the AMReporter, since the task is now running.
       TezTaskAttemptID ta = taskSpec.getTaskAttemptID();
-      this.amReporter.unregisterTask(request.getAmHost(), request.getAmPort(), ta);
+      this.amReporter.unregisterTask(request.getAmHost(), request.getAmPort(),
+          fragmentInfo.getQueryInfo().getQueryIdentifier(), ta);
 
       synchronized (this) {
         if (!shouldRunTask) {
@@ -355,7 +356,9 @@ public class TaskRunnerCallable extends CallableWithNdc<TaskRunner2Result> {
             // If the task hasn't started - inform about fragment completion immediately. It's possible for
             // the callable to never run.
             fragmentCompletionHanler.fragmentComplete(fragmentInfo);
-            this.amReporter.unregisterTask(request.getAmHost(), request.getAmPort(), ta);
+            this.amReporter
+                .unregisterTask(request.getAmHost(), request.getAmPort(),
+                    fragmentInfo.getQueryInfo().getQueryIdentifier(), ta);
           }
         }
       } else {
@@ -374,7 +377,7 @@ public class TaskRunnerCallable extends CallableWithNdc<TaskRunner2Result> {
    */
   public void reportTaskKilled() {
     killedTaskHandler
-        .taskKilled(request.getAmHost(), request.getAmPort(), vertex.getUser(), jobToken,
+        .taskKilled(request.getAmHost(), request.getAmPort(), vertex.getTokenIdentifier(), jobToken,
             fragmentInfo.getQueryInfo().getQueryIdentifier(), taskSpec.getTaskAttemptID());
   }
 

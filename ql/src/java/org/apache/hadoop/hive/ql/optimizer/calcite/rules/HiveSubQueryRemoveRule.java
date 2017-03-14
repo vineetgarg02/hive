@@ -396,16 +396,16 @@ public abstract class HiveSubQueryRemoveRule extends RelOptRule{
                     // we are creating filter here so should not be returning NULL. Not sure why Calcite return NULL
                     //operands.add(builder.or(keyIsNulls), builder.literal(false));
                 }
-                Boolean b = true;
+                RexNode b = builder.literal(true);
                 switch (logic) {
                     case TRUE_FALSE_UNKNOWN:
-                        b = null;
+                        b = e.rel.getCluster().getRexBuilder().makeNullLiteral(SqlTypeName.BOOLEAN);
                         // fall through
                     case UNKNOWN_AS_TRUE:
                         operands.add(
                                 builder.call(SqlStdOperatorTable.LESS_THAN,
                                         builder.field("ct", "ck"), builder.field("ct", "c")),
-                                builder.literal(b));
+                                b);
                         break;
                 }
                 operands.add(builder.literal(false));

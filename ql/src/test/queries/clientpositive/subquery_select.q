@@ -20,6 +20,24 @@ SELECT p_size, p_size IN (
         SELECT MAX(p_size) FROM part p where p.p_type = part.p_type)
 FROM part;
 
+-- NOT IN, non corr
+explain SELECT p_size, p_size NOT IN (
+        SELECT MAX(p_size) FROM part)
+FROM part;
+
+SELECT p_size, p_size NOT IN (
+        SELECT MAX(p_size) FROM part)
+FROM part ;
+
+-- NOT IN, corr
+EXPLAIN SELECT p_size, p_size NOT IN (
+        SELECT MAX(p_size) FROM part p where p.p_type = part.p_type)
+FROM part;
+
+SELECT p_size, p_size NOT IN (
+        SELECT MAX(p_size) FROM part p where p.p_type = part.p_type)
+FROM part;
+
 -- EXISTS, non corr
 explain SELECT p_size, EXISTS(SELECT p_size FROM part)
 FROM part;
@@ -32,6 +50,20 @@ explain SELECT p_size, EXISTS(SELECT p_size FROM part pp where pp.p_type = part.
 FROM part;
 
 SELECT p_size, EXISTS(SELECT p_size FROM part pp where pp.p_type = part.p_type)
+FROM part;
+
+-- NOT EXISTS, non corr
+explain SELECT p_size, NOT EXISTS(SELECT p_size FROM part)
+FROM part;
+
+SELECT p_size, NOT EXISTS(SELECT p_size FROM part)
+FROM part;
+
+-- NOT EXISTS, corr
+explain SELECT p_size, NOT EXISTS(SELECT p_size FROM part pp where pp.p_type = part.p_type)
+FROM part;
+
+SELECT p_size, NOT EXISTS(SELECT p_size FROM part pp where pp.p_type = part.p_type)
 FROM part;
 
 -- SCALAR, corr

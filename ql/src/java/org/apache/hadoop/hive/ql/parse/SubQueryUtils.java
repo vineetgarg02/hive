@@ -654,7 +654,9 @@ public class SubQueryUtils {
   }
 
   static void checkForSubqueries(ASTNode node) throws SemanticException {
-    if(node.getType() == HiveParser.TOK_SUBQUERY_EXPR) {
+    // allow NOT but throw an error for rest
+    if(node.getType() == HiveParser.TOK_SUBQUERY_EXPR
+            && node.getParent().getType() != HiveParser.KW_NOT) {
       throw new CalciteSubquerySemanticException(ErrorMsg.UNSUPPORTED_SUBQUERY_EXPRESSION.getMsg(
               "Invalid subquery. Subquery in SELECT could only be top-level expression"));
     }

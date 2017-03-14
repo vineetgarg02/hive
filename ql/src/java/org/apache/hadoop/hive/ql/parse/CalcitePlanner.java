@@ -3710,7 +3710,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
 
       RexNodeConverter rexNodeConv = new RexNodeConverter(cluster, srcRel.getRowType(),
               outerNameToPosMap, buildHiveColNameToInputPosMap(col_list, inputRR), relToHiveRR.get(srcRel),
-              outerRR, 0, true, subqueryId);
+              outerRR, 0, false, subqueryId);
       for (ExprNodeDesc colExpr : col_list) {
         calciteColLst.add(rexNodeConv.convert(colExpr));
       }

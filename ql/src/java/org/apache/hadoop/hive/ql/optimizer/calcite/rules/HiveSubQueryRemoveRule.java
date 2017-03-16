@@ -47,6 +47,7 @@ import org.apache.calcite.util.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -89,8 +90,10 @@ public abstract class HiveSubQueryRemoveRule extends RelOptRule{
                                     project.getProjects(), e);
                     builder.push(project.getInput());
                     final int fieldCount = builder.peek().getRowType().getFieldCount();
+                    Set<RelNode> corrScalarQueries = project.getCluster().getPlanner().getContext().unwrap(Set.class);
+                    boolean isCorrScalarQuery = corrScalarQueries.contains(e.rel);
                     final RexNode target = apply(e, HiveFilter.getVariablesSet(e),
-                            logic, builder, 1, fieldCount, false);
+                            logic, builder, 1, fieldCount, isCorrScalarQuery);
                     final RexShuttle shuttle = new ReplaceSubQueryShuttle(e, target);
                     builder.project(shuttle.apply(project.getProjects()),
                             project.getRowType().getFieldNames());
@@ -181,7 +184,9 @@ public abstract class HiveSubQueryRemoveRule extends RelOptRule{
                     final ImmutableList.Builder<RexNode> operands = ImmutableList.builder();
                     RexNode literal;
                     if(isAggZeroOnEmpty(e)) {
-                        literal = builder.literal(0);
+                        // since count has a return type of BIG INT we need to make a literal of type big int
+                        // relbuilder's literal doesn't allow this
+                        literal = e.rel.getCluster().getRexBuilder().makeBigintLiteral(new BigDecimal(0));
                     }
                     else {
                         literal = e.rel.getCluster().getRexBuilder().makeNullLiteral(getAggTypeForScalarSub(e));

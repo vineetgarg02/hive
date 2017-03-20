@@ -135,8 +135,7 @@ DROP table tnull;
 
 -- following tests test subquery in all kind of expressions (except UDAF, UDA and UDTF)
 
--- explain select (select max(p_size) from part);
--- select (select max(p_size) from part);
+
 
 -- different data types
 -- string with string
@@ -159,5 +158,67 @@ SELECT p_size, (SELECT count(p_size) FROM part p
 explain select p_type, (select p_size from part order by p_size limit 1) = 1 from part;
 select p_type, (select p_size from part order by p_size limit 1) = 1 from part;
 
+-- in corr, multiple
+EXPLAIN SELECT p_size, p_size IN (
+        SELECT MAX(p_size) FROM part p where p.p_type = part.p_type) AND
+        p_name IN (SELECT min(p_name) from part)
+FROM part;
+SELECT p_size, p_size IN (
+        SELECT MAX(p_size) FROM part p where p.p_type = part.p_type) AND
+        p_name IN (SELECT min(p_name) from part)
+FROM part;
 
+-- exists, corr
+explain SELECT p_size, NOT EXISTS(SELECT p_size FROM part pp where pp.p_type = part.p_type)
+FROM part;
+SELECT p_size, NOT EXISTS(SELECT p_size FROM part pp where pp.p_type = part.p_type)
+FROM part;
 
+-- scalar subquery within IN subquery
+explain select p_size, (p_size IN
+    (select (select max(p_size) from part) as sb from part order by sb limit 1)) = true
+   from part;
+select p_size, (p_size IN
+    (select (select max(p_size) from part) as sb from part order by sb limit 1)) = true
+   from part;
+
+explain select case when (select count(*)
+                  from part
+                  where p_size between 1 and 20) > 409437
+            then (select avg(p_partkey)
+                  from part
+                  where p_partkey between 1 and 20)
+            else (select max(p_size)
+                  from part
+                  where p_partkey between 10000 and 20000) end sq
+from part;
+
+select case when (select count(*)
+                  from part
+                  where p_size between 1 and 20) > 409437
+            then (select avg(p_partkey)
+                  from part
+                  where p_partkey between 1 and 20)
+            else (select max(p_size)
+                  from part
+                  where p_partkey between 10000 and 20000) end sq
+from part;
+
+-- TODO: add the following to negative
+--select (select max(p_size) from part);
+
+select max(p_size) > ( select count(*)-1 from part) from part;
+
+select o.p_size, (select count(distinct p_type) from part p where p.p_partkey = o.p_partkey) tmp
+    FROM part o right join (select * from part where p_size > (select avg(p_size) from part)) t on t.p_partkey = o.p_partkey;
+
+select (select max(p_size) from part), (select min(p_size) from part),
+    (select avg(p_size) from part), (select sum(p_size) from part)
+     from part;
+
+select t1.p_size,
+    (select count(*) from part t2 where t2.p_partkey = t1.p_partkey group by t2.p_partkey),
+    (select count(*) from part p, part pp where p.p_size = pp.p_size and p.p_type = pp.p_type
+                                              and (select sum(p_size) from part a1 where a1.p_partkey = p.p_partkey
+                                                                        group by a1.p_partkey) > 0)
+    from part t1;

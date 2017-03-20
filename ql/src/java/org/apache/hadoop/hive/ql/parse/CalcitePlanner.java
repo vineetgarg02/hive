@@ -3612,7 +3612,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
                   subQueryToRelNode);
           if(isSubQuery) {
             ExprNodeDesc subQueryExpr = genExprNodeDesc(expr, relToHiveRR.get(srcRel),
-                    outerRR, subQueryToRelNode, false);
+                    outerRR, subQueryToRelNode, true);
             col_list.add(subQueryExpr);
 
             ColumnInfo colInfo = new ColumnInfo(SemanticAnalyzer.getColumnInternalName(pos),
@@ -3622,6 +3622,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
                       + colAlias + " => " + colInfo + " due to duplication, see previous warnings",
                       UnsupportedFeature.Duplicates_in_RR);
             }
+            pos = Integer.valueOf(pos.intValue() + 1);
           } else {
 
             // 6.4 Build ExprNode corresponding to colums

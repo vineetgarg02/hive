@@ -216,6 +216,12 @@ select (select max(p_size) from part), (select min(p_size) from part),
     (select avg(p_size) from part), (select sum(p_size) from part)
      from part;
 
+explain select t1.p_size,
+    (select count(*) from part p, part pp where p.p_size = pp.p_size and p.p_type = pp.p_type
+                                              and (select sum(p_size) from part a1 where a1.p_partkey = p.p_partkey
+                                                                        group by a1.p_partkey) > 0)
+    from part t1;
+
 select t1.p_size,
     (select count(*) from part t2 where t2.p_partkey = t1.p_partkey group by t2.p_partkey),
     (select count(*) from part p, part pp where p.p_size = pp.p_size and p.p_type = pp.p_type

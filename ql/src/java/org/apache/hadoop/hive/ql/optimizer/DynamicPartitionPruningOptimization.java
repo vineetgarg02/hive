@@ -19,6 +19,7 @@
 package org.apache.hadoop.hive.ql.optimizer;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -507,6 +508,8 @@ public class DynamicPartitionPruningOptimization implements NodeProcessor {
       GenericUDAFBloomFilterEvaluator bloomFilterEval = (GenericUDAFBloomFilterEvaluator) bloomFilter.getGenericUDAFEvaluator();
       bloomFilterEval.setSourceOperator(selectOp);
       bloomFilterEval.setMaxEntries(parseContext.getConf().getLongVar(ConfVars.TEZ_MAX_BLOOM_FILTER_ENTRIES));
+      bloomFilterEval.setMinEntries(parseContext.getConf().getLongVar(ConfVars.TEZ_MIN_BLOOM_FILTER_ENTRIES));
+      bloomFilterEval.setFactor(parseContext.getConf().getFloatVar(ConfVars.TEZ_BLOOM_FILTER_FACTOR));
       bloomFilter.setGenericUDAFWritableEvaluator(bloomFilterEval);
       aggs.add(min);
       aggs.add(max);
@@ -558,6 +561,8 @@ public class DynamicPartitionPruningOptimization implements NodeProcessor {
     Map<String, ExprNodeDesc> columnExprMap = new HashMap<String, ExprNodeDesc>();
     rsOp.setColumnExprMap(columnExprMap);
 
+    rsOp.getConf().setReducerTraits(EnumSet.of(ReduceSinkDesc.ReducerTraits.QUICKSTART));
+
     // Create the final Group By Operator
     ArrayList<AggregationDesc> aggsFinal = new ArrayList<AggregationDesc>();
     try {
@@ -603,6 +608,8 @@ public class DynamicPartitionPruningOptimization implements NodeProcessor {
       GenericUDAFBloomFilterEvaluator bloomFilterEval = (GenericUDAFBloomFilterEvaluator) bloomFilter.getGenericUDAFEvaluator();
       bloomFilterEval.setSourceOperator(selectOp);
       bloomFilterEval.setMaxEntries(parseContext.getConf().getLongVar(ConfVars.TEZ_MAX_BLOOM_FILTER_ENTRIES));
+      bloomFilterEval.setMinEntries(parseContext.getConf().getLongVar(ConfVars.TEZ_MIN_BLOOM_FILTER_ENTRIES));
+      bloomFilterEval.setFactor(parseContext.getConf().getFloatVar(ConfVars.TEZ_BLOOM_FILTER_FACTOR));
       bloomFilter.setGenericUDAFWritableEvaluator(bloomFilterEval);
 
       aggsFinal.add(min);
@@ -659,6 +666,7 @@ public class DynamicPartitionPruningOptimization implements NodeProcessor {
     runtimeValuesInfo.setTableDesc(rsFinalTableDesc);
     runtimeValuesInfo.setDynamicValueIDs(dynamicValueIDs);
     runtimeValuesInfo.setColExprs(rsValueCols);
+    runtimeValuesInfo.setTsColExpr(ctx.parent.getChildren().get(0));
     parseContext.getRsToRuntimeValuesInfoMap().put(rsOpFinal, runtimeValuesInfo);
 
     return true;

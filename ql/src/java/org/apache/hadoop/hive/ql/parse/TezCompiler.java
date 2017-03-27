@@ -17,6 +17,7 @@
  */
 package org.apache.hadoop.hive.ql.parse;
 
+import com.google.common.base.Preconditions;
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -58,6 +59,8 @@ import org.apache.hadoop.hive.ql.optimizer.physical.Vectorizer;
 import org.apache.hadoop.hive.ql.optimizer.stats.annotation.AnnotateWithStatistics;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.hive.ql.session.SessionState.LogHelper;
+import org.apache.hadoop.hive.ql.exec.SelectOperator;
+import org.apache.hadoop.hive.ql.stats.StatsUtils;
 
 /**
  * TezCompiler translates the operator plan into TezTasks.
@@ -101,11 +104,13 @@ public class TezCompiler extends TaskCompiler {
     runStatsDependentOptimizations(procCtx, inputs, outputs);
     perfLogger.PerfLogEnd(this.getClass().getName(), PerfLogger.TEZ_COMPILER, "Run the optimizations that use stats for optimization");
 
+    // Removing semijoin optimization when it may not be beneficial
+    removeSemijoinOptimizationByBenefit(procCtx);
+
     perfLogger.PerfLogBegin(this.getClass().getName(), PerfLogger.TEZ_COMPILER);
-    // after the stats phase we might have some cyclic dependencies that we need
-    // to take care of.
-    runCycleAnalysisForPartitionPruning(procCtx, inputs, outputs);
-    perfLogger.PerfLogEnd(this.getClass().getName(), PerfLogger.TEZ_COMPILER, "Run cycle analysis for partition pruning");
+    // Remove any parallel edge between semijoin and mapjoin.
+    removeSemijoinsParallelToMapJoin(procCtx);
+    perfLogger.PerfLogEnd(this.getClass().getName(), PerfLogger.TEZ_COMPILER, "Run the optimizations that use stats for optimization");
 
     perfLogger.PerfLogBegin(this.getClass().getName(), PerfLogger.TEZ_COMPILER);
     // Remove semijoin optimization if it creates a cycle with mapside joins
@@ -121,6 +126,12 @@ public class TezCompiler extends TaskCompiler {
     // Remove bloomfilter if no stats generated
     removeSemiJoinIfNoStats(procCtx);
     perfLogger.PerfLogEnd(this.getClass().getName(), PerfLogger.TEZ_COMPILER, "Remove bloom filter optimizations if needed");
+
+    perfLogger.PerfLogBegin(this.getClass().getName(), PerfLogger.TEZ_COMPILER);
+    // after the stats phase we might have some cyclic dependencies that we need
+    // to take care of.
+    runCycleAnalysisForPartitionPruning(procCtx, inputs, outputs);
+    perfLogger.PerfLogEnd(this.getClass().getName(), PerfLogger.TEZ_COMPILER, "Run cycle analysis for partition pruning");
 
     // need a new run of the constant folding because we might have created lots
     // of "and true and true" conditions.
@@ -781,6 +792,16 @@ public class TezCompiler extends TaskCompiler {
           break;
         }
       }
+
+      // Check if big table is big enough that runtime filtering is
+      // worth it.
+      if (ts.getStatistics() != null) {
+        long numRows = ts.getStatistics().getNumRows();
+        if (numRows < pCtx.getConf().getLongVar(ConfVars.TEZ_BIGTABLE_MIN_SIZE_SEMIJOIN_REDUCTION)) {
+          removeSemiJoin = true;
+        }
+      }
+
       if (removeSemiJoin) {
         // The stats are not annotated, remove the semijoin operator
         GenTezUtils.removeBranch(rs);
@@ -809,5 +830,324 @@ public class TezCompiler extends TaskCompiler {
     topNodes.addAll(procCtx.parseContext.getTopOps().values());
     GraphWalker ogw = new PreOrderOnceWalker(disp);
     ogw.startWalking(topNodes, null);
+  }
+
+  private boolean findParallelSemiJoinBranch(Operator<?> mapjoin, TableScanOperator bigTableTS,
+                                             ParseContext parseContext,
+                                             Map<ReduceSinkOperator, TableScanOperator> semijoins) {
+
+    boolean parallelEdges = false;
+    for (Operator<?> op : mapjoin.getParentOperators()) {
+      if (!(op instanceof ReduceSinkOperator)) {
+        continue;
+      }
+
+      op = op.getParentOperators().get(0);
+
+      // Follow the Reducesink operator upstream which is on small table side.
+      while (!(op instanceof ReduceSinkOperator) &&
+              !(op instanceof TableScanOperator) &&
+              !(op.getChildren() != null && op.getChildren().size() > 1)) {
+        op = op.getParentOperators().get(0);
+      }
+
+      // Bail out if RS or TS is encountered.
+      if (op instanceof ReduceSinkOperator || op instanceof TableScanOperator) {
+        continue;
+      }
+
+      // A branch is hit.
+      for (Node nd : op.getChildren()) {
+        if (nd instanceof SelectOperator) {
+          Operator<?> child = (Operator<?>) nd;
+
+          while (child.getChildOperators().size() > 0) {
+            child = child.getChildOperators().get(0);
+          }
+
+          // If not ReduceSink Op, skip
+          if (!(child instanceof ReduceSinkOperator)) {
+            continue;
+          }
+
+          ReduceSinkOperator rs = (ReduceSinkOperator) child;
+          TableScanOperator ts = parseContext.getRsOpToTsOpMap().get(rs);
+          if (ts == null || ts != bigTableTS) {
+            // skip, no semijoin or not the one we are looking for.
+            continue;
+          }
+
+          // Add the semijoin branch to the map
+          semijoins.put(rs, ts);
+          parallelEdges = true;
+        }
+      }
+    }
+    return parallelEdges;
+  }
+
+  /*
+   *  The algorithm looks at all the mapjoins in the operator pipeline until
+   *  it hits RS Op and for each mapjoin examines if it has paralllel semijoin
+   *  edge.
+   */
+  private void removeSemijoinsParallelToMapJoin(OptimizeTezProcContext procCtx)
+          throws SemanticException {
+    if(!procCtx.conf.getBoolVar(ConfVars.TEZ_DYNAMIC_SEMIJOIN_REDUCTION) ||
+            !procCtx.conf.getBoolVar(ConfVars.HIVECONVERTJOIN)) {
+      // Not needed without semi-join reduction
+      return;
+    }
+
+    // Get all the TS ops.
+    List<Operator<?>> topOps = new ArrayList<>();
+    topOps.addAll(procCtx.parseContext.getTopOps().values());
+
+    Map<ReduceSinkOperator, TableScanOperator> semijoins = new HashMap<>();
+    for (Operator<?> parent : topOps) {
+      // A TS can have multiple branches due to DPP Or Semijoin Opt.
+      // USe DFS to traverse all the branches until RS is hit.
+      Deque<Operator<?>> deque = new LinkedList<>();
+      deque.add(parent);
+      while (!deque.isEmpty()) {
+        Operator<?> op = deque.poll();
+        if (op instanceof ReduceSinkOperator) {
+          // Done with this branch
+          continue;
+        }
+
+        if (op instanceof MapJoinOperator) {
+          // A candidate.
+          if (!findParallelSemiJoinBranch(op, (TableScanOperator) parent,
+                  procCtx.parseContext, semijoins)) {
+            // No parallel edge was found for the given mapjoin op,
+            // no need to go down further, skip this TS operator pipeline.
+            break;
+          }
+        }
+        deque.addAll(op.getChildOperators());
+      }
+    }
+
+    if (semijoins.size() > 0) {
+      for (ReduceSinkOperator rs : semijoins.keySet()) {
+        GenTezUtils.removeBranch(rs);
+        GenTezUtils.removeSemiJoinOperator(procCtx.parseContext, rs,
+                semijoins.get(rs));
+      }
+    }
+  }
+
+  private static boolean canUseNDV(ColStatistics colStats) {
+    return (colStats != null) && (colStats.getCountDistint() >= 0);
+  }
+
+  private static double getBloomFilterCost(
+      SelectOperator sel,
+      FilterOperator fil) {
+    double cost = -1;
+    Statistics selStats = sel.getStatistics();
+    if (selStats != null) {
+      cost = selStats.getNumRows();
+
+      // Some other things that could be added here to model cost:
+      // Cost of computing/sending partial BloomFilter results? BloomFilterSize * # mappers
+      // For reduce-side join, add the cost of the semijoin table scan/dependent tablescans?
+    }
+    return cost;
+  }
+
+  private static long getCombinedKeyDomainCardinality(
+      ColStatistics selColStat,
+      ColStatistics selColSourceStat,
+      ColStatistics tsColStat) {
+    long keyDomainCardinality = -1;
+    if (!canUseNDV(selColStat) || !canUseNDV(tsColStat)) {
+      return -1;
+    }
+
+    long selColSourceNdv = canUseNDV(selColSourceStat) ? selColSourceStat.getCountDistint() : -1;
+    boolean semiJoinKeyIsPK = StatsUtils.inferForeignKey(selColStat, tsColStat);
+    if (semiJoinKeyIsPK) {
+      // PK/FQ relationship: NDV of selColSourceStat is a superset of what is in tsColStat
+      if (selColSourceNdv >= 0) {
+        // Most accurate domain cardinality would be source column NDV if available.
+        keyDomainCardinality = selColSourceNdv;
+      }
+    } else {
+      if (selColSourceNdv >= 0) {
+        // If semijoin keys and ts keys completely unrelated, the cardinality of both sets
+        // could be obtained by adding both cardinalities. Would there be an average case?
+        keyDomainCardinality = selColSourceNdv + tsColStat.getCountDistint();
+
+        // Don't exceed the range if we have one.
+        if (StatsUtils.hasDiscreteRange(selColStat)
+            && StatsUtils.hasDiscreteRange(tsColStat)) {
+          long range = 0;
+          // Trying using the cardinality from the value range.
+          ColStatistics.Range combinedRange = StatsUtils.combineRange(selColStat.getRange(), tsColStat.getRange());
+          if (combinedRange != null) {
+            range = StatsUtils.getRangeDelta(combinedRange);
+          } else {
+            range = StatsUtils.getRangeDelta(selColStat.getRange())
+                + StatsUtils.getRangeDelta(tsColStat.getRange());
+          }
+          keyDomainCardinality = Math.min(keyDomainCardinality, range);
+        }
+      }
+      // Otherwise, we tried ..
+    }
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("Computing key domain cardinality, keyDomainCardinality=" + keyDomainCardinality
+          + ", semiJoinKeyIsPK=" + semiJoinKeyIsPK
+          + ", selColStat=" + selColStat
+          + ", selColSourceStat=" + selColSourceStat
+          + ", tsColStat=" + tsColStat);
+    }
+
+    return keyDomainCardinality;
+  }
+
+  private static double getBloomFilterBenefit(
+      SelectOperator sel, ExprNodeDesc selExpr,
+      FilterOperator fil, ExprNodeDesc tsExpr) {
+    double benefit = -1;
+    Statistics selStats = sel.getStatistics();
+    Statistics filStats = fil.getStatistics();
+    if (selStats == null || filStats == null) {
+      LOG.debug("No stats available to compute BloomFilter benefit");
+      return benefit;
+    }
+
+    // For cardinality values use numRows as default, try to use ColStats if available
+    long selKeyCardinality = selStats.getNumRows();
+    long tsKeyCardinality = filStats.getNumRows();
+    long tsRows = filStats.getNumRows();
+    long tsRowSize = filStats.getAvgRowSize();
+    long keyDomainCardinality = selKeyCardinality + tsKeyCardinality;
+
+    ExprNodeColumnDesc selCol = ExprNodeDescUtils.getColumnExpr(selExpr);
+    ExprNodeColumnDesc tsCol = ExprNodeDescUtils.getColumnExpr(tsExpr);
+    if (selCol != null && tsCol != null) {
+      // Check if there are column stats available for these columns
+      ColStatistics selColStat = selStats.getColumnStatisticsFromColName(selCol.getColumn());
+      ColStatistics filColStat = filStats.getColumnStatisticsFromColName(tsCol.getColumn());
+      if (canUseNDV(selColStat)) {
+        selKeyCardinality = selColStat.getCountDistint();
+      }
+      if (canUseNDV(filColStat)) {
+        tsKeyCardinality = filColStat.getCountDistint();
+      }
+      // Get colstats for the original table column for selCol if possible, this would have
+      // more accurate information about the original NDV of the column before any filtering.
+      ColStatistics selColSourceStat = null;
+      if (selColStat != null) {
+        ExprNodeDescUtils.ColumnOrigin selColSource = ExprNodeDescUtils.findColumnOrigin(selCol, sel);
+        if (selColSource != null && selColSource.op.getStatistics() != null) {
+          selColSourceStat = selColSource.op.getStatistics().getColumnStatisticsFromColName(
+              selColSource.col.getColumn());
+        }
+      }
+      long domainCardinalityFromColStats = getCombinedKeyDomainCardinality(
+          selColStat, selColSourceStat, filColStat);
+      if (domainCardinalityFromColStats >= 0) {
+        keyDomainCardinality = domainCardinalityFromColStats;
+      }
+    }
+
+    // Selectivity: key cardinality of semijoin / domain cardinality
+    // Benefit (rows filtered from ts): (1 - selectivity) * # ts rows
+    double selectivity = selKeyCardinality / (double) keyDomainCardinality;
+    selectivity = Math.min(selectivity, 1);
+    benefit = tsRows * (1 - selectivity);
+
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("BloomFilter benefit for " + selCol + " to " + tsCol
+          + ", selKeyCardinality=" + selKeyCardinality
+          + ", tsKeyCardinality=" + tsKeyCardinality
+          + ", tsRows=" + tsRows
+          + ", keyDomainCardinality=" + keyDomainCardinality);
+      LOG.debug("SemiJoin key selectivity=" + selectivity
+          + ", benefit=" + benefit);
+    }
+
+    return benefit;
+  }
+
+  private static double computeBloomFilterNetBenefit(
+      SelectOperator sel, ExprNodeDesc selExpr,
+      FilterOperator fil, ExprNodeDesc tsExpr) {
+    double netBenefit = -1;
+    double benefit = getBloomFilterBenefit(sel, selExpr, fil, tsExpr);
+    Statistics filStats = fil.getStatistics();
+    if (benefit > 0 && filStats != null) {
+      double cost = getBloomFilterCost(sel, fil);
+      if (cost > 0) {
+        long filDataSize = filStats.getNumRows();
+        netBenefit = (benefit - cost) / filDataSize;
+        LOG.debug("BloomFilter benefit=" + benefit
+            + ", cost=" + cost
+            + ", tsDataSize=" + filDataSize
+            + ", netBenefit=" + (benefit - cost));
+      }
+    }
+    LOG.debug("netBenefit=" + netBenefit);
+    return netBenefit;
+  }
+
+  private void removeSemijoinOptimizationByBenefit(OptimizeTezProcContext procCtx)
+      throws SemanticException {
+    if(!procCtx.conf.getBoolVar(ConfVars.TEZ_DYNAMIC_SEMIJOIN_REDUCTION)) {
+      // Not needed without semi-join reduction
+      return;
+    }
+
+    List<ReduceSinkOperator> semijoinRsToRemove = new ArrayList<ReduceSinkOperator>();
+    Map<ReduceSinkOperator, TableScanOperator> map = procCtx.parseContext.getRsOpToTsOpMap();
+    double semijoinReductionThreshold = procCtx.conf.getFloatVar(
+        HiveConf.ConfVars.TEZ_DYNAMIC_SEMIJOIN_REDUCTION_THRESHOLD);
+    for (ReduceSinkOperator rs : map.keySet()) {
+      // rs is semijoin optimization branch, which should look like <Parent>-SEL-GB1-RS1-GB2-RS2
+      // Get to the SelectOperator ancestor
+      SelectOperator sel = null;
+      for (Operator<?> currOp = rs; currOp.getParentOperators().size() > 0; currOp = currOp.getParentOperators().get(0)) {
+        if (currOp instanceof SelectOperator) {
+          sel = (SelectOperator) currOp;
+          break;
+        }
+      }
+      if (sel == null) {
+        throw new SemanticException("Unexpected error - could not find SEL ancestor from semijoin branch of " + rs);
+      }
+
+      // Check the ndv/rows from the SEL vs the destination tablescan the semijoin opt is going to.
+      TableScanOperator ts = map.get(rs);
+      RuntimeValuesInfo rti = procCtx.parseContext.getRsToRuntimeValuesInfoMap().get(rs);
+      ExprNodeDesc tsExpr = rti.getTsColExpr();
+      // In the SEL operator of the semijoin branch, there should be only one column in the operator
+      ExprNodeDesc selExpr = sel.getConf().getColList().get(0);
+
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("Computing BloomFilter cost/benefit for " + OperatorUtils.getOpNamePretty(rs)
+            + " - " + OperatorUtils.getOpNamePretty(ts) + " (" + tsExpr + ")");
+      }
+
+      double reductionFactor = computeBloomFilterNetBenefit(sel, selExpr,
+              (FilterOperator)ts.getChildOperators().get(0), tsExpr);
+      if (reductionFactor < semijoinReductionThreshold) {
+        // This semijoin optimization should be removed. Do it after we're done iterating
+        semijoinRsToRemove.add(rs);
+      }
+    }
+
+    for (ReduceSinkOperator rs : semijoinRsToRemove) {
+      TableScanOperator ts = map.get(rs);
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("Reduction factor not satisfied for " + OperatorUtils.getOpNamePretty(rs)
+            + "-" + OperatorUtils.getOpNamePretty(ts) + ". Removing semijoin optimization.");
+      }
+      GenTezUtils.removeBranch(rs);
+      GenTezUtils.removeSemiJoinOperator(procCtx.parseContext, rs, ts);
+    }
   }
 }

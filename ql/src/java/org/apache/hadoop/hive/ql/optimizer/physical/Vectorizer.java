@@ -749,6 +749,7 @@ public class Vectorizer implements PhysicalPlanResolver {
       if (!isSchemaEvolution) {
         enabledConditionsNotMetList.add(
             "Vectorizing tables without Schema Evolution requires " + HiveConf.ConfVars.HIVE_VECTORIZATION_USE_VECTORIZED_INPUT_FILE_FORMAT.varname);
+        return false;
       }
 
       String deserializerClassName = pd.getDeserializerClassName();
@@ -2019,17 +2020,6 @@ public class Vectorizer implements PhysicalPlanResolver {
         (processingMode != ProcessingMode.HASH && processingMode != ProcessingMode.STREAMING)) {
       LOG.info("Vectorized GROUPING SETS only expected for HASH and STREAMING processing modes");
       return false;
-    }
-
-    if (processingMode == ProcessingMode.MERGE_PARTIAL) {
-      // For now, VectorGroupByOperator ProcessingModeReduceMergePartial cannot handle key
-      // expressions.
-      for (ExprNodeDesc keyExpr : desc.getKeys()) {
-        if (!(keyExpr instanceof ExprNodeColumnDesc)) {
-          setExpressionIssue("Key", "Non-column key expressions not supported for MERGEPARTIAL");
-          return false;
-        }
-      }
     }
 
     Pair<Boolean,Boolean> retPair =

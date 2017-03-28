@@ -204,8 +204,6 @@ select case when (select count(*)
                   where p_partkey between 10000 and 20000) end sq
 from part;
 
--- TODO: add the following to negative
---select (select max(p_size) from part);
 
 explain select max(p_size) > ( select count(*)-1 from part) from part;
 select max(p_size) > ( select count(*)-1 from part) from part;

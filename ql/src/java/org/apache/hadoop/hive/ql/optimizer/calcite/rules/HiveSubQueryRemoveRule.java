@@ -29,6 +29,7 @@ import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rex.LogicVisitor;
 import org.apache.calcite.rex.RexInputRef;
+import org.apache.calcite.rex.RexVisitorImpl;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexShuttle;
 import org.apache.calcite.rex.RexSubQuery;
@@ -43,7 +44,9 @@ import org.apache.calcite.sql.type.ReturnTypes;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.tools.RelBuilderFactory;
 import org.apache.calcite.util.Pair;
+import org.apache.calcite.util.Util;
 
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
@@ -133,6 +136,62 @@ public abstract class HiveSubQueryRemoveRule extends RelOptRule{
                     call.transformTo(builder.build());
                 }
             };
+
+    public static final HiveSubQueryRemoveRule REL_NODE =
+        new HiveSubQueryRemoveRule(
+            operand(RelNode.class, null, HiveSubQueryFinder.RELNODE_PREDICATE,
+                any()),
+            HiveRelFactories.HIVE_BUILDER, "SubQueryRemoveRule:Filter") {
+            public void onMatch(RelOptRuleCall call) {
+                final RelNode relNode = call.rel(0);
+                if(relNode instanceof Filter) {
+                    final Filter filter = call.rel(0);
+                    //TODO: replace HiveSubQRemoveRelBuilder with calcite's once calcite 1.11.0 is released
+                    final HiveSubQRemoveRelBuilder builder = new HiveSubQRemoveRelBuilder(null, call.rel(0).getCluster(), null);
+                    final RexSubQuery e =
+                        RexUtil.SubQueryFinder.find(filter.getCondition());
+                    assert e != null;
+
+                    final RelOptUtil.Logic logic =
+                        LogicVisitor.find(RelOptUtil.Logic.TRUE,
+                            ImmutableList.of(filter.getCondition()), e);
+                    builder.push(filter.getInput());
+                    final int fieldCount = builder.peek().getRowType().getFieldCount();
+
+                    assert(filter instanceof HiveFilter);
+                    Set<RelNode> corrScalarQueries = filter.getCluster().getPlanner().getContext().unwrap(Set.class);
+                    boolean isCorrScalarQuery = corrScalarQueries.contains(e.rel);
+
+                    final RexNode target = apply(e, HiveFilter.getVariablesSet(e), logic,
+                        builder, 1, fieldCount, isCorrScalarQuery);
+                    final RexShuttle shuttle = new ReplaceSubQueryShuttle(e, target);
+                    builder.filter(shuttle.apply(filter.getCondition()));
+                    builder.project(fields(builder, filter.getRowType().getFieldCount()));
+                    call.transformTo(builder.build());
+                }
+                else if(relNode instanceof Project) {
+                    final Project project = call.rel(0);
+                    //TODO: replace HiveSubQRemoveRelBuilder with calcite's once calcite 1.11.0 is released
+                    final HiveSubQRemoveRelBuilder builder = new HiveSubQRemoveRelBuilder(null, call.rel(0).getCluster(), null);
+                    final RexSubQuery e =
+                        RexUtil.SubQueryFinder.find(project.getProjects());
+                    assert e != null;
+                    final RelOptUtil.Logic logic =
+                        LogicVisitor.find(RelOptUtil.Logic.TRUE_FALSE_UNKNOWN,
+                            project.getProjects(), e);
+                    builder.push(project.getInput());
+                    final int fieldCount = builder.peek().getRowType().getFieldCount();
+                    Set<RelNode> corrScalarQueries = project.getCluster().getPlanner().getContext().unwrap(Set.class);
+                    boolean isCorrScalarQuery = corrScalarQueries.contains(e.rel);
+                    final RexNode target = apply(e, HiveFilter.getVariablesSet(e),
+                        logic, builder, 1, fieldCount, isCorrScalarQuery);
+                    final RexShuttle shuttle = new ReplaceSubQueryShuttle(e, target);
+                    builder.project(shuttle.apply(project.getProjects()),
+                        project.getRowType().getFieldNames());
+                    call.transformTo(builder.build());
+                }
+            }
+        };
 
     private HiveSubQueryRemoveRule(RelOptRuleOperand operand,
                                RelBuilderFactory relBuilderFactory,
@@ -460,6 +519,68 @@ public abstract class HiveSubQueryRemoveRule extends RelOptRule{
             return RexUtil.eq(subQuery, this.subQuery) ? replacement : subQuery;
         }
     }
+
+    /** Visitor that throws {@link org.apache.calcite.util.Util.FoundOne} if
+     * applied to an expression that contains a {@link RexSubQuery}. */
+    public static class HiveSubQueryFinder extends RexVisitorImpl<Void> {
+        public static final HiveSubQueryFinder INSTANCE = new HiveSubQueryFinder();
+
+        /** Returns whether a {@link Project} contains a sub-query. */
+        public static final Predicate<RelNode> RELNODE_PREDICATE=
+            new Predicate<RelNode>() {
+                public boolean apply(RelNode relNode) {
+                    if (relNode instanceof Project) {
+                        Project project = (Project)relNode;
+                        for (RexNode node : project.getProjects()) {
+                            try {
+                                node.accept(INSTANCE);
+                            } catch (Util.FoundOne e) {
+                                return true;
+                            }
+                        }
+                        return false;
+                    }
+                    else if (relNode instanceof Filter) {
+                        try {
+                            ((Filter)relNode).getCondition().accept(INSTANCE);
+                            return false;
+                        } catch (Util.FoundOne e) {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+            };
+
+        private HiveSubQueryFinder() {
+            super(true);
+        }
+
+        @Override public Void visitSubQuery(RexSubQuery subQuery) {
+            throw new Util.FoundOne(subQuery);
+        }
+
+        public static RexSubQuery find(Iterable<RexNode> nodes) {
+            for (RexNode node : nodes) {
+                try {
+                    node.accept(INSTANCE);
+                } catch (Util.FoundOne e) {
+                    return (RexSubQuery) e.getNode();
+                }
+            }
+            return null;
+        }
+
+        public static RexSubQuery find(RexNode node) {
+            try {
+                node.accept(INSTANCE);
+                return null;
+            } catch (Util.FoundOne e) {
+                return (RexSubQuery) e.getNode();
+            }
+        }
+    }
+
 }
 
 // End SubQueryRemoveRule.java

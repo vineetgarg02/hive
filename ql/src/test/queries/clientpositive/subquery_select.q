@@ -207,21 +207,50 @@ from part;
 -- TODO: add the following to negative
 --select (select max(p_size) from part);
 
+explain select max(p_size) > ( select count(*)-1 from part) from part;
 select max(p_size) > ( select count(*)-1 from part) from part;
 
+-- corr scalar query in project and scalar query in filter
+explain select o.p_size, (select count(distinct p_type) from part p where p.p_partkey = o.p_partkey) tmp
+    FROM part o right join (select * from part where p_size > (select avg(p_size) from part)) t on t.p_partkey = o.p_partkey;
 select o.p_size, (select count(distinct p_type) from part p where p.p_partkey = o.p_partkey) tmp
     FROM part o right join (select * from part where p_size > (select avg(p_size) from part)) t on t.p_partkey = o.p_partkey;
 
+-- multiple scalar queries in project
+explain select (select max(p_size) from part), (select min(p_size) from part),
+    (select avg(p_size) from part), (select sum(p_size) from part)
+     from part;
 select (select max(p_size) from part), (select min(p_size) from part),
     (select avg(p_size) from part), (select sum(p_size) from part)
      from part;
 
+-- scalar subquery with join
+explain select t1.p_size,
+    (select count(*) from part p, part pp where p.p_size = pp.p_size and p.p_type = pp.p_type)
+    from part t1;
+select t1.p_size,
+    (select count(*) from part p, part pp where p.p_size = pp.p_size and p.p_type = pp.p_type)
+    from part t1;
+
+-- scalar subquery in join and in filter
 explain select t1.p_size,
     (select count(*) from part p, part pp where p.p_size = pp.p_size and p.p_type = pp.p_type
                                               and (select sum(p_size) from part a1 where a1.p_partkey = p.p_partkey
                                                                         group by a1.p_partkey) > 0)
     from part t1;
+select t1.p_size,
+    (select count(*) from part p, part pp where p.p_size = pp.p_size and p.p_type = pp.p_type
+                                              and (select sum(p_size) from part a1 where a1.p_partkey = p.p_partkey
+                                                                        group by a1.p_partkey) > 0)
+    from part t1;
 
+-- multiple scalar queries in projecdt with scalar query in filter
+explain select t1.p_size,
+    (select count(*) from part t2 where t2.p_partkey = t1.p_partkey group by t2.p_partkey),
+    (select count(*) from part p, part pp where p.p_size = pp.p_size and p.p_type = pp.p_type
+                                              and (select sum(p_size) from part a1 where a1.p_partkey = p.p_partkey
+                                                                        group by a1.p_partkey) > 0)
+    from part t1;
 select t1.p_size,
     (select count(*) from part t2 where t2.p_partkey = t1.p_partkey group by t2.p_partkey),
     (select count(*) from part p, part pp where p.p_size = pp.p_size and p.p_type = pp.p_type

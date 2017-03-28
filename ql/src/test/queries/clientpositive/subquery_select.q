@@ -257,3 +257,7 @@ select t1.p_size,
                                               and (select sum(p_size) from part a1 where a1.p_partkey = p.p_partkey
                                                                         group by a1.p_partkey) > 0)
     from part t1;
+
+-- subquery in UDF
+explain SELECT p_size, exp((SELECT max(p_size) FROM part p WHERE p.p_type = part.p_type)) from part;
+SELECT p_size, exp((SELECT max(p_size) FROM part p WHERE p.p_type = part.p_type)) from part;

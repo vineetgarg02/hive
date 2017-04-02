@@ -162,6 +162,9 @@ public abstract class HiveSubQueryRemoveRule extends RelOptRule{
         return relAgg.getAggCallList().get(0).getType().getSqlTypeName();
     }
 
+    // nested subqueries are handled in the same invocation of SubqueryRemoveRuile
+    // helpplanner goes over all transformed node and will call this rule if it
+    // founds new RexSubquery node
     protected RexNode apply(RexSubQuery e, Set<CorrelationId> variablesSet,
                             RelOptUtil.Logic logic,
                             HiveSubQRemoveRelBuilder builder, int inputCount, int offset,

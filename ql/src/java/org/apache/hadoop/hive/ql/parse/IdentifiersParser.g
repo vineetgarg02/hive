@@ -585,9 +585,14 @@ precedenceSimilarExpressionPartNot[CommonTree t]
     precedenceSimilarExpressionAtom[$t]
     ;
 
+isDistinctFrom
+    :
+    KW_IS KW_DISTINCT KW_FROM -> ^(TOK_ISDISTINCTFROM)
+    ;
+
 precedenceEqualOperator
     :
-    EQUAL | EQUAL_NS | NOTEQUAL
+    EQUAL | EQUAL_NS | NOTEQUAL | isDistinctFrom
     ;
 
 precedenceEqualExpression

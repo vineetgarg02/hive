@@ -1,0 +1,138 @@
+PREHOOK: query: explain select 1 is distinct from 1,
+               1 is distinct from 2,
+               1 is distinct from null,
+               null is distinct from null
+         from part
+PREHOOK: type: QUERY
+POSTHOOK: query: explain select 1 is distinct from 1,
+               1 is distinct from 2,
+               1 is distinct from null,
+               null is distinct from null
+         from part
+POSTHOOK: type: QUERY
+STAGE DEPENDENCIES:
+  Stage-0 is a root stage
+
+STAGE PLANS:
+  Stage: Stage-0
+    Fetch Operator
+      limit: -1
+      Processor Tree:
+        TableScan
+          alias: part
+          Select Operator
+            expressions: false (type: boolean), true (type: boolean), true (type: boolean), false (type: boolean)
+            outputColumnNames: _col0, _col1, _col2, _col3
+            ListSink
+
+PREHOOK: query: select 1 is distinct from 1,
+               1 is distinct from 2,
+               1 is distinct from null,
+               null is distinct from null
+         from part
+PREHOOK: type: QUERY
+PREHOOK: Input: default@part
+#### A masked pattern was here ####
+POSTHOOK: query: select 1 is distinct from 1,
+               1 is distinct from 2,
+               1 is distinct from null,
+               null is distinct from null
+         from part
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@part
+#### A masked pattern was here ####
+false	true	true	false
+false	true	true	false
+false	true	true	false
+false	true	true	false
+false	true	true	false
+false	true	true	false
+false	true	true	false
+false	true	true	false
+false	true	true	false
+false	true	true	false
+false	true	true	false
+false	true	true	false
+false	true	true	false
+false	true	true	false
+false	true	true	false
+false	true	true	false
+false	true	true	false
+false	true	true	false
+false	true	true	false
+false	true	true	false
+false	true	true	false
+false	true	true	false
+false	true	true	false
+false	true	true	false
+false	true	true	false
+false	true	true	false
+PREHOOK: query: explain select 1 is not distinct from 1,
+               1 is not distinct from 2,
+               1 is not distinct from null,
+               null is not distinct from null
+         from part
+PREHOOK: type: QUERY
+POSTHOOK: query: explain select 1 is not distinct from 1,
+               1 is not distinct from 2,
+               1 is not distinct from null,
+               null is not distinct from null
+         from part
+POSTHOOK: type: QUERY
+STAGE DEPENDENCIES:
+  Stage-0 is a root stage
+
+STAGE PLANS:
+  Stage: Stage-0
+    Fetch Operator
+      limit: -1
+      Processor Tree:
+        TableScan
+          alias: part
+          Select Operator
+            expressions: true (type: boolean), false (type: boolean), false (type: boolean), true (type: boolean)
+            outputColumnNames: _col0, _col1, _col2, _col3
+            ListSink
+
+PREHOOK: query: select 1 is not distinct from 1,
+               1 is not distinct from 2,
+               1 is not distinct from null,
+               null is not distinct from null
+         from part
+PREHOOK: type: QUERY
+PREHOOK: Input: default@part
+#### A masked pattern was here ####
+POSTHOOK: query: select 1 is not distinct from 1,
+               1 is not distinct from 2,
+               1 is not distinct from null,
+               null is not distinct from null
+         from part
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@part
+#### A masked pattern was here ####
+true	false	false	true
+true	false	false	true
+true	false	false	true
+true	false	false	true
+true	false	false	true
+true	false	false	true
+true	false	false	true
+true	false	false	true
+true	false	false	true
+true	false	false	true
+true	false	false	true
+true	false	false	true
+true	false	false	true
+true	false	false	true
+true	false	false	true
+true	false	false	true
+true	false	false	true
+true	false	false	true
+true	false	false	true
+true	false	false	true
+true	false	false	true
+true	false	false	true
+true	false	false	true
+true	false	false	true
+true	false	false	true
+true	false	false	true

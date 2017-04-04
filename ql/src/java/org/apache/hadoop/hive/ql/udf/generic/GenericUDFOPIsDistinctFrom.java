@@ -43,6 +43,6 @@ public class GenericUDFOPIsDistinctFrom extends GenericUDFOPNotEqual{
 
   @Override
   public GenericUDF negative() {
-      return new GenericUDFOPNotEqualNS();
+      return new GenericUDFOPIsNotDistinctFrom();
   }
 }

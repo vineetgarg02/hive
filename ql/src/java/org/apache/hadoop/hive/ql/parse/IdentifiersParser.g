@@ -587,7 +587,9 @@ precedenceSimilarExpressionPartNot[CommonTree t]
 
 isDistinctFrom
     :
-    KW_IS KW_DISTINCT KW_FROM -> ^(TOK_ISDISTINCTFROM)
+    KW_IS (a=KW_NOT)? KW_DISTINCT KW_FROM
+    -> {$a !=null}? ^(TOK_ISNOTDISTINCTFROM)
+    -> ^(TOK_ISDISTINCTFROM)
     ;
 
 precedenceEqualOperator

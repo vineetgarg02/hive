@@ -21,7 +21,7 @@ package org.apache.hadoop.hive.ql.udf.generic;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 
 // this function is for internal use only
-public class GenericUDFOPNotIsDistinctFrom extends GenericUDFOPEqual {
+public class GenericUDFOPIsNotDistinctFrom extends GenericUDFOPEqual {
 
   @Override
   public Object evaluate(DeferredObject[] arguments) throws HiveException {

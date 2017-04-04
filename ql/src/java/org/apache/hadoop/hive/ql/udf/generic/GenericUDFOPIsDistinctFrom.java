@@ -21,8 +21,8 @@ package org.apache.hadoop.hive.ql.udf.generic;
 import org.apache.hadoop.hive.ql.exec.Description;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 
-@Description(name = "<=>", value = "a _FUNC_ b - Returns same result with EQUAL(=) operator " +
-    "for non-null operands, but returns TRUE if both are NULL, FALSE if one of the them is NULL")
+@Description(name = "is distinct from", value = "a _FUNC_ b - Returns same result with NOT EQUAL(<>) operator " +
+    "for non-null operands, but returns FALSE if both are NULL, TRUE if one of the them is NULL")
 @NDV(maxNdv = 2)
 public class GenericUDFOPIsDistinctFrom extends GenericUDFOPNotEqual{
 

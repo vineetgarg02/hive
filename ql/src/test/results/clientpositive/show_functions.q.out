@@ -121,6 +121,8 @@ initcap
 inline
 instr
 internal_interval
+is distinct from
+is not distinct from
 isnotnull
 isnull
 java_method

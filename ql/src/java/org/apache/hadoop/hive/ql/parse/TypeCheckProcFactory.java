@@ -715,6 +715,15 @@ public class TypeCheckProcFactory {
 
     static HashMap<Integer, String> specialUnaryOperatorTextHashMap;
     static HashMap<Integer, String> specialFunctionTextHashMap;
+    // this hash map maps ast tokens (added in grammar) which are transformed
+    //  into UDFs but aren't function oar unary operator
+    // e.g. is distinct from, is not distinct from
+    // reason we keep this map is because this name is registered in function registry
+    // so that show functions or describe functions display 'is distinct from' instead of
+    // TOK_DISTINCT_FROM
+    // Make sure the name is same as used in Fuction Registry
+    // getFuctionText uses this map to lookup for name
+    static HashMap<Integer, String> specialExpressiontoTextHashMap;
     static HashMap<Integer, String> conversionFunctionTextHashMap;
     static HashSet<Integer> windowingTokens;
     static {
@@ -724,6 +733,9 @@ public class TypeCheckProcFactory {
       specialFunctionTextHashMap = new HashMap<Integer, String>();
       specialFunctionTextHashMap.put(HiveParser.TOK_ISNULL, "isnull");
       specialFunctionTextHashMap.put(HiveParser.TOK_ISNOTNULL, "isnotnull");
+      specialExpressiontoTextHashMap = new HashMap<Integer, String>();
+      specialExpressiontoTextHashMap.put(HiveParser.TOK_ISNOTDISTINCTFROM, "is not distinct from");
+      specialExpressiontoTextHashMap.put(HiveParser.TOK_ISDISTINCTFROM, "is distinct from");
       conversionFunctionTextHashMap = new HashMap<Integer, String>();
       conversionFunctionTextHashMap.put(HiveParser.TOK_BOOLEAN,
           serdeConstants.BOOLEAN_TYPE_NAME);
@@ -806,6 +818,7 @@ public class TypeCheckProcFactory {
         if (expr.getChildCount() == 1) {
           funcText = specialUnaryOperatorTextHashMap.get(expr.getType());
         }
+        funcText = specialExpressiontoTextHashMap.get(expr.getType());
         if (funcText == null) {
           funcText = expr.getText();
         }

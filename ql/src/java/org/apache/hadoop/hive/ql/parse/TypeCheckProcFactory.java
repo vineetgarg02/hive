@@ -818,8 +818,10 @@ public class TypeCheckProcFactory {
         if (expr.getChildCount() == 1) {
           funcText = specialUnaryOperatorTextHashMap.get(expr.getType());
         }
-        funcText = specialExpressiontoTextHashMap.get(expr.getType());
         if (funcText == null) {
+          funcText = specialExpressiontoTextHashMap.get(expr.getType());
+        }
+        if(funcText == null) {
           funcText = expr.getText();
         }
       } else {

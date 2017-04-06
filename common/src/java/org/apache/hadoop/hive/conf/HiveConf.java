@@ -1067,7 +1067,7 @@ public class HiveConf extends Configuration {
         "the expression exceeds this threshold; the threshold is expressed in terms of number of nodes (leaves and" +
         "interior nodes). -1 to not set up a threshold."),
     HIVE_CBO_RETPATH_HIVEOP("hive.cbo.returnpath.hiveop", false, "Flag to control calcite plan to hive operator conversion"),
-    HIVE_CBO_EXTENDED_COST_MODEL("hive.cbo.costmodel.extended", false, "Flag to control enabling the extended cost model based on"
+    HIVE_CBO_EXTENDED_COST_MODEL("hive.cbo.costmodel.extended", true, "Flag to control enabling the extended cost model based on"
                                  + "CPU, IO and cardinality. Otherwise, the cost model is based on cardinality."),
     HIVE_CBO_COST_MODEL_CPU("hive.cbo.costmodel.cpu", "0.000001", "Default cost of a comparison"),
     HIVE_CBO_COST_MODEL_NET("hive.cbo.costmodel.network", "150.0", "Default cost of a transfering a byte over network;"

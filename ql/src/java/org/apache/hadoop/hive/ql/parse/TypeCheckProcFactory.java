@@ -715,15 +715,18 @@ public class TypeCheckProcFactory {
 
     static HashMap<Integer, String> specialUnaryOperatorTextHashMap;
     static HashMap<Integer, String> specialFunctionTextHashMap;
-    // this hash map maps ast tokens (added in grammar) which are transformed
-    //  into UDFs but aren't function oar unary operator
-    // e.g. is distinct from, is not distinct from
-    // reason we keep this map is because this name is registered in function registry
-    // so that show functions or describe functions display 'is distinct from' instead of
-    // TOK_DISTINCT_FROM
-    // Make sure the name is same as used in Fuction Registry
-    // getFuctionText uses this map to lookup for name
+
+    // specialExpressiontoTextHashMap maps ast tokens to text
+    //  for tokens which are rewritten in grammar but aren't part of input query
+    //  e.g. 'is distinct from' is rewritten into
+    //            KW_NOT
+    //              EQUAL_NS
+    // Since these token are formed from rewrite rules they have text 'KW_NOT' and 'EQUAL_NS'
+    // instead of 'not' and '<=>'
+    //  For this reason we manually map these tokens into appropriate text/name so that
+    // function lookup (getFunctionText) works appropriately.
     static HashMap<Integer, String> specialExpressiontoTextHashMap;
+
     static HashMap<Integer, String> conversionFunctionTextHashMap;
     static HashSet<Integer> windowingTokens;
     static {
@@ -734,8 +737,8 @@ public class TypeCheckProcFactory {
       specialFunctionTextHashMap.put(HiveParser.TOK_ISNULL, "isnull");
       specialFunctionTextHashMap.put(HiveParser.TOK_ISNOTNULL, "isnotnull");
       specialExpressiontoTextHashMap = new HashMap<Integer, String>();
-      specialExpressiontoTextHashMap.put(HiveParser.TOK_ISNOTDISTINCTFROM, "is not distinct from");
-      specialExpressiontoTextHashMap.put(HiveParser.TOK_ISDISTINCTFROM, "is distinct from");
+      specialExpressiontoTextHashMap.put(HiveParser.EQUAL_NS, "<=>");
+      specialExpressiontoTextHashMap.put(HiveParser.KW_NOT, "not");
       conversionFunctionTextHashMap = new HashMap<Integer, String>();
       conversionFunctionTextHashMap.put(HiveParser.TOK_BOOLEAN,
           serdeConstants.BOOLEAN_TYPE_NAME);

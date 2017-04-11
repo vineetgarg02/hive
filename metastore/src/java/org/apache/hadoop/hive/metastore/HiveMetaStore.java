@@ -162,6 +162,8 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
  */
 public class HiveMetaStore extends ThriftHiveMetastore {
   public static final Logger LOG = LoggerFactory.getLogger(HiveMetaStore.class);
+  public static final String PARTITION_NUMBER_EXCEED_LIMIT_MSG =
+      "Number of partitions scanned (=%d) on table '%s' exceeds limit (=%d). This is controlled on the metastore server by %s.";
 
   // boolean that tells if the HiveMetaStore (remote) server is being used.
   // Can be used to determine if the calls to metastore api (HMSHandler) are being made with
@@ -873,7 +875,7 @@ public class HiveMetaStore extends ThriftHiveMetastore {
       try {
         firePreEvent(new PreCreateDatabaseEvent(db, this));
         if (!wh.isDir(dbPath)) {
-          if (!wh.mkdirs(dbPath, true)) {
+          if (!wh.mkdirs(dbPath)) {
             throw new MetaException("Unable to create database path " + dbPath +
                 ", failed to create database " + db.getName());
           }
@@ -1430,7 +1432,7 @@ public class HiveMetaStore extends ThriftHiveMetastore {
 
         if (tblPath != null) {
           if (!wh.isDir(tblPath)) {
-            if (!wh.mkdirs(tblPath, true)) {
+            if (!wh.mkdirs(tblPath)) {
               throw new MetaException(tblPath
                   + " is not a directory or unable to create one");
             }
@@ -2225,7 +2227,7 @@ public class HiveMetaStore extends ThriftHiveMetastore {
         }
 
         if (!wh.isDir(partLocation)) {
-          if (!wh.mkdirs(partLocation, true)) {
+          if (!wh.mkdirs(partLocation)) {
             throw new MetaException(partLocation
                 + " is not a directory or unable to create one");
           }
@@ -2776,7 +2778,7 @@ public class HiveMetaStore extends ThriftHiveMetastore {
         // mkdirs() because if the file system is read-only, mkdirs will
         // throw an exception even if the directory already exists.
         if (!wh.isDir(partLocation)) {
-          if (!wh.mkdirs(partLocation, true)) {
+          if (!wh.mkdirs(partLocation)) {
             throw new MetaException(partLocation
                 + " is not a directory or unable to create one");
           }
@@ -2986,7 +2988,7 @@ public class HiveMetaStore extends ThriftHiveMetastore {
         }
         Path destParentPath = destPath.getParent();
         if (!wh.isDir(destParentPath)) {
-          if (!wh.mkdirs(destParentPath, true)) {
+          if (!wh.mkdirs(destParentPath)) {
               throw new MetaException("Unable to create path " + destParentPath);
           }
         }
@@ -3528,8 +3530,8 @@ public class HiveMetaStore extends ThriftHiveMetastore {
         int partitionRequest = (maxToFetch < 0) ? numPartitions : maxToFetch;
         if (partitionRequest > partitionLimit) {
           String configName = ConfVars.METASTORE_LIMIT_PARTITION_REQUEST.varname;
-          throw new MetaException(String.format("Number of partitions scanned (=%d) on table '%s' exceeds limit" +
-              " (=%d). This is controlled on the metastore server by %s.", partitionRequest, tblName, partitionLimit, configName));
+          throw new MetaException(String.format(PARTITION_NUMBER_EXCEED_LIMIT_MSG, partitionRequest,
+              tblName, partitionLimit, configName));
         }
       }
     }
@@ -7150,10 +7152,9 @@ public class HiveMetaStore extends ThriftHiveMetastore {
             ServerMode.METASTORE);
         saslServer.setSecretManager(delegationTokenManager.getSecretManager());
         transFactory = saslServer.createTransportFactory(
-                MetaStoreUtils.getMetaStoreSaslProperties(conf));
+                MetaStoreUtils.getMetaStoreSaslProperties(conf, useSSL));
         processor = saslServer.wrapProcessor(
           new ThriftHiveMetastore.Processor<IHMSHandler>(handler));
-        serverSocket = HiveAuthUtils.getServerSocket(null, port);
 
         LOG.info("Starting DB backed MetaStore Server in Secure Mode");
       } else {
@@ -7172,25 +7173,27 @@ public class HiveMetaStore extends ThriftHiveMetastore {
           processor = new TSetIpAddressProcessor<IHMSHandler>(handler);
           LOG.info("Starting DB backed MetaStore Server");
         }
+      }
+
+      if (!useSSL) {
+        serverSocket = HiveAuthUtils.getServerSocket(null, port);
+      } else {
+        String keyStorePath = conf.getVar(ConfVars.HIVE_METASTORE_SSL_KEYSTORE_PATH).trim();
+        if (keyStorePath.isEmpty()) {
+          throw new IllegalArgumentException(ConfVars.HIVE_METASTORE_SSL_KEYSTORE_PATH.varname
+              + " Not configured for SSL connection");
+        }
+        String keyStorePassword = ShimLoader.getHadoopShims().getPassword(conf,
+            HiveConf.ConfVars.HIVE_METASTORE_SSL_KEYSTORE_PASSWORD.varname);
 
         // enable SSL support for HMS
         List<String> sslVersionBlacklist = new ArrayList<String>();
         for (String sslVersion : conf.getVar(ConfVars.HIVE_SSL_PROTOCOL_BLACKLIST).split(",")) {
           sslVersionBlacklist.add(sslVersion);
         }
-        if (!useSSL) {
-          serverSocket = HiveAuthUtils.getServerSocket(null, port);
-        } else {
-          String keyStorePath = conf.getVar(ConfVars.HIVE_METASTORE_SSL_KEYSTORE_PATH).trim();
-          if (keyStorePath.isEmpty()) {
-            throw new IllegalArgumentException(ConfVars.HIVE_METASTORE_SSL_KEYSTORE_PASSWORD.varname
-                + " Not configured for SSL connection");
-          }
-          String keyStorePassword = ShimLoader.getHadoopShims().getPassword(conf,
-              HiveConf.ConfVars.HIVE_METASTORE_SSL_KEYSTORE_PASSWORD.varname);
-          serverSocket = HiveAuthUtils.getServerSSLSocket(null, port, keyStorePath,
-              keyStorePassword, sslVersionBlacklist);
-        }
+
+        serverSocket = HiveAuthUtils.getServerSSLSocket(null, port, keyStorePath,
+            keyStorePassword, sslVersionBlacklist);
       }
 
       if (tcpKeepAlive) {
@@ -7252,6 +7255,7 @@ public class HiveMetaStore extends ThriftHiveMetastore {
       HMSHandler.LOG.info("Options.maxWorkerThreads = "
           + maxWorkerThreads);
       HMSHandler.LOG.info("TCP keepalive = " + tcpKeepAlive);
+      HMSHandler.LOG.info("Enable SSL = " + useSSL);
 
       if (startLock != null) {
         signalOtherThreadsToStart(tServer, startLock, startCondition, startedServing);

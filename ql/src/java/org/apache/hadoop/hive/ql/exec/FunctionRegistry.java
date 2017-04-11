@@ -357,8 +357,6 @@ public final class FunctionRegistry {
 
     system.registerGenericUDF("isnull", GenericUDFOPNull.class);
     system.registerGenericUDF("isnotnull", GenericUDFOPNotNull.class);
-    system.registerGenericUDF("is distinct from", GenericUDFOPNotEqualNS.class);
-    system.registerGenericUDF("is not distinct from", GenericUDFOPEqualNS.class);
 
     system.registerGenericUDF("if", GenericUDFIf.class);
     system.registerGenericUDF("in", GenericUDFIn.class);

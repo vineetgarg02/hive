@@ -49,6 +49,7 @@ import org.apache.hadoop.hive.ql.optimizer.metainfo.annotation.AnnotateWithOpTra
 import org.apache.hadoop.hive.ql.optimizer.physical.AnnotateRunTimeStatsOptimizer;
 import org.apache.hadoop.hive.ql.optimizer.physical.CrossProductCheck;
 import org.apache.hadoop.hive.ql.optimizer.physical.LlapDecider;
+import org.apache.hadoop.hive.ql.optimizer.physical.LlapPreVectorizationPass;
 import org.apache.hadoop.hive.ql.optimizer.physical.MemoryDecider;
 import org.apache.hadoop.hive.ql.optimizer.physical.MetadataOnlyOptimizer;
 import org.apache.hadoop.hive.ql.optimizer.physical.NullScanOptimizer;
@@ -235,7 +236,16 @@ public class TezCompiler extends TaskCompiler {
     GenTezUtils.removeBranch(victim);
 
     if (victim == victimRS) {
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("Cycle found. Removing semijoin "
+            + OperatorUtils.getOpNamePretty(victimRS) + " - " + OperatorUtils.getOpNamePretty(victimTS));
+      }
       GenTezUtils.removeSemiJoinOperator(context.parseContext, victimRS, victimTS);
+    } else {
+      // at this point we've found the fork in the op pipeline that has the pruning as a child plan.
+      LOG.info("Disabling dynamic pruning for: "
+          + ((DynamicPruningEventDesc) victim.getConf()).getTableScan().toString()
+          + ". Needed to break cyclic dependency");
     }
     return;
   }
@@ -544,6 +554,12 @@ public class TezCompiler extends TaskCompiler {
       LOG.debug("Skipping cross product analysis");
     }
 
+    if ("llap".equalsIgnoreCase(conf.getVar(HiveConf.ConfVars.HIVE_EXECUTION_MODE))) {
+      physicalCtx = new LlapPreVectorizationPass().resolve(physicalCtx);
+    } else {
+      LOG.debug("Skipping llap pre-vectorization pass");
+    }
+
     if (conf.getBoolVar(HiveConf.ConfVars.HIVE_VECTORIZATION_ENABLED)
         && ctx.getExplainAnalyze() == null) {
       physicalCtx = new Vectorizer().resolve(physicalCtx);
@@ -651,6 +667,10 @@ public class TezCompiler extends TaskCompiler {
         for (ReduceSinkOperator rs : pctx.getRsOpToTsOpMap().keySet()) {
           if (ts == pctx.getRsOpToTsOpMap().get(rs)) {
             // match!
+            if (LOG.isDebugEnabled()) {
+              LOG.debug("Semijoin optimization found going to SMB join. Removing semijoin "
+                  + OperatorUtils.getOpNamePretty(rs) + " - " + OperatorUtils.getOpNamePretty(ts));
+            }
             GenTezUtils.removeBranch(rs);
             GenTezUtils.removeSemiJoinOperator(pctx, rs, ts);
           }
@@ -750,6 +770,10 @@ public class TezCompiler extends TaskCompiler {
 
           if (parent == ts) {
             // We have a cycle!
+            if (LOG.isDebugEnabled()) {
+              LOG.debug("Semijoin cycle due to mapjoin. Removing semijoin "
+                  + OperatorUtils.getOpNamePretty(rs) + " - " + OperatorUtils.getOpNamePretty(ts));
+            }
             GenTezUtils.removeBranch(rs);
             GenTezUtils.removeSemiJoinOperator(pCtx, rs, ts);
           }
@@ -789,6 +813,12 @@ public class TezCompiler extends TaskCompiler {
         if (expectedEntries == -1 || expectedEntries >
                 pCtx.getConf().getLongVar(ConfVars.TEZ_MAX_BLOOM_FILTER_ENTRIES)) {
           removeSemiJoin = true;
+          if (LOG.isDebugEnabled()) {
+            LOG.debug("expectedEntries=" + expectedEntries + ". "
+                + "Either stats unavailable or expectedEntries exceeded max allowable bloomfilter size. "
+                + "Removing semijoin "
+                + OperatorUtils.getOpNamePretty(rs) + " - " + OperatorUtils.getOpNamePretty(ts));
+          }
           break;
         }
       }
@@ -799,6 +829,10 @@ public class TezCompiler extends TaskCompiler {
         long numRows = ts.getStatistics().getNumRows();
         if (numRows < pCtx.getConf().getLongVar(ConfVars.TEZ_BIGTABLE_MIN_SIZE_SEMIJOIN_REDUCTION)) {
           removeSemiJoin = true;
+          if (LOG.isDebugEnabled()) {
+            LOG.debug("Insufficient rows (" + numRows + ") to justify semijoin optimization. Removing semijoin "
+                + OperatorUtils.getOpNamePretty(rs) + " - " + OperatorUtils.getOpNamePretty(ts));
+          }
         }
       }
 
@@ -931,6 +965,10 @@ public class TezCompiler extends TaskCompiler {
 
     if (semijoins.size() > 0) {
       for (ReduceSinkOperator rs : semijoins.keySet()) {
+        if (LOG.isDebugEnabled()) {
+          LOG.debug("Semijoin optimization with parallel edge to map join. Removing semijoin "
+              + OperatorUtils.getOpNamePretty(rs) + " - " + OperatorUtils.getOpNamePretty(semijoins.get(rs)));
+        }
         GenTezUtils.removeBranch(rs);
         GenTezUtils.removeSemiJoinOperator(procCtx.parseContext, rs,
                 semijoins.get(rs));

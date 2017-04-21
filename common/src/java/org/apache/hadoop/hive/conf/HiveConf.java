@@ -2275,7 +2275,10 @@ public class HiveConf extends Configuration {
          "Choices between memory, ssd and default"),
     HIVE_QUERY_LIFETIME_HOOKS("hive.query.lifetime.hooks", "",
         "A comma separated list of hooks which implement QueryLifeTimeHook. These will be triggered" +
-            " before/after query compilation and before/after query execution, in the order specified"),
+            " before/after query compilation and before/after query execution, in the order specified." +
+        "Implementations of QueryLifeTimeHookWithParseHooks can also be specified in this list. If they are" +
+        "specified then they will be invoked in the same places as QueryLifeTimeHooks and will be invoked during pre " +
+         "and post query parsing"),
     HIVE_DRIVER_RUN_HOOKS("hive.exec.driver.run.hooks", "",
         "A comma separated list of hooks which implement HiveDriverRunHook. Will be run at the beginning " +
         "and end of Driver.run, these will be run in the order specified."),
@@ -2855,6 +2858,9 @@ public class HiveConf extends Configuration {
         "Turn on Tez' auto reducer parallelism feature. When enabled, Hive will still estimate data sizes\n" +
         "and set parallelism estimates. Tez will sample source vertices' output sizes and adjust the estimates at runtime as\n" +
         "necessary."),
+    TEZ_LLAP_MIN_REDUCER_PER_EXECUTOR("hive.tez.llap.min.reducer.per.executor", 0.95f,
+        "If above 0, the min number of reducers for auto-parallelism for LLAP scheduling will\n" +
+        "be set to this fraction of the number of executors."),
     TEZ_MAX_PARTITION_FACTOR("hive.tez.max.partition.factor", 2f,
         "When auto reducer parallelism is enabled this factor will be used to over-partition data in shuffle edges."),
     TEZ_MIN_PARTITION_FACTOR("hive.tez.min.partition.factor", 0.25f,
@@ -2892,6 +2898,8 @@ public class HiveConf extends Configuration {
             "Big table for runtime filteting should be of atleast this size"),
     TEZ_DYNAMIC_SEMIJOIN_REDUCTION_THRESHOLD("hive.tez.dynamic.semijoin.reduction.threshold", (float) 0.50,
             "Only perform semijoin optimization if the estimated benefit at or above this fraction of the target table"),
+    TEZ_DYNAMIC_SEMIJOIN_REDUCTION_HINT_ONLY("hive.tez.dynamic.semijoin.reduction.hint.only", false,
+            "When true, only enforce semijoin when a hint is provided"),
     TEZ_SMB_NUMBER_WAVES(
         "hive.tez.smb.number.waves",
         (float) 0.5,

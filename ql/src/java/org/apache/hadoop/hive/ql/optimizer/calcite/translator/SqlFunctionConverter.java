@@ -478,12 +478,6 @@ public class SqlFunctionConverter {
       ImmutableList<RelDataType> calciteArgTypes, RelDataType calciteRetType, boolean deterministic)
       throws CalciteSemanticException {
 
-    if (hiveUdfName != null && hiveUdfName.trim().equals("<=>")) {
-      // We can create Calcite IS_DISTINCT_FROM operator for this. But since our
-      // join reordering algo cant handle this anyway there is no advantage of
-      // this.So, bail out for now.
-      throw new CalciteSemanticException("<=> is not yet supported for cbo.", UnsupportedFeature.Less_than_equal_greater_than);
-    }
     SqlOperator calciteOp;
     CalciteUDFInfo uInf = getUDFInfo(hiveUdfName, calciteArgTypes, calciteRetType);
     switch (hiveUdfName) {

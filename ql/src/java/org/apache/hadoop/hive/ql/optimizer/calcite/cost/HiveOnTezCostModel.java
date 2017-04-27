@@ -79,12 +79,13 @@ public class HiveOnTezCostModel extends HiveCostModel {
 
   @Override
   public RelOptCost getScanCost(HiveTableScan ts) {
-    return algoUtils.computeScanCost(ts.getRows(), RelMetadataQuery.instance().getAverageRowSize(ts));
+    //return algoUtils.computeScanCost(ts.getRows(), RelMetadataQuery.instance().getAverageRowSize(ts));
+    return HiveCost.FACTORY.makeZeroCost();
   }
 
   @Override
   public RelOptCost getAggregateCost(HiveAggregate aggregate) {
-    if (aggregate.isBucketedInput()) {
+    /* if (aggregate.isBucketedInput()) {
       return HiveCost.FACTORY.makeZeroCost();
     } else {
       RelMetadataQuery mq = RelMetadataQuery.instance();
@@ -105,7 +106,8 @@ public class HiveOnTezCostModel extends HiveCostModel {
       final double ioCost = algoUtils.computeSortIOCost(new Pair<Double,Double>(rCount,rAverageSize));
       // 4. Result
       return HiveCost.FACTORY.makeCost(rCount, cpuCost, ioCost);
-    }
+    } */
+    return HiveCost.FACTORY.makeZeroCost();
   }
 
   /**

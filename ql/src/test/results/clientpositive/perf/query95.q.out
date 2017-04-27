@@ -128,7 +128,7 @@ Stage-0
                             SHUFFLE [RS_46]
                               PartitionCols:_col0
                               Group By Operator [GBY_42] (rows=158402938 width=135)
-                                Output:["_col0"],keys:_col0
+                                Output:["_col0"],keys:_COL0
                                 Select Operator [SEL_13] (rows=158402938 width=135)
                                   Output:["_col0"]
                                   Filter Operator [FIL_12] (rows=158402938 width=135)

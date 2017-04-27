@@ -80,7 +80,7 @@ public class HiveAlgorithmsUtil {
         cpuCost += computeSortCPUCost(cardinality);
       }
       // Merge cost
-      cpuCost += cardinality * cpuCost;
+      cpuCost += cardinality * this.cpuCost;
     }
     return cpuCost;
   }

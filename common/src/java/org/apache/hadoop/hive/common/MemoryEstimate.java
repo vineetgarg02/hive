@@ -6,9 +6,7 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * http://www.apache.org/licenses/LICENSE-2.0
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,26 +14,16 @@
  * limitations under the License.
  */
 
-package org.apache.hadoop.hive.common.jsonexplain.tez;
+package org.apache.hadoop.hive.common;
 
-public final class Printer {
-  public static final String lineSeparator = System.getProperty("line.separator");;
-  private final StringBuilder builder = new StringBuilder();
-
-  public void print(String string) {
-    builder.append(string);
-  }
-
-  public void println(String string) {
-    builder.append(string);
-    builder.append(lineSeparator);
-  }
-
-  public void println() {
-    builder.append(lineSeparator);
-  }
-  
-  public String toString() {
-    return builder.toString();
-  }
+/**
+ * Interface that can be used to provide size estimates based on data structures held in memory for an object instance.
+ */
+public interface MemoryEstimate {
+  /**
+   * Returns estimated memory size based {@link org.apache.hadoop.hive.ql.util.JavaDataModel}
+   *
+   * @return estimated memory size in bytes
+   */
+  long getEstimatedMemorySize();
 }

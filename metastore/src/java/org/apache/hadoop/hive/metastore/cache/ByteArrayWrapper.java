@@ -15,15 +15,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hadoop.hive.ql.exec.mapjoin;
+package org.apache.hadoop.hive.metastore.cache;
 
-import org.apache.hadoop.hive.ql.metadata.HiveException;
+import java.util.Arrays;
 
+/**
+ * byte array with comparator
+ */
+public class ByteArrayWrapper {
+  byte[] wrapped;
 
+  ByteArrayWrapper(byte[] b) {
+    wrapped = b;
+  }
 
-public class MapJoinMemoryExhaustionException extends HiveException {
-  private static final long serialVersionUID = 3678353959830506881L;
-  public MapJoinMemoryExhaustionException(String msg) {
-    super(msg);
+  @Override
+  public boolean equals(Object other) {
+    if (other instanceof ByteArrayWrapper) {
+      return Arrays.equals(((ByteArrayWrapper)other).wrapped, wrapped);
+    } else {
+      return false;
+    }
+  }
+
+  @Override
+  public int hashCode() {
+    return Arrays.hashCode(wrapped);
   }
 }

@@ -594,11 +594,9 @@ public class QBSubQuery implements ISubQueryJoinInfo {
 
     // figure out if there is group by
     boolean noImplicityGby = true;
-    if ( insertClause.getChild(1).getChildCount() > 3 &&
-            insertClause.getChild(1).getChild(3).getType() == HiveParser.TOK_GROUPBY ) {
-      if((ASTNode) insertClause.getChild(1).getChild(3) != null){
+    if ( insertClause.getChildCount() > 3 &&
+            insertClause.getChild(3).getType() == HiveParser.TOK_GROUPBY ) {
         noImplicityGby = false;
-      }
     }
 
     /*

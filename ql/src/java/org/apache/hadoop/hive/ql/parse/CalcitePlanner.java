@@ -335,7 +335,10 @@ public class CalcitePlanner extends SemanticAnalyzer {
       skipCalcitePlan = true;
     } else {
       PreCboCtx cboCtx = (PreCboCtx) plannerCtx;
-      ASTNode oldHints = getQB().getParseInfo().getHints();
+      List<ASTNode> oldHints = new ArrayList<>();
+      // Cache the hints before CBO runs and removes them.
+      // Use the hints later in top level QB.
+        getHintsFromQB(getQB(), oldHints);
 
       // Note: for now, we don't actually pass the queryForCbo to CBO, because
       // it accepts qb, not AST, and can also access all the private stuff in
@@ -364,6 +367,10 @@ public class CalcitePlanner extends SemanticAnalyzer {
               throw new SemanticException("Create view is not supported in cbo return path.");
             }
             sinkOp = getOptimizedHiveOPDag();
+            if (oldHints.size() > 0) {
+              LOG.debug("Propagating hints to QB: " + oldHints);
+              getQB().getParseInfo().setHintList(oldHints);
+            }
             LOG.info("CBO Succeeded; optimized logical plan.");
             this.ctx.setCboInfo("Plan optimized by CBO.");
             this.ctx.setCboSucceeded(true);
@@ -403,13 +410,13 @@ public class CalcitePlanner extends SemanticAnalyzer {
                 newAST = reAnalyzeCTASAfterCbo(newAST);
               }
             }
-            if (oldHints != null) {
+            if (oldHints.size() > 0) {
               if (getQB().getParseInfo().getHints() != null) {
-                LOG.warn("Hints are not null in the optimized tree; before CBO " + oldHints.dump()
-                    + "; after CBO " + getQB().getParseInfo().getHints().dump());
+                LOG.warn("Hints are not null in the optimized tree; "
+                    + "after CBO " + getQB().getParseInfo().getHints().dump());
               } else {
                 LOG.debug("Propagating hints to QB: " + oldHints);
-                getQB().getParseInfo().setHints(oldHints);
+                getQB().getParseInfo().setHintList(oldHints);
               }
             }
             Phase1Ctx ctx_1 = initPhase1Ctx();
@@ -1292,6 +1299,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
     // this is to keep track if a subquery is correlated and contains aggregate
     // since this is special cased when it is rewritten in SubqueryRemoveRule
     Set<RelNode> corrScalarRexSQWithAgg = new HashSet<RelNode>();
+    Set<RelNode> scalarAggNoGbyNoWin = new HashSet<RelNode>();
 
     // TODO: Do we need to keep track of RR, ColNameToPosMap for every op or
     // just last one.
@@ -1325,7 +1333,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
               Boolean.FALSE.toString());
       CalciteConnectionConfig calciteConfig = new CalciteConnectionConfigImpl(calciteConfigProperties);
       HivePlannerContext confContext = new HivePlannerContext(algorithmsConf, registry, calciteConfig,
-                 corrScalarRexSQWithAgg);
+                 corrScalarRexSQWithAgg, scalarAggNoGbyNoWin);
       RelOptPlanner planner = HiveVolcanoPlanner.createPlanner(confContext);
       final RexBuilder rexBuilder = cluster.getRexBuilder();
       final RelOptCluster optCluster = RelOptCluster.create(planner, rexBuilder);
@@ -2418,8 +2426,8 @@ public class CalcitePlanner extends SemanticAnalyzer {
     }
 
     private void subqueryRestrictionCheck(QB qb, ASTNode searchCond, RelNode srcRel,
-                                         boolean forHavingClause,
-                                          Set<ASTNode> corrScalarQueries) throws SemanticException {
+                                         boolean forHavingClause, Set<ASTNode> corrScalarQueries,
+                        Set<ASTNode> scalarQueriesWithAggNoWinNoGby) throws SemanticException {
         List<ASTNode> subQueriesInOriginalTree = SubQueryUtils.findSubQueries(searchCond);
 
         ASTNode clonedSearchCond = (ASTNode) SubQueryUtils.adaptor.dupTree(searchCond);
@@ -2454,9 +2462,14 @@ public class CalcitePlanner extends SemanticAnalyzer {
 
           String havingInputAlias = null;
 
-          boolean isCorrScalarWithAgg = subQuery.subqueryRestrictionsCheck(inputRR, forHavingClause, havingInputAlias);
-          if(isCorrScalarWithAgg) {
+          boolean [] subqueryConfig = {false, false};
+          subQuery.subqueryRestrictionsCheck(inputRR, forHavingClause,
+              havingInputAlias, subqueryConfig);
+          if(subqueryConfig[0]) {
             corrScalarQueries.add(originalSubQueryAST);
+          }
+          if(subqueryConfig[1]) {
+            scalarQueriesWithAggNoWinNoGby.add(originalSubQueryAST);
           }
       }
     }
@@ -2464,8 +2477,10 @@ public class CalcitePlanner extends SemanticAnalyzer {
                                        Map<ASTNode, RelNode> subQueryToRelNode) throws SemanticException {
 
         Set<ASTNode> corrScalarQueriesWithAgg = new HashSet<ASTNode>();
+        Set<ASTNode> scalarQueriesWithAggNoWinNoGby= new HashSet<ASTNode>();
         //disallow subqueries which HIVE doesn't currently support
-        subqueryRestrictionCheck(qb, node, srcRel, forHavingClause, corrScalarQueriesWithAgg);
+        subqueryRestrictionCheck(qb, node, srcRel, forHavingClause, corrScalarQueriesWithAgg,
+            scalarQueriesWithAggNoWinNoGby);
         Deque<ASTNode> stack = new ArrayDeque<ASTNode>();
         stack.push(node);
 
@@ -2495,8 +2510,13 @@ public class CalcitePlanner extends SemanticAnalyzer {
               subQueryToRelNode.put(next, subQueryRelNode);
               //keep track of subqueries which are scalar, correlated and contains aggregate
               // subquery expression. This will later be special cased in Subquery remove rule
+              // for correlated scalar queries with aggregate we have take care of the case where
+              // inner aggregate happens on empty result
               if(corrScalarQueriesWithAgg.contains(next)) {
                   corrScalarRexSQWithAgg.add(subQueryRelNode);
+              }
+              if(scalarQueriesWithAggNoWinNoGby.contains(next)) {
+                scalarAggNoGbyNoWin.add(subQueryRelNode);
               }
               isSubQuery = true;
               break;

@@ -272,6 +272,8 @@ public final class FunctionRegistry {
     system.registerGenericUDF("initcap", GenericUDFInitCap.class);
 
     system.registerUDF("like", UDFLike.class, true);
+    system.registerGenericUDF("likeany", GenericUDFLikeAny.class);
+    system.registerGenericUDF("likeall", GenericUDFLikeAll.class);
     system.registerGenericUDF("rlike", GenericUDFRegExp.class);
     system.registerGenericUDF("regexp", GenericUDFRegExp.class);
     system.registerUDF("regexp_replace", UDFRegExpReplace.class, false);
@@ -357,6 +359,10 @@ public final class FunctionRegistry {
 
     system.registerGenericUDF("isnull", GenericUDFOPNull.class);
     system.registerGenericUDF("isnotnull", GenericUDFOPNotNull.class);
+    system.registerGenericUDF("istrue", GenericUDFOPTrue.class);
+    system.registerGenericUDF("isnottrue", GenericUDFOPNotTrue.class);
+    system.registerGenericUDF("isfalse", GenericUDFOPFalse.class);
+    system.registerGenericUDF("isnotfalse", GenericUDFOPNotFalse.class);
 
     system.registerGenericUDF("if", GenericUDFIf.class);
     system.registerGenericUDF("in", GenericUDFIn.class);

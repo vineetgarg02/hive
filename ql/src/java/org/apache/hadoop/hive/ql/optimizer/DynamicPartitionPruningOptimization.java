@@ -220,14 +220,34 @@ public class DynamicPartitionPruningOptimization implements NodeProcessor {
             }
             String tableAlias = (op == null ? "" : ((TableScanOperator) op).getConf().getAlias());
 
-            Map<String, SemiJoinHint> hints = ctx.desc.getHints();
-            SemiJoinHint sjHint = (hints != null) ? hints.get(tableAlias) : null;
-            keyBaseAlias = ctx.generator.getOperatorId() + "_" + tableAlias + "_" + column;
-
-            semiJoinAttempted = generateSemiJoinOperatorPlan(
-                ctx, parseContext, ts, keyBaseAlias, sjHint);
-            if (!semiJoinAttempted && sjHint != null) {
-              throw new SemanticException("The user hint to enforce semijoin failed required conditions");
+            StringBuilder internalColNameBuilder = new StringBuilder();
+            StringBuilder colNameBuilder = new StringBuilder();
+            if (getColumnName(ctx, internalColNameBuilder, colNameBuilder)) {
+              String colName = colNameBuilder.toString();
+              keyBaseAlias = ctx.generator.getOperatorId() + "_" + tableAlias
+                      + "_" + colName;
+              Map<String, SemiJoinHint> hints = parseContext.getSemiJoinHints();
+              if (hints != null) {
+                if (hints.size() > 0) {
+                  SemiJoinHint sjHint = hints.get(tableAlias);
+                  if (sjHint != null && sjHint.getColName() != null &&
+                          !colName.equals(sjHint.getColName())) {
+                    LOG.debug("Removed hint due to column mismatch + Col = " + colName + " hint column = " + sjHint.getColName());
+                    sjHint = null;
+                  }
+                  semiJoinAttempted = generateSemiJoinOperatorPlan(
+                          ctx, parseContext, ts, keyBaseAlias,
+                          internalColNameBuilder.toString(), colName, sjHint);
+                  if (!semiJoinAttempted && sjHint != null) {
+                    throw new SemanticException("The user hint to enforce semijoin failed required conditions");
+                  }
+                }
+              } else {
+                // fallback to regular logic
+                semiJoinAttempted = generateSemiJoinOperatorPlan(
+                        ctx, parseContext, ts, keyBaseAlias,
+                        internalColNameBuilder.toString(), colName, null);
+              }
             }
           }
         }
@@ -274,6 +294,34 @@ public class DynamicPartitionPruningOptimization implements NodeProcessor {
     cleanTableScanFilters(ts);
 
     return false;
+  }
+
+  // Given a key, find the corresponding column name.
+  private boolean getColumnName(DynamicListContext ctx, StringBuilder internalColName,
+                                StringBuilder colName) {
+    ExprNodeDesc exprNodeDesc = ctx.generator.getConf().getKeyCols().get(ctx.desc.getKeyIndex());
+    ExprNodeColumnDesc colExpr = ExprNodeDescUtils.getColumnExpr(exprNodeDesc);
+
+    if (colExpr == null) {
+      return false;
+    }
+
+    internalColName.append(colExpr.getColumn());
+    Operator<? extends OperatorDesc> parentOfRS = ctx.generator.getParentOperators().get(0);
+    if (!(parentOfRS instanceof SelectOperator)) {
+      colName.append(internalColName.toString());
+      return true;
+    }
+
+    exprNodeDesc = parentOfRS.getColumnExprMap().get(internalColName.toString());
+    colExpr = ExprNodeDescUtils.getColumnExpr(exprNodeDesc);
+
+    if (colExpr == null) {
+      return false;
+    }
+
+    colName.append(ExprNodeDescUtils.extractColName(colExpr));
+    return true;
   }
 
   private void replaceExprNode(DynamicListContext ctx, FilterDesc desc, ExprNodeDesc node) {
@@ -391,7 +439,8 @@ public class DynamicPartitionPruningOptimization implements NodeProcessor {
 
   // Generates plan for min/max when dynamic partition pruning is ruled out.
   private boolean generateSemiJoinOperatorPlan(DynamicListContext ctx, ParseContext parseContext,
-      TableScanOperator ts, String keyBaseAlias, SemiJoinHint sjHint) throws SemanticException {
+      TableScanOperator ts, String keyBaseAlias, String internalColName,
+      String colName, SemiJoinHint sjHint) throws SemanticException {
 
     // If semijoin hint is enforced, make sure hint is provided
     if (parseContext.getConf().getBoolVar(ConfVars.TEZ_DYNAMIC_SEMIJOIN_REDUCTION_HINT_ONLY)
@@ -405,50 +454,18 @@ public class DynamicPartitionPruningOptimization implements NodeProcessor {
     // we need the expr that generated the key of the reduce sink
     ExprNodeDesc key = ctx.generator.getConf().getKeyCols().get(ctx.desc.getKeyIndex());
 
-    String internalColName = null;
-    ExprNodeDesc exprNodeDesc = key;
-    // Find the ExprNodeColumnDesc
-    while (!(exprNodeDesc instanceof ExprNodeColumnDesc) &&
-            (exprNodeDesc.getChildren() != null)) {
-      exprNodeDesc = exprNodeDesc.getChildren().get(0);
+    assert colName != null;
+    // Fetch the TableScan Operator.
+    Operator<?> op = parentOfRS;
+    while (!(op == null || op instanceof TableScanOperator)) {
+      op = op.getParentOperators().get(0);
     }
+    assert op != null;
 
-    if (!(exprNodeDesc instanceof ExprNodeColumnDesc)) {
-      // No column found!
-      // Bail out
+    Table table = ((TableScanOperator) op).getConf().getTableMetadata();
+    if (table.isPartitionKey(colName)) {
+      // The column is partition column, skip the optimization.
       return false;
-    }
-
-    internalColName = ((ExprNodeColumnDesc) exprNodeDesc).getColumn();
-    if (parentOfRS instanceof SelectOperator) {
-      // Make sure the semijoin branch is not on partition column.
-      ExprNodeDesc expr = parentOfRS.getColumnExprMap().get(internalColName);
-      while (!(expr instanceof ExprNodeColumnDesc) &&
-              (expr.getChildren() != null)) {
-        expr = expr.getChildren().get(0);
-      }
-
-      if (!(expr instanceof ExprNodeColumnDesc)) {
-        // No column found!
-        // Bail out
-        return false;
-      }
-
-      ExprNodeColumnDesc colExpr = (ExprNodeColumnDesc) expr;
-      String colName = ExprNodeDescUtils.extractColName(colExpr);
-
-      // Fetch the TableScan Operator.
-      Operator<?> op = parentOfRS.getParentOperators().get(0);
-      while (op != null && !(op instanceof TableScanOperator)) {
-        op = op.getParentOperators().get(0);
-      }
-      assert op != null;
-
-      Table table = ((TableScanOperator) op).getConf().getTableMetadata();
-      if (table.isPartitionKey(colName)) {
-        // The column is partition column, skip the optimization.
-        return false;
-      }
     }
 
     // If hint is provided and only hinted semijoin optimizations should be
@@ -662,14 +679,6 @@ public class DynamicPartitionPruningOptimization implements NodeProcessor {
             groupByDescFinal, new RowSchema(rsOp.getSchema()), rsOp);
     groupByOpFinal.setColumnExprMap(new HashMap<String, ExprNodeDesc>());
 
-    // for explain purpose
-    if (parseContext.getContext().getExplainConfig() != null
-        && parseContext.getContext().getExplainConfig().isFormatted()) {
-      List<String> outputOperators = new ArrayList<>();
-      outputOperators.add(groupByOpFinal.getOperatorId());
-      rsOp.getConf().setOutputOperators(outputOperators);
-    }
-
     createFinalRsForSemiJoinOp(parseContext, ts, groupByOpFinal, key,
             keyBaseAlias, ctx.parent.getChildren().get(0), sjHint != null);
 
@@ -711,16 +720,6 @@ public class DynamicPartitionPruningOptimization implements NodeProcessor {
     LOG.debug("DynamicSemiJoinPushdown: Saving RS to TS mapping: " + rsOpFinal + ": " + ts);
     SemiJoinBranchInfo sjInfo = new SemiJoinBranchInfo(ts, isHint);
     parseContext.getRsToSemiJoinBranchInfo().put(rsOpFinal, sjInfo);
-
-    // for explain purpose
-    if (parseContext.getContext().getExplainConfig() != null &&
-            parseContext.getContext().getExplainConfig().isFormatted()) {
-      List<String> outputOperators = rsOpFinal.getConf().getOutputOperators();
-      if (outputOperators == null) {
-        outputOperators = new ArrayList<>();
-      }
-      outputOperators.add(ts.getOperatorId());
-    }
 
     // Save the info that is required at query time to resolve dynamic/runtime values.
     RuntimeValuesInfo runtimeValuesInfo = new RuntimeValuesInfo();

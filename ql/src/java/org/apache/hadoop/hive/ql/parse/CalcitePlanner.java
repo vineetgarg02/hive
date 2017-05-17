@@ -1362,13 +1362,6 @@ public class CalcitePlanner extends SemanticAnalyzer {
       RexExecutor executorProvider = new HiveRexExecutorImpl(optCluster);
       calciteGenPlan.getCluster().getPlanner().setExecutor(executorProvider);
 
-      // We need to get the ColumnAccessInfo and viewToTableSchema for views.
-      HiveRelFieldTrimmer fieldTrimmer = new HiveRelFieldTrimmer(null,
-          HiveRelFactories.HIVE_BUILDER.create(optCluster, null), this.columnAccessInfo,
-          this.viewProjectToTableSchema);
-
-      fieldTrimmer.trim(calciteGenPlan);
-
       // Create and set MD provider
       HiveDefaultRelMetadataProvider mdProvider = new HiveDefaultRelMetadataProvider(conf);
       RelMetadataQuery.THREAD_PROVIDERS.set(
@@ -1382,6 +1375,13 @@ public class CalcitePlanner extends SemanticAnalyzer {
 
       calciteGenPlan = HiveRelDecorrelator.decorrelateQuery(calciteGenPlan);
       LOG.debug("Plan after decorrelation:\n" + RelOptUtil.toString(calciteGenPlan));
+
+      // We need to get the ColumnAccessInfo and viewToTableSchema for views.
+      HiveRelFieldTrimmer fieldTrimmer = new HiveRelFieldTrimmer(null,
+          HiveRelFactories.HIVE_BUILDER.create(optCluster, null), this.columnAccessInfo,
+          this.viewProjectToTableSchema);
+
+      fieldTrimmer.trim(calciteGenPlan);
 
       // 2. Apply pre-join order optimizations
       calcitePreCboPlan = applyPreJoinOrderingTransforms(calciteGenPlan,

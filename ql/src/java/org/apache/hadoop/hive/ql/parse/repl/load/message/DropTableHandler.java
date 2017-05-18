@@ -28,7 +28,7 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 
-class DropTableHandler extends AbstractMessageHandler {
+public class DropTableHandler extends AbstractMessageHandler {
   @Override
   public List<Task<? extends Serializable>> handle(Context context)
       throws SemanticException {
@@ -38,13 +38,15 @@ class DropTableHandler extends AbstractMessageHandler {
     DropTableDesc dropTableDesc = new DropTableDesc(
         actualDbName + "." + actualTblName,
         null, true, true,
-        eventOnlyReplicationSpec(context));
+        eventOnlyReplicationSpec(context)
+    );
     Task<DDLWork> dropTableTask = TaskFactory.get(
         new DDLWork(readEntitySet, writeEntitySet, dropTableDesc),
         context.hiveConf
     );
-    context.log
-        .debug("Added drop tbl task : {}:{}", dropTableTask.getId(), dropTableDesc.getTableName());
+    context.log.debug(
+        "Added drop tbl task : {}:{}", dropTableTask.getId(), dropTableDesc.getTableName()
+    );
     databasesUpdated.put(actualDbName, context.dmd.getEventTo());
     return Collections.singletonList(dropTableTask);
   }

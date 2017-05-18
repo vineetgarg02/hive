@@ -359,7 +359,7 @@ STAGE PLANS:
                     Statistics: Num rows: 20 Data size: 5277 Basic stats: COMPLETE Column stats: NONE
                     Map Join Operator
                       condition map:
-                           Left Outer Join0 to 1
+                           Left Outer Join 0 to 1
                       keys:
                         0 _col0 (type: int)
                         1 _col0 (type: int)
@@ -377,7 +377,7 @@ STAGE PLANS:
                       Statistics: Num rows: 22 Data size: 5804 Basic stats: COMPLETE Column stats: NONE
                       Map Join Operator
                         condition map:
-                             Left Outer Join0 to 1
+                             Left Outer Join 0 to 1
                         keys:
                           0 _col1 (type: bigint)
                           1 _col0 (type: bigint)
@@ -407,9 +407,11 @@ STAGE PLANS:
                           Reduce Output Operator
                             sort order: 
                             Reduce Sink Vectorization:
-                                className: VectorReduceSinkObjectHashOperator
+                                className: VectorReduceSinkEmptyKeyOperator
+                                keyColumns: []
                                 native: true
                                 nativeConditionsMet: hive.vectorized.execution.reducesink.new.enabled IS true, hive.execution.engine spark IN [tez, spark] IS true, No PTF TopN IS true, No DISTINCT columns IS true, BinarySortableSerDe for keys IS true, LazyBinarySerDe for values IS true
+                                valueColumns: [0, 1]
                             Statistics: Num rows: 1 Data size: 16 Basic stats: COMPLETE Column stats: NONE
                             value expressions: _col0 (type: bigint), _col1 (type: bigint)
             Execution mode: vectorized

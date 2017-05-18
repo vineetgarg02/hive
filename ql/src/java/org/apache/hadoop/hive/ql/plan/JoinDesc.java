@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hive.ql.exec.MemoryMonitorInfo;
 import org.apache.hadoop.hive.ql.exec.Operator;
 import org.apache.hadoop.hive.ql.parse.QBJoinTree;
 import org.apache.hadoop.hive.ql.plan.Explain.Level;
@@ -107,8 +108,11 @@ public class JoinDesc extends AbstractOperatorDesc {
   private transient boolean leftInputJoin;
   private transient List<String> streamAliases;
 
+  // represents the total memory that this Join operator will use if it is a MapJoin operator
+  protected transient long inMemoryDataSize;
+
   // non-transient field, used at runtime to kill a task if it exceeded memory limits when running in LLAP
-  protected long noConditionalTaskSize;
+  protected MemoryMonitorInfo memoryMonitorInfo;
 
   public JoinDesc() {
   }
@@ -116,14 +120,14 @@ public class JoinDesc extends AbstractOperatorDesc {
   public JoinDesc(final Map<Byte, List<ExprNodeDesc>> exprs,
       List<String> outputColumnNames, final boolean noOuterJoin,
       final JoinCondDesc[] conds, final Map<Byte, List<ExprNodeDesc>> filters,
-      ExprNodeDesc[][] joinKeys, final long noConditionalTaskSize) {
+      ExprNodeDesc[][] joinKeys, final MemoryMonitorInfo memoryMonitorInfo) {
     this.exprs = exprs;
     this.outputColumnNames = outputColumnNames;
     this.noOuterJoin = noOuterJoin;
     this.conds = conds;
     this.filters = filters;
     this.joinKeys = joinKeys;
-    this.noConditionalTaskSize = noConditionalTaskSize;
+    this.memoryMonitorInfo = memoryMonitorInfo;
     resetOrder();
   }
 
@@ -150,7 +154,9 @@ public class JoinDesc extends AbstractOperatorDesc {
     ret.setHandleSkewJoin(handleSkewJoin);
     ret.setSkewKeyDefinition(getSkewKeyDefinition());
     ret.setTagOrder(getTagOrder().clone());
-    ret.setNoConditionalTaskSize(getNoConditionalTaskSize());
+    if (getMemoryMonitorInfo() != null) {
+      ret.setMemoryMonitorInfo(new MemoryMonitorInfo(getMemoryMonitorInfo()));
+    }
     if (getKeyTableDesc() != null) {
       ret.setKeyTableDesc((TableDesc) getKeyTableDesc().clone());
     }
@@ -201,7 +207,8 @@ public class JoinDesc extends AbstractOperatorDesc {
     this.filterMap = clone.filterMap;
     this.residualFilterExprs = clone.residualFilterExprs;
     this.statistics = clone.statistics;
-    this.noConditionalTaskSize = clone.noConditionalTaskSize;
+    this.inMemoryDataSize = clone.inMemoryDataSize;
+    this.memoryMonitorInfo = clone.memoryMonitorInfo;
   }
 
   public Map<Byte, List<ExprNodeDesc>> getExprs() {
@@ -687,13 +694,19 @@ public class JoinDesc extends AbstractOperatorDesc {
     streamAliases = joinDesc.streamAliases == null ? null : new ArrayList<String>(joinDesc.streamAliases);
   }
 
-  private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(JoinDesc.class);
-
-  public long getNoConditionalTaskSize() {
-    return noConditionalTaskSize;
+  public MemoryMonitorInfo getMemoryMonitorInfo() {
+    return memoryMonitorInfo;
   }
 
-  public void setNoConditionalTaskSize(final long noConditionalTaskSize) {
-    this.noConditionalTaskSize = noConditionalTaskSize;
+  public void setMemoryMonitorInfo(final MemoryMonitorInfo memoryMonitorInfo) {
+    this.memoryMonitorInfo = memoryMonitorInfo;
+  }
+
+  public long getInMemoryDataSize() {
+    return inMemoryDataSize;
+  }
+
+  public void setInMemoryDataSize(final long inMemoryDataSize) {
+    this.inMemoryDataSize = inMemoryDataSize;
   }
 }

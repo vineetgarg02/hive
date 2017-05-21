@@ -121,6 +121,11 @@ public class HiveRelMdDistinctRowCount extends RelMdDistinctRowCount {
         maxICost = iCost;
       }
     }
-    return cost.plus(maxICost);
+    cost = cost.plus(maxICost);
+
+    // get estimated cardinality of this join
+    RelOptCost joinCardinality = HiveCost.FACTORY.makeCost(mq.getRowCount(rel),0.0,0.0);
+    // take estimated cardinality into account
+    return cost.plus(joinCardinality);
   }
 }

@@ -302,7 +302,7 @@ public class RelOptHiveTable extends RelOptAbstractTable {
       if (!hiveTblMetadata.isPartitioned()) {
         // 2.1 Handle the case for unpartitioned table.
         hiveColStats = StatsUtils.getTableColumnStats(hiveTblMetadata, hiveNonPartitionCols,
-            nonPartColNamesThatRqrStats);
+            nonPartColNamesThatRqrStats, hiveConf);
 
         // 2.1.1 Record Column Names that we needed stats for but couldn't
         if (hiveColStats == null) {

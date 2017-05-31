@@ -297,9 +297,12 @@ public class StatsUtils {
           // add partition column stats
           addParitionColumnStats(conf, neededColumns, referencedColumns, schema, table, partList,
               emptyStats);
-          stats.addToColumnStats(emptyStats);
           stats.addToDataSize(getDataSizeFromColumnStats(nr, emptyStats));
           stats.updateColumnStatsState(deriveStatType(emptyStats, referencedColumns));
+
+          // estimate stats
+          emptyStats = estimateStats(table, schema, neededColumns, conf, nr);
+          stats.addToColumnStats(emptyStats);
         } else {
           List<ColumnStatisticsObj> colStats = aggrStats.getColStats();
           if (colStats.size() != neededColumns.size()) {
@@ -780,6 +783,45 @@ public class StatsUtils {
     return cs;
   }
 
+  private static ColStatistics estimateColStats(long numRows, String colName) {
+    ColStatistics cs = new ColStatistics();
+    cs.setColumnName(colName);
+    cs.setCountDistint(numRows/2);
+    return cs;
+  }
+  private static List<ColStatistics> estimateStats(Table table, List<ColumnInfo> schema,
+      List<String> neededColumns, HiveConf conf, long numRows) {
+
+    List<ColStatistics> stats = new ArrayList<ColStatistics>(neededColumns.size());
+
+    boolean shouldEstimate = HiveConf.getBoolVar(conf, ConfVars.HIVESTATSESTIMATE );
+    if(!shouldEstimate) return stats;
+
+    // estimated for non-partition table
+    long nr = numRows;
+    if (!table.isPartitioned()) {
+
+      long ds = getDataSize(conf, table);
+      nr = getNumRows(conf, schema, neededColumns, table, ds);
+    }
+    for (int i = 0; i < neededColumns.size(); i++) {
+      ColStatistics cs = estimateColStats(nr, neededColumns.get(i));
+      stats.add(cs);
+    }
+    return stats;
+  }
+
+  public static List<ColStatistics> getTableColumnStats(
+      Table table, List<ColumnInfo> schema, List<String> neededColumns,
+      HiveConf hiveconf) {
+    List<ColStatistics> stats = null;
+    stats = getTableColumnStats(table, schema, neededColumns);
+
+    if(stats.isEmpty() ) {
+      stats = estimateStats(table, schema, neededColumns, hiveconf, 0);
+    }
+    return stats;
+  }
   /**
    * Get table level column statistics from metastore for needed columns
    * @param table
@@ -803,6 +845,7 @@ public class StatsUtils {
     try {
       List<ColumnStatisticsObj> colStat = Hive.get().getTableColumnStatistics(
           dbName, tabName, neededColsInTable);
+
       stats = convertColStats(colStat, tabName);
     } catch (HiveException e) {
       LOG.error("Failed to retrieve table statistics: ", e);

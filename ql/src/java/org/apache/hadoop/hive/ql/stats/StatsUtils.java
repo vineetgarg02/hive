@@ -783,19 +783,17 @@ public class StatsUtils {
     return cs;
   }
 
-  private static ColStatistics estimateColStats(long numRows, String colName) {
+  private static ColStatistics estimateColStats(long numRows, String colName, HiveConf conf) {
     ColStatistics cs = new ColStatistics();
     cs.setColumnName(colName);
-    cs.setCountDistint(numRows/2);
+    long ndv_factor = HiveConf.getLongVar(conf, ConfVars.HIVESTATSNDVFACTOR);
+    cs.setCountDistint(numRows/ndv_factor);
     return cs;
   }
   private static List<ColStatistics> estimateStats(Table table, List<ColumnInfo> schema,
       List<String> neededColumns, HiveConf conf, long numRows) {
 
     List<ColStatistics> stats = new ArrayList<ColStatistics>(neededColumns.size());
-
-    boolean shouldEstimate = HiveConf.getBoolVar(conf, ConfVars.HIVESTATSESTIMATE );
-    if(!shouldEstimate) return stats;
 
     // estimated for non-partition table
     long nr = numRows;
@@ -805,7 +803,7 @@ public class StatsUtils {
       nr = getNumRows(conf, schema, neededColumns, table, ds);
     }
     for (int i = 0; i < neededColumns.size(); i++) {
-      ColStatistics cs = estimateColStats(nr, neededColumns.get(i));
+      ColStatistics cs = estimateColStats(nr, neededColumns.get(i), conf);
       stats.add(cs);
     }
     return stats;

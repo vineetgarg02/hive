@@ -1392,7 +1392,6 @@ public class CalcitePlanner extends SemanticAnalyzer {
       //    the rest of optimizations
       if (profilesCBO.contains(ExtendedCBOProfile.JOIN_REORDERING)) {
         perfLogger.PerfLogBegin(this.getClass().getName(), PerfLogger.OPTIMIZER);
-        boolean oldVal = HiveConf.getBoolVar(conf, ConfVars.HIVESTATSESTIMATE );
         try {
           List<RelMetadataProvider> list = Lists.newArrayList();
           list.add(mdProvider.getMetadataProvider());
@@ -1417,11 +1416,6 @@ public class CalcitePlanner extends SemanticAnalyzer {
           }
           hepPlanner.setRoot(rootRel);
 
-          // this conf var is set to true so that in absence of statistics we "make up" stats
-          // this is done because otherwise join-ordering completely bails out and we could end up
-          // with cross-joins when join-ordering could have done better
-          HiveConf.setBoolVar(conf, ConfVars.HIVESTATSESTIMATE, true );
-
           calciteOptimizedPlan = hepPlanner.findBestExp();
         } catch (Exception e) {
           boolean isMissingStats = noColsMissingStats.get() > 0;
@@ -1434,7 +1428,6 @@ public class CalcitePlanner extends SemanticAnalyzer {
             throw e;
           }
         }
-        HiveConf.setBoolVar(conf, ConfVars.HIVESTATSESTIMATE, oldVal);
         perfLogger.PerfLogEnd(this.getClass().getName(), PerfLogger.OPTIMIZER, "Calcite: Join Reordering");
       } else {
         calciteOptimizedPlan = calcitePreCboPlan;

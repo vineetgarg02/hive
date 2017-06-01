@@ -1676,8 +1676,8 @@ public class HiveConf extends Configuration {
         "Whether or not to use a binary search to find the entries in an index table that match the filter, where possible"),
 
     // Statistics
-    HIVESTATSESTIMATE("hive.stats.estimate", false,
-        "Internal flag to determine if in absence of statistics join ordering should estimate stats."),
+    HIVESTATSNDVFACTOR("hive.stats.ndv.estimate.factor", (long)2,
+        "NDV factor used to estimate NDV in absence of statistics."),
     HIVESTATSAUTOGATHER("hive.stats.autogather", true,
         "A flag to gather statistics (only basic) automatically during the INSERT OVERWRITE command."),
     HIVESTATSCOLAUTOGATHER("hive.stats.column.autogather", false,

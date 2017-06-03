@@ -1245,7 +1245,13 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
   }
 
   private RexNode simplifyComparison(RexNode op) {
-    if(op instanceof RexCall) {
+    switch(op.getKind()) {
+    case EQUALS:
+    case GREATER_THAN:
+    case GREATER_THAN_OR_EQUAL:
+    case LESS_THAN:
+    case LESS_THAN_OR_EQUAL:
+    case NOT_EQUALS:
       RexCall e = (RexCall) op;
       final List<RexNode> operands = new ArrayList<>(e.operands);
 
@@ -1266,7 +1272,7 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
           // "x != x" simplifies to "false" (similarly < and >)
           return rexBuilder.makeLiteral(false);
         }
-      }
+    }
     return op;
   }
 

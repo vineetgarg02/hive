@@ -783,9 +783,10 @@ public class StatsUtils {
     return cs;
   }
 
-  private static ColStatistics estimateColStats(long numRows, String colName, HiveConf conf) {
-    ColStatistics cs = new ColStatistics();
-    cs.setColumnName(colName);
+  private static ColStatistics estimateColStats(long numRows, String colName, HiveConf conf,
+      List<ColumnInfo> schema) {
+    ColumnInfo cinfo = getColumnInfoForColumn(colName, schema);
+    ColStatistics cs = new ColStatistics(colName, cinfo.getTypeName());
     long ndv_factor = HiveConf.getLongVar(conf, ConfVars.HIVESTATSNDVFACTOR);
     cs.setCountDistint(numRows/ndv_factor);
     return cs;
@@ -803,7 +804,7 @@ public class StatsUtils {
       nr = getNumRows(conf, schema, neededColumns, table, ds);
     }
     for (int i = 0; i < neededColumns.size(); i++) {
-      ColStatistics cs = estimateColStats(nr, neededColumns.get(i), conf);
+      ColStatistics cs = estimateColStats(nr, neededColumns.get(i), conf, schema);
       stats.add(cs);
     }
     return stats;

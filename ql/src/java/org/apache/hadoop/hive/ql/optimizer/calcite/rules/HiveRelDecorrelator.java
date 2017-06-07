@@ -119,6 +119,7 @@ import java.util.NavigableMap;
 import java.util.Objects;
 import java.util.Set;
 import java.util.SortedMap;
+import java.util.Stack;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import javax.annotation.Nonnull;
@@ -176,6 +177,8 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
   private final Map<RelNode, Frame> map = new HashMap<>();
 
   private final HashSet<LogicalCorrelate> generatedCorRels = Sets.newHashSet();
+
+  private Stack valueGen = new Stack();
 
   //~ Constructors -----------------------------------------------------------
 
@@ -1157,8 +1160,12 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
           throws Util.FoundOne {
     switch (e.getKind()) {
     // for now only EQUAL and NOT EQUAL corr predicates are optimized
-    case EQUALS:
     case NOT_EQUALS:
+      if((boolean)valueGen.peek()) {
+        // we will need value generator
+        break;
+      }
+    case EQUALS:
         final RexCall call = (RexCall) e;
         final List<RexNode> operands = call.getOperands();
         if (references(operands.get(0), correlation)
@@ -1365,6 +1372,9 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
     final RelNode oldLeft = rel.getInput(0);
     final RelNode oldRight = rel.getInput(1);
 
+    boolean mightRequireValueGen = new findAggregateInSubquery().traverse(oldRight);
+    valueGen.push(mightRequireValueGen);
+
     final Frame leftFrame = getInvoke(oldLeft, rel);
     final Frame rightFrame = getInvoke(oldRight, rel);
 
@@ -1458,6 +1468,8 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
     RelNode newJoin =
             LogicalJoin.create(leftFrame.r, rightFrame.r, condition,
                     ImmutableSet.<CorrelationId>of(), rel.getJoinType().toJoinType());
+
+    valueGen.pop();
 
     return register(rel, newJoin, mapOldToNewOutputs, corDefOutputs);
   }
@@ -3090,6 +3102,33 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
     }
   }
 
+  private static class findAggregateInSubquery extends HiveRelShuttleImpl {
+    private boolean mightRequireValueGen ;
+    findAggregateInSubquery() { this.mightRequireValueGen = false; }
+
+    @Override public RelNode visit(HiveAggregate rel) {
+      if(((HiveAggregate)rel).getAggCallList().isEmpty() == false) {
+        this.mightRequireValueGen = true;
+      }
+      return super.visit(rel);
+    }
+    @Override public RelNode visit(LogicalAggregate rel) {
+      if(((LogicalAggregate)rel).getAggCallList().isEmpty() == false) {
+        this.mightRequireValueGen = true;
+      }
+      return super.visit(rel);
+    }
+    @Override public RelNode visit(LogicalCorrelate rel) {
+      // this means we are hitting nested subquery so don't
+      // need to go further
+      return rel;
+    }
+
+    public boolean traverse(RelNode root) {
+      root.accept(this);
+      return mightRequireValueGen;
+    }
+  }
   /** Builds a {@link org.apache.calcite.sql2rel.RelDecorrelator.CorelMap}. */
   private static class CorelMapBuilder extends HiveRelShuttleImpl {
     final SortedMap<CorrelationId, RelNode> mapCorToCorRel =

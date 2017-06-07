@@ -69,25 +69,7 @@ select p_mfgr, p_name, p_size
 from part b where b.p_size in
 	(select min(p_size)
 	 from (select p_mfgr, p_size, rank() over(partition by p_mfgr order by p_size) as r from part) a
-	 where r <= 2 and b.p_name = a.p_mfgr
-	)
-;
-
--- agg, non-equi corr
-explain
-select p_mfgr, p_name, p_size
-from part b where b.p_size in
-	(select min(p_size)
-	 from (select p_mfgr, p_size, rank() over(partition by p_mfgr order by p_size) as r from part) a
-	 where r <= 2 and b.p_name <> a.p_mfgr
-	)
-;
-
-select p_mfgr, p_name, p_size
-from part b where b.p_size in
-	(select min(p_size)
-	 from (select p_mfgr, p_size, rank() over(partition by p_mfgr order by p_size) as r from part) a
-	 where r <= 2 and b.p_name <> a.p_mfgr
+	 where r <= 2 and b.p_mfgr = a.p_mfgr
 	)
 ;
 

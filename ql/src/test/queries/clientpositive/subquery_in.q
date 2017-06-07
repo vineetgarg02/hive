@@ -69,29 +69,69 @@ select p_mfgr, p_name, p_size
 from part b where b.p_size in
 	(select min(p_size)
 	 from (select p_mfgr, p_size, rank() over(partition by p_mfgr order by p_size) as r from part) a
-	 where r <= 2 and b.p_mfgr = a.p_mfgr
+	 where r <= 2 and b.p_name = a.p_mfgr
+	)
+;
+
+-- agg, non-equi corr
+explain
+select p_mfgr, p_name, p_size
+from part b where b.p_size in
+	(select min(p_size)
+	 from (select p_mfgr, p_size, rank() over(partition by p_mfgr order by p_size) as r from part) a
+	 where r <= 2 and b.p_name <> a.p_mfgr
+	)
+;
+
+select p_mfgr, p_name, p_size
+from part b where b.p_size in
+	(select min(p_size)
+	 from (select p_mfgr, p_size, rank() over(partition by p_mfgr order by p_size) as r from part) a
+	 where r <= 2 and b.p_name <> a.p_mfgr
 	)
 ;
 
 -- distinct, corr
-explain 
-select * 
-from src b 
+explain
+select *
+from src b
 where b.key in
-        (select distinct a.key 
-         from src a 
+        (select distinct a.key
+         from src a
          where b.value = a.value and a.key > '9'
         )
 ;
 
-select * 
-from src b 
+select *
+from src b
 where b.key in
-        (select distinct a.key 
-         from src a 
+        (select distinct a.key
+         from src a
          where b.value = a.value and a.key > '9'
         )
 ;
+
+-- corr, non equi predicate, should not have a join with outer to generate
+-- corr values
+explain
+select *
+from src b
+where b.key in
+        (select distinct a.key
+         from src a
+         where b.value <> a.key and a.key > '9'
+        )
+;
+
+select *
+from src b
+where b.key in
+        (select distinct a.key
+         from src a
+         where b.value <> a.key and a.key > '9'
+        )
+;
+
 
 -- non agg, non corr, windowing
 select p_mfgr, p_name, p_size 

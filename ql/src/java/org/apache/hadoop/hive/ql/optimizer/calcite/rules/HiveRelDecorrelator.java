@@ -320,8 +320,14 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
     return planner.findBestExp();
   }
 
+  protected RexNode decorrelateExpr(RexNode exp, boolean valueGenerator) {
+    DecorrelateRexShuttle shuttle = new DecorrelateRexShuttle();
+    shuttle.setValueGenerator(valueGenerator);
+    return exp.accept(shuttle);
+  }
   protected RexNode decorrelateExpr(RexNode exp) {
     DecorrelateRexShuttle shuttle = new DecorrelateRexShuttle();
+    shuttle.setValueGenerator(false);
     return exp.accept(shuttle);
   }
 
@@ -1107,7 +1113,11 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
         try {
           findCorrelationEquivalent(correlation, ((Filter) rel).getCondition());
         } catch (Util.FoundOne e) {
-          map.put(def, (Integer) e.getNode());
+          // we need to keep predicate kind e.g. EQUAL or NOT EQUAL
+          // so that later while decorrelating LogicalCorrelate appropriate join predicate
+          // is generated
+          def.setPredicateKind((SqlKind)((Pair)e.getNode()).getValue());
+          map.put(def, (Integer)((Pair) e.getNode()).getKey());
         }
       }
       // If all correlation variables are now satisfied, skip creating a value
@@ -1146,16 +1156,18 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
   private void findCorrelationEquivalent(CorRef correlation, RexNode e)
           throws Util.FoundOne {
     switch (e.getKind()) {
-      case EQUALS:
+    // for now only EQUAL and NOT EQUAL corr predicates are optimized
+    case EQUALS:
+    case NOT_EQUALS:
         final RexCall call = (RexCall) e;
         final List<RexNode> operands = call.getOperands();
         if (references(operands.get(0), correlation)
                 && operands.get(1) instanceof RexInputRef) {
-          throw new Util.FoundOne(((RexInputRef) operands.get(1)).getIndex());
+          throw new Util.FoundOne(Pair.of(((RexInputRef) operands.get(1)).getIndex(), e.getKind()));
         }
         if (references(operands.get(1), correlation)
                 && operands.get(0) instanceof RexInputRef) {
-          throw new Util.FoundOne(((RexInputRef) operands.get(0)).getIndex());
+          throw new Util.FoundOne(Pair.of(((RexInputRef) operands.get(0)).getIndex(), e.getKind()));
         }
         break;
       case AND:
@@ -1224,17 +1236,22 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
         return null;
       }
 
+      Frame oldInputFrame = frame;
       // If this LogicalFilter has correlated reference, create value generator
       // and produce the correlated variables in the new output.
       if (cm.mapRefRelToCorRef.containsKey(rel)) {
         frame = decorrelateInputWithValueGenerator(rel);
       }
 
-      // Replace the filter expression to reference output of the join
-      // Map filter to the new filter over join
-      relBuilder.push(frame.r).filter(
-          simplifyComparison(decorrelateExpr(rel.getCondition())));
-
+      boolean valueGenerator = true;
+      if(frame.r == oldInputFrame.r) {
+        // this means correated value generator wasn't generated
+        valueGenerator = false;
+      }
+        // Replace the filter expression to reference output of the join
+        // Map filter to the new filter over join
+        relBuilder.push(frame.r).filter(
+            simplifyComparison(decorrelateExpr(rel.getCondition(), valueGenerator)));
       // Filter does not change the input ordering.
       // Filter rel does not permute the input.
       // All corvars produced by filter will have the same output positions in the
@@ -1268,9 +1285,6 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
         case LESS_THAN_OR_EQUAL:
           // "x = x" simplifies to "x is not null" (similarly <= and >=)
           return rexBuilder.makeCall(SqlStdOperatorTable.IS_NOT_NULL, o0);
-        default:
-          // "x != x" simplifies to "false" (similarly < and >)
-          return rexBuilder.makeLiteral(false);
         }
     }
     return op;
@@ -1313,9 +1327,15 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
 
     }
 
+    boolean valueGenerator = true;
+    if(frame.r == oldInput) {
+      // this means correated value generator wasn't generated
+      valueGenerator = false;
+    }
+
     // Replace the filter expression to reference output of the join
     // Map filter to the new filter over join
-    relBuilder.push(frame.r).filter(decorrelateExpr(rel.getCondition()));
+    relBuilder.push(frame.r).filter(decorrelateExpr(rel.getCondition(), valueGenerator));
 
 
     // Filter does not change the input ordering.
@@ -1381,11 +1401,22 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
       }
       final int newLeftPos = leftFrame.oldToNewOutputs.get(corDef.field);
       final int newRightPos = rightOutput.getValue();
-      conditions.add(
-              rexBuilder.makeCall(SqlStdOperatorTable.EQUALS,
-                      RexInputRef.of(newLeftPos, newLeftOutput),
-                      new RexInputRef(newLeftFieldCount + newRightPos,
-                              newRightOutput.get(newRightPos).getType())));
+      if(corDef.getPredicateKind() == SqlKind.NOT_EQUALS) {
+        conditions.add(
+            rexBuilder.makeCall(SqlStdOperatorTable.NOT_EQUALS,
+                RexInputRef.of(newLeftPos, newLeftOutput),
+                new RexInputRef(newLeftFieldCount + newRightPos,
+                    newRightOutput.get(newRightPos).getType())));
+
+      }
+      else {
+        conditions.add(
+            rexBuilder.makeCall(SqlStdOperatorTable.EQUALS,
+                RexInputRef.of(newLeftPos, newLeftOutput),
+                new RexInputRef(newLeftFieldCount + newRightPos,
+                    newRightOutput.get(newRightPos).getType())));
+
+      }
 
       // remove this cor var from output position mapping
       corDefOutputs.remove(corDef);
@@ -1820,7 +1851,79 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
 
   /** Shuttle that decorrelates. */
   private class DecorrelateRexShuttle extends RexShuttle {
+    private boolean valueGenerator;
+    public void setValueGenerator(boolean valueGenerator) {
+      this.valueGenerator = valueGenerator;
+    }
+
+    // DecorrelateRexShuttle ends up decorrelating expressions cor.col1 <> $4
+    // to $4=$4 if value generator is not generated, $4<>$4 is further simplified
+    // to false. This is wrong and messes up the whole tree. To prevent this visitCall
+    // is overridden to rewrite/simply such predicates to is not null.
+    // we also need to take care that we do this only for correlated predicates and
+    // not user specified explicit predicates
+    @Override  public RexNode visitCall(final RexCall call) {
+      if(!valueGenerator) {
+        switch (call.getKind()) {
+        case EQUALS:
+        case NOT_EQUALS:
+          final List<RexNode> operands = new ArrayList<>(call.operands);
+          RexNode o0 = operands.get(0);
+          RexNode o1 = operands.get(1);
+          boolean isCorrelated = false;
+          if (o0 instanceof RexFieldAccess && (cm.mapFieldAccessToCorRef.get(o0) != null)) {
+            o0 = decorrFieldAccess((RexFieldAccess) o0);
+            isCorrelated = true;
+
+          }
+          if (o1 instanceof RexFieldAccess && (cm.mapFieldAccessToCorRef.get(o1) != null)) {
+            o1 = decorrFieldAccess((RexFieldAccess) o1);
+            isCorrelated = true;
+          }
+          if (isCorrelated && RexUtil.eq(o0, o1)) {
+            return rexBuilder.makeCall(SqlStdOperatorTable.IS_NOT_NULL, o0);
+          }
+
+          final List<RexNode> newOperands = new ArrayList<>();
+          newOperands.add(o0);
+          newOperands.add(o1);
+          boolean[] update = { false };
+          List<RexNode> clonedOperands = visitList(newOperands, update);
+
+          return relBuilder.call(call.getOperator(), clonedOperands);
+        }
+      }
+
+      boolean[] update = {false};
+      List<RexNode> clonedOperands = visitList(call.operands, update);
+      if (update[0]) {
+      // REVIEW jvs 8-Mar-2005:  This doesn't take into account
+      // the fact that a rewrite may have changed the result type.
+      // To do that, we would need to take a RexBuilder and
+      // watch out for special operators like CAST and NEW where
+      // the type is embedded in the original call.
+      return relBuilder.call(
+          call.getOperator(),
+          clonedOperands);
+      }
+      else {
+        return call;
+      }
+    }
+
     @Override public RexNode visitFieldAccess(RexFieldAccess fieldAccess) {
+      return decorrFieldAccess(fieldAccess);
+    }
+
+    @Override public RexNode visitInputRef(RexInputRef inputRef) {
+      final RexInputRef ref = getNewForOldInputRef(inputRef);
+      if (ref.getIndex() == inputRef.getIndex()
+              && ref.getType() == inputRef.getType()) {
+        return inputRef; // re-use old object, to prevent needless expr cloning
+      }
+      return ref;
+    }
+    private RexNode decorrFieldAccess(RexFieldAccess fieldAccess) {
       int newInputOutputOffset = 0;
       for (RelNode input : currentRel.getInputs()) {
         final Frame frame = map.get(input);
@@ -1835,7 +1938,7 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
               // This input rel does produce the cor var referenced.
               // Assume fieldAccess has the correct type info.
               return new RexInputRef(newInputPos + newInputOutputOffset,
-                      frame.r.getRowType().getFieldList().get(newInputPos)
+                  frame.r.getRowType().getFieldList().get(newInputPos)
                       .getType());
             }
           }
@@ -1848,15 +1951,6 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
         }
       }
       return fieldAccess;
-    }
-
-    @Override public RexNode visitInputRef(RexInputRef inputRef) {
-      final RexInputRef ref = getNewForOldInputRef(inputRef);
-      if (ref.getIndex() == inputRef.getIndex()
-              && ref.getType() == inputRef.getType()) {
-        return inputRef; // re-use old object, to prevent needless expr cloning
-      }
-      return ref;
     }
   }
 
@@ -2882,10 +2976,12 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
   static class CorDef implements Comparable<CorDef> {
     public final CorrelationId corr;
     public final int field;
+    private SqlKind predicateKind;
 
     CorDef(CorrelationId corr, int field) {
       this.corr = corr;
       this.field = field;
+      this.predicateKind = null;
     }
 
     @Override public String toString() {
@@ -2909,6 +3005,13 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
         return c;
       }
       return Integer.compare(field, o.field);
+    }
+    public SqlKind getPredicateKind() {
+      return predicateKind;
+    }
+    public void setPredicateKind(SqlKind predKind) {
+      this.predicateKind = predKind;
+
     }
   }
 

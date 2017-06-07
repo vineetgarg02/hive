@@ -266,6 +266,8 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
       return planner2.findBestExp();
     }
 
+    assert(valueGen.isEmpty());
+
     return root;
   }
 
@@ -1905,22 +1907,7 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
           return relBuilder.call(call.getOperator(), clonedOperands);
         }
       }
-
-      boolean[] update = {false};
-      List<RexNode> clonedOperands = visitList(call.operands, update);
-      if (update[0]) {
-      // REVIEW jvs 8-Mar-2005:  This doesn't take into account
-      // the fact that a rewrite may have changed the result type.
-      // To do that, we would need to take a RexBuilder and
-      // watch out for special operators like CAST and NEW where
-      // the type is embedded in the original call.
-      return relBuilder.call(
-          call.getOperator(),
-          clonedOperands);
-      }
-      else {
-        return call;
-      }
+      return super.visitCall(call);
     }
 
     @Override public RexNode visitFieldAccess(RexFieldAccess fieldAccess) {

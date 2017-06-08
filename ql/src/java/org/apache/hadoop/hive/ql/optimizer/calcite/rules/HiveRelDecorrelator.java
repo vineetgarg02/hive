@@ -41,11 +41,7 @@ import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.core.RelFactories;
 import org.apache.calcite.rel.core.Sort;
 import org.apache.calcite.rel.core.Values;
-import org.apache.calcite.rel.logical.LogicalAggregate;
-import org.apache.calcite.rel.logical.LogicalCorrelate;
-import org.apache.calcite.rel.logical.LogicalFilter;
-import org.apache.calcite.rel.logical.LogicalJoin;
-import org.apache.calcite.rel.logical.LogicalProject;
+import org.apache.calcite.rel.logical.*;
 import org.apache.calcite.rel.metadata.RelMdUtil;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rel.rules.FilterCorrelateRule;
@@ -61,6 +57,7 @@ import org.apache.calcite.rex.RexFieldAccess;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.rex.RexOver;
 import org.apache.calcite.rex.RexShuttle;
 import org.apache.calcite.rex.RexSubQuery;
 import org.apache.calcite.rex.RexUtil;
@@ -83,11 +80,7 @@ import org.apache.calcite.util.ReflectiveVisitor;
 import org.apache.calcite.util.Stacks;
 import org.apache.calcite.util.Util;
 import org.apache.calcite.util.mapping.Mappings;
-import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveAggregate;
-import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveFilter;
-import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveJoin;
-import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveProject;
-import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveSortLimit;
+import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.*;
 import org.apache.hadoop.hive.ql.parse.SemanticAnalyzer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -106,6 +99,7 @@ import com.google.common.collect.Sets;
 import com.google.common.collect.SortedSetMultimap;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.optimizer.calcite.HiveRelShuttleImpl;
+import sun.rmi.runtime.Log;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -1374,7 +1368,7 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
     final RelNode oldLeft = rel.getInput(0);
     final RelNode oldRight = rel.getInput(1);
 
-    boolean mightRequireValueGen = new findAggregateInSubquery().traverse(oldRight);
+    boolean mightRequireValueGen = new findIfValueGenRequired().traverse(oldRight);
     valueGen.push(mightRequireValueGen);
 
     final Frame leftFrame = getInvoke(oldLeft, rel);
@@ -3089,19 +3083,77 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
     }
   }
 
-  private static class findAggregateInSubquery extends HiveRelShuttleImpl {
+  private static class findIfValueGenRequired extends HiveRelShuttleImpl {
     private boolean mightRequireValueGen ;
-    findAggregateInSubquery() { this.mightRequireValueGen = false; }
+    findIfValueGenRequired() { this.mightRequireValueGen = false; }
 
+    private boolean hasRexOver(List<RexNode> projects) {
+      for(RexNode expr : projects) {
+        if(expr instanceof  RexOver) {
+          return true;
+        }
+      }
+      return false;
+    }
+    @Override public RelNode visit(HiveJoin rel) {
+      mightRequireValueGen = true;
+      return rel;
+    }
+    public RelNode visit(HiveSortLimit rel) {
+      mightRequireValueGen = true;
+      return rel;
+    }
+    public RelNode visit(HiveUnion rel) {
+      mightRequireValueGen = true;
+      return rel;
+    }
+    public RelNode visit(LogicalUnion rel) {
+      mightRequireValueGen = true;
+      return rel;
+    }
+    public RelNode visit(LogicalIntersect rel) {
+      mightRequireValueGen = true;
+      return rel;
+    }
+
+    public RelNode visit(HiveIntersect rel) {
+      mightRequireValueGen = true;
+      return rel;
+    }
+
+    @Override public RelNode visit(LogicalJoin rel) {
+      mightRequireValueGen = true;
+      return rel;
+    }
+    @Override public RelNode visit(HiveProject rel) {
+      if(hasRexOver(((HiveProject)rel).getProjects())) {
+        mightRequireValueGen = true;
+        return rel;
+      }
+      return super.visit(rel);
+    }
+    @Override public RelNode visit(LogicalProject rel) {
+      if(hasRexOver(((LogicalProject)rel).getProjects())) {
+        mightRequireValueGen = true;
+        return rel;
+      }
+      return super.visit(rel);
+    }
     @Override public RelNode visit(HiveAggregate rel) {
-      if(((HiveAggregate)rel).getAggCallList().isEmpty() == false) {
+      // if there are aggregate functions or grouping sets we will need
+      // value generator
+      if(((HiveAggregate)rel).getAggCallList().isEmpty() == false
+          || ((HiveAggregate)rel).indicator == true) {
         this.mightRequireValueGen = true;
+        return rel;
       }
       return super.visit(rel);
     }
     @Override public RelNode visit(LogicalAggregate rel) {
-      if(((LogicalAggregate)rel).getAggCallList().isEmpty() == false) {
+      if(((LogicalAggregate)rel).getAggCallList().isEmpty() == false
+          || ((LogicalAggregate)rel).indicator == true) {
         this.mightRequireValueGen = true;
+        return rel;
       }
       return super.visit(rel);
     }

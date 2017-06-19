@@ -169,48 +169,7 @@ import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveSortLimit;
 import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveTableFunctionScan;
 import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveTableScan;
 import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveUnion;
-import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveAggregateJoinTransposeRule;
-import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveAggregateProjectMergeRule;
-import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveAggregatePullUpConstantsRule;
-import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveDruidProjectFilterTransposeRule;
-import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveExceptRewriteRule;
-import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveExpandDistinctAggregatesRule;
-import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveFilterAggregateTransposeRule;
-import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveFilterJoinRule;
-import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveFilterProjectTSTransposeRule;
-import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveFilterProjectTransposeRule;
-import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveFilterSetOpTransposeRule;
-import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveFilterSortTransposeRule;
-import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveInsertExchange4JoinRule;
-import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveIntersectMergeRule;
-import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveIntersectRewriteRule;
-import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveJoinAddNotNullRule;
-import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveJoinCommuteRule;
-import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveJoinProjectTransposeRule;
-import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveJoinPushTransitivePredicatesRule;
-import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveJoinToMultiJoinRule;
-import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HivePartitionPruneRule;
-import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HivePointLookupOptimizerRule;
-import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HivePreFilteringRule;
-import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveProjectFilterPullUpConstantsRule;
-import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveProjectMergeRule;
-import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveProjectOverIntersectRemoveRule;
-import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveProjectSortTransposeRule;
-import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveReduceExpressionsRule;
-import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveReduceExpressionsWithStatsRule;
-import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveRelDecorrelator;
-import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveRelFieldTrimmer;
-import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveRulesRegistry;
-import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveSemiJoinRule;
-import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveSortJoinReduceRule;
-import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveSortLimitPullUpConstantsRule;
-import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveSortMergeRule;
-import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveSortProjectTransposeRule;
-import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveSortRemoveRule;
-import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveSortUnionReduceRule;
-import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveSubQueryRemoveRule;
-import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveUnionPullUpConstantsRule;
-import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveWindowingFixRule;
+import org.apache.hadoop.hive.ql.optimizer.calcite.rules.*;
 import org.apache.hadoop.hive.ql.optimizer.calcite.rules.views.HiveMaterializedViewFilterScanRule;
 import org.apache.hadoop.hive.ql.optimizer.calcite.translator.ASTBuilder;
 import org.apache.hadoop.hive.ql.optimizer.calcite.translator.ASTConverter;
@@ -1525,6 +1484,12 @@ public class CalcitePlanner extends SemanticAnalyzer {
         calciteOptimizedPlan = hepPlan(calciteOptimizedPlan, false, mdProvider.getMetadataProvider(), null, HiveSemiJoinRule.INSTANCE);
         perfLogger.PerfLogEnd(this.getClass().getName(), PerfLogger.OPTIMIZER, "Calcite: Semijoin conversion");
       }
+
+      // 8. Get rid of sq_count_check if group by key is constant (HIVE-)
+      perfLogger.PerfLogBegin(this.getClass().getName(), PerfLogger.OPTIMIZER);
+      calciteOptimizedPlan = hepPlan(calciteOptimizedPlan, false, mdProvider.getMetadataProvider(), null, HiveRemoveSqCountCheck.INSTANCE);
+      perfLogger.PerfLogEnd(this.getClass().getName(), PerfLogger.OPTIMIZER, "Calcite: Removing sq_count_check UDF ");
+
 
 
       // 8. Run rule to fix windowing issue when it is done over

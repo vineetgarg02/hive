@@ -175,6 +175,11 @@ public abstract class HiveSubQueryRemoveRule extends RelOptRule{
                 // if scalar query has aggregate and no windowing and no gby avoid adding sq_count_check
                 // since it is guaranteed to produce at most one row
                 if(!hasNoWindowingAndNoGby) {
+                    // we want to have project after join since sq_count_check's count() expression wouldn't
+                    // be needed further up
+                    final List<RexNode> parentQueryFields = new ArrayList<>();
+                    parentQueryFields.addAll(builder.fields());
+
                     builder.push(e.rel);
                     // returns single row/column
                     builder.aggregate(builder.groupKey(), builder.count(false, "cnt"));
@@ -192,7 +197,9 @@ public abstract class HiveSubQueryRemoveRule extends RelOptRule{
                     } else
                         builder.join(JoinRelType.INNER, builder.literal(true), variablesSet);
 
-                    offset++;
+                    builder.project(parentQueryFields);
+
+                    //offset++;
                 }
                 if(isCorrScalarAgg) {
                     // Transformation :

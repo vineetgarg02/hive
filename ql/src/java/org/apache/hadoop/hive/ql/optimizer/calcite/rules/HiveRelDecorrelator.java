@@ -41,10 +41,15 @@ import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.core.RelFactories;
 import org.apache.calcite.rel.core.Sort;
 import org.apache.calcite.rel.core.Values;
-import org.apache.calcite.rel.logical.*;
+import org.apache.calcite.rel.logical.LogicalAggregate;
+import org.apache.calcite.rel.logical.LogicalCorrelate;
+import org.apache.calcite.rel.logical.LogicalFilter;
+import org.apache.calcite.rel.logical.LogicalIntersect;
+import org.apache.calcite.rel.logical.LogicalJoin;
+import org.apache.calcite.rel.logical.LogicalProject;
+import org.apache.calcite.rel.logical.LogicalUnion;
 import org.apache.calcite.rel.metadata.RelMdUtil;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
-import org.apache.calcite.rel.rules.FilterCorrelateRule;
 import org.apache.calcite.rel.rules.FilterJoinRule;
 import org.apache.calcite.rel.rules.FilterProjectTransposeRule;
 import org.apache.calcite.rel.type.RelDataType;
@@ -80,8 +85,13 @@ import org.apache.calcite.util.ReflectiveVisitor;
 import org.apache.calcite.util.Stacks;
 import org.apache.calcite.util.Util;
 import org.apache.calcite.util.mapping.Mappings;
-import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.*;
-import org.apache.hadoop.hive.ql.parse.SemanticAnalyzer;
+import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveAggregate;
+import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveFilter;
+import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveIntersect;
+import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveJoin;
+import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveProject;
+import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveSortLimit;
+import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveUnion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -99,7 +109,6 @@ import com.google.common.collect.Sets;
 import com.google.common.collect.SortedSetMultimap;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.optimizer.calcite.HiveRelShuttleImpl;
-import sun.rmi.runtime.Log;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -1254,7 +1263,7 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
         // Replace the filter expression to reference output of the join
         // Map filter to the new filter over join
         relBuilder.push(frame.r).filter(
-            simplifyComparison(decorrelateExpr(rel.getCondition(), valueGenerator)));
+            (decorrelateExpr(rel.getCondition(), valueGenerator)));
       // Filter does not change the input ordering.
       // Filter rel does not permute the input.
       // All corvars produced by filter will have the same output positions in the
@@ -1263,36 +1272,6 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
               frame.corDefOutputs);
     }
   }
-
-  private RexNode simplifyComparison(RexNode op) {
-    switch(op.getKind()) {
-    case EQUALS:
-    case GREATER_THAN:
-    case GREATER_THAN_OR_EQUAL:
-    case LESS_THAN:
-    case LESS_THAN_OR_EQUAL:
-    case NOT_EQUALS:
-      RexCall e = (RexCall) op;
-      final List<RexNode> operands = new ArrayList<>(e.operands);
-
-      // Simplify "x <op> x"
-      final RexNode o0 = operands.get(0);
-      final RexNode o1 = operands.get(1);
-      // this should only be called when we are creating filter (decorrelate filter)
-      // since in that case null/unknown is treated as false we don't care about
-      // nullability of operands and will always rewrite op=op to op is not null
-      if (RexUtil.eq(o0, o1) )
-        switch (e.getKind()) {
-        case EQUALS:
-        case GREATER_THAN_OR_EQUAL:
-        case LESS_THAN_OR_EQUAL:
-          // "x = x" simplifies to "x is not null" (similarly <= and >=)
-          return rexBuilder.makeCall(SqlStdOperatorTable.IS_NOT_NULL, o0);
-        }
-    }
-    return op;
-  }
-
 
     /**
      * Rewrite LogicalFilter.
@@ -1416,6 +1395,7 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
 
       }
       else {
+        assert(corDef.getPredicateKind() == SqlKind.EQUALS);
         conditions.add(
             rexBuilder.makeCall(SqlStdOperatorTable.EQUALS,
                 RexInputRef.of(newLeftPos, newLeftOutput),
@@ -1870,6 +1850,8 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
     // is overridden to rewrite/simply such predicates to is not null.
     // we also need to take care that we do this only for correlated predicates and
     // not user specified explicit predicates
+    // TODO:  This code should be removed once CALCITE-1851 is fixed and
+    // there is support of not equal
     @Override  public RexNode visitCall(final RexCall call) {
       if(!valueGenerator) {
         switch (call.getKind()) {

@@ -39,6 +39,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.common.Pool;
 import org.apache.hadoop.hive.common.Pool.PoolObjectHelper;
+import org.apache.hadoop.hive.common.io.Allocator.BufferObjectFactory;
 import org.apache.hadoop.hive.common.io.DataCache;
 import org.apache.hadoop.hive.common.io.Allocator;
 import org.apache.hadoop.hive.common.io.encoded.EncodedColumnBatch.ColumnStreamData;
@@ -50,6 +51,7 @@ import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.llap.ConsumerFeedback;
 import org.apache.hadoop.hive.llap.DebugUtils;
 import org.apache.hadoop.hive.llap.cache.BufferUsageManager;
+import org.apache.hadoop.hive.llap.cache.LlapDataBuffer;
 import org.apache.hadoop.hive.llap.cache.LowLevelCache;
 import org.apache.hadoop.hive.llap.cache.LowLevelCache.Priority;
 import org.apache.hadoop.hive.llap.counters.QueryFragmentCounters;
@@ -155,10 +157,10 @@ public class OrcEncodedDataReader extends CallableWithNdc<Void>
   private Object fileKey;
   private FileSystem fs;
   /**
-   * readState[stripeIx'][colIx'] => boolean array (could be a bitmask) of rg-s that need to be
-   * read. Contains only stripes that are read, and only columns included. null => read all RGs.
+   * stripeRgs[stripeIx'] => boolean array (could be a bitmask) of rg-s that need to be read.
+   * Contains only stripes that are read, and only columns included. null => read all RGs.
    */
-  private boolean[][][] readState;
+  private boolean[][] stripeRgs;
   private volatile boolean isStopped = false;
   @SuppressWarnings("unused")
   private volatile boolean isPaused = false;
@@ -268,12 +270,13 @@ public class OrcEncodedDataReader extends CallableWithNdc<Void>
       return null;
     }
 
-    if (readState.length == 0) {
+    if (stripeRgs.length == 0) {
       consumer.setDone();
       recordReaderTime(startTime);
       return null; // No data to read.
     }
-    counters.setDesc(QueryFragmentCounters.Desc.STRIPES, stripeIxFrom + "," + readState.length);
+    counters.setDesc(QueryFragmentCounters.Desc.STRIPES,
+        stripeIxFrom + "," + stripeRgs.length);
 
     // 3. Apply SARG if needed, and otherwise determine what RGs to read.
     int stride = fileMetadata.getRowIndexStride();
@@ -334,13 +337,13 @@ public class OrcEncodedDataReader extends CallableWithNdc<Void>
     // TODO: I/O threadpool could be here - one thread per stripe; for now, linear.
     boolean hasFileId = this.fileKey != null;
     OrcBatchKey stripeKey = hasFileId ? new OrcBatchKey(fileKey, -1, 0) : null;
-    for (int stripeIxMod = 0; stripeIxMod < readState.length; ++stripeIxMod) {
+    for (int stripeIxMod = 0; stripeIxMod < stripeRgs.length; ++stripeIxMod) {
       if (processStop()) {
         recordReaderTime(startTime);
         return null;
       }
       int stripeIx = stripeIxFrom + stripeIxMod;
-      boolean[][] colRgs = null;
+      boolean[] rgs = null;
       OrcStripeMetadata stripeMetadata = null;
       StripeInformation stripe;
       try {
@@ -348,16 +351,15 @@ public class OrcEncodedDataReader extends CallableWithNdc<Void>
 
         LlapIoImpl.ORC_LOGGER.trace("Reading stripe {}: {}, {}", stripeIx, stripe.getOffset(),
             stripe.getLength());
-        colRgs = readState[stripeIxMod];
+        rgs = stripeRgs[stripeIxMod];
         if (LlapIoImpl.ORC_LOGGER.isTraceEnabled()) {
-          LlapIoImpl.ORC_LOGGER.trace("readState[{}]: {}", stripeIxMod, Arrays.toString(colRgs));
+          LlapIoImpl.ORC_LOGGER.trace("readState[{}]: {}", stripeIxMod, Arrays.toString(rgs));
         }
         // We assume that NO_RGS value is only set from SARG filter and for all columns;
         // intermediate changes for individual columns will unset values in the array.
         // Skip this case for 0-column read. We could probably special-case it just like we do
         // in EncodedReaderImpl, but for now it's not that important.
-        if (colRgs.length > 0 && colRgs[0] ==
-            RecordReaderImpl.SargApplier.READ_NO_RGS) continue;
+        if (rgs == RecordReaderImpl.SargApplier.READ_NO_RGS) continue;
 
         // 6.2. Ensure we have stripe metadata. We might have read it before for RG filtering.
         boolean isFoundInCache = false;
@@ -421,7 +423,7 @@ public class OrcEncodedDataReader extends CallableWithNdc<Void>
         // data it receives for one stripe. We could probably interrupt it, if it checked that.
         stripeReader.readEncodedColumns(stripeIx, stripe, stripeMetadata.getRowIndexes(),
             stripeMetadata.getEncodings(), stripeMetadata.getStreams(), globalIncludes,
-            colRgs, consumer);
+            rgs, consumer);
       } catch (Throwable t) {
         consumer.setError(t);
         cleanupReaders();
@@ -617,10 +619,10 @@ public class OrcEncodedDataReader extends CallableWithNdc<Void>
    */
   private ArrayList<OrcStripeMetadata> readStripesMetadata(
       boolean[] globalInc, boolean[] sargColumns) throws IOException {
-    ArrayList<OrcStripeMetadata> result = new ArrayList<OrcStripeMetadata>(readState.length);
+    ArrayList<OrcStripeMetadata> result = new ArrayList<OrcStripeMetadata>(stripeRgs.length);
     boolean hasFileId = this.fileKey != null;
     OrcBatchKey stripeKey = hasFileId ? new OrcBatchKey(fileKey, 0, 0) : null;
-    for (int stripeIxMod = 0; stripeIxMod < readState.length; ++stripeIxMod) {
+    for (int stripeIxMod = 0; stripeIxMod < stripeRgs.length; ++stripeIxMod) {
       OrcStripeMetadata value = null;
       int stripeIx = stripeIxMod + stripeIxFrom;
       if (hasFileId && metadataCache != null) {
@@ -712,8 +714,8 @@ public class OrcEncodedDataReader extends CallableWithNdc<Void>
           OrcFile.WriterVersion.from(fileMetadata.getWriterVersionNum()));
     }
     boolean hasAnyData = false;
-    // readState should have been initialized by this time with an empty array.
-    for (int stripeIxMod = 0; stripeIxMod < readState.length; ++stripeIxMod) {
+    // stripeRgs should have been initialized by this time with an empty array.
+    for (int stripeIxMod = 0; stripeIxMod < stripeRgs.length; ++stripeIxMod) {
       int stripeIx = stripeIxMod + stripeIxFrom;
       StripeInformation stripe = fileMetadata.getStripes().get(stripeIx);
       int rgCount = getRgCount(stripe, rowIndexStride);
@@ -739,17 +741,8 @@ public class OrcEncodedDataReader extends CallableWithNdc<Void>
         }
       }
       assert isAll || isNone || rgsToRead.length == rgCount;
-      int fileIncludesCount = 0;
-      // TODO: hacky for now - skip the root 0-s column.
-      //        We don't need separate readState w/o HL cache, should get rid of that instead.
-      for (int includeIx = 1; includeIx < globalIncludes.length; ++includeIx) {
-        fileIncludesCount += (globalIncludes[includeIx] ? 1 : 0);
-      }
-      readState[stripeIxMod] = new boolean[fileIncludesCount][];
-      for (int includeIx = 0; includeIx < fileIncludesCount; ++includeIx) {
-        readState[stripeIxMod][includeIx] = (isAll || isNone) ? rgsToRead :
+      stripeRgs[stripeIxMod] = (isAll || isNone) ? rgsToRead :
           Arrays.copyOf(rgsToRead, rgsToRead.length);
-      }
       adjustRgMetric(rgCount, rgsToRead, isNone, isAll);
     }
     return hasAnyData;
@@ -820,10 +813,10 @@ public class OrcEncodedDataReader extends CallableWithNdc<Void>
       LlapIoImpl.ORC_LOGGER.trace("Including stripes until {} (end of file); {} stripes",
           stripeIx, (stripeIxTo - stripeIxFrom));
     }
-    readState = new boolean[stripeIxTo - stripeIxFrom][][];
+    stripeRgs = new boolean[stripeIxTo - stripeIxFrom][];
   }
 
-  private class DataWrapperForOrc implements DataReader, DataCache {
+  private class DataWrapperForOrc implements DataReader, DataCache, BufferObjectFactory {
     private final DataReader orcDataReader;
 
     private DataWrapperForOrc(DataWrapperForOrc other) {
@@ -940,6 +933,16 @@ public class OrcEncodedDataReader extends CallableWithNdc<Void>
     @Override
     public OrcProto.StripeFooter readStripeFooter(StripeInformation stripe) throws IOException {
       return orcDataReader.readStripeFooter(stripe);
+    }
+
+    @Override
+    public BufferObjectFactory getDataBufferFactory() {
+      return this;
+    }
+
+    @Override
+    public MemoryBuffer create() {
+      return new LlapDataBuffer();
     }
   }
 

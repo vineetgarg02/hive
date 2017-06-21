@@ -74,16 +74,19 @@ import org.apache.hadoop.hive.io.HdfsUtils;
 import org.apache.hadoop.hive.metastore.HiveMetaException;
 import org.apache.hadoop.hive.metastore.HiveMetaHook;
 import org.apache.hadoop.hive.metastore.HiveMetaHookLoader;
+import org.apache.hadoop.hive.metastore.HiveMetaStore;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.PartitionDropOptions;
+import org.apache.hadoop.hive.metastore.RawStore;
 import org.apache.hadoop.hive.metastore.RetryingMetaStoreClient;
 import org.apache.hadoop.hive.metastore.SynchronizedMetaStoreClient;
 import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.Warehouse;
 import org.apache.hadoop.hive.metastore.api.AggrStats;
 import org.apache.hadoop.hive.metastore.api.AlreadyExistsException;
+import org.apache.hadoop.hive.metastore.api.CmRecycleRequest;
 import org.apache.hadoop.hive.metastore.api.ColumnStatisticsObj;
 import org.apache.hadoop.hive.metastore.api.CompactionResponse;
 import org.apache.hadoop.hive.metastore.api.CompactionType;
@@ -411,6 +414,9 @@ public class Hive {
     if (metaStoreClient != null) {
       metaStoreClient.close();
       metaStoreClient = null;
+    }
+    if (syncMetaStoreClient != null) {
+      syncMetaStoreClient.close();
     }
     if (owner != null) {
       owner = null;
@@ -1971,6 +1977,7 @@ private void constructOneLBLocationMap(FileStatus fSta,
     try {
       // for each dynamically created DP directory, construct a full partition spec
       // and load the partition based on that
+      final Map<Long, RawStore> rawStoreMap = new HashMap<Long, RawStore>();
       for(final Path partPath : validPartitions) {
         // generate a full partition specification
         final LinkedHashMap<String, String> fullPartSpec = Maps.newLinkedHashMap(partSpec);
@@ -1997,6 +2004,12 @@ private void constructOneLBLocationMap(FileStatus fSta,
                       + partsToLoad + " partitions.");
                 }
               }
+              // Add embedded rawstore, so we can cleanup later to avoid memory leak
+              if (getMSC().isLocalMetaStore()) {
+                if (!rawStoreMap.containsKey(Thread.currentThread().getId())) {
+                  rawStoreMap.put(Thread.currentThread().getId(), HiveMetaStore.HMSHandler.getRawStore());
+                }
+              }
               return null;
             } catch (Exception t) {
               LOG.error("Exception when loading partition with parameters "
@@ -2017,6 +2030,10 @@ private void constructOneLBLocationMap(FileStatus fSta,
 
       for (Future future : futures) {
         future.get();
+      }
+
+      for (RawStore rs : rawStoreMap.values()) {
+        rs.shutdown();
       }
     } catch (InterruptedException | ExecutionException e) {
       LOG.debug("Cancelling " + futures.size() + " dynamic loading tasks");
@@ -3171,6 +3188,22 @@ private void constructOneLBLocationMap(FileStatus fSta,
     }
   }
 
+  /**
+   * Recycles the files recursively from the input path to the cmroot directory either by copying or moving it.
+   *
+   * @param dataPath Path of the data files to be recycled to cmroot
+   * @param isPurge
+   *          When set to true files which needs to be recycled are not moved to Trash
+   */
+  public void recycleDirToCmPath(Path dataPath, boolean isPurge) throws HiveException {
+    try {
+      CmRecycleRequest request = new CmRecycleRequest(dataPath.toString(), isPurge);
+      getMSC().recycleDirToCmPath(request);
+    } catch (Exception e) {
+      throw new HiveException(e);
+    }
+  }
+
   //it is assumed that parent directory of the destf should already exist when this
   //method is called. when the replace value is true, this method works a little different
   //from mv command if the destf is a directory, it replaces the destf instead of moving under
@@ -3447,7 +3480,6 @@ private void constructOneLBLocationMap(FileStatus fSta,
     }
   }
 
-
   /**
    * Replaces files in the partition with new data set specified by srcf. Works
    * by renaming directory of srcf to the destination file.
@@ -3496,7 +3528,7 @@ private void constructOneLBLocationMap(FileStatus fSta,
         FileStatus[] statuses = null;
         try {
           FileSystem oldFs = oldPath.getFileSystem(conf);
-          statuses = oldFs.listStatus(oldPath, FileUtils.HIDDEN_FILES_PATH_FILTER);
+
           // Do not delete oldPath if:
           //  - destf is subdir of oldPath
           isOldPathUnderDestf = isSubDir(oldPath, destf, oldFs, destFs, false);
@@ -3505,6 +3537,10 @@ private void constructOneLBLocationMap(FileStatus fSta,
             // existing content might result in incorrect (extra) data.
             // But not sure why we changed not to delete the oldPath in HIVE-8750 if it is
             // not the destf or its subdir?
+            if (conf.getBoolVar(HiveConf.ConfVars.REPLCMENABLED)) {
+              recycleDirToCmPath(oldPath, purge);
+            }
+            statuses = oldFs.listStatus(oldPath, FileUtils.HIDDEN_FILES_PATH_FILTER);
             oldPathDeleted = trashFiles(oldFs, statuses, conf, purge);
           }
         } catch (IOException e) {
@@ -3518,7 +3554,7 @@ private void constructOneLBLocationMap(FileStatus fSta,
           }
         }
         if (statuses != null && statuses.length > 0) {
-          if (isOldPathUnderDestf && !oldPathDeleted) {
+          if (!oldPathDeleted) {
             throw new HiveException("Destination directory " + destf + " has not be cleaned up.");
           }
         }

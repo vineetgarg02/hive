@@ -290,6 +290,8 @@ public class ObjectStore implements RawStore, Configurable {
       if (propsChanged) {
         if (pmf != null){
           clearOutPmfClassLoaderCache(pmf);
+          // close the underlying connection pool to avoid leaks
+          pmf.close();
         }
         pmf = null;
         prop = null;
@@ -562,6 +564,7 @@ public class ObjectStore implements RawStore, Configurable {
       LOG.debug("RawStore: " + this + ", with PersistenceManager: " + pm +
           " will be shutdown");
       pm.close();
+      pm = null;
     }
   }
 

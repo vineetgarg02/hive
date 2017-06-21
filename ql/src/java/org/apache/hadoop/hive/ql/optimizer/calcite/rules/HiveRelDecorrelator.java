@@ -3067,7 +3067,7 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
 
   private static class findIfValueGenRequired extends HiveRelShuttleImpl {
     private boolean mightRequireValueGen ;
-    findIfValueGenRequired() { this.mightRequireValueGen = false; }
+    findIfValueGenRequired() { this.mightRequireValueGen = true; }
 
     private boolean hasRexOver(List<RexNode> projects) {
       for(RexNode expr : projects) {
@@ -3108,36 +3108,36 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
       return rel;
     }
     @Override public RelNode visit(HiveProject rel) {
-      if(hasRexOver(((HiveProject)rel).getProjects())) {
-        mightRequireValueGen = true;
-        return rel;
+      if(!(hasRexOver(((HiveProject)rel).getProjects()))) {
+        mightRequireValueGen = false;
+        return super.visit(rel);
       }
-      return super.visit(rel);
+      return rel;
     }
     @Override public RelNode visit(LogicalProject rel) {
-      if(hasRexOver(((LogicalProject)rel).getProjects())) {
-        mightRequireValueGen = true;
-        return rel;
+      if(!(hasRexOver(((LogicalProject)rel).getProjects()))) {
+        mightRequireValueGen = false;
+        return super.visit(rel);
       }
-      return super.visit(rel);
+      return rel;
     }
     @Override public RelNode visit(HiveAggregate rel) {
       // if there are aggregate functions or grouping sets we will need
       // value generator
-      if(((HiveAggregate)rel).getAggCallList().isEmpty() == false
-          || ((HiveAggregate)rel).indicator == true) {
-        this.mightRequireValueGen = true;
-        return rel;
+      if(!(((HiveAggregate)rel).getAggCallList().isEmpty() == false
+          || ((HiveAggregate)rel).indicator == true)) {
+        this.mightRequireValueGen = false;
+        return super.visit(rel);
       }
-      return super.visit(rel);
+      return rel;
     }
     @Override public RelNode visit(LogicalAggregate rel) {
-      if(((LogicalAggregate)rel).getAggCallList().isEmpty() == false
-          || ((LogicalAggregate)rel).indicator == true) {
-        this.mightRequireValueGen = true;
-        return rel;
+      if(!(((LogicalAggregate)rel).getAggCallList().isEmpty() == false
+          || ((LogicalAggregate)rel).indicator == true)) {
+        this.mightRequireValueGen = false;
+        return super.visit(rel);
       }
-      return super.visit(rel);
+      return rel;
     }
     @Override public RelNode visit(LogicalCorrelate rel) {
       // this means we are hitting nested subquery so don't

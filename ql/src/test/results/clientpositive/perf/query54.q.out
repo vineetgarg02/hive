@@ -186,7 +186,7 @@ Stage-0
                                             Output:["_col0"],keys:_col0
                                             Select Operator [SEL_107] (rows=18262 width=1119)
                                               Output:["_col0"]
-                                              Filter Operator [FIL_182] (rows=18262 width=1119)
+                                              Filter Operator [FIL_179] (rows=18262 width=1119)
                                                 predicate:((d_year = 1999) and (d_moy = 3))
                                                 TableScan [TS_43] (rows=73049 width=1119)
                                                   default@date_dim,date_dim,Tbl:COMPLETE,Col:NONE,Output:["d_month_seq","d_year","d_moy"]
@@ -215,9 +215,7 @@ Stage-0
                                                             Output:["_col0"],keys:_col0
                                                             Select Operator [SEL_85] (rows=18262 width=1119)
                                                               Output:["_col0"]
-                                                              Filter Operator [FIL_181] (rows=18262 width=1119)
-                                                                predicate:((d_year = 1999) and (d_moy = 3))
-                                                                 Please refer to the previous TableScan [TS_43]
+                                                               Please refer to the previous Filter Operator [FIL_179]
                                       <-Reducer 6 [CUSTOM_SIMPLE_EDGE]
                                         PARTITION_ONLY_SHUFFLE [RS_101]
                                           Merge Join Operator [MERGEJOIN_191] (rows=6363893803988 width=1208)
@@ -229,13 +227,11 @@ Stage-0
                                               <-Map 26 [SIMPLE_EDGE]
                                                 SHUFFLE [RS_80]
                                                   PartitionCols:_col0
-                                                  Group By Operator [GBY_79] (rows=18262 width=1119)
+                                                  Group By Operator [GBY_47] (rows=18262 width=1119)
                                                     Output:["_col0"],keys:_col0
-                                                    Select Operator [SEL_77] (rows=18262 width=1119)
+                                                    Select Operator [SEL_45] (rows=18262 width=1119)
                                                       Output:["_col0"]
-                                                      Filter Operator [FIL_180] (rows=18262 width=1119)
-                                                        predicate:((d_year = 1999) and (d_moy = 3))
-                                                         Please refer to the previous TableScan [TS_43]
+                                                       Please refer to the previous Filter Operator [FIL_179]
                                           <-Reducer 5 [CUSTOM_SIMPLE_EDGE]
                                             PARTITION_ONLY_SHUFFLE [RS_98]
                                               Select Operator [SEL_74] (rows=696954748 width=88)
@@ -272,13 +268,7 @@ Stage-0
                                                                     <-Map 26 [SIMPLE_EDGE]
                                                                       SHUFFLE [RS_48]
                                                                         PartitionCols:_col0
-                                                                        Group By Operator [GBY_47] (rows=18262 width=1119)
-                                                                          Output:["_col0"],keys:_col0
-                                                                          Select Operator [SEL_45] (rows=18262 width=1119)
-                                                                            Output:["_col0"]
-                                                                            Filter Operator [FIL_179] (rows=18262 width=1119)
-                                                                              predicate:((d_year = 1999) and (d_moy = 3))
-                                                                               Please refer to the previous TableScan [TS_43]
+                                                                         Please refer to the previous Group By Operator [GBY_47]
                                                 <-Reducer 4 [SIMPLE_EDGE]
                                                   SHUFFLE [RS_71]
                                                     PartitionCols:_col7

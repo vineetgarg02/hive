@@ -1089,6 +1089,11 @@ public class HiveConf extends Configuration {
         "How many rows in the right-most join operand Hive should buffer before emitting the join result."),
     HIVEJOINCACHESIZE("hive.join.cache.size", 25000,
         "How many rows in the joining tables (except the streaming table) should be cached in memory."),
+    HIVE_PUSH_RESIDUAL_INNER("hive.join.inner.residual", false,
+        "Whether to push non-equi filter predicates within inner joins. This can improve efficiency in "
+        + "the evaluation of certain joins, since we will not be emitting rows which are thrown away by "
+        + "a Filter operator straight away. However, currently vectorization does not support them, thus "
+        + "enabling it is only recommended when vectorization is disabled."),
 
     // CBO related
     HIVE_CBO_ENABLED("hive.cbo.enable", true, "Flag to control enabling Cost Based Optimizations using Calcite framework."),
@@ -1656,9 +1661,9 @@ public class HiveConf extends Configuration {
         "If the skew information is correctly stored in the metadata, hive.optimize.skewjoin.compiletime\n" +
         "would change the query plan to take care of it, and hive.optimize.skewjoin will be a no-op."),
 
-    HIVE_SHARED_SCAN_OPTIMIZATION("hive.optimize.shared.scan", true,
-        "Whether to enable shared scan optimizer. The optimizer finds scan operator over the same table\n" +
-        "in the query plan and merges them if they meet some preconditions."),
+    HIVE_SHARED_WORK_OPTIMIZATION("hive.optimize.shared.work", true,
+        "Whether to enable shared work optimizer. The optimizer finds scan operator over the same table\n" +
+        "and follow-up operators in the query plan and merges them if they meet some preconditions."),
 
     // CTE
     HIVE_CTE_MATERIALIZE_THRESHOLD("hive.optimize.cte.materialize.threshold", -1,
@@ -2827,6 +2832,15 @@ public class HiveConf extends Configuration {
         "1. chosen : use VectorUDFAdaptor for a small set of UDFs that were choosen for good performance\n" +
         "2. all    : use VectorUDFAdaptor for all UDFs"
     ),
+    HIVE_VECTORIZATION_COMPLEX_TYPES_ENABLED("hive.vectorized.complex.types.enabled", true,
+        "This flag should be set to true to enable vectorization\n" +
+        "of expressions with complex types.\n" +
+        "The default value is true."),
+    HIVE_VECTORIZATION_GROUPBY_COMPLEX_TYPES_ENABLED("hive.vectorized.groupby.complex.types.enabled", true,
+        "This flag should be set to true to enable group by vectorization\n" +
+        "of aggregations that use complex types.\n",
+        "For example, AVG uses a complex type (STRUCT) for partial aggregation results" +
+        "The default value is true."),
 
     HIVE_TYPE_CHECK_ON_INSERT("hive.typecheck.on.insert", true, "This property has been extended to control "
         + "whether to check, convert, and normalize partition value to conform to its column type in "

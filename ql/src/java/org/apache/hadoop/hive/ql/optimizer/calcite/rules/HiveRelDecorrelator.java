@@ -1395,7 +1395,8 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
 
       }
       else {
-        assert(corDef.getPredicateKind() == SqlKind.EQUALS);
+        assert(corDef.getPredicateKind() == null
+          || corDef.getPredicateKind() == SqlKind.EQUALS);
         conditions.add(
             rexBuilder.makeCall(SqlStdOperatorTable.EQUALS,
                 RexInputRef.of(newLeftPos, newLeftOutput),

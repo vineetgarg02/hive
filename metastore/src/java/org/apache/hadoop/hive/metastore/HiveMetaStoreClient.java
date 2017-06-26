@@ -663,7 +663,7 @@ public class HiveMetaStoreClient implements IMetaStoreClient {
    * @param partitionSpecs partitions specs of the parent partition to be exchanged
    * @param destDb the db of the destination table
    * @param destinationTableName the destination table name
-   @ @return new partition after exchanging
+   * @return new partition after exchanging
    */
   @Override
   public Partition exchange_partition(Map<String, String> partitionSpecs,
@@ -679,7 +679,7 @@ public class HiveMetaStoreClient implements IMetaStoreClient {
    * @param partitionSpecs partitions specs of the parent partition to be exchanged
    * @param destDb the db of the destination table
    * @param destinationTableName the destination table name
-   @ @return new partitions after exchanging
+   * @return new partitions after exchanging
    */
   @Override
   public List<Partition> exchange_partitions(Map<String, String> partitionSpecs,
@@ -1125,6 +1125,18 @@ public class HiveMetaStoreClient implements IMetaStoreClient {
   }
 
   /**
+   * Recycles the files recursively from the input path to the cmroot directory either by copying or moving it.
+   *
+   * @param request Inputs for path of the data files to be recycled to cmroot and
+   *                isPurge flag when set to true files which needs to be recycled are not moved to Trash
+   * @return Response which is currently void
+   */
+  @Override
+  public CmRecycleResponse recycleDirToCmPath(CmRecycleRequest request) throws MetaException, TException {
+    return client.cm_recycle(request);
+  }
+
+  /**
    * @param type
    * @return true if the type is dropped
    * @throws MetaException
@@ -1232,7 +1244,7 @@ public class HiveMetaStoreClient implements IMetaStoreClient {
    * @param db_name the database name
    * @param tbl_name the table name
    * @param filter the filter string,
-   *    for example "part1 = \"p1_abc\" and part2 <= "\p2_test\"". Filtering can
+   *    for example "part1 = \"p1_abc\" and part2 &lt;= "\p2_test\"". Filtering can
    *    be done only on string partition keys.
    * @param max_parts the maximum number of partitions to return,
    *    all partitions are returned if -1 is passed
@@ -1505,7 +1517,7 @@ public class HiveMetaStoreClient implements IMetaStoreClient {
    * @param db_name the database name
    * @param tbl_name the table name
    * @param filter the filter string,
-   *    for example "part1 = \"p1_abc\" and part2 <= "\p2_test\"". Filtering can
+   *    for example "part1 = \"p1_abc\" and part2 &lt;= "\p2_test\"". Filtering can
    *    be done only on string partition keys.
    * @return number of partitions
    * @throws MetaException

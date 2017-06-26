@@ -576,7 +576,6 @@ public class MetaStoreUtils {
    * @param conf
    *          hive configuration
    * @return true or false depending on conformance
-   * @exception MetaException
    *              if it doesn't match the pattern.
    */
   static public boolean validateName(String name, Configuration conf) {
@@ -652,14 +651,22 @@ public class MetaStoreUtils {
     return true;
   }
 
-  static boolean columnsIncluded(List<FieldSchema> oldCols, List<FieldSchema> newCols) {
+  /*
+   * This method is to check if the new column list includes all the old columns with same name and
+   * type. The column comment does not count.
+   */
+  static boolean columnsIncludedByNameType(List<FieldSchema> oldCols, List<FieldSchema> newCols) {
     if (oldCols.size() > newCols.size()) {
       return false;
     }
 
-    Set<FieldSchema> newColsSet = new HashSet<FieldSchema>(newCols);
+    Map<String, String> columnNameTypePairMap = new HashMap<String, String>(newCols.size());
+    for (FieldSchema newCol : newCols) {
+      columnNameTypePairMap.put(newCol.getName().toLowerCase(), newCol.getType());
+    }
     for (final FieldSchema oldCol : oldCols) {
-      if (!newColsSet.contains(oldCol)) {
+      if (!columnNameTypePairMap.containsKey(oldCol.getName())
+          || !columnNameTypePairMap.get(oldCol.getName()).equalsIgnoreCase(oldCol.getType())) {
         return false;
       }
     }
@@ -692,7 +699,7 @@ public class MetaStoreUtils {
    * validate column type
    *
    * if it is predefined, yes. otherwise no
-   * @param name
+   * @param type
    * @return
    */
   static public String validateColumnType(String type) {
@@ -850,7 +857,7 @@ public class MetaStoreUtils {
    * @return String containing "Thrift
    *         DDL#comma-separated-column-names#colon-separated-columntypes
    *         Example:
-   *         "struct result { a string, map<int,string> b}#a,b#string:map<int,string>"
+   *         "struct result { a string, map&lt;int,string&gt; b}#a,b#string:map&lt;int,string&gt;"
    */
   public static String getFullDDLFromFieldSchema(String structName,
       List<FieldSchema> fieldSchemas) {
@@ -1960,6 +1967,14 @@ public class MetaStoreUtils {
       metaException.initCause(e);
     }
     return metaException;
+  }
+  
+  public static List<String> getColumnNames(List<FieldSchema> schema) {
+    List<String> cols = new ArrayList<>();
+    for (FieldSchema fs : schema) {
+      cols.add(fs.getName());
+    }
+    return cols;
   }
 
 }

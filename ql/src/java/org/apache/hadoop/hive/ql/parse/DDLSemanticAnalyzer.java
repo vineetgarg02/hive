@@ -1494,6 +1494,12 @@ public class DDLSemanticAnalyzer extends BaseSemanticAnalyzer {
     }
 
     Table tab = getTable(tableName, true);
+    // cascade only occurs with partitioned table
+    if (isCascade && !tab.isPartitioned()) {
+      throw new SemanticException(
+          ErrorMsg.ALTER_TABLE_NON_PARTITIONED_TABLE_CASCADE_NOT_SUPPORTED);
+    }
+
     // Determine the lock type to acquire
     WriteEntity.WriteType writeType = WriteEntity.determineAlterTableWriteType(op);
 
@@ -2951,8 +2957,8 @@ public class DDLSemanticAnalyzer extends BaseSemanticAnalyzer {
           if (desc.getPartParams() == null) {
             desc.setPartParams(new HashMap<String, String>());
           }
-          StatsSetupConst.setBasicStatsStateForCreateTable(desc.getPartParams(),
-              StatsSetupConst.TRUE);
+          StatsSetupConst.setStatsStateForCreateTable(desc.getPartParams(),
+              MetaStoreUtils.getColumnNames(tab.getCols()), StatsSetupConst.TRUE);
         }
       }
     }

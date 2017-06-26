@@ -209,7 +209,7 @@ STAGE PLANS:
                     name: default.srcbucket_mapjoin
                   name: default.srcbucket_mapjoin
             Truncated Path -> Alias:
-              /srcbucket_mapjoin [a]
+              /srcbucket_mapjoin [$hdt$_0:a]
         Map 3 
             Map Operator Tree:
                 TableScan
@@ -283,7 +283,7 @@ STAGE PLANS:
                     name: default.srcbucket_mapjoin
                   name: default.srcbucket_mapjoin
             Truncated Path -> Alias:
-              /srcbucket_mapjoin [b]
+              /srcbucket_mapjoin [$hdt$_1:b]
         Reducer 2 
             Needs Tagging: true
             Reduce Operator Tree:
@@ -310,7 +310,7 @@ STAGE PLANS:
                         input format: org.apache.hadoop.mapred.TextInputFormat
                         output format: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
                         properties:
-                          COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
+                          COLUMN_STATS_ACCURATE {"BASIC_STATS":"true","COLUMN_STATS":{"key":"true","value1":"true","value2":"true"}}
                           bucket_count -1
                           column.name.delimiter ,
                           columns key,value1,value2
@@ -341,7 +341,7 @@ STAGE PLANS:
               input format: org.apache.hadoop.mapred.TextInputFormat
               output format: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
               properties:
-                COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
+                COLUMN_STATS_ACCURATE {"BASIC_STATS":"true","COLUMN_STATS":{"key":"true","value1":"true","value2":"true"}}
                 bucket_count -1
                 column.name.delimiter ,
                 columns key,value1,value2
@@ -554,7 +554,7 @@ STAGE PLANS:
                     name: default.srcbucket_mapjoin
                   name: default.srcbucket_mapjoin
             Truncated Path -> Alias:
-              /srcbucket_mapjoin [a]
+              /srcbucket_mapjoin [$hdt$_0:a]
         Map 3 
             Map Operator Tree:
                 TableScan
@@ -628,7 +628,7 @@ STAGE PLANS:
                     name: default.srcbucket_mapjoin
                   name: default.srcbucket_mapjoin
             Truncated Path -> Alias:
-              /srcbucket_mapjoin [b]
+              /srcbucket_mapjoin [$hdt$_1:b]
         Reducer 2 
             Needs Tagging: true
             Reduce Operator Tree:

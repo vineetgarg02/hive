@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -167,7 +167,7 @@ public class ReplCopyTask extends Task<ReplCopyWork> implements Serializable {
         }else{
           LOG.debug("ReplCopyTask _files now tracks:" + oneSrc.getPath().toUri());
           console.printInfo("Tracking file: " + oneSrc.getPath().toUri());
-          String chksumString = ReplChangeManager.getChksumString(oneSrc.getPath(), actualSrcFs);
+          String chksumString = ReplChangeManager.checksumFor(oneSrc.getPath(), actualSrcFs);
           listBW.write(ReplChangeManager.encodeFileUri
               (oneSrc.getPath().toUri().toString(), chksumString) + "\n");
         }
@@ -187,15 +187,25 @@ public class ReplCopyTask extends Task<ReplCopyWork> implements Serializable {
   }
 
   private boolean doCopy(Path dst, FileSystem dstFs, Path src, FileSystem srcFs) throws IOException {
-    if (conf.getBoolVar(HiveConf.ConfVars.HIVE_IN_TEST)){
-      // regular copy in test env.
+    if (conf.getBoolVar(HiveConf.ConfVars.HIVE_IN_TEST)
+        || isLocalFile(src) || isLocalFile(dst)){
+      // regular copy in test env, or when source or destination is a local file
+      // distcp runs inside a mapper task, and cannot handle file:///
+      LOG.debug("Using regular copy for {} -> {}", src.toUri(), dst.toUri());
       return FileUtils.copy(srcFs, src, dstFs, dst, false, true, conf);
     } else {
       // distcp in actual deployment with privilege escalation
+      LOG.debug("Using privleged distcp for {} -> {}", src.toUri(), dst.toUri());
       return FileUtils.privilegedCopy(srcFs, src, dst, conf);
     }
   }
 
+  private boolean isLocalFile(Path p) {
+    String scheme = p.toUri().getScheme();
+    boolean isLocalFile = scheme.equalsIgnoreCase("file");
+    LOG.debug("{} was a local file? {}, had scheme {}",p.toUri(), isLocalFile, scheme);
+    return isLocalFile;
+  }
 
   private List<FileStatus> filesInFileListing(FileSystem fs, Path path)
       throws IOException {
@@ -251,7 +261,7 @@ public class ReplCopyTask extends Task<ReplCopyWork> implements Serializable {
   public static Task<?> getLoadCopyTask(ReplicationSpec replicationSpec, Path srcPath, Path dstPath, HiveConf conf) {
     Task<?> copyTask = null;
     LOG.debug("ReplCopyTask:getLoadCopyTask: "+srcPath + "=>" + dstPath);
-    if (replicationSpec.isInReplicationScope()){
+    if ((replicationSpec != null) && replicationSpec.isInReplicationScope()){
       ReplCopyWork rcwork = new ReplCopyWork(srcPath, dstPath, false);
       LOG.debug("ReplCopyTask:\trcwork");
       if (replicationSpec.isLazy()){
@@ -269,7 +279,7 @@ public class ReplCopyTask extends Task<ReplCopyWork> implements Serializable {
   public static Task<?> getDumpCopyTask(ReplicationSpec replicationSpec, Path srcPath, Path dstPath, HiveConf conf) {
     Task<?> copyTask = null;
     LOG.debug("ReplCopyTask:getDumpCopyTask: "+srcPath + "=>" + dstPath);
-    if (replicationSpec.isInReplicationScope()){
+    if ((replicationSpec != null) && replicationSpec.isInReplicationScope()){
       ReplCopyWork rcwork = new ReplCopyWork(srcPath, dstPath, false);
       LOG.debug("ReplCopyTask:\trcwork");
       if (replicationSpec.isLazy()){

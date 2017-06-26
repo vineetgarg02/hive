@@ -92,7 +92,6 @@ import org.apache.calcite.rel.rules.ProjectRemoveRule;
 import org.apache.calcite.rel.rules.SemiJoinFilterTransposeRule;
 import org.apache.calcite.rel.rules.SemiJoinJoinTransposeRule;
 import org.apache.calcite.rel.rules.SemiJoinProjectTransposeRule;
-import org.apache.calcite.rel.rules.UnionMergeRule;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
@@ -172,6 +171,7 @@ import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveUnion;
 import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveAggregateJoinTransposeRule;
 import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveAggregateProjectMergeRule;
 import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveAggregatePullUpConstantsRule;
+import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveAggregateReduceRule;
 import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveDruidProjectFilterTransposeRule;
 import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveExceptRewriteRule;
 import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveExpandDistinctAggregatesRule;
@@ -209,6 +209,7 @@ import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveSortProjectTranspos
 import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveSortRemoveRule;
 import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveSortUnionReduceRule;
 import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveSubQueryRemoveRule;
+import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveUnionMergeRule;
 import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveUnionPullUpConstantsRule;
 import org.apache.hadoop.hive.ql.optimizer.calcite.rules.HiveWindowingFixRule;
 import org.apache.hadoop.hive.ql.optimizer.calcite.rules.views.HiveMaterializedViewFilterScanRule;
@@ -260,6 +261,7 @@ import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+
 import org.apache.calcite.config.CalciteConnectionConfig;
 
 public class CalcitePlanner extends SemanticAnalyzer {
@@ -1437,7 +1439,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
       // 4. Run other optimizations that do not need stats
       perfLogger.PerfLogBegin(this.getClass().getName(), PerfLogger.OPTIMIZER);
       calciteOptimizedPlan = hepPlan(calciteOptimizedPlan, false, mdProvider.getMetadataProvider(), null,
-              HepMatchOrder.BOTTOM_UP, ProjectRemoveRule.INSTANCE, UnionMergeRule.INSTANCE,
+              HepMatchOrder.BOTTOM_UP, ProjectRemoveRule.INSTANCE, HiveUnionMergeRule.INSTANCE,
               HiveProjectMergeRule.INSTANCE_NO_FORCE, HiveAggregateProjectMergeRule.INSTANCE,
               HiveJoinCommuteRule.INSTANCE);
       perfLogger.PerfLogEnd(this.getClass().getName(), PerfLogger.OPTIMIZER, "Calcite: Optimizations without stats");
@@ -1522,7 +1524,8 @@ public class CalcitePlanner extends SemanticAnalyzer {
       // run this rule at later stages, since many calcite rules cant deal with semijoin
       if (conf.getBoolVar(ConfVars.SEMIJOIN_CONVERSION)) {
         perfLogger.PerfLogBegin(this.getClass().getName(), PerfLogger.OPTIMIZER);
-        calciteOptimizedPlan = hepPlan(calciteOptimizedPlan, false, mdProvider.getMetadataProvider(), null, HiveSemiJoinRule.INSTANCE);
+        calciteOptimizedPlan = hepPlan(calciteOptimizedPlan, false, mdProvider.getMetadataProvider(), null,
+                HiveSemiJoinRule.INSTANCE_PROJECT, HiveSemiJoinRule.INSTANCE_AGGREGATE);
         perfLogger.PerfLogEnd(this.getClass().getName(), PerfLogger.OPTIMIZER, "Calcite: Semijoin conversion");
       }
 
@@ -1618,9 +1621,10 @@ public class CalcitePlanner extends SemanticAnalyzer {
       //0. SetOp rewrite
       perfLogger.PerfLogBegin(this.getClass().getName(), PerfLogger.OPTIMIZER);
       basePlan = hepPlan(basePlan, true, mdProvider, null, HepMatchOrder.BOTTOM_UP,
-          HiveProjectOverIntersectRemoveRule.INSTANCE, HiveIntersectMergeRule.INSTANCE);
+          HiveProjectOverIntersectRemoveRule.INSTANCE, HiveIntersectMergeRule.INSTANCE,
+          HiveUnionMergeRule.INSTANCE);
       perfLogger.PerfLogEnd(this.getClass().getName(), PerfLogger.OPTIMIZER,
-          "Calcite: HiveProjectOverIntersectRemoveRule and HiveIntersectMerge rules");
+          "Calcite: HiveProjectOverIntersectRemoveRule, HiveIntersectMerge and HiveUnionMergeRule rules");
 
       perfLogger.PerfLogBegin(this.getClass().getName(), PerfLogger.OPTIMIZER);
       basePlan = hepPlan(basePlan, false, mdProvider, executorProvider, HepMatchOrder.BOTTOM_UP,
@@ -1670,7 +1674,8 @@ public class CalcitePlanner extends SemanticAnalyzer {
       rules.add(HiveFilterSortTransposeRule.INSTANCE);
       rules.add(HiveFilterJoinRule.JOIN);
       rules.add(HiveFilterJoinRule.FILTER_ON_JOIN);
-      rules.add(new HiveFilterAggregateTransposeRule(Filter.class, HiveRelFactories.HIVE_FILTER_FACTORY, Aggregate.class));
+      rules.add(new HiveFilterAggregateTransposeRule(Filter.class, HiveRelFactories.HIVE_BUILDER,
+          Aggregate.class));
       rules.add(new FilterMergeRule(HiveRelFactories.HIVE_BUILDER));
       if (conf.getBoolVar(HiveConf.ConfVars.HIVE_OPTIMIZE_REDUCE_WITH_STATS)) {
         rules.add(HiveReduceExpressionsWithStatsRule.INSTANCE);
@@ -1679,6 +1684,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
       rules.add(HiveReduceExpressionsRule.PROJECT_INSTANCE);
       rules.add(HiveReduceExpressionsRule.FILTER_INSTANCE);
       rules.add(HiveReduceExpressionsRule.JOIN_INSTANCE);
+      rules.add(HiveAggregateReduceRule.INSTANCE);
       if (conf.getBoolVar(HiveConf.ConfVars.HIVEPOINTLOOKUPOPTIMIZER)) {
         rules.add(new HivePointLookupOptimizerRule.FilterCondition(minNumORClauses));
         rules.add(new HivePointLookupOptimizerRule.JoinCondition(minNumORClauses));
@@ -3104,38 +3110,63 @@ public class CalcitePlanner extends SemanticAnalyzer {
           ASTNode ref = (ASTNode) nullObASTExpr.getChild(0);
           Map<ASTNode, ExprNodeDesc> astToExprNDescMap = null;
           ExprNodeDesc obExprNDesc = null;
-          // first try to get it from select
-          // in case of udtf, selectOutputRR may be null.
-          if (selectOutputRR != null) {
-            try {
-              astToExprNDescMap = genAllExprNodeDesc(ref, selectOutputRR);
-              obExprNDesc = astToExprNDescMap.get(ref);
-            } catch (SemanticException ex) {
-              // we can tolerate this as this is the previous behavior
-              LOG.debug("Can not find column in " + ref.getText() + ". The error msg is "
-                  + ex.getMessage());
+          
+          boolean isBothByPos = HiveConf.getBoolVar(conf, ConfVars.HIVE_GROUPBY_ORDERBY_POSITION_ALIAS);
+          boolean isObyByPos = isBothByPos
+              || HiveConf.getBoolVar(conf, ConfVars.HIVE_ORDERBY_POSITION_ALIAS);
+          // replace each of the position alias in ORDERBY with the actual column
+          if (ref != null && ref.getToken().getType() == HiveParser.Number) {
+            if (isObyByPos) {
+              int pos = Integer.parseInt(ref.getText());
+              if (pos > 0 && pos <= selectOutputRR.getColumnInfos().size()) {
+                // fieldIndex becomes so simple
+                // Note that pos starts from 1 while fieldIndex starts from 0;
+                fieldIndex = pos - 1;
+              } else {
+                throw new SemanticException(
+                    ErrorMsg.INVALID_POSITION_ALIAS_IN_ORDERBY.getMsg("Position alias: " + pos
+                        + " does not exist\n" + "The Select List is indexed from 1 to "
+                        + selectOutputRR.getColumnInfos().size()));
+              }
+            } else { // if not using position alias and it is a number.
+              LOG.warn("Using constant number "
+                  + ref.getText()
+                  + " in order by. If you try to use position alias when hive.orderby.position.alias is false, the position alias will be ignored.");
             }
-          }
-          // then try to get it from all
-          if (obExprNDesc == null) {
-            astToExprNDescMap = genAllExprNodeDesc(ref, inputRR);
-            obExprNDesc = astToExprNDescMap.get(ref);
-          }
-          if (obExprNDesc == null) {
-            throw new SemanticException("Invalid order by expression: " + obASTExpr.toString());
-          }
-          // 2.2 Convert ExprNode to RexNode
-          rnd = converter.convert(obExprNDesc);
-
-          // 2.3 Determine the index of ob expr in child schema
-          // NOTE: Calcite can not take compound exprs in OB without it being
-          // present in the child (& hence we add a child Project Rel)
-          if (rnd instanceof RexInputRef) {
-            fieldIndex = ((RexInputRef) rnd).getIndex();
           } else {
-            fieldIndex = srcRelRecordSz + newVCLst.size();
-            newVCLst.add(rnd);
-            vcASTTypePairs.add(new Pair<ASTNode, TypeInfo>(ref, obExprNDesc.getTypeInfo()));
+            // first try to get it from select
+            // in case of udtf, selectOutputRR may be null.
+            if (selectOutputRR != null) {
+              try {
+                astToExprNDescMap = genAllExprNodeDesc(ref, selectOutputRR);
+                obExprNDesc = astToExprNDescMap.get(ref);
+              } catch (SemanticException ex) {
+                // we can tolerate this as this is the previous behavior
+                LOG.debug("Can not find column in " + ref.getText() + ". The error msg is "
+                    + ex.getMessage());
+              }
+            }
+            // then try to get it from all
+            if (obExprNDesc == null) {
+              astToExprNDescMap = genAllExprNodeDesc(ref, inputRR);
+              obExprNDesc = astToExprNDescMap.get(ref);
+            }
+            if (obExprNDesc == null) {
+              throw new SemanticException("Invalid order by expression: " + obASTExpr.toString());
+            }
+            // 2.2 Convert ExprNode to RexNode
+            rnd = converter.convert(obExprNDesc);
+
+            // 2.3 Determine the index of ob expr in child schema
+            // NOTE: Calcite can not take compound exprs in OB without it being
+            // present in the child (& hence we add a child Project Rel)
+            if (rnd instanceof RexInputRef) {
+              fieldIndex = ((RexInputRef) rnd).getIndex();
+            } else {
+              fieldIndex = srcRelRecordSz + newVCLst.size();
+              newVCLst.add(rnd);
+              vcASTTypePairs.add(new Pair<ASTNode, TypeInfo>(ref, obExprNDesc.getTypeInfo()));
+            }
           }
 
           // 2.4 Determine the Direction of order by

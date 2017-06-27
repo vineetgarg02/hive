@@ -3113,32 +3113,48 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
         mightRequireValueGen = false;
         return super.visit(rel);
       }
-      return rel;
+      else {
+        mightRequireValueGen = true;
+        return rel;
+      }
     }
     @Override public RelNode visit(LogicalProject rel) {
       if(!(hasRexOver(((LogicalProject)rel).getProjects()))) {
         mightRequireValueGen = false;
         return super.visit(rel);
       }
-      return rel;
+      else {
+        mightRequireValueGen = true;
+        return rel;
+      }
     }
     @Override public RelNode visit(HiveAggregate rel) {
       // if there are aggregate functions or grouping sets we will need
       // value generator
-      if(!(((HiveAggregate)rel).getAggCallList().isEmpty() == false
-          || ((HiveAggregate)rel).indicator == true)) {
+      if((((HiveAggregate)rel).getAggCallList().isEmpty() == true
+          && ((HiveAggregate)rel).indicator == false)) {
         this.mightRequireValueGen = false;
         return super.visit(rel);
       }
-      return rel;
+      else {
+        // need to reset to true in case previous aggregate/project
+        // has set it to false
+        this.mightRequireValueGen = true;
+        return rel;
+      }
     }
     @Override public RelNode visit(LogicalAggregate rel) {
-      if(!(((LogicalAggregate)rel).getAggCallList().isEmpty() == false
-          || ((LogicalAggregate)rel).indicator == true)) {
+      if((((LogicalAggregate)rel).getAggCallList().isEmpty() == true
+          && ((LogicalAggregate)rel).indicator == false)) {
         this.mightRequireValueGen = false;
         return super.visit(rel);
       }
-      return rel;
+      else {
+        // need to reset to true in case previous aggregate/project
+        // has set it to false
+        this.mightRequireValueGen = true;
+        return rel;
+      }
     }
     @Override public RelNode visit(LogicalCorrelate rel) {
       // this means we are hitting nested subquery so don't

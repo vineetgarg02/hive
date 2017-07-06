@@ -1543,8 +1543,14 @@ public class StatsRulesProcFactory {
 
         // update join statistics
         stats.setColumnStats(outColStats);
-        long joinRowCount = inferredRowCount !=-1 ? inferredRowCount : computeNewRowCount(rowCounts, denom, jop);
-        updateColStats(conf, stats, joinRowCount, jop, rowCountParents);
+
+        // reason we compute interim row count, where join type isn't considered, is because later
+        // it will be used to estimate num nulls
+        long interimRowCount = inferredRowCount !=-1 ? inferredRowCount : computeInterimRowCount(rowCounts, denom, jop);
+        // final row computation will consider join type
+        long joinRowCount = inferredRowCount !=-1 ? inferredRowCount :computeFinalRowCount(rowCounts, interimRowCount, jop);
+
+        updateColStats(conf, stats, interimRowCount, joinRowCount, jop, rowCountParents);
 
         // evaluate filter expression and update statistics
         if (joinRowCount != -1 && jop.getConf().getNoOuterJoin() &&
@@ -1775,7 +1781,8 @@ public class StatsRulesProcFactory {
         newNumRows = newrows;
       } else {
         // there is more than one FK
-        newNumRows = this.computeNewRowCount(rowCounts, getDenominator(distinctVals), jop);
+        newNumRows = this.computeInterimRowCount(rowCounts, getDenominator(distinctVals), jop);
+        newNumRows = this.computeFinalRowCount(rowCounts, newNumRows, jop);
       }
       return newNumRows;
     }
@@ -1895,7 +1902,7 @@ public class StatsRulesProcFactory {
       return result;
     }
 
-    private void updateColStats(HiveConf conf, Statistics stats, long newNumRows,
+    private void updateColStats(HiveConf conf, Statistics stats, long interimNumRows, long newNumRows,
         CommonJoinOperator<? extends JoinDesc> jop,
         Map<Integer, Long> rowCountParents) {
 
@@ -1934,10 +1941,34 @@ public class StatsRulesProcFactory {
         if (ratio <= 1.0) {
           newDV = (long) Math.ceil(ratio * oldDV);
         }
+
+        cs.setCountDistint(newDV);
         // Assumes inner join
         // TODO: HIVE-5579 will handle different join types
-        cs.setNumNulls(0);
-        cs.setCountDistint(newDV);
+        // set numNulls based on type of join
+        // need to know what side the column is coming from
+        // mamke sure it is two way join only
+        // pos will tell us which side of table it belongs
+        // joinCond.getLeft() will give us the pos
+        if (jop.getConf().getConds().length == 1) {
+          JoinCondDesc joinCond = jop.getConf().getConds()[0];
+          switch (joinCond.getType()) {
+          case JoinDesc.LEFT_OUTER_JOIN :
+            //if this column is coming from right input and
+            // interim row count is different from final row count
+            // it means we could have diff number of nulls
+            if(pos == joinCond.getRight()
+                && interimNumRows != newNumRows) {
+              // interim row count can not be less due to containment
+              // assumption in join cardinality computation
+              assert(newNumRows > interimNumRows);
+              long oldNumNulls = cs.getNumNulls();
+              long newNumNulls = oldNumNulls + (newNumRows - interimNumRows);
+              cs.setNumNulls(newNumNulls);
+            }
+            break;
+          }
+        }
       }
       stats.setColumnStats(colStats);
       long newDataSize = StatsUtils
@@ -1956,7 +1987,39 @@ public class StatsRulesProcFactory {
       stats.setDataSize(StatsUtils.getMaxIfOverflow(newDataSize));
     }
 
-    private long computeNewRowCount(List<Long> rowCountParents, long denom, CommonJoinOperator<? extends JoinDesc> join) {
+    private long computeFinalRowCount(List<Long> rowCountParents,long interimRowCount,
+        CommonJoinOperator<? extends JoinDesc> join) {
+      long result = interimRowCount;
+      if (join.getConf().getConds().length == 1) {
+        JoinCondDesc joinCond = join.getConf().getConds()[0];
+        switch (joinCond.getType()) {
+        case JoinDesc.INNER_JOIN:
+          // only dealing with special join types here.
+          break;
+        case JoinDesc.LEFT_OUTER_JOIN :
+          // all rows from left side will be present in resultset
+          result = Math.max(rowCountParents.get(joinCond.getLeft()),result);
+          break;
+        case JoinDesc.RIGHT_OUTER_JOIN :
+          // all rows from right side will be present in resultset
+          result = Math.max(rowCountParents.get(joinCond.getRight()),result);
+          break;
+        case JoinDesc.FULL_OUTER_JOIN :
+          // all rows from both side will be present in resultset
+          result = Math.max(StatsUtils.safeAdd(rowCountParents.get(joinCond.getRight()), rowCountParents.get(joinCond.getLeft())),result);
+          break;
+        case JoinDesc.LEFT_SEMI_JOIN :
+          // max # of rows = rows from left side
+          result = Math.min(rowCountParents.get(joinCond.getLeft()),result);
+          break;
+        default:
+          LOG.debug("Unhandled join type in stats estimation: " + joinCond.getType());
+          break;
+        }
+      }
+      return result;
+    }
+    private long computeInterimRowCount(List<Long> rowCountParents, long denom, CommonJoinOperator<? extends JoinDesc> join) {
       double factor = 0.0d;
       long result = 1;
       long max = rowCountParents.get(0);
@@ -1982,33 +2045,6 @@ public class StatsRulesProcFactory {
 
       result = (long) (result * factor);
 
-      if (join.getConf().getConds().length == 1) {
-        JoinCondDesc joinCond = join.getConf().getConds()[0];
-        switch (joinCond.getType()) {
-          case JoinDesc.INNER_JOIN:
-            // only dealing with special join types here.
-            break;
-          case JoinDesc.LEFT_OUTER_JOIN :
-            // all rows from left side will be present in resultset
-            result = Math.max(rowCountParents.get(joinCond.getLeft()),result);
-            break;
-          case JoinDesc.RIGHT_OUTER_JOIN :
-            // all rows from right side will be present in resultset
-            result = Math.max(rowCountParents.get(joinCond.getRight()),result);
-            break;
-          case JoinDesc.FULL_OUTER_JOIN :
-            // all rows from both side will be present in resultset
-            result = Math.max(StatsUtils.safeAdd(rowCountParents.get(joinCond.getRight()), rowCountParents.get(joinCond.getLeft())),result);
-            break;
-          case JoinDesc.LEFT_SEMI_JOIN :
-            // max # of rows = rows from left side
-            result = Math.min(rowCountParents.get(joinCond.getLeft()),result);
-            break;
-          default:
-            LOG.debug("Unhandled join type in stats estimation: " + joinCond.getType());
-            break;
-        }
-      }
       return result;
     }
 

@@ -19,6 +19,7 @@
 package org.apache.hadoop.hive.ql.optimizer.stats.annotation;
 
 import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -1902,6 +1903,81 @@ public class StatsRulesProcFactory {
       return result;
     }
 
+    private boolean isJoinKey(final String columnName,
+    final ExprNodeDesc[][] joinKeys) {
+      for (int i = 0; i < joinKeys.length; i++) {
+        for (ExprNodeDesc expr : Arrays.asList(joinKeys[i])) {
+
+          if (expr instanceof ExprNodeColumnDesc) {
+            if (((ExprNodeColumnDesc) expr).getColumn().equals(columnName)) {
+              return true;
+            }
+          }
+        }
+      }
+      return false;
+    }
+
+    private void updateColNumNulls(ColStatistics colStats, long interimNumRows, long newNumRows,
+        long pos, CommonJoinOperator<? extends JoinDesc> jop) {
+
+      // we don't change numNulls for this column
+      if(interimNumRows == newNumRows) {
+        return;
+      }
+
+      // interim row count can not be less due to containment
+      // assumption in join cardinality computation
+      assert(newNumRows > interimNumRows);
+
+      if (jop.getConf().getConds().length == 1) {
+        JoinCondDesc joinCond = jop.getConf().getConds()[0];
+        switch (joinCond.getType()) {
+        case JoinDesc.LEFT_OUTER_JOIN :
+          //if this column is coming from right input only then we update num nulls
+          if(pos == joinCond.getRight()) {
+            long oldNumNulls = colStats.getNumNulls();
+            long newNumNulls;
+            if(isJoinKey(colStats.getColumnName(), jop.getConf().getJoinKeys())) {
+              newNumNulls = Math.min(newNumRows,  (newNumRows-interimNumRows));
+            }
+            else {
+              newNumNulls = Math.min(newNumRows, oldNumNulls + (newNumRows-interimNumRows));
+            }
+            colStats.setNumNulls(newNumNulls);
+          }
+          break;
+        case JoinDesc.RIGHT_OUTER_JOIN:
+          if(pos == joinCond.getLeft()) {
+            long oldNumNulls = colStats.getNumNulls();
+            long newNumNulls;
+            if (isJoinKey(colStats.getColumnName(), jop.getConf().getJoinKeys())) {
+              newNumNulls = Math.min(newNumRows, (newNumRows - interimNumRows));
+            } else {
+              newNumNulls = Math.min(newNumRows, oldNumNulls + (newNumRows - interimNumRows));
+            }
+            colStats.setNumNulls(newNumNulls);
+          }
+          break;
+        case JoinDesc.FULL_OUTER_JOIN:
+            long oldNumNulls = colStats.getNumNulls();
+            long newNumNulls;
+            if (isJoinKey(colStats.getColumnName(), jop.getConf().getJoinKeys())) {
+              newNumNulls = Math.min(newNumRows, (newNumRows - interimNumRows));
+            } else {
+              newNumNulls = Math.min(newNumRows, oldNumNulls + (newNumRows - interimNumRows));
+            }
+            colStats.setNumNulls(newNumNulls);
+          break;
+
+        case JoinDesc.INNER_JOIN:
+        case JoinDesc.UNIQUE_JOIN:
+        case JoinDesc.LEFT_SEMI_JOIN:
+          break;
+        }
+      }
+    }
+
     private void updateColStats(HiveConf conf, Statistics stats, long interimNumRows, long newNumRows,
         CommonJoinOperator<? extends JoinDesc> jop,
         Map<Integer, Long> rowCountParents) {
@@ -1943,32 +2019,7 @@ public class StatsRulesProcFactory {
         }
 
         cs.setCountDistint(newDV);
-        // Assumes inner join
-        // TODO: HIVE-5579 will handle different join types
-        // set numNulls based on type of join
-        // need to know what side the column is coming from
-        // mamke sure it is two way join only
-        // pos will tell us which side of table it belongs
-        // joinCond.getLeft() will give us the pos
-        if (jop.getConf().getConds().length == 1) {
-          JoinCondDesc joinCond = jop.getConf().getConds()[0];
-          switch (joinCond.getType()) {
-          case JoinDesc.LEFT_OUTER_JOIN :
-            //if this column is coming from right input and
-            // interim row count is different from final row count
-            // it means we could have diff number of nulls
-            if(pos == joinCond.getRight()
-                && interimNumRows != newNumRows) {
-              // interim row count can not be less due to containment
-              // assumption in join cardinality computation
-              assert(newNumRows > interimNumRows);
-              long oldNumNulls = cs.getNumNulls();
-              long newNumNulls = oldNumNulls + (newNumRows - interimNumRows);
-              cs.setNumNulls(newNumNulls);
-            }
-            break;
-          }
-        }
+        updateColNumNulls(cs,interimNumRows,newNumRows,pos,jop);
       }
       stats.setColumnStats(colStats);
       long newDataSize = StatsUtils

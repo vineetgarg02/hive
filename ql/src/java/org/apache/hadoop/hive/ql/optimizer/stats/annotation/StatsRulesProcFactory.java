@@ -1921,60 +1921,65 @@ public class StatsRulesProcFactory {
     private void updateColNumNulls(ColStatistics colStats, long interimNumRows, long newNumRows,
         long pos, CommonJoinOperator<? extends JoinDesc> jop) {
 
-      // we don't change numNulls for this column
-      if(interimNumRows == newNumRows) {
+      if (!(jop.getConf().getConds().length == 1)) {
+        // we skip multi joins
         return;
       }
 
-      // interim row count can not be less due to containment
-      // assumption in join cardinality computation
-      assert(newNumRows > interimNumRows);
 
-      if (jop.getConf().getConds().length == 1) {
-        JoinCondDesc joinCond = jop.getConf().getConds()[0];
-        switch (joinCond.getType()) {
-        case JoinDesc.LEFT_OUTER_JOIN :
-          //if this column is coming from right input only then we update num nulls
-          if(pos == joinCond.getRight()) {
-            long oldNumNulls = colStats.getNumNulls();
-            long newNumNulls;
-            if(isJoinKey(colStats.getColumnName(), jop.getConf().getJoinKeys())) {
-              newNumNulls = Math.min(newNumRows,  (newNumRows-interimNumRows));
-            }
-            else {
-              newNumNulls = Math.min(newNumRows, oldNumNulls + (newNumRows-interimNumRows));
-            }
-            colStats.setNumNulls(newNumNulls);
+      JoinCondDesc joinCond = jop.getConf().getConds()[0];
+      switch (joinCond.getType()) {
+      case JoinDesc.LEFT_OUTER_JOIN :
+        //if this column is coming from right input only then we update num nulls
+        if(pos == joinCond.getRight()
+            && interimNumRows != newNumRows) {
+          // interim row count can not be less due to containment
+          // assumption in join cardinality computation
+          assert(newNumRows > interimNumRows);
+          long oldNumNulls = colStats.getNumNulls();
+          long newNumNulls;
+          if(isJoinKey(colStats.getColumnName(), jop.getConf().getJoinKeys())) {
+            newNumNulls = Math.min(newNumRows,  (newNumRows-interimNumRows));
           }
-          break;
-        case JoinDesc.RIGHT_OUTER_JOIN:
-          if(pos == joinCond.getLeft()) {
-            long oldNumNulls = colStats.getNumNulls();
-            long newNumNulls;
-            if (isJoinKey(colStats.getColumnName(), jop.getConf().getJoinKeys())) {
-              newNumNulls = Math.min(newNumRows, (newNumRows - interimNumRows));
-            } else {
-              newNumNulls = Math.min(newNumRows, oldNumNulls + (newNumRows - interimNumRows));
-            }
-            colStats.setNumNulls(newNumNulls);
+          else {
+            newNumNulls = Math.min(newNumRows, oldNumNulls + (newNumRows-interimNumRows));
           }
-          break;
-        case JoinDesc.FULL_OUTER_JOIN:
-            long oldNumNulls = colStats.getNumNulls();
-            long newNumNulls;
-            if (isJoinKey(colStats.getColumnName(), jop.getConf().getJoinKeys())) {
-              newNumNulls = Math.min(newNumRows, (newNumRows - interimNumRows));
-            } else {
-              newNumNulls = Math.min(newNumRows, oldNumNulls + (newNumRows - interimNumRows));
-            }
-            colStats.setNumNulls(newNumNulls);
-          break;
-
-        case JoinDesc.INNER_JOIN:
-        case JoinDesc.UNIQUE_JOIN:
-        case JoinDesc.LEFT_SEMI_JOIN:
-          break;
+          colStats.setNumNulls(newNumNulls);
         }
+        break;
+      case JoinDesc.RIGHT_OUTER_JOIN:
+        if(pos == joinCond.getLeft()
+            && interimNumRows != newNumRows) {
+          // interim row count can not be less due to containment
+          // assumption in join cardinality computation
+          assert(newNumRows > interimNumRows);
+          long oldNumNulls = colStats.getNumNulls();
+          long newNumNulls;
+          if (isJoinKey(colStats.getColumnName(), jop.getConf().getJoinKeys())) {
+            newNumNulls = Math.min(newNumRows, (newNumRows - interimNumRows));
+          } else {
+            newNumNulls = Math.min(newNumRows, oldNumNulls + (newNumRows - interimNumRows));
+          }
+          colStats.setNumNulls(newNumNulls);
+        }
+        break;
+      case JoinDesc.FULL_OUTER_JOIN:
+        long oldNumNulls = colStats.getNumNulls();
+        long newNumNulls;
+        if (isJoinKey(colStats.getColumnName(), jop.getConf().getJoinKeys())) {
+          newNumNulls = Math.min(newNumRows, (newNumRows - interimNumRows));
+        } else {
+          newNumNulls = Math.min(newNumRows, oldNumNulls + (newNumRows - interimNumRows));
+        }
+        colStats.setNumNulls(newNumNulls);
+        break;
+
+      case JoinDesc.INNER_JOIN:
+      case JoinDesc.UNIQUE_JOIN:
+      case JoinDesc.LEFT_SEMI_JOIN:
+        // to keep the behavior backward compatible num nulls are set to 0
+        colStats.setNumNulls(0);
+        break;
       }
     }
 

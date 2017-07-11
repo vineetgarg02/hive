@@ -39,6 +39,11 @@ import java.util.List;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
+/**
+ * Planner rule that removes UDF sq_count_check from a
+ * plan if group by keys in a subquery are constant
+ * and there is no windowing or grouping sets
+ */
 public class HiveRemoveSqCountCheck extends RelOptRule {
 
   public static final HiveRemoveSqCountCheck INSTANCE =
@@ -71,7 +76,6 @@ public class HiveRemoveSqCountCheck extends RelOptRule {
         return true;
       }
     }
-    // Rule cannot be applied if there are GroupingSets
     return false;
   }
 

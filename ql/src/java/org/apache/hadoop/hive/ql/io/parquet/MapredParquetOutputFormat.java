@@ -18,11 +18,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
-import java.util.TimeZone;
 
-import org.apache.hadoop.hive.ql.io.parquet.serde.ParquetTableUtils;
-import org.apache.hadoop.hive.ql.io.parquet.timestamp.NanoTimeUtils;
-import org.apache.parquet.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.fs.FileSystem;
@@ -117,7 +113,6 @@ public class MapredParquetOutputFormat extends FileOutputFormat<NullWritable, Pa
     }
 
     DataWritableWriteSupport.setSchema(HiveSchemaConverter.convert(columnNames, columnTypes), jobConf);
-    DataWritableWriteSupport.setTimeZone(getParquetWriterTimeZone(tableProperties), jobConf);
 
     return getParquerRecordWriterWrapper(realOutputFormat, jobConf, finalOutPath.toString(),
             progress,tableProperties);
@@ -132,19 +127,5 @@ public class MapredParquetOutputFormat extends FileOutputFormat<NullWritable, Pa
       ) throws IOException {
     return new ParquetRecordWriterWrapper(realOutputFormat, jobConf, finalOutPath.toString(),
             progress,tableProperties);
-  }
-
-  private TimeZone getParquetWriterTimeZone(Properties tableProperties) {
-    // PARQUET_INT96_WRITE_ZONE_PROPERTY is a table property used to detect what timezone
-    // conversion to use when writing Parquet timestamps.
-    String timeZoneID =
-        tableProperties.getProperty(ParquetTableUtils.PARQUET_INT96_WRITE_ZONE_PROPERTY);
-    if (!Strings.isNullOrEmpty(timeZoneID)) {
-
-      NanoTimeUtils.validateTimeZone(timeZoneID);
-      return TimeZone.getTimeZone(timeZoneID);
-    }
-
-    return TimeZone.getDefault();
   }
 }

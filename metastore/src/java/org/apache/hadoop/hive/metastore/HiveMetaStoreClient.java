@@ -90,7 +90,7 @@ import com.google.common.collect.Lists;
  */
 @Public
 @Unstable
-public class HiveMetaStoreClient implements IMetaStoreClient {
+public class HiveMetaStoreClient implements IMetaStoreClient, AutoCloseable {
   /**
    * Capabilities of the current client. If this client talks to a MetaStore server in a manner
    * implying the usage of some expanded features that require client-side support that this client
@@ -126,6 +126,10 @@ public class HiveMetaStoreClient implements IMetaStoreClient {
 
   public HiveMetaStoreClient(HiveConf conf) throws MetaException {
     this(conf, null, true);
+  }
+
+  public HiveMetaStoreClient(HiveConf conf, HiveMetaHookLoader hookLoader) throws MetaException {
+    this(conf, hookLoader, true);
   }
 
   public HiveMetaStoreClient(HiveConf conf, HiveMetaHookLoader hookLoader, Boolean allowEmbedded)

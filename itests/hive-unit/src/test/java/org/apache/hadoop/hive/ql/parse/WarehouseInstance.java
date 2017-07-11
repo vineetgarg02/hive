@@ -32,6 +32,7 @@ import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.ql.CommandNeedRetryException;
 import org.apache.hadoop.hive.ql.Driver;
+import org.apache.hadoop.hive.ql.exec.repl.ReplDumpWork;
 import org.apache.hadoop.hive.ql.parse.repl.PathBuilder;
 import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
 import org.apache.hadoop.hive.ql.session.SessionState;
@@ -94,21 +95,20 @@ class WarehouseInstance implements Closeable {
     hiveConf.setBoolVar(HiveConf.ConfVars.FIRE_EVENTS_FOR_DML, true);
     hiveConf.setVar(HiveConf.ConfVars.REPLCMDIR, cmRoot);
     hiveConf.setVar(HiveConf.ConfVars.REPL_FUNCTIONS_ROOT_DIR, functionsRoot);
-    String schemaName = "APP" + uniqueIdentifier;
-    System.setProperty("datanucleus.mapping.Schema", schemaName);
+    System.setProperty("datanucleus.mapping.Schema", "APP");
     hiveConf.setVar(HiveConf.ConfVars.METASTORECONNECTURLKEY,
-        "jdbc:derby:memory:${test.tmp.dir}/" + schemaName + ";create=true");
-
-    int metaStorePort = MetaStoreUtils.startMetaStore(hiveConf);
+        "jdbc:derby:memory:${test.tmp.dir}/APP;create=true");
     hiveConf.setVar(HiveConf.ConfVars.REPLDIR,
-        hiveWarehouseLocation + "/hrepl" + uniqueIdentifier + "/");
-    hiveConf.setVar(HiveConf.ConfVars.METASTOREURIS, "thrift://localhost:" + metaStorePort);
+            hiveWarehouseLocation + "/hrepl" + uniqueIdentifier + "/");
     hiveConf.setIntVar(HiveConf.ConfVars.METASTORETHRIFTCONNECTIONRETRIES, 3);
     hiveConf.set(HiveConf.ConfVars.PREEXECHOOKS.varname, "");
     hiveConf.set(HiveConf.ConfVars.POSTEXECHOOKS.varname, "");
     hiveConf.set(HiveConf.ConfVars.HIVE_SUPPORT_CONCURRENCY.varname, "false");
     System.setProperty(HiveConf.ConfVars.PREEXECHOOKS.varname, " ");
     System.setProperty(HiveConf.ConfVars.POSTEXECHOOKS.varname, " ");
+
+    int metaStorePort = MetaStoreUtils.startMetaStore(hiveConf);
+    hiveConf.setVar(HiveConf.ConfVars.METASTOREURIS, "thrift://localhost:" + metaStorePort);
 
     Path testPath = new Path(hiveWarehouseLocation);
     FileSystem testPathFileSystem = FileSystem.get(testPath.toUri(), hiveConf);
@@ -132,7 +132,7 @@ class WarehouseInstance implements Closeable {
 
   private void advanceDumpDir() {
     next++;
-    ReplicationSemanticAnalyzer.injectNextDumpDirForTest(String.valueOf(next));
+    ReplDumpWork.injectNextDumpDirForTest(String.valueOf(next));
   }
 
   private ArrayList<String> lastResults;

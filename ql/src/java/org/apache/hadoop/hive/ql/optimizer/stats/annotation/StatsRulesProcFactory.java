@@ -1547,9 +1547,11 @@ public class StatsRulesProcFactory {
 
         // reason we compute interim row count, where join type isn't considered, is because later
         // it will be used to estimate num nulls
-        long interimRowCount = inferredRowCount !=-1 ? inferredRowCount : computeRowCountAssumingInnerJoin(rowCounts, denom, jop);
+        long interimRowCount = inferredRowCount !=-1 ? inferredRowCount
+            :computeRowCountAssumingInnerJoin(rowCounts, denom, jop);
         // final row computation will consider join type
-        long joinRowCount = inferredRowCount !=-1 ? inferredRowCount :computeFinalRowCount(rowCounts, interimRowCount, jop);
+        long joinRowCount = inferredRowCount !=-1 ? inferredRowCount
+            :computeFinalRowCount(rowCounts, interimRowCount, jop);
 
         updateColStats(conf, stats, interimRowCount, joinRowCount, jop, rowCountParents);
 
@@ -1782,7 +1784,8 @@ public class StatsRulesProcFactory {
         newNumRows = newrows;
       } else {
         // there is more than one FK
-        newNumRows = this.computeRowCountAssumingInnerJoin(rowCounts, getDenominator(distinctVals), jop);
+        newNumRows = this.computeRowCountAssumingInnerJoin(rowCounts,
+            getDenominator(distinctVals), jop);
         newNumRows = this.computeFinalRowCount(rowCounts, newNumRows, jop);
       }
       return newNumRows;
@@ -1979,7 +1982,8 @@ public class StatsRulesProcFactory {
       colStats.setNumNulls(newNumNulls);
     }
 
-    private void updateColStats(HiveConf conf, Statistics stats, long interimNumRows, long newNumRows,
+    private void updateColStats(HiveConf conf, Statistics stats, long interimNumRows,
+        long newNumRows,
         CommonJoinOperator<? extends JoinDesc> jop,
         Map<Integer, Long> rowCountParents) {
 
@@ -2020,7 +2024,7 @@ public class StatsRulesProcFactory {
         }
 
         cs.setCountDistint(newDV);
-        updateNumNulls(cs,interimNumRows,newNumRows,pos,jop);
+        updateNumNulls(cs, interimNumRows, newNumRows, pos, jop);
       }
       stats.setColumnStats(colStats);
       long newDataSize = StatsUtils
@@ -2039,7 +2043,7 @@ public class StatsRulesProcFactory {
       stats.setDataSize(StatsUtils.getMaxIfOverflow(newDataSize));
     }
 
-    private long computeFinalRowCount(List<Long> rowCountParents,long interimRowCount,
+    private long computeFinalRowCount(List<Long> rowCountParents, long interimRowCount,
         CommonJoinOperator<? extends JoinDesc> join) {
       long result = interimRowCount;
       if (join.getConf().getConds().length == 1) {
@@ -2050,19 +2054,20 @@ public class StatsRulesProcFactory {
           break;
         case JoinDesc.LEFT_OUTER_JOIN :
           // all rows from left side will be present in resultset
-          result = Math.max(rowCountParents.get(joinCond.getLeft()),result);
+          result = Math.max(rowCountParents.get(joinCond.getLeft()), result);
           break;
         case JoinDesc.RIGHT_OUTER_JOIN :
           // all rows from right side will be present in resultset
-          result = Math.max(rowCountParents.get(joinCond.getRight()),result);
+          result = Math.max(rowCountParents.get(joinCond.getRight()), result);
           break;
         case JoinDesc.FULL_OUTER_JOIN :
           // all rows from both side will be present in resultset
-          result = Math.max(StatsUtils.safeAdd(rowCountParents.get(joinCond.getRight()), rowCountParents.get(joinCond.getLeft())),result);
+          result = Math.max(StatsUtils.safeAdd(rowCountParents.get(joinCond.getRight()),
+              rowCountParents.get(joinCond.getLeft())), result);
           break;
         case JoinDesc.LEFT_SEMI_JOIN :
           // max # of rows = rows from left side
-          result = Math.min(rowCountParents.get(joinCond.getLeft()),result);
+          result = Math.min(rowCountParents.get(joinCond.getLeft()), result);
           break;
         default:
           LOG.debug("Unhandled join type in stats estimation: " + joinCond.getType());
@@ -2071,7 +2076,8 @@ public class StatsRulesProcFactory {
       }
       return result;
     }
-    private long computeRowCountAssumingInnerJoin(List<Long> rowCountParents, long denom, CommonJoinOperator<? extends JoinDesc> join) {
+    private long computeRowCountAssumingInnerJoin(List<Long> rowCountParents, long denom,
+        CommonJoinOperator<? extends JoinDesc> join) {
       double factor = 0.0d;
       long result = 1;
       long max = rowCountParents.get(0);

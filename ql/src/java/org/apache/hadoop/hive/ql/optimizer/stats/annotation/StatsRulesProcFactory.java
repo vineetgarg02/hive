@@ -1966,6 +1966,7 @@ public class StatsRulesProcFactory {
             newNumNulls = Math.min(newNumRows, oldNumNulls + (newNumRows - interimNumRows));
           }
         }
+        break;
       case JoinDesc.FULL_OUTER_JOIN:
         if (isJoinKey(colStats.getColumnName(), jop.getConf().getJoinKeys())) {
           newNumNulls = Math.min(newNumRows, (newNumRows - interimNumRows));

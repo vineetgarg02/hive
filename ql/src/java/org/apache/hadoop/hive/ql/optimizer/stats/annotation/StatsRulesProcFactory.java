@@ -1547,7 +1547,7 @@ public class StatsRulesProcFactory {
 
         // reason we compute interim row count, where join type isn't considered, is because later
         // it will be used to estimate num nulls
-        long interimRowCount = inferredRowCount !=-1 ? inferredRowCount : computeInterimRowCount(rowCounts, denom, jop);
+        long interimRowCount = inferredRowCount !=-1 ? inferredRowCount : computeRowCountAssumingInnerJoin(rowCounts, denom, jop);
         // final row computation will consider join type
         long joinRowCount = inferredRowCount !=-1 ? inferredRowCount :computeFinalRowCount(rowCounts, interimRowCount, jop);
 
@@ -1782,7 +1782,7 @@ public class StatsRulesProcFactory {
         newNumRows = newrows;
       } else {
         // there is more than one FK
-        newNumRows = this.computeInterimRowCount(rowCounts, getDenominator(distinctVals), jop);
+        newNumRows = this.computeRowCountAssumingInnerJoin(rowCounts, getDenominator(distinctVals), jop);
         newNumRows = this.computeFinalRowCount(rowCounts, newNumRows, jop);
       }
       return newNumRows;
@@ -1918,14 +1918,17 @@ public class StatsRulesProcFactory {
       return false;
     }
 
-    private void updateColNumNulls(ColStatistics colStats, long interimNumRows, long newNumRows,
+    private void updateNumNulls(ColStatistics colStats, long interimNumRows, long newNumRows,
         long pos, CommonJoinOperator<? extends JoinDesc> jop) {
 
       if (!(jop.getConf().getConds().length == 1)) {
-        // we skip multi joins
+        // TODO: handle multi joins
         return;
       }
 
+
+      long oldNumNulls = colStats.getNumNulls();
+      long newNumNulls = Math.min(newNumRows, oldNumNulls);
 
       JoinCondDesc joinCond = jop.getConf().getConds()[0];
       switch (joinCond.getType()) {
@@ -1936,51 +1939,44 @@ public class StatsRulesProcFactory {
           // interim row count can not be less due to containment
           // assumption in join cardinality computation
           assert(newNumRows > interimNumRows);
-          long oldNumNulls = colStats.getNumNulls();
-          long newNumNulls;
           if(isJoinKey(colStats.getColumnName(), jop.getConf().getJoinKeys())) {
             newNumNulls = Math.min(newNumRows,  (newNumRows-interimNumRows));
           }
           else {
             newNumNulls = Math.min(newNumRows, oldNumNulls + (newNumRows-interimNumRows));
           }
-          colStats.setNumNulls(newNumNulls);
         }
         break;
       case JoinDesc.RIGHT_OUTER_JOIN:
         if(pos == joinCond.getLeft()
             && interimNumRows != newNumRows) {
+
           // interim row count can not be less due to containment
           // assumption in join cardinality computation
+          // interimNumRows represent number of matches for join keys on two sides.
+          // newNumRows-interimNumRows represent number of non-matches.
           assert(newNumRows > interimNumRows);
-          long oldNumNulls = colStats.getNumNulls();
-          long newNumNulls;
+
           if (isJoinKey(colStats.getColumnName(), jop.getConf().getJoinKeys())) {
             newNumNulls = Math.min(newNumRows, (newNumRows - interimNumRows));
           } else {
             newNumNulls = Math.min(newNumRows, oldNumNulls + (newNumRows - interimNumRows));
           }
-          colStats.setNumNulls(newNumNulls);
         }
-        break;
       case JoinDesc.FULL_OUTER_JOIN:
-        long oldNumNulls = colStats.getNumNulls();
-        long newNumNulls;
         if (isJoinKey(colStats.getColumnName(), jop.getConf().getJoinKeys())) {
           newNumNulls = Math.min(newNumRows, (newNumRows - interimNumRows));
         } else {
           newNumNulls = Math.min(newNumRows, oldNumNulls + (newNumRows - interimNumRows));
         }
-        colStats.setNumNulls(newNumNulls);
         break;
 
       case JoinDesc.INNER_JOIN:
       case JoinDesc.UNIQUE_JOIN:
       case JoinDesc.LEFT_SEMI_JOIN:
-        // to keep the behavior backward compatible num nulls are set to 0
-        colStats.setNumNulls(0);
         break;
       }
+      colStats.setNumNulls(newNumNulls);
     }
 
     private void updateColStats(HiveConf conf, Statistics stats, long interimNumRows, long newNumRows,
@@ -2024,7 +2020,7 @@ public class StatsRulesProcFactory {
         }
 
         cs.setCountDistint(newDV);
-        updateColNumNulls(cs,interimNumRows,newNumRows,pos,jop);
+        updateNumNulls(cs,interimNumRows,newNumRows,pos,jop);
       }
       stats.setColumnStats(colStats);
       long newDataSize = StatsUtils
@@ -2075,7 +2071,7 @@ public class StatsRulesProcFactory {
       }
       return result;
     }
-    private long computeInterimRowCount(List<Long> rowCountParents, long denom, CommonJoinOperator<? extends JoinDesc> join) {
+    private long computeRowCountAssumingInnerJoin(List<Long> rowCountParents, long denom, CommonJoinOperator<? extends JoinDesc> join) {
       double factor = 0.0d;
       long result = 1;
       long max = rowCountParents.get(0);

@@ -62,7 +62,8 @@ public class HiveRemoveSqCountCheck extends RelOptRule {
             ),
             operand(Project.class,
                 operand(Aggregate.class,
-                    any())))
+                    any()))
+        )
     ), HiveRelFactories.HIVE_BUILDER, "HiveRemoveSqCountCheck");
   }
 
@@ -103,7 +104,9 @@ public class HiveRemoveSqCountCheck extends RelOptRule {
     final Aggregate aggregate = call.rel(6);
 
     // in presence of grouping sets we can't remove sq_count_check
-    if(aggregate.indicator) return ;
+    if(aggregate.indicator) {
+      return;
+    }
 
     final int groupCount = aggregate.getGroupCount();
 

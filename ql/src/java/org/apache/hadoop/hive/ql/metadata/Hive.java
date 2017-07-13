@@ -2192,7 +2192,7 @@ private void constructOneLBLocationMap(FileStatus fSta,
           try {
             org.apache.hadoop.hive.metastore.api.Partition ptn =
                 getMSC().getPartition(addPartitionDesc.getDbName(), addPartitionDesc.getTableName(), p.getValues());
-            if (addPartitionDesc.getReplicationSpec().allowReplacementInto(ptn)){
+            if (addPartitionDesc.getReplicationSpec().allowReplacementInto(ptn.getParameters())){
               partsToAlter.add(p);
             } // else ptn already exists, but we do nothing with it.
           } catch (NoSuchObjectException nsoe){
@@ -3129,7 +3129,7 @@ private void constructOneLBLocationMap(FileStatus fSta,
     * I'll leave the below loop for now until a better approach is found.
     */
     for (int counter = 1; destFs.exists(destFilePath); counter++) {
-      destFilePath =  new Path(destDirPath, name + ("_copy_" + counter) + (!type.isEmpty() ? "." + type : ""));
+      destFilePath =  new Path(destDirPath, name + (Utilities.COPY_KEYWORD + counter) + (!type.isEmpty() ? "." + type : ""));
     }
 
     if (isRenameAllowed) {

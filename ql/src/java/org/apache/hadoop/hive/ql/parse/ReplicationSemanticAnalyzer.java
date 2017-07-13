@@ -1,57 +1,40 @@
-/**
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+/*
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
  */
 package org.apache.hadoop.hive.ql.parse;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
-import com.google.common.primitives.Ints;
 import org.antlr.runtime.tree.Tree;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.Database;
-import org.apache.hadoop.hive.metastore.api.Function;
 import org.apache.hadoop.hive.metastore.api.InvalidOperationException;
-import org.apache.hadoop.hive.metastore.api.NotificationEvent;
-import org.apache.hadoop.hive.metastore.messaging.EventUtils;
-import org.apache.hadoop.hive.metastore.messaging.MessageFactory;
-import org.apache.hadoop.hive.metastore.messaging.event.filters.AndFilter;
-import org.apache.hadoop.hive.metastore.messaging.event.filters.DatabaseAndTableFilter;
-import org.apache.hadoop.hive.metastore.messaging.event.filters.EventBoundaryFilter;
-import org.apache.hadoop.hive.metastore.messaging.event.filters.MessageFormatFilter;
 import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.QueryState;
 import org.apache.hadoop.hive.ql.exec.Task;
 import org.apache.hadoop.hive.ql.exec.TaskFactory;
+import org.apache.hadoop.hive.ql.exec.repl.ReplDumpWork;
 import org.apache.hadoop.hive.ql.hooks.ReadEntity;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
-import org.apache.hadoop.hive.ql.metadata.InvalidTableException;
 import org.apache.hadoop.hive.ql.metadata.Table;
-import org.apache.hadoop.hive.ql.parse.repl.DumpType;
-import org.apache.hadoop.hive.ql.parse.repl.dump.HiveWrapper;
 import org.apache.hadoop.hive.ql.parse.repl.dump.Utils;
-import org.apache.hadoop.hive.ql.parse.repl.dump.events.EventHandler;
-import org.apache.hadoop.hive.ql.parse.repl.dump.events.EventHandlerFactory;
-import org.apache.hadoop.hive.ql.parse.repl.dump.io.FunctionSerializer;
-import org.apache.hadoop.hive.ql.parse.repl.dump.io.JsonWriter;
 import org.apache.hadoop.hive.ql.parse.repl.load.DumpMetaData;
 import org.apache.hadoop.hive.ql.parse.repl.load.EventDumpDirComparator;
 import org.apache.hadoop.hive.ql.parse.repl.load.MetaData;
@@ -77,7 +60,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 
 import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_FROM;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_LIMIT;
@@ -101,7 +83,6 @@ public class ReplicationSemanticAnalyzer extends BaseSemanticAnalyzer {
   private static final String dumpSchema = "dump_dir,last_repl_id#string,string";
 
   private static final String FUNCTIONS_ROOT_DIR_NAME = "_functions";
-  private static final String FUNCTION_METADATA_DIR_NAME = "_metadata";
   private final static Logger REPL_STATE_LOG = LoggerFactory.getLogger("ReplState");
 
   ReplicationSemanticAnalyzer(QueryState queryState) throws SemanticException {
@@ -180,248 +161,25 @@ public class ReplicationSemanticAnalyzer extends BaseSemanticAnalyzer {
     LOG.debug("ReplicationSemanticAnalyzer.analyzeReplDump: " + String.valueOf(dbNameOrPattern)
         + "." + String.valueOf(tblNameOrPattern) + " from " + String.valueOf(eventFrom) + " to "
         + String.valueOf(eventTo) + " maxEventLimit " + String.valueOf(maxEventLimit));
-    String replRoot = conf.getVar(HiveConf.ConfVars.REPLDIR);
-    Path dumpRoot = new Path(replRoot, getNextDumpDir());
-    DumpMetaData dmd = new DumpMetaData(dumpRoot, conf);
-    Path cmRoot = new Path(conf.getVar(HiveConf.ConfVars.REPLCMDIR));
-    Long lastReplId;
     try {
-      if (eventFrom == null){
-        // bootstrap case
-        Long bootDumpBeginReplId = db.getMSC().getCurrentNotificationEventId().getEventId();
-        for (String dbName : matchesDb(dbNameOrPattern)) {
-          REPL_STATE_LOG.info("Repl Dump: Started analyzing Repl Dump for DB: {}, Dump Type: BOOTSTRAP", dbName);
-          LOG.debug("ReplicationSemanticAnalyzer: analyzeReplDump dumping db: " + dbName);
-          Path dbRoot = dumpDbMetadata(dbName, dumpRoot);
-          dumpFunctionMetadata(dbName, dumpRoot);
-          for (String tblName : matchesTbl(dbName, tblNameOrPattern)) {
-            LOG.debug("ReplicationSemanticAnalyzer: analyzeReplDump dumping table: " + tblName
-                + " to db root " + dbRoot.toUri());
-            dumpTbl(ast, dbName, tblName, dbRoot);
-          }
-          REPL_STATE_LOG.info("Repl Dump: Completed analyzing Repl Dump for DB: {} and created {} COPY tasks to dump " +
-                              "metadata and data",
-                              dbName, rootTasks.size());
-        }
-        Long bootDumpEndReplId = db.getMSC().getCurrentNotificationEventId().getEventId();
-        LOG.info("Bootstrap object dump phase took from {} to {}", bootDumpBeginReplId, bootDumpEndReplId);
-
-        // Now that bootstrap has dumped all objects related, we have to account for the changes
-        // that occurred while bootstrap was happening - i.e. we have to look through all events
-        // during the bootstrap period and consolidate them with our dump.
-
-        IMetaStoreClient.NotificationFilter evFilter =
-            new DatabaseAndTableFilter(dbNameOrPattern, tblNameOrPattern);
-        EventUtils.MSClientNotificationFetcher evFetcher =
-            new EventUtils.MSClientNotificationFetcher(db.getMSC());
-        EventUtils.NotificationEventIterator evIter = new EventUtils.NotificationEventIterator(
-            evFetcher, bootDumpBeginReplId,
-            Ints.checkedCast(bootDumpEndReplId - bootDumpBeginReplId) + 1,
-            evFilter );
-
-        // Now we consolidate all the events that happenned during the objdump into the objdump
-        while (evIter.hasNext()){
-          NotificationEvent ev = evIter.next();
-          Path evRoot = new Path(dumpRoot, String.valueOf(ev.getEventId()));
-          // FIXME : implement consolidateEvent(..) similar to dumpEvent(ev,evRoot)
-        }
-        LOG.info(
-            "Consolidation done, preparing to return {},{}->{}",
-            dumpRoot.toUri(), bootDumpBeginReplId, bootDumpEndReplId);
-        dmd.setDump(DumpType.BOOTSTRAP, bootDumpBeginReplId, bootDumpEndReplId, cmRoot);
-        dmd.write();
-
-        // Set the correct last repl id to return to the user
-        lastReplId = bootDumpEndReplId;
-      } else {
-        // get list of events matching dbPattern & tblPattern
-        // go through each event, and dump out each event to a event-level dump dir inside dumproot
-        if (eventTo == null){
-          eventTo = db.getMSC().getCurrentNotificationEventId().getEventId();
-          LOG.debug("eventTo not specified, using current event id : {}", eventTo);
-        } else if (eventTo < eventFrom) {
-          throw new Exception("Invalid event ID input received in TO clause");
-        }
-
-        Integer maxRange = Ints.checkedCast(eventTo - eventFrom + 1);
-        if ((maxEventLimit == null) || (maxEventLimit > maxRange)){
-          maxEventLimit = maxRange;
-        }
-
-        // TODO : instead of simply restricting by message format, we should eventually
-        // move to a jdbc-driver-stype registering of message format, and picking message
-        // factory per event to decode. For now, however, since all messages have the
-        // same factory, restricting by message format is effectively a guard against
-        // older leftover data that would cause us problems.
-
-        IMetaStoreClient.NotificationFilter evFilter = new AndFilter(
-            new DatabaseAndTableFilter(dbNameOrPattern, tblNameOrPattern),
-            new EventBoundaryFilter(eventFrom, eventTo),
-            new MessageFormatFilter(MessageFactory.getInstance().getMessageFormat()));
-
-        EventUtils.MSClientNotificationFetcher evFetcher
-            = new EventUtils.MSClientNotificationFetcher(db.getMSC());
-
-        EventUtils.NotificationEventIterator evIter = new EventUtils.NotificationEventIterator(
-            evFetcher, eventFrom, maxEventLimit, evFilter);
-
-        lastReplId = eventTo;
-        REPL_STATE_LOG.info("Repl Dump: Started Repl Dump for DB: {}, Dump Type: INCREMENTAL",
-                            (null != dbNameOrPattern && !dbNameOrPattern.isEmpty()) ? dbNameOrPattern : "?");
-        while (evIter.hasNext()){
-          NotificationEvent ev = evIter.next();
-          lastReplId = ev.getEventId();
-          Path evRoot = new Path(dumpRoot, String.valueOf(lastReplId));
-          dumpEvent(ev, evRoot, cmRoot);
-        }
-
-        REPL_STATE_LOG.info("Repl Dump: Completed Repl Dump for DB: {}",
-                            (null != dbNameOrPattern && !dbNameOrPattern.isEmpty()) ? dbNameOrPattern : "?");
-
-        LOG.info("Done dumping events, preparing to return {},{}", dumpRoot.toUri(), lastReplId);
-        Utils.writeOutput(
-            Arrays.asList(
-                "incremental",
-                String.valueOf(eventFrom),
-                String.valueOf(lastReplId)
-            ),
-            dmd.getDumpFilePath(), conf);
-        dmd.setDump(DumpType.INCREMENTAL, eventFrom, lastReplId, cmRoot);
-        dmd.write();
-      }
-      prepareReturnValues(Arrays.asList(dumpRoot.toUri().toString(), String.valueOf(lastReplId)), dumpSchema);
+      ctx.setResFile(ctx.getLocalTmpPath());
+      Task<ReplDumpWork> replDumpWorkTask = TaskFactory
+          .get(new ReplDumpWork(
+              dbNameOrPattern,
+              tblNameOrPattern,
+              eventFrom,
+              eventTo,
+              ErrorMsg.INVALID_PATH.getMsg(ast),
+              maxEventLimit,
+              ctx.getResFile().toUri().toString()
+          ), conf);
+      rootTasks.add(replDumpWorkTask);
       setFetchTask(createFetchTask(dumpSchema));
     } catch (Exception e) {
       // TODO : simple wrap & rethrow for now, clean up with error codes
       LOG.warn("Error during analyzeReplDump", e);
       throw new SemanticException(e);
     }
-  }
-
-  private void dumpEvent(NotificationEvent ev, Path evRoot, Path cmRoot) throws Exception {
-    EventHandler.Context context = new EventHandler.Context(
-        evRoot,
-        cmRoot,
-        db,
-        conf,
-        getNewEventOnlyReplicationSpec(ev.getEventId())
-    );
-    EventHandlerFactory.handlerFor(ev).handle(context);
-    REPL_STATE_LOG.info("Repl Dump: Dumped event with ID: {}, Type: {} and dumped metadata and data to path {}",
-                        String.valueOf(ev.getEventId()), ev.getEventType(), evRoot.toUri().toString());
-  }
-
-  public static void injectNextDumpDirForTest(String dumpdir){
-    testInjectDumpDir = dumpdir;
-  }
-
-  private String getNextDumpDir() {
-    if (conf.getBoolVar(HiveConf.ConfVars.HIVE_IN_TEST)) {
-      // make it easy to write .q unit tests, instead of unique id generation.
-      // however, this does mean that in writing tests, we have to be aware that
-      // repl dump will clash with prior dumps, and thus have to clean up properly.
-      if (testInjectDumpDir == null){
-        return "next";
-      } else {
-        return testInjectDumpDir;
-      }
-    } else {
-      return String.valueOf(System.currentTimeMillis());
-      // TODO: time good enough for now - we'll likely improve this.
-      // We may also work in something the equivalent of pid, thrid and move to nanos to ensure
-      // uniqueness.
-    }
-  }
-
-  /**
-   *
-   * @param dbName
-   * @param dumpRoot
-   * @return db dumped path
-   * @throws SemanticException
-   */
-  private Path dumpDbMetadata(String dbName, Path dumpRoot) throws SemanticException {
-    Path dbRoot = new Path(dumpRoot, dbName);
-    try {
-      // TODO : instantiating FS objects are generally costly. Refactor
-      FileSystem fs = dbRoot.getFileSystem(conf);
-      Path dumpPath = new Path(dbRoot, EximUtil.METADATA_NAME);
-      HiveWrapper.Tuple<Database> database = new HiveWrapper(db, dbName).database();
-      EximUtil.createDbExportDump(fs, dumpPath, database.object, database.replicationSpec);
-      REPL_STATE_LOG.info("Repl Dump: Dumped DB metadata");
-    } catch (Exception e) {
-      // TODO : simple wrap & rethrow for now, clean up with error codes
-      throw new SemanticException(e);
-    }
-    return dbRoot;
-  }
-
-  private void dumpFunctionMetadata(String dbName, Path dumpRoot) throws SemanticException {
-    Path functionsRoot = new Path(new Path(dumpRoot, dbName), FUNCTIONS_ROOT_DIR_NAME);
-    try {
-      // TODO : This should ideally return the Function Objects and not Strings(function names) that should be done by the caller, Look at this separately.
-      List<String> functionNames = db.getFunctions(dbName, "*");
-      for (String functionName : functionNames) {
-        HiveWrapper.Tuple<Function> tuple;
-        try {
-          tuple = new HiveWrapper(db, dbName).function(functionName);
-        } catch (HiveException e) {
-          //This can happen as we are querying the getFunctions before we are getting the actual function
-          //in between there can be a drop function by a user in which case our call will fail.
-          LOG.info("Function " + functionName + " could not be found, we are ignoring it as it can be a valid state ", e);
-          continue;
-        }
-        if (tuple.object.getResourceUris().isEmpty()) {
-          REPL_STATE_LOG.warn(
-              "Not replicating function: " + functionName + " as it seems to have been created "
-                  + "without USING clause");
-          continue;
-        }
-
-        Path functionRoot = new Path(functionsRoot, functionName);
-        Path functionMetadataRoot = new Path(functionRoot, FUNCTION_METADATA_DIR_NAME);
-        try (JsonWriter jsonWriter = new JsonWriter(functionMetadataRoot.getFileSystem(conf),
-            functionMetadataRoot)) {
-          FunctionSerializer serializer =
-              new FunctionSerializer(tuple.object, conf);
-          serializer.writeTo(jsonWriter, tuple.replicationSpec);
-        }
-        REPL_STATE_LOG.info("Repl Dump: Dumped metadata for function: {}", functionName);
-      }
-    } catch (Exception e) {
-      throw new SemanticException(e);
-    }
-  }
-
-  /**
-   *
-   * @param ast
-   * @param dbName
-   * @param tblName
-   * @param dbRoot
-   * @return tbl dumped path
-   * @throws SemanticException
-   */
-  private Path dumpTbl(ASTNode ast, String dbName, String tblName, Path dbRoot) throws SemanticException {
-    Path tableRoot = new Path(dbRoot, tblName);
-    try {
-      URI toURI = EximUtil.getValidatedURI(conf, tableRoot.toUri().toString());
-      TableSpec ts = new TableSpec(db, conf, dbName + "." + tblName, null);
-
-      ExportSemanticAnalyzer.prepareExport(ast, toURI, ts, getNewReplicationSpec(), db, conf, ctx,
-          rootTasks, inputs, outputs, LOG);
-      REPL_STATE_LOG.info("Repl Dump: Analyzed dump for table/view: {}.{} and created copy tasks to dump metadata " +
-                          "and data to path {}", dbName, tblName, toURI.toString());
-    } catch (InvalidTableException te) {
-      // Bootstrap dump shouldn't fail if the table is dropped/renamed while dumping it.
-      // Just log a debug message and skip it.
-      LOG.debug(te.getMessage());
-      return null;
-    } catch (HiveException e) {
-      // TODO : simple wrap & rethrow for now, clean up with error codes
-      throw new SemanticException(e);
-    }
-    return tableRoot;
   }
 
   // REPL LOAD
@@ -668,11 +426,11 @@ public class ReplicationSemanticAnalyzer extends BaseSemanticAnalyzer {
         for (String tableName : tablesUpdated.keySet()){
           // weird - AlterTableDesc requires a HashMap to update props instead of a Map.
           HashMap<String,String> mapProp = new HashMap<String,String>();
-          mapProp.put(
-              ReplicationSpec.KEY.CURR_STATE_ID.toString(),
-              tablesUpdated.get(tableName).toString());
+          String eventId = tablesUpdated.get(tableName).toString();
+
+          mapProp.put(ReplicationSpec.KEY.CURR_STATE_ID.toString(), eventId);
           AlterTableDesc alterTblDesc =  new AlterTableDesc(
-              AlterTableDesc.AlterTableTypes.ADDPROPS, null, false);
+              AlterTableDesc.AlterTableTypes.ADDPROPS, new ReplicationSpec(eventId, eventId));
           alterTblDesc.setProps(mapProp);
           alterTblDesc.setOldName(tableName);
           Task<? extends Serializable> updateReplIdTask = TaskFactory.get(
@@ -682,10 +440,10 @@ public class ReplicationSemanticAnalyzer extends BaseSemanticAnalyzer {
         }
         for (String dbName : dbsUpdated.keySet()){
           Map<String,String> mapProp = new HashMap<String,String>();
-          mapProp.put(
-              ReplicationSpec.KEY.CURR_STATE_ID.toString(),
-              dbsUpdated.get(dbName).toString());
-          AlterDatabaseDesc alterDbDesc = new AlterDatabaseDesc(dbName, mapProp);
+          String eventId = dbsUpdated.get(dbName).toString();
+
+          mapProp.put(ReplicationSpec.KEY.CURR_STATE_ID.toString(), eventId);
+          AlterDatabaseDesc alterDbDesc = new AlterDatabaseDesc(dbName, mapProp, new ReplicationSpec(eventId, eventId));
           Task<? extends Serializable> updateReplIdTask = TaskFactory.get(
               new DDLWork(inputs, outputs, alterDbDesc), conf);
           taskChainTail.addDependentTask(updateReplIdTask);
@@ -786,7 +544,7 @@ public class ReplicationSemanticAnalyzer extends BaseSemanticAnalyzer {
 
       Task<? extends Serializable> dbRootTask = null;
       if (existEmptyDb(dbName)) {
-        AlterDatabaseDesc alterDbDesc = new AlterDatabaseDesc(dbName, dbObj.getParameters());
+        AlterDatabaseDesc alterDbDesc = new AlterDatabaseDesc(dbName, dbObj.getParameters(), null);
         dbRootTask = TaskFactory.get(new DDLWork(inputs, outputs, alterDbDesc), conf);
       } else {
         CreateDatabaseDesc createDbDesc = new CreateDatabaseDesc();
@@ -964,54 +722,5 @@ public class ReplicationSemanticAnalyzer extends BaseSemanticAnalyzer {
     }
     ctx.setResFile(ctx.getLocalTmpPath());
     Utils.writeOutput(values, ctx.getResFile(), conf);
-  }
-
-  private ReplicationSpec getNewReplicationSpec() throws SemanticException {
-    try {
-      ReplicationSpec rspec = getNewReplicationSpec("replv2", "will-be-set");
-      rspec.setCurrentReplicationState(String.valueOf(db.getMSC()
-          .getCurrentNotificationEventId().getEventId()));
-      return rspec;
-    } catch (Exception e) {
-      throw new SemanticException(e); // TODO : simple wrap & rethrow for now, clean up with error codes
-    }
-  }
-
-  // Use for specifying object state as well as event state
-  private ReplicationSpec getNewReplicationSpec(String evState, String objState) throws SemanticException {
-    return new ReplicationSpec(true, false, evState, objState, false, true, true);
-  }
-
-  // Use for replication states focused on event only, where the obj state will be the event state
-  private ReplicationSpec getNewEventOnlyReplicationSpec(Long eventId) throws SemanticException {
-    return getNewReplicationSpec(eventId.toString(), eventId.toString());
-  }
-
-  private Iterable<? extends String> matchesTbl(String dbName, String tblPattern)
-      throws HiveException {
-    if (tblPattern == null) {
-      return removeValuesTemporaryTables(db.getAllTables(dbName));
-    } else {
-      return db.getTablesByPattern(dbName, tblPattern);
-    }
-  }
-
-  private final static String TMP_TABLE_PREFIX =
-      SemanticAnalyzer.VALUES_TMP_TABLE_NAME_PREFIX.toLowerCase();
-
-  static Iterable<String> removeValuesTemporaryTables(List<String> tableNames) {
-    return Collections2.filter(tableNames,
-        tableName -> {
-          assert tableName != null;
-          return !tableName.toLowerCase().startsWith(TMP_TABLE_PREFIX);
-        });
-  }
-
-  private Iterable<? extends String> matchesDb(String dbPattern) throws HiveException {
-    if (dbPattern == null) {
-      return db.getAllDatabases();
-    } else {
-      return db.getDatabasesByPattern(dbPattern);
-    }
   }
 }

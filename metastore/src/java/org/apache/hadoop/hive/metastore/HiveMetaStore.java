@@ -3173,7 +3173,7 @@ public class HiveMetaStore extends ThriftHiveMetastore {
          * TODO: Use the hard link feature of hdfs
          * once https://issues.apache.org/jira/browse/HDFS-3370 is done
          */
-        pathCreated = wh.renameDir(sourcePath, destPath);
+        pathCreated = wh.renameDir(sourcePath, destPath, false);
 
         // Setting success to false to make sure that if the listener fails, rollback happens.
         success = false;
@@ -3200,7 +3200,7 @@ public class HiveMetaStore extends ThriftHiveMetastore {
         if (!success || !pathCreated) {
           ms.rollbackTransaction();
           if (pathCreated) {
-            wh.renameDir(destPath, sourcePath);
+            wh.renameDir(destPath, sourcePath, false);
           }
         }
 
@@ -4706,7 +4706,8 @@ public class HiveMetaStore extends ThriftHiveMetastore {
     @Override
     public Index add_index(final Index newIndex, final Table indexTable)
         throws InvalidObjectException, AlreadyExistsException, MetaException, TException {
-      startFunction("add_index", ": " + newIndex.toString() + " " + indexTable.toString());
+      String tableName = indexTable != null ? indexTable.getTableName() : "";
+      startFunction("add_index", ": " + newIndex.toString() + " " + tableName);
       Index ret = null;
       Exception ex = null;
       try {
@@ -4725,7 +4726,6 @@ public class HiveMetaStore extends ThriftHiveMetastore {
           throw newMetaException(e);
         }
       } finally {
-        String tableName = indexTable != null ? indexTable.getTableName() : null;
         endFunction("add_index", ret != null, ex, tableName);
       }
       return ret;

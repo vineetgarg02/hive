@@ -81,7 +81,6 @@ import org.apache.hadoop.hive.ql.io.HiveOutputFormat;
 import org.apache.hadoop.hive.ql.io.IOConstants;
 import org.apache.hadoop.hive.ql.io.InputFormatChecker;
 import org.apache.hadoop.hive.ql.io.RecordIdentifier;
-import org.apache.hadoop.hive.ql.io.RecordUpdater;
 import org.apache.hadoop.hive.ql.io.orc.OrcInputFormat.Context;
 import org.apache.hadoop.hive.ql.io.orc.OrcInputFormat.SplitStrategy;
 import org.apache.hadoop.hive.ql.io.sarg.ConvertAstToSearchArg;
@@ -910,7 +909,7 @@ public class TestInputOutputFormat {
       MockFileSystem fs, String path, OrcInputFormat.CombinedCtx combineCtx) throws IOException {
     OrcInputFormat.AcidDirInfo adi = createAdi(context, fs, path);
     return OrcInputFormat.determineSplitStrategies(combineCtx, context,
-        adi.fs, adi.splitPath, adi.acidInfo, adi.baseFiles, adi.parsedDeltas,
+        adi.fs, adi.splitPath, adi.baseFiles, adi.parsedDeltas,
         null, null, true);
   }
 
@@ -924,7 +923,7 @@ public class TestInputOutputFormat {
       OrcInputFormat.Context context, OrcInputFormat.FileGenerator gen) throws IOException {
     OrcInputFormat.AcidDirInfo adi = gen.call();
     return OrcInputFormat.determineSplitStrategies(
-        null, context, adi.fs, adi.splitPath, adi.acidInfo, adi.baseFiles, adi.parsedDeltas,
+        null, context, adi.fs, adi.splitPath, adi.baseFiles, adi.parsedDeltas,
         null, null, true);
   }
 
@@ -2445,14 +2444,14 @@ public class TestInputOutputFormat {
     assertEquals("mock:/combinationAcid/p=0/base_0000010/bucket_00000",
         split.getPath().toString());
     assertEquals(0, split.getStart());
-    assertEquals(607, split.getLength());
+    assertEquals(648, split.getLength());
     split = (HiveInputFormat.HiveInputSplit) splits[1];
     assertEquals("org.apache.hadoop.hive.ql.io.orc.OrcInputFormat",
         split.inputFormatClassName());
     assertEquals("mock:/combinationAcid/p=0/base_0000010/bucket_00001",
         split.getPath().toString());
     assertEquals(0, split.getStart());
-    assertEquals(629, split.getLength());
+    assertEquals(674, split.getLength());
     CombineHiveInputFormat.CombineHiveInputSplit combineSplit =
         (CombineHiveInputFormat.CombineHiveInputSplit) splits[2];
     assertEquals(BUCKETS, combineSplit.getNumPaths());
@@ -3397,7 +3396,9 @@ public class TestInputOutputFormat {
     // call-2: open to read data - split 1 => mock:/mocktable5/0_0
     // call-3: open to read footer - split 2 => mock:/mocktable5/0_1
     // call-4: open to read data - split 2 => mock:/mocktable5/0_1
-    assertEquals(4, readOpsDelta);
+    // call-5: AcidUtils.getAcidState - getLen() mock:/mocktable5/0_0
+    // call-6: AcidUtils.getAcidState - getLen() mock:/mocktable5/0_1
+    assertEquals(6, readOpsDelta);
 
     // revert back to local fs
     conf.set("fs.defaultFS", "file:///");
@@ -3470,7 +3471,9 @@ public class TestInputOutputFormat {
     }
     // call-1: open to read data - split 1 => mock:/mocktable6/0_0
     // call-2: open to read data - split 2 => mock:/mocktable6/0_1
-    assertEquals(2, readOpsDelta);
+    // call-3: AcidUtils.getAcidState - getLen() mock:/mocktable6/0_0
+    // call-4: AcidUtils.getAcidState - getLen() mock:/mocktable6/0_1
+    assertEquals(4, readOpsDelta);
 
     // revert back to local fs
     conf.set("fs.defaultFS", "file:///");
@@ -3548,7 +3551,8 @@ public class TestInputOutputFormat {
     // call-2: open to read data - split 1 => mock:/mocktable7/0_0
     // call-3: open side file (flush length) of delta directory
     // call-4: fs.exists() check for delta_xxx_xxx/bucket_00000 file
-    assertEquals(4, readOpsDelta);
+    // call-5: AcidUtils.getAcidState - getLen() mock:/mocktable7/0_0
+    assertEquals(5, readOpsDelta);
 
     // revert back to local fs
     conf.set("fs.defaultFS", "file:///");
@@ -3625,7 +3629,8 @@ public class TestInputOutputFormat {
     // call-1: open to read data - split 1 => mock:/mocktable8/0_0
     // call-2: open side file (flush length) of delta directory
     // call-3: fs.exists() check for delta_xxx_xxx/bucket_00000 file
-    assertEquals(3, readOpsDelta);
+    // call-4: AcidUtils.getAcidState - getLen() mock:/mocktable8/0_0
+    assertEquals(4, readOpsDelta);
 
     // revert back to local fs
     conf.set("fs.defaultFS", "file:///");
@@ -3852,7 +3857,7 @@ public class TestInputOutputFormat {
     OrcStruct struct = reader.createValue();
     while (reader.next(id, struct)) {
       assertEquals("id " + record, record, id.getRowId());
-      assertEquals("bucket " + record, 0, id.getBucketId());
+      assertEquals("bucket " + record, 0, id.getBucketProperty());
       assertEquals("trans " + record, 1, id.getTransactionId());
       assertEquals("a " + record,
           42 * record, ((IntWritable) struct.getFieldValue(0)).get());
@@ -3879,7 +3884,7 @@ public class TestInputOutputFormat {
     struct = reader.createValue();
     while (reader.next(id, struct)) {
       assertEquals("id " + record, record, id.getRowId());
-      assertEquals("bucket " + record, 0, id.getBucketId());
+      assertEquals("bucket " + record, 0, id.getBucketProperty());
       assertEquals("trans " + record, 1, id.getTransactionId());
       assertEquals("a " + record,
           42 * record, ((IntWritable) struct.getFieldValue(0)).get());

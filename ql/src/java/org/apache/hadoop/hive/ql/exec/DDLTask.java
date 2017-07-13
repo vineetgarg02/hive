@@ -118,8 +118,6 @@ import org.apache.hadoop.hive.ql.io.merge.MergeFileWork;
 import org.apache.hadoop.hive.ql.io.orc.OrcInputFormat;
 import org.apache.hadoop.hive.ql.io.orc.OrcSerde;
 import org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe;
-import org.apache.hadoop.hive.ql.io.parquet.serde.ParquetTableUtils;
-import org.apache.hadoop.hive.ql.io.parquet.timestamp.NanoTimeUtils;
 import org.apache.hadoop.hive.ql.io.rcfile.truncate.ColumnTruncateTask;
 import org.apache.hadoop.hive.ql.io.rcfile.truncate.ColumnTruncateWork;
 import org.apache.hadoop.hive.ql.lockmgr.DbLockManager;
@@ -934,6 +932,12 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
     case ALTER_PROPERTY:
       Map<String, String> newParams = alterDbDesc.getDatabaseProperties();
       Map<String, String> params = database.getParameters();
+
+      if (!alterDbDesc.getReplicationSpec().allowEventReplacementInto(params)) {
+        LOG.debug("DDLTask: Alter Database {} is skipped as database is newer than update", dbName);
+        return 0; // no replacement, the existing database state is newer than our update.
+      }
+
       // if both old and new params are not null, merge them
       if (params != null && newParams != null) {
         params.putAll(newParams);
@@ -1117,10 +1121,19 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
    * @throws HiveException
    */
   private int renamePartition(Hive db, RenamePartitionDesc renamePartitionDesc) throws HiveException {
-
-    Table tbl = db.getTable(renamePartitionDesc.getTableName());
-
+    String tableName = renamePartitionDesc.getTableName();
     LinkedHashMap<String, String> oldPartSpec = renamePartitionDesc.getOldPartSpec();
+
+    if (!allowOperationInReplicationScope(db, tableName, oldPartSpec, renamePartitionDesc.getReplicationSpec())) {
+      // no rename, the table is missing either due to drop/rename which follows the current rename.
+      // or the existing table is newer than our update.
+      LOG.debug("DDLTask: Rename Partition is skipped as table {} / partition {} is newer than update",
+              tableName,
+              FileUtils.makePartName(new ArrayList(oldPartSpec.keySet()), new ArrayList(oldPartSpec.values())));
+      return 0;
+    }
+
+    Table tbl = db.getTable(tableName);
     Partition oldPart = db.getPartition(tbl, oldPartSpec, false);
     if (oldPart == null) {
       String partName = FileUtils.makePartName(new ArrayList<String>(oldPartSpec.keySet()),
@@ -1131,8 +1144,7 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
     Partition part = db.getPartition(tbl, oldPartSpec, false);
     part.setValues(renamePartitionDesc.getNewPartSpec());
     db.renamePartition(tbl, oldPartSpec, part);
-    Partition newPart = db
-        .getPartition(tbl, renamePartitionDesc.getNewPartSpec(), false);
+    Partition newPart = db.getPartition(tbl, renamePartitionDesc.getNewPartSpec(), false);
     work.getInputs().add(new ReadEntity(oldPart));
     // We've already obtained a lock on the table, don't lock the partition too
     addIfAbsentByName(new WriteEntity(newPart, WriteEntity.WriteType.DDL_NO_LOCK));
@@ -3559,6 +3571,13 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
    *           Throws this exception if an unexpected error occurs.
    */
   private int alterTable(Hive db, AlterTableDesc alterTbl) throws HiveException {
+    if (!allowOperationInReplicationScope(db, alterTbl.getOldName(), null, alterTbl.getReplicationSpec())) {
+      // no alter, the table is missing either due to drop/rename which follows the alter.
+      // or the existing table is newer than our update.
+      LOG.debug("DDLTask: Alter Table is skipped as table {} is newer than update", alterTbl.getOldName());
+      return 0;
+    }
+
     // alter the table
     Table tbl = db.getTable(alterTbl.getOldName());
 
@@ -3829,15 +3848,22 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
           throw new HiveException(ErrorMsg.REPLACE_CANNOT_DROP_COLUMNS, alterTbl.getOldName());
         }
       }
+
+      boolean partitioned = tbl.isPartitioned();
+      boolean droppingColumns = alterTbl.getNewCols().size() < sd.getCols().size();
+      if (ParquetHiveSerDe.isParquetTable(tbl) &&
+          isSchemaEvolutionEnabled(tbl) &&
+          !alterTbl.getIsCascade() &&
+          droppingColumns && partitioned) {
+        LOG.warn("Cannot drop columns from a partitioned parquet table without the CASCADE option");
+        throw new HiveException(ErrorMsg.REPLACE_CANNOT_DROP_COLUMNS,
+            alterTbl.getOldName());
+      }
       sd.setCols(alterTbl.getNewCols());
     } else if (alterTbl.getOp() == AlterTableDesc.AlterTableTypes.ADDPROPS) {
       if (StatsSetupConst.USER.equals(environmentContext.getProperties()
               .get(StatsSetupConst.STATS_GENERATED))) {
         environmentContext.getProperties().remove(StatsSetupConst.DO_NOT_UPDATE_STATS);
-      }
-      if(alterTbl.getProps().containsKey(ParquetTableUtils.PARQUET_INT96_WRITE_ZONE_PROPERTY)) {
-        NanoTimeUtils.validateTimeZone(
-            alterTbl.getProps().get(ParquetTableUtils.PARQUET_INT96_WRITE_ZONE_PROPERTY));
       }
       if (part != null) {
         part.getTPartition().getParameters().putAll(alterTbl.getProps());
@@ -4191,19 +4217,20 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
        * drop the partitions inside it that are older than this event. To wit, DROP TABLE FOR REPL
        * acts like a recursive DROP TABLE IF OLDER.
        */
-      if (!replicationSpec.allowEventReplacementInto(tbl)){
+      if (!replicationSpec.allowEventReplacementInto(tbl.getParameters())){
         // Drop occured as part of replicating a drop, but the destination
         // table was newer than the event being replicated. Ignore, but drop
         // any partitions inside that are older.
         if (tbl.isPartitioned()){
 
-          PartitionIterable partitions = new PartitionIterable(db,tbl,null,conf.getIntVar(
-              HiveConf.ConfVars.METASTORE_BATCH_RETRIEVE_MAX));
+          PartitionIterable partitions = new PartitionIterable(db,tbl,null,
+                  conf.getIntVar(HiveConf.ConfVars.METASTORE_BATCH_RETRIEVE_MAX));
 
           for (Partition p : Iterables.filter(partitions, replicationSpec.allowEventReplacementInto())){
             db.dropPartition(tbl.getDbName(),tbl.getTableName(),p.getValues(),true);
           }
         }
+        LOG.debug("DDLTask: Drop Table is skipped as table {} is newer than update", dropTbl.getTableName());
         return; // table is newer, leave it be.
       }
     }
@@ -4370,25 +4397,13 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
       // trigger replace-mode semantics.
       Table existingTable = db.getTable(tbl.getDbName(), tbl.getTableName(), false);
       if (existingTable != null){
-        if (!crtTbl.getReplicationSpec().allowEventReplacementInto(existingTable)){
-          return 0; // no replacement, the existing table state is newer than our update.
-        } else {
+        if (crtTbl.getReplicationSpec().allowEventReplacementInto(existingTable.getParameters())){
           crtTbl.setReplaceMode(true); // we replace existing table.
+        } else {
+          LOG.debug("DDLTask: Create Table is skipped as table {} is newer than update",
+                  crtTbl.getTableName());
+          return 0; // no replacement, the existing table state is newer than our update.
         }
-      }
-    }
-
-    // If HIVE_PARQUET_INT96_DEFAULT_UTC_WRITE_ZONE is set to True, then set new Parquet tables timezone
-    // to UTC by default (only if the table property is not set)
-    if (ParquetHiveSerDe.isParquetTable(tbl)) {
-      SessionState ss = SessionState.get();
-      String parquetTimezone = tbl.getProperty(ParquetTableUtils.PARQUET_INT96_WRITE_ZONE_PROPERTY);
-      if (parquetTimezone == null || parquetTimezone.isEmpty()) {
-        if (ss.getConf().getBoolVar(ConfVars.HIVE_PARQUET_INT96_DEFAULT_UTC_WRITE_ZONE)) {
-          tbl.setProperty(ParquetTableUtils.PARQUET_INT96_WRITE_ZONE_PROPERTY, ParquetTableUtils.PARQUET_INT96_NO_ADJUSTMENT_ZONE);
-        }
-      } else {
-        NanoTimeUtils.validateTimeZone(parquetTimezone);
       }
     }
 
@@ -4516,12 +4531,6 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
       if (paramsStr != null) {
         retainer.addAll(Arrays.asList(paramsStr.split(",")));
       }
-
-      // Retain Parquet INT96 write zone property to keep Parquet timezone bugfixes.
-      if (params.get(ParquetTableUtils.PARQUET_INT96_WRITE_ZONE_PROPERTY) != null) {
-        retainer.add(ParquetTableUtils.PARQUET_INT96_WRITE_ZONE_PROPERTY);
-      }
-
       if (!retainer.isEmpty()) {
         params.keySet().retainAll(retainer);
       } else {
@@ -4703,6 +4712,15 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
     String tableName = truncateTableDesc.getTableName();
     Map<String, String> partSpec = truncateTableDesc.getPartSpec();
 
+    if (!allowOperationInReplicationScope(db, tableName, partSpec, truncateTableDesc.getReplicationSpec())) {
+      // no truncate, the table is missing either due to drop/rename which follows the truncate.
+      // or the existing table is newer than our update.
+      LOG.debug("DDLTask: Truncate Table/Partition is skipped as table {} / partition {} is newer than update",
+              tableName,
+              (partSpec == null) ? "null" : FileUtils.makePartName(new ArrayList(partSpec.keySet()), new ArrayList(partSpec.values())));
+      return 0;
+    }
+
     try {
       db.truncateTable(tableName, partSpec);
     } catch (Exception e) {
@@ -4827,6 +4845,45 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
           Utilities.getQualifiedPath(conf, new Path(HiveConf.getVar(conf, HiveConf.ConfVars.METASTOREWAREHOUSE),
               database.getName().toLowerCase() + DATABASE_PATH_SUFFIX)));
     }
+  }
+
+  /**
+   * Validate if the given table/partition is eligible for update
+   *
+   * @param db Database.
+   * @param tableName Table name of format db.table
+   * @param partSpec Partition spec for the partition
+   * @param replicationSpec Replications specification
+   *
+   * @return boolean true if allow the operation
+   * @throws HiveException
+   */
+  private boolean allowOperationInReplicationScope(Hive db, String tableName,
+              Map<String, String> partSpec, ReplicationSpec replicationSpec) throws HiveException {
+    if ((null == replicationSpec) || (!replicationSpec.isInReplicationScope())) {
+      // Always allow the operation if it is not in replication scope.
+      return true;
+    }
+    // If the table/partition exist and is older than the event, then just apply
+    // the event else noop.
+    Table existingTable = db.getTable(tableName, false);
+    if ((existingTable != null)
+            && replicationSpec.allowEventReplacementInto(existingTable.getParameters())) {
+      // Table exists and is older than the update. Now, need to ensure if update allowed on the
+      // partition.
+      if (partSpec != null) {
+        Partition existingPtn = db.getPartition(existingTable, partSpec, false);
+        return ((existingPtn != null)
+                && replicationSpec.allowEventReplacementInto(existingPtn.getParameters()));
+      }
+
+      // Replacement is allowed as the existing table is older than event
+      return true;
+    }
+
+    // The table is missing either due to drop/rename which follows the operation.
+    // Or the existing table is newer than our update. So, don't allow the update.
+    return false;
   }
 
   public static boolean doesTableNeedLocation(Table tbl) {

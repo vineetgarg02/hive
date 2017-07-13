@@ -1321,6 +1321,9 @@ public class HiveConf extends Configuration {
     HIVETESTMODEROLLBACKTXN("hive.test.rollbacktxn", false, "For testing only.  Will mark every ACID transaction aborted", false),
     HIVETESTMODEFAILCOMPACTION("hive.test.fail.compaction", false, "For testing only.  Will cause CompactorMR to fail.", false),
     HIVETESTMODEFAILHEARTBEATER("hive.test.fail.heartbeater", false, "For testing only.  Will cause Heartbeater to fail.", false),
+    TESTMODE_BUCKET_CODEC_VERSION("hive.test.bucketcodec.version", 1,
+      "For testing only.  Will make ACID subsystem write RecordIdentifier.bucketId in specified\n" +
+        "format", false),
 
     HIVEMERGEMAPFILES("hive.merge.mapfiles", true,
         "Merge small files at the end of a map-only job"),
@@ -1356,12 +1359,9 @@ public class HiveConf extends Configuration {
         "Maximum fraction of heap that can be used by Parquet file writers in one task.\n" +
         "It is for avoiding OutOfMemory error in tasks. Work with Parquet 1.6.0 and above.\n" +
         "This config parameter is defined in Parquet, so that it does not start with 'hive.'."),
-    @Deprecated
     HIVE_PARQUET_TIMESTAMP_SKIP_CONVERSION("hive.parquet.timestamp.skip.conversion", true,
-        "Current Hive implementation of parquet stores timestamps to UTC, this flag allows skipping of the conversion" +
-            "on reading parquet files from other tools"),
-    HIVE_PARQUET_INT96_DEFAULT_UTC_WRITE_ZONE("hive.parquet.mr.int96.enable.utc.write.zone", false,
-        "Enable this variable to use UTC as the default timezone for new Parquet tables."),
+      "Current Hive implementation of parquet stores timestamps to UTC, this flag allows skipping of the conversion" +
+      "on reading parquet files from other tools"),
     HIVE_INT_TIMESTAMP_CONVERSION_IN_SECONDS("hive.int.timestamp.conversion.in.seconds", false,
         "Boolean/tinyint/smallint/int/bigint value is interpreted as milliseconds during the timestamp conversion.\n" +
         "Set this flag to true to interpret the value as seconds to be consistent with float/double." ),
@@ -1611,6 +1611,8 @@ public class HiveConf extends Configuration {
     HIVESAMPLINGNUMBERFORORDERBY("hive.optimize.sampling.orderby.number", 1000, "Total number of samples to be obtained."),
     HIVESAMPLINGPERCENTFORORDERBY("hive.optimize.sampling.orderby.percent", 0.1f, new RatioValidator(),
         "Probability with which a row will be chosen."),
+    HIVE_REMOVE_ORDERBY_IN_SUBQUERY("hive.remove.orderby.in.subquery", true,
+        "If set to true, order/sort by without limit in sub queries will be removed."),
     HIVEOPTIMIZEDISTINCTREWRITE("hive.optimize.distinct.rewrite", true, "When applicable this "
         + "optimization rewrites distinct aggregates from a single stage to multi-stage "
         + "aggregation. This may not be optimal in all cases. Ideally, whether to trigger it or "
@@ -3178,7 +3180,7 @@ public class HiveConf extends Configuration {
       new TimeValidator(TimeUnit.MILLISECONDS),
       "Amount of time to wait on connection failures to the AM from an LLAP daemon before\n" +
       "considering the AM to be dead.", "llap.am.liveness.connection.timeout-millis"),
-    LLAP_DAEMON_AM_USE_FQDN("hive.llap.am.use.fqdn", false,
+    LLAP_DAEMON_AM_USE_FQDN("hive.llap.am.use.fqdn", true,
         "Whether to use FQDN of the AM machine when submitting work to LLAP."),
     // Not used yet - since the Writable RPC engine does not support this policy.
     LLAP_DAEMON_AM_LIVENESS_CONNECTION_SLEEP_BETWEEN_RETRIES_MS(

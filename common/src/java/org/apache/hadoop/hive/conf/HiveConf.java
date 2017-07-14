@@ -1766,7 +1766,7 @@ public class HiveConf extends Configuration {
         "and will estimate the number of rows from row schema."),
     // statistics annotation fetches column statistics for all required columns which can
     // be very expensive sometimes
-    HIVE_STATS_FETCH_COLUMN_STATS("hive.stats.fetch.column.stats", true,
+    HIVE_STATS_FETCH_COLUMN_STATS("hive.stats.fetch.column.stats", false,
         "Annotation of operator tree with statistics information requires column statistics.\n" +
         "Column statistics are fetched from metastore. Fetching column statistics for each needed column\n" +
         "can be expensive when the number of columns is high. This flag can be used to disable fetching\n" +

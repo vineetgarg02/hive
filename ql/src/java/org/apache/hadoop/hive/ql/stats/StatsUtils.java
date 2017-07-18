@@ -788,7 +788,7 @@ public class StatsUtils {
     ColumnInfo cinfo = getColumnInfoForColumn(colName, schema);
     ColStatistics cs = new ColStatistics(colName, cinfo.getTypeName());
     long ndv_factor = HiveConf.getLongVar(conf, ConfVars.HIVESTATSNDVFACTOR);
-    cs.setCountDistint(numRows/ndv_factor);
+    cs.setCountDistint(Math.max(1,numRows/ndv_factor));
     return cs;
   }
   private static List<ColStatistics> estimateStats(Table table, List<ColumnInfo> schema,

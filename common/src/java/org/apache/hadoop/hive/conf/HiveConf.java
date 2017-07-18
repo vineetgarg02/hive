@@ -1666,6 +1666,9 @@ public class HiveConf extends Configuration {
     HIVE_SHARED_WORK_OPTIMIZATION("hive.optimize.shared.work", true,
         "Whether to enable shared work optimizer. The optimizer finds scan operator over the same table\n" +
         "and follow-up operators in the query plan and merges them if they meet some preconditions."),
+    HIVE_REMOVE_SQ_COUNT_CHECK("hive.optimize.remove.sq_count_check", false,
+        "Whether to remove an extra join with sq_count_check for scalar subqueries "
+            + "with constant group by keys."),
 
     // CTE
     HIVE_CTE_MATERIALIZE_THRESHOLD("hive.optimize.cte.materialize.threshold", -1,
@@ -1721,7 +1724,9 @@ public class HiveConf extends Configuration {
     HIVE_STATS_COLLECT_SCANCOLS("hive.stats.collect.scancols", false,
         "Whether column accesses are tracked in the QueryPlan.\n" +
         "This is useful to identify how tables are accessed and to determine if there are wasted columns that can be trimmed."),
-    // standard error allowed for ndv estimates. A lower value indicates higher accuracy and a
+    HIVE_STATS_NDV_ALGO("hive.stats.ndv.algo", "hll", new PatternSet("hll", "fm"),
+            "hll and fm stand for HyperLogLog and FM-sketch, respectively for computing ndv."), 
+    // standard error allowed for ndv estimates for FM-sketch. A lower value indicates higher accuracy and a
     // higher compute cost.
     HIVE_STATS_NDV_ERROR("hive.stats.ndv.error", (float)20.0,
         "Standard error expressed in percentage. Provides a tradeoff between accuracy and compute cost. \n" +

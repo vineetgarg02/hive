@@ -210,6 +210,9 @@ public class StatsUtils {
       List<ColStatistics> colStats = Lists.newArrayList();
       if (fetchColStats) {
         colStats = getTableColumnStats(table, schema, neededColumns);
+        if(colStats.size() < 1) {
+          colStats = estimateStats(table,schema,neededColumns, conf, nr);
+        }
         long betterDS = getDataSizeFromColumnStats(nr, colStats);
         ds = (betterDS < 1 || colStats.isEmpty()) ? ds : betterDS;
       }
@@ -301,7 +304,7 @@ public class StatsUtils {
           stats.updateColumnStatsState(deriveStatType(emptyStats, referencedColumns));
 
           // estimate stats
-          emptyStats = estimateStats(table, schema, neededColumns, conf, nr);
+          emptyStats = estimateStats(table, schema, neededColumns, conf, ds);
           stats.addToColumnStats(emptyStats);
         } else {
           List<ColumnStatisticsObj> colStats = aggrStats.getColStats();
@@ -787,22 +790,62 @@ public class StatsUtils {
       List<ColumnInfo> schema) {
     ColumnInfo cinfo = getColumnInfoForColumn(colName, schema);
     ColStatistics cs = new ColStatistics(colName, cinfo.getTypeName());
-    long ndv_factor = HiveConf.getLongVar(conf, ConfVars.HIVESTATSNDVFACTOR);
-    cs.setCountDistint(Math.max(1,numRows/ndv_factor));
+
+    String colTypeLowerCase = cinfo.getTypeName().toLowerCase();
+    //long ndv_factor = HiveConf.getLongVar(conf, ConfVars.HIVESTATSNDVFACTOR);
+    float ndv_factor = 0.20f; // 20 Percent ndv
+    float null_factor = 0.05f; // we will estimate 5 percent as nulls
+    double avgColLenString = 5;
+
+    cs.setCountDistint(Math.max(1, (long)(numRows * ndv_factor)));
+    cs.setNumNulls(Math.min(numRows, (long)(numRows * null_factor)));
+
+    if (colTypeLowerCase.equals(serdeConstants.TINYINT_TYPE_NAME)
+        || colTypeLowerCase.equals(serdeConstants.SMALLINT_TYPE_NAME)
+        || colTypeLowerCase.equals(serdeConstants.INT_TYPE_NAME)) {
+      cs.setAvgColLen(JavaDataModel.get().primitive1());
+      cs.setRange(Integer.MIN_VALUE, Integer.MAX_VALUE);
+    } else if (colTypeLowerCase.equals(serdeConstants.BIGINT_TYPE_NAME)) {
+      cs.setAvgColLen(JavaDataModel.get().primitive2());
+      cs.setRange(Integer.MIN_VALUE, Integer.MAX_VALUE);
+    } else if (colTypeLowerCase.equals(serdeConstants.FLOAT_TYPE_NAME)) {
+      cs.setAvgColLen(JavaDataModel.get().primitive1());
+      cs.setRange(Float.MIN_VALUE, Float.MAX_VALUE);
+    } else if (colTypeLowerCase.equals(serdeConstants.DOUBLE_TYPE_NAME)) {
+      cs.setAvgColLen(JavaDataModel.get().primitive2());
+      cs.setRange(Double.MIN_VALUE, Double.MAX_VALUE);
+    } else if (colTypeLowerCase.equals(serdeConstants.STRING_TYPE_NAME)
+        || colTypeLowerCase.startsWith(serdeConstants.CHAR_TYPE_NAME)
+        || colTypeLowerCase.startsWith(serdeConstants.VARCHAR_TYPE_NAME)) {
+      cs.setAvgColLen(avgColLenString);
+    } else if (colTypeLowerCase.equals(serdeConstants.BOOLEAN_TYPE_NAME)) {
+        cs.setCountDistint(2);
+        cs.setNumTrues(Math.max(1, (long)numRows/2));
+        cs.setNumFalses(Math.max(1, (long)numRows/2));
+        cs.setAvgColLen(JavaDataModel.get().primitive1());
+    } else if (colTypeLowerCase.equals(serdeConstants.BINARY_TYPE_NAME)) {
+      cs.setAvgColLen(avgColLenString);
+    } else if (colTypeLowerCase.equals(serdeConstants.TIMESTAMP_TYPE_NAME) ||
+        colTypeLowerCase.equals(serdeConstants.TIMESTAMPTZ_TYPE_NAME)) {
+      cs.setAvgColLen(JavaDataModel.get().lengthOfTimestamp());
+    } else if (colTypeLowerCase.startsWith(serdeConstants.DECIMAL_TYPE_NAME)) {
+      cs.setAvgColLen(JavaDataModel.get().lengthOfDecimal());
+      cs.setRange(Float.MIN_VALUE, Float.MAX_VALUE);
+    } else if (colTypeLowerCase.equals(serdeConstants.DATE_TYPE_NAME)) {
+      cs.setAvgColLen(JavaDataModel.get().lengthOfDate());
+      cs.setRange(null, null);
+    } else {
+      // Columns statistics for complex datatypes are not supported yet
+      return null;
+    }
     return cs;
   }
+
   private static List<ColStatistics> estimateStats(Table table, List<ColumnInfo> schema,
-      List<String> neededColumns, HiveConf conf, long numRows) {
+      List<String> neededColumns, HiveConf conf, long nr) {
 
     List<ColStatistics> stats = new ArrayList<ColStatistics>(neededColumns.size());
 
-    // estimated for non-partition table
-    long nr = numRows;
-    if (!table.isPartitioned()) {
-
-      long ds = getDataSize(conf, table);
-      nr = getNumRows(conf, schema, neededColumns, table, ds);
-    }
     for (int i = 0; i < neededColumns.size(); i++) {
       ColStatistics cs = estimateColStats(nr, neededColumns.get(i), conf, schema);
       stats.add(cs);
@@ -817,7 +860,9 @@ public class StatsUtils {
     stats = getTableColumnStats(table, schema, neededColumns);
 
     if(stats.isEmpty() ) {
-      stats = estimateStats(table, schema, neededColumns, hiveconf, 0);
+      long ds = getDataSize(hiveconf, table) ;
+      long nr = getNumRows(hiveconf, schema, neededColumns, table,ds);
+      stats = estimateStats(table, schema, neededColumns, hiveconf, nr);
     }
     return stats;
   }

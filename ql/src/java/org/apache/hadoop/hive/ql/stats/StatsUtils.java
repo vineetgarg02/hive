@@ -297,14 +297,16 @@ public class StatsUtils {
           // state/initialize structures.
           List<ColStatistics> emptyStats = Lists.newArrayList();
 
+          // estimate stats
+          emptyStats = estimateStats(table, schema, neededColumns, conf, nr);
+
           // add partition column stats
           addParitionColumnStats(conf, neededColumns, referencedColumns, schema, table, partList,
               emptyStats);
+
           stats.addToDataSize(getDataSizeFromColumnStats(nr, emptyStats));
           stats.updateColumnStatsState(deriveStatType(emptyStats, referencedColumns));
 
-          // estimate stats
-          emptyStats = estimateStats(table, schema, neededColumns, conf, ds);
           stats.addToColumnStats(emptyStats);
         } else {
           List<ColumnStatisticsObj> colStats = aggrStats.getColStats();
@@ -797,8 +799,15 @@ public class StatsUtils {
     float null_factor = 0.05f; // we will estimate 5 percent as nulls
     double avgColLenString = 5;
 
-    cs.setCountDistint(Math.max(1, (long)(numRows * ndv_factor)));
-    cs.setNumNulls(Math.min(numRows, (long)(numRows * null_factor)));
+    //cs.setCountDistint(Math.max(1, (long)(numRows * ndv_factor)));
+    //cs.setNumNulls(Math.min(numRows, (long)(numRows * null_factor)));
+    // since other places like RelOptHiveTable does computation on actual stats
+    // we can not estimate here and have RelOptHiveTable use actual stats
+    // RelOptHiveTable do not estimate stats and operates on e.g. num rows = 1 in
+    // absence of stats. So it is not safe to estimate numNulls, countDistinct to percentage
+    // of numRows.
+    cs.setCountDistint(numRows);
+    cs.setNumNulls(0);
 
     if (colTypeLowerCase.equals(serdeConstants.TINYINT_TYPE_NAME)
         || colTypeLowerCase.equals(serdeConstants.SMALLINT_TYPE_NAME)

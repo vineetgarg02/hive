@@ -794,13 +794,8 @@ public class StatsUtils {
     ColStatistics cs = new ColStatistics(colName, cinfo.getTypeName());
 
     String colTypeLowerCase = cinfo.getTypeName().toLowerCase();
-    //long ndv_factor = HiveConf.getLongVar(conf, ConfVars.HIVESTATSNDVFACTOR);
-    float ndv_factor = 0.20f; // 20 Percent ndv
-    float null_factor = 0.05f; // we will estimate 5 percent as nulls
     double avgColLenString = 5;
 
-    //cs.setCountDistint(Math.max(1, (long)(numRows * ndv_factor)));
-    //cs.setNumNulls(Math.min(numRows, (long)(numRows * null_factor)));
     // since other places like RelOptHiveTable does computation on actual stats
     // we can not estimate here and have RelOptHiveTable use actual stats
     // RelOptHiveTable do not estimate stats and operates on e.g. num rows = 1 in

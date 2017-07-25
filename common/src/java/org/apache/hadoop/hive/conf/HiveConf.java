@@ -161,19 +161,25 @@ public class HiveConf extends Configuration {
       result = checkConfigFile(new File(confPath, name));
       if (result == null) {
         String homePath = System.getenv("HIVE_HOME");
-        String nameInConf = "conf" + File.pathSeparator + name;
+        String nameInConf = "conf" + File.separator + name;
         result = checkConfigFile(new File(homePath, nameInConf));
         if (result == null) {
           URI jarUri = null;
           try {
-            jarUri = HiveConf.class.getProtectionDomain().getCodeSource().getLocation().toURI();
+            // Handle both file:// and jar:<url>!{entry} in the case of shaded hive libs
+            URL sourceUrl = HiveConf.class.getProtectionDomain().getCodeSource().getLocation();
+            jarUri = sourceUrl.getProtocol().equalsIgnoreCase("jar") ? new URI(sourceUrl.getPath()) : sourceUrl.toURI();
           } catch (Throwable e) {
             if (l4j.isInfoEnabled()) {
               l4j.info("Cannot get jar URI", e);
             }
             System.err.println("Cannot get jar URI: " + e.getMessage());
           }
-          result = checkConfigFile(new File(new File(jarUri).getParentFile(), nameInConf));
+          // From the jar file, the parent is /lib folder
+          File parent = new File(jarUri).getParentFile();
+          if (parent != null) {
+            result = checkConfigFile(new File(parent.getParentFile(), nameInConf));
+          }
         }
       }
     }
@@ -559,6 +565,8 @@ public class HiveConf extends Configuration {
         "operation log directory will not be removed, so they can be found after the test runs."),
 
     HIVE_IN_TEZ_TEST("hive.in.tez.test", false, "internal use only, true when in testing tez",
+        true),
+    HIVE_MAPJOIN_TESTING_NO_HASH_TABLE_LOAD("hive.mapjoin.testing.no.hash.table.load", false, "internal use only, true when in testing map join",
         true),
 
     LOCALMODEAUTO("hive.exec.mode.local.auto", false,
@@ -1733,7 +1741,9 @@ public class HiveConf extends Configuration {
         "Whether column accesses are tracked in the QueryPlan.\n" +
         "This is useful to identify how tables are accessed and to determine if there are wasted columns that can be trimmed."),
     HIVE_STATS_NDV_ALGO("hive.stats.ndv.algo", "hll", new PatternSet("hll", "fm"),
-            "hll and fm stand for HyperLogLog and FM-sketch, respectively for computing ndv."), 
+        "hll and fm stand for HyperLogLog and FM-sketch, respectively for computing ndv."), 
+    HIVE_STATS_FETCH_BITVECTOR("hive.stats.fetch.bitvector", false,
+        "Whether we fetch bitvector when we compute ndv. Users can turn it off if they want to use old schema"),
     // standard error allowed for ndv estimates for FM-sketch. A lower value indicates higher accuracy and a
     // higher compute cost.
     HIVE_STATS_NDV_ERROR("hive.stats.ndv.error", (float)20.0,
@@ -2838,9 +2848,13 @@ public class HiveConf extends Configuration {
     HIVE_VECTORIZATION_USE_VECTOR_DESERIALIZE("hive.vectorized.use.vector.serde.deserialize", true,
         "This flag should be set to true to enable vectorizing rows using vector deserialize.\n" +
         "The default value is true."),
-    HIVE_VECTORIZATION_USE_ROW_DESERIALIZE("hive.vectorized.use.row.serde.deserialize", false,
+    HIVE_VECTORIZATION_USE_ROW_DESERIALIZE("hive.vectorized.use.row.serde.deserialize", true,
         "This flag should be set to true to enable vectorizing using row deserialize.\n" +
         "The default value is false."),
+    HIVE_VECTORIZATION_ROW_DESERIALIZE_INPUTFORMAT_EXCLUDES(
+        "hive.vectorized.row.serde.inputformat.excludes",
+        "org.apache.parquet.hadoop.ParquetInputFormat,org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat",
+        "The input formats not supported by row deserialize vectorization."),
     HIVE_VECTOR_ADAPTOR_USAGE_MODE("hive.vectorized.adaptor.usage.mode", "all", new StringSet("none", "chosen", "all"),
         "Specifies the extent to which the VectorUDFAdaptor will be used for UDFs that do not have a cooresponding vectorized class.\n" +
         "0. none   : disable any usage of VectorUDFAdaptor\n" +
@@ -2992,6 +3006,11 @@ public class HiveConf extends Configuration {
         -1f, "The customized fraction of JVM memory which Tez will reserve for the processor"),
     // The default is different on the client and server, so it's null here.
     LLAP_IO_ENABLED("hive.llap.io.enabled", null, "Whether the LLAP IO layer is enabled."),
+    LLAP_IO_TRACE_SIZE("hive.llap.io.trace.size", "2Mb",
+        new SizeValidator(0L, true, (long)Integer.MAX_VALUE, false),
+        "The buffer size for a per-fragment LLAP debug trace. 0 to disable."),
+    LLAP_IO_TRACE_ALWAYS_DUMP("hive.llap.io.trace.always.dump", false,
+        "Whether to always dump the LLAP IO trace (if enabled); the default is on error."),
     LLAP_IO_NONVECTOR_WRAPPER_ENABLED("hive.llap.io.nonvector.wrapper.enabled", true,
         "Whether the LLAP IO layer is enabled for non-vectorized queries that read inputs\n" +
         "that can be vectorized"),

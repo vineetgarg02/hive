@@ -15,19 +15,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hive.hcatalog.listener;
 
-/**
- * Keeps a list of reserved keys used by Hive listeners when updating the ListenerEvent
- * parameters.
- */
-public class MetaStoreEventListenerConstants {
-  /*
-   * DbNotificationListener keys reserved for updating ListenerEvent parameters.
-   *
-   * DB_NOTIFICATION_EVENT_ID_KEY_NAME This key will have the event identifier that DbNotificationListener
-   *                                   processed during an event. This event identifier might be shared
-   *                                   across other MetaStoreEventListener implementations.
-   */
-  public static final String DB_NOTIFICATION_EVENT_ID_KEY_NAME = "DB_NOTIFICATION_EVENT_ID_KEY_NAME";
+package org.apache.hadoop.hive.ql.exec.util.collectoroperator;
+
+import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
+
+public class CountVectorCollectorTestOperator extends CountCollectorTestOperator {
+
+  private static final long serialVersionUID = 1L;
+
+  public CountVectorCollectorTestOperator() {
+    super();
+  }
+
+  public int getRowCount() {
+    return rowCount;
+  }
+
+  @Override
+  public void process(Object row, int tag) throws HiveException {
+    // Do nothing but count the batch size.
+    VectorizedRowBatch batch = (VectorizedRowBatch) row;
+    rowCount += batch.size;
+  }
+
+  @Override
+  public String getName() {
+    return CountVectorCollectorTestOperator.class.getSimpleName();
+  }
 }

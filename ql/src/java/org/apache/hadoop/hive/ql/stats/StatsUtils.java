@@ -176,6 +176,79 @@ public class StatsUtils {
     return ds;
   }
 
+  /**
+   * Returns number of rows if it exists. Otherwise it estimates number of rows
+   * based on estimated data size for both partition and non-partitioned table
+   * RelOptHiveTable's getRowCount uses this.
+   *
+   * @param conf
+   * @param schema
+   * @param table
+   * @return
+   */
+  public static long getNumRows(HiveConf conf, List<ColumnInfo> schema, Table table,
+                                PrunedPartitionList partitionList) {
+    //for non-partitioned table
+    List<String> neededColumns = new ArrayList<>();
+    for(ColumnInfo ci:schema) {
+      neededColumns.add(ci.getInternalName());
+    }
+    if(!table.isPartitioned()) {
+      long ds = getDataSize(conf, table);
+      return getNumRows(conf, schema, neededColumns, table, ds);
+    }
+    else { // partitioned table
+      long nr = 0;
+      long ds = 0;
+
+      List<Long> rowCounts = Lists.newArrayList();
+      List<Long> dataSizes = Lists.newArrayList();
+
+      rowCounts = getBasicStatForPartitions(
+          table, partitionList.getNotDeniedPartns(), StatsSetupConst.ROW_COUNT);
+      dataSizes =  getBasicStatForPartitions(
+          table, partitionList.getNotDeniedPartns(), StatsSetupConst.RAW_DATA_SIZE);
+
+      nr = getSumIgnoreNegatives(rowCounts);
+      ds = getSumIgnoreNegatives(dataSizes);
+
+      // we have actual number of rows
+      if(nr > 0) return nr;
+
+      if (ds <= 0) {
+        dataSizes = getBasicStatForPartitions(
+            table, partitionList.getNotDeniedPartns(), StatsSetupConst.TOTAL_SIZE);
+        ds = getSumIgnoreNegatives(dataSizes);
+      }
+
+      // if data size still could not be determined, then fall back to filesytem to get file
+      // sizes
+      if (ds <= 0) {
+        dataSizes = getFileSizeForPartitions(conf, partitionList.getNotDeniedPartns());
+      }
+      ds = getSumIgnoreNegatives(dataSizes);
+      float deserFactor =
+          HiveConf.getFloatVar(conf, HiveConf.ConfVars.HIVE_STATS_DESERIALIZATION_FACTOR);
+      ds = (long) (ds * deserFactor);
+
+      int avgRowSize = estimateRowSizeFromSchema(conf, schema, neededColumns);
+      if (avgRowSize > 0) {
+        setUnknownRcDsToAverage(rowCounts, dataSizes, avgRowSize);
+        nr = getSumIgnoreNegatives(rowCounts);
+        ds = getSumIgnoreNegatives(dataSizes);
+
+        // number of rows -1 means that statistics from metastore is not reliable
+        if (nr <= 0) {
+          nr = ds / avgRowSize;
+        }
+      }
+      if (nr == 0) {
+        nr = 1;
+      }
+      return nr;
+    }
+  }
+
   private static long getNumRows(HiveConf conf, List<ColumnInfo> schema, List<String> neededColumns, Table table, long ds) {
     long nr = getNumRows(table);
  // number of rows -1 means that statistics from metastore is not reliable
@@ -796,13 +869,11 @@ public class StatsUtils {
     String colTypeLowerCase = cinfo.getTypeName().toLowerCase();
     double avgColLenString = 5;
 
-    // since other places like RelOptHiveTable does computation on actual stats
-    // we can not estimate here and have RelOptHiveTable use actual stats
-    // RelOptHiveTable do not estimate stats and operates on e.g. num rows = 1 in
-    // absence of stats. So it is not safe to estimate numNulls, countDistinct to percentage
-    // of numRows.
-    cs.setCountDistint(numRows);
-    cs.setNumNulls(0);
+    long ndvPercent = Math.min(100L, HiveConf.getLongVar(conf, ConfVars.HIVE_STATS_NDV_ESTIMATE_PERC));
+    long nullPercent = Math.min(100L, HiveConf.getLongVar(conf, ConfVars.HIVE_STATS_NUM_NULLS_ESTIMATE_PERC));
+
+    cs.setCountDistint(Math.max(1, (long)(numRows * ndvPercent/100.00)));
+    cs.setNumNulls(Math.min(numRows, (long)(numRows * nullPercent/100.00)));
 
     if (colTypeLowerCase.equals(serdeConstants.TINYINT_TYPE_NAME)
         || colTypeLowerCase.equals(serdeConstants.SMALLINT_TYPE_NAME)

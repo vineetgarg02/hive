@@ -206,14 +206,7 @@ public class RelOptHiveTable extends RelOptAbstractTable {
         // predicates
         computePartitionList(hiveConf, null, new HashSet<Integer>());
       }
-      if (hiveTblMetadata.isPartitioned()) {
-        List<Long> rowCounts = StatsUtils.getBasicStatForPartitions(hiveTblMetadata,
-            partitionList.getNotDeniedPartns(), StatsSetupConst.ROW_COUNT);
-        rowCount = StatsUtils.getSumIgnoreNegatives(rowCounts);
-
-      } else {
-        rowCount = StatsUtils.getNumRows(hiveTblMetadata);
-      }
+      rowCount = StatsUtils.getNumRows(hiveConf, getNonPartColumns(), hiveTblMetadata, partitionList);
     }
 
     if (rowCount == -1)
@@ -297,39 +290,53 @@ public class RelOptHiveTable extends RelOptAbstractTable {
 
     // 2. Obtain Col Stats for Non Partition Cols
     if (nonPartColNamesThatRqrStats.size() > 0) {
-      List<ColStatistics> hiveColStats;
+      List<ColStatistics> hiveColStats = new ArrayList<ColStatistics>();
 
       if (!hiveTblMetadata.isPartitioned()) {
         // 2.1 Handle the case for unpartitioned table.
-        hiveColStats = StatsUtils.getTableColumnStats(hiveTblMetadata, hiveNonPartitionCols,
-            nonPartColNamesThatRqrStats, hiveConf);
-
-        // 2.1.1 Record Column Names that we needed stats for but couldn't
-        if (hiveColStats == null) {
-          colNamesFailedStats.addAll(nonPartColNamesThatRqrStats);
-        } else if (hiveColStats.size() != nonPartColNamesThatRqrStats.size()) {
-          Set<String> setOfFiledCols = new HashSet<String>(nonPartColNamesThatRqrStats);
-
-          Set<String> setOfObtainedColStats = new HashSet<String>();
-          for (ColStatistics cs : hiveColStats) {
-            setOfObtainedColStats.add(cs.getColumnName());
+        try {
+          Statistics stats = StatsUtils.collectStatistics(hiveConf, null,
+              hiveTblMetadata, hiveNonPartitionCols, nonPartColNamesThatRqrStats,
+              nonPartColNamesThatRqrStats, true, true);
+          rowCount = stats.getNumRows();
+          for (String c : nonPartColNamesThatRqrStats) {
+            ColStatistics cs = stats.getColumnStatisticsFromColName(c);
+            if (cs != null) {
+              hiveColStats.add(cs);
+            }
           }
-          setOfFiledCols.removeAll(setOfObtainedColStats);
 
-          colNamesFailedStats.addAll(setOfFiledCols);
-        } else {
-          // Column stats in hiveColStats might not be in the same order as the columns in
-          // nonPartColNamesThatRqrStats. reorder hiveColStats so we can build hiveColStatsMap
-          // using nonPartColIndxsThatRqrStats as below
-          Map<String, ColStatistics> columnStatsMap =
-              new HashMap<String, ColStatistics>(hiveColStats.size());
-          for (ColStatistics cs : hiveColStats) {
-            columnStatsMap.put(cs.getColumnName(), cs);
+          // 2.1.1 Record Column Names that we needed stats for but couldn't
+          if (hiveColStats.isEmpty()) {
+            colNamesFailedStats.addAll(nonPartColNamesThatRqrStats);
+          } else if (hiveColStats.size() != nonPartColNamesThatRqrStats.size()) {
+            Set<String> setOfFiledCols = new HashSet<String>(nonPartColNamesThatRqrStats);
+
+            Set<String> setOfObtainedColStats = new HashSet<String>();
+            for (ColStatistics cs : hiveColStats) {
+              setOfObtainedColStats.add(cs.getColumnName());
+            }
+            setOfFiledCols.removeAll(setOfObtainedColStats);
+
+            colNamesFailedStats.addAll(setOfFiledCols);
+          } else {
+            // Column stats in hiveColStats might not be in the same order as the columns in
+            // nonPartColNamesThatRqrStats. reorder hiveColStats so we can build hiveColStatsMap
+            // using nonPartColIndxsThatRqrStats as below
+            Map<String, ColStatistics> columnStatsMap =
+                new HashMap<String, ColStatistics>(hiveColStats.size());
+            for (ColStatistics cs : hiveColStats) {
+              columnStatsMap.put(cs.getColumnName(), cs);
+            }
+            hiveColStats.clear();
+            for (String colName : nonPartColNamesThatRqrStats) {
+              hiveColStats.add(columnStatsMap.get(colName));
+            }
           }
-          hiveColStats.clear();
-          for (String colName : nonPartColNamesThatRqrStats) {
-            hiveColStats.add(columnStatsMap.get(colName));
-          }
+        } catch (HiveException e) {
+          String logMsg = "Collecting stats for table: " + hiveTblMetadata.getTableName() + " failed.";
+          LOG.error(logMsg, e);
+          throw new RuntimeException(logMsg, e);
         }
       } else {
         // 2.2 Obtain col stats for partitioned table.
@@ -337,7 +344,6 @@ public class RelOptHiveTable extends RelOptAbstractTable {
           if (partitionList.getNotDeniedPartns().isEmpty()) {
             // no need to make a metastore call
             rowCount = 0;
-            hiveColStats = new ArrayList<ColStatistics>();
             for (String c : nonPartColNamesThatRqrStats) {
               // add empty stats object for each column
               hiveColStats.add(new ColStatistics(c, null));

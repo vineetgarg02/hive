@@ -137,9 +137,9 @@ Stage-0
           PARTITION_ONLY_SHUFFLE [RS_5]
             Group By Operator [GBY_4] (rows=1 width=16)
               Output:["_col0","_col1"],aggregations:["sum(_col0)","sum(_col1)"]
-              Select Operator [SEL_2] (rows=500 width=187)
+              Select Operator [SEL_2] (rows=500 width=182)
                 Output:["_col0","_col1"]
-                TableScan [TS_0] (rows=500 width=187)
+                TableScan [TS_0] (rows=500 width=182)
                   default@src_orc_merge_test_part,src_orc_merge_test_part,Tbl:COMPLETE,Col:COMPLETE,Output:["key","value"]
 
 PREHOOK: query: alter table src_orc_merge_test_part partition (ds='2012-01-03', ts='2012-01-03+14:46:31') concatenate
@@ -196,9 +196,9 @@ Stage-0
           PARTITION_ONLY_SHUFFLE [RS_5]
             Group By Operator [GBY_4] (rows=1 width=16)
               Output:["_col0","_col1"],aggregations:["sum(_col0)","sum(_col1)"]
-              Select Operator [SEL_2] (rows=500 width=187)
+              Select Operator [SEL_2] (rows=500 width=182)
                 Output:["_col0","_col1"]
-                TableScan [TS_0] (rows=500 width=187)
+                TableScan [TS_0] (rows=500 width=182)
                   default@src_orc_merge_test_part,src_orc_merge_test_part,Tbl:COMPLETE,Col:COMPLETE,Output:["key","value"]
 
 PREHOOK: query: drop table src_orc_merge_test_part
@@ -2883,12 +2883,12 @@ Stage-0
     Stage-1
       Reducer 2 llap
       File Output Operator [FS_6]
-        Group By Operator [GBY_4] (rows=2 width=28)
+        Group By Operator [GBY_4] (rows=1 width=28)
           Output:["_col0","_col1","_col2","_col3"],aggregations:["count(DISTINCT KEY._col1:0._col0)","count(DISTINCT KEY._col1:1._col0)","sum(VALUE._col2)"],keys:KEY._col0
         <-Map 1 [SIMPLE_EDGE] llap
           SHUFFLE [RS_3]
             PartitionCols:_col0
-            Group By Operator [GBY_2] (rows=2 width=36)
+            Group By Operator [GBY_2] (rows=1 width=36)
               Output:["_col0","_col1","_col2","_col3","_col4","_col5"],aggregations:["count(DISTINCT b)","count(DISTINCT c)","sum(d)"],keys:a, b, c
               Select Operator [SEL_1] (rows=4 width=16)
                 Output:["a","b","c","d"]
@@ -2910,7 +2910,7 @@ Stage-0
     Stage-1
       Reducer 2 llap
       File Output Operator [FS_5]
-        Group By Operator [GBY_3] (rows=4 width=28)
+        Group By Operator [GBY_3] (rows=1 width=28)
           Output:["_col0","_col1","_col2","_col3"],aggregations:["count(DISTINCT KEY._col1:0._col0)","count(DISTINCT KEY._col1:1._col0)","sum(VALUE._col0)"],keys:KEY._col0
         <-Map 1 [SIMPLE_EDGE] llap
           SHUFFLE [RS_2]
@@ -3380,9 +3380,9 @@ Stage-0
     Stage-1
       Reducer 2 llap
       File Output Operator [FS_6]
-        Select Operator [SEL_5] (rows=3 width=16)
+        Select Operator [SEL_5] (rows=9 width=16)
           Output:["_col0","_col1","_col2","_col3"]
-          Merge Join Operator [MERGEJOIN_7] (rows=3 width=16)
+          Merge Join Operator [MERGEJOIN_7] (rows=9 width=16)
             Conds:RS_2.key=RS_3.value(Inner),Output:["_col0","_col1","_col5","_col6"]
           <-Map 1 [SIMPLE_EDGE] llap
             SHUFFLE [RS_2]
@@ -3410,9 +3410,9 @@ Stage-0
     Stage-1
       Reducer 2 llap
       File Output Operator [FS_11]
-        Select Operator [SEL_10] (rows=3 width=24)
+        Select Operator [SEL_10] (rows=27 width=24)
           Output:["_col0","_col1","_col2","_col3","_col4","_col5"]
-          Merge Join Operator [MERGEJOIN_21] (rows=3 width=24)
+          Merge Join Operator [MERGEJOIN_21] (rows=27 width=24)
             Conds:RS_4.key=RS_6.value(Inner),RS_4.key=RS_8.key(Inner),Output:["_col0","_col1","_col5","_col6","_col10","_col11"]
           <-Map 1 [SIMPLE_EDGE] llap
             SHUFFLE [RS_4]
@@ -3451,9 +3451,9 @@ Stage-0
     Stage-1
       Reducer 2 llap
       File Output Operator [FS_8]
-        Select Operator [SEL_7] (rows=3 width=24)
+        Select Operator [SEL_7] (rows=27 width=24)
           Output:["_col0","_col1","_col2","_col3","_col4","_col5"]
-          Merge Join Operator [MERGEJOIN_9] (rows=3 width=24)
+          Merge Join Operator [MERGEJOIN_9] (rows=27 width=24)
             Conds:RS_3.key=RS_4.value(Inner),RS_3.key=RS_5.key(Inner),Output:["_col0","_col1","_col5","_col6","_col10","_col11"]
           <-Map 1 [SIMPLE_EDGE] llap
             SHUFFLE [RS_3]
@@ -3486,9 +3486,9 @@ Stage-0
     Stage-1
       Reducer 2 llap
       File Output Operator [FS_11]
-        Select Operator [SEL_10] (rows=1 width=24)
+        Select Operator [SEL_10] (rows=27 width=24)
           Output:["_col0","_col1","_col2","_col3","_col4","_col5"]
-          Merge Join Operator [MERGEJOIN_15] (rows=1 width=24)
+          Merge Join Operator [MERGEJOIN_15] (rows=27 width=24)
             Conds:RS_4.key, value=RS_6.value, key(Inner),RS_4.key, value=RS_8.key, value(Inner),Output:["_col0","_col1","_col5","_col6","_col10","_col11"]
           <-Map 1 [SIMPLE_EDGE] llap
             SHUFFLE [RS_4]
@@ -3527,9 +3527,9 @@ Stage-0
     Stage-1
       Reducer 2 llap
       File Output Operator [FS_8]
-        Select Operator [SEL_7] (rows=1 width=24)
+        Select Operator [SEL_7] (rows=27 width=24)
           Output:["_col0","_col1","_col2","_col3","_col4","_col5"]
-          Merge Join Operator [MERGEJOIN_9] (rows=1 width=24)
+          Merge Join Operator [MERGEJOIN_9] (rows=27 width=24)
             Conds:RS_3.key, value=RS_4.value, key(Inner),RS_3.key, value=RS_5.key, value(Inner),Output:["_col0","_col1","_col5","_col6","_col10","_col11"]
           <-Map 1 [SIMPLE_EDGE] llap
             SHUFFLE [RS_3]
@@ -3562,9 +3562,9 @@ Stage-0
     Stage-1
       Reducer 2 llap
       File Output Operator [FS_6]
-        Select Operator [SEL_5] (rows=3 width=16)
+        Select Operator [SEL_5] (rows=9 width=16)
           Output:["_col0","_col1","_col2","_col3"]
-          Merge Join Operator [MERGEJOIN_7] (rows=3 width=16)
+          Merge Join Operator [MERGEJOIN_7] (rows=9 width=16)
             Conds:RS_2.key=RS_3.value(Left Outer),Output:["_col0","_col1","_col5","_col6"]
           <-Map 1 [SIMPLE_EDGE] llap
             SHUFFLE [RS_2]
@@ -3592,9 +3592,9 @@ Stage-0
     Stage-1
       Reducer 2 llap
       File Output Operator [FS_6]
-        Select Operator [SEL_5] (rows=3 width=16)
+        Select Operator [SEL_5] (rows=9 width=16)
           Output:["_col0","_col1","_col2","_col3"]
-          Merge Join Operator [MERGEJOIN_7] (rows=3 width=16)
+          Merge Join Operator [MERGEJOIN_7] (rows=9 width=16)
             Conds:RS_2.key=RS_3.value(Right Outer),Output:["_col0","_col1","_col5","_col6"]
           <-Map 1 [SIMPLE_EDGE] llap
             SHUFFLE [RS_2]
@@ -3622,9 +3622,9 @@ Stage-0
     Stage-1
       Reducer 2 llap
       File Output Operator [FS_6]
-        Select Operator [SEL_5] (rows=6 width=10)
+        Select Operator [SEL_5] (rows=9 width=16)
           Output:["_col0","_col1","_col2","_col3"]
-          Merge Join Operator [MERGEJOIN_7] (rows=6 width=10)
+          Merge Join Operator [MERGEJOIN_7] (rows=9 width=16)
             Conds:RS_2.key=RS_3.value(Outer),Output:["_col0","_col1","_col5","_col6"]
           <-Map 1 [SIMPLE_EDGE] llap
             SHUFFLE [RS_2]
@@ -3652,9 +3652,9 @@ Stage-0
     Stage-1
       Reducer 2 llap
       File Output Operator [FS_6]
-        Select Operator [SEL_5] (rows=3 width=16)
+        Select Operator [SEL_5] (rows=9 width=16)
           Output:["_col0","_col1","_col2","_col3"]
-          Merge Join Operator [MERGEJOIN_7] (rows=3 width=16)
+          Merge Join Operator [MERGEJOIN_7] (rows=9 width=16)
             Conds:RS_2.key=RS_3.value(Inner),Output:["_col0","_col1","_col5","_col6"]
           <-Map 1 [SIMPLE_EDGE] llap
             SHUFFLE [RS_2]
@@ -3748,9 +3748,9 @@ Stage-0
     Stage-1
       Reducer 2 llap
       File Output Operator [FS_6]
-        Select Operator [SEL_5] (rows=26 width=16)
+        Select Operator [SEL_5] (rows=135 width=16)
           Output:["_col0","_col1","_col2","_col3"]
-          Merge Join Operator [MERGEJOIN_7] (rows=26 width=16)
+          Merge Join Operator [MERGEJOIN_7] (rows=135 width=16)
             Conds:RS_2.key=RS_3.key(Inner),Output:["_col0","_col1","_col5","_col6"]
           <-Map 1 [SIMPLE_EDGE] llap
             SHUFFLE [RS_2]
@@ -3778,9 +3778,9 @@ Stage-0
     Stage-1
       Reducer 2 llap
       File Output Operator [FS_6]
-        Select Operator [SEL_5] (rows=1 width=16)
+        Select Operator [SEL_5] (rows=27 width=16)
           Output:["_col0","_col1","_col2","_col3"]
-          Merge Join Operator [MERGEJOIN_7] (rows=1 width=16)
+          Merge Join Operator [MERGEJOIN_7] (rows=27 width=16)
             Conds:RS_2.key, value=RS_3.key, value(Inner),Output:["_col0","_col1","_col5","_col6"]
           <-Map 1 [SIMPLE_EDGE] llap
             SHUFFLE [RS_2]
@@ -3808,9 +3808,9 @@ Stage-0
     Stage-1
       Reducer 2 llap
       File Output Operator [FS_6]
-        Select Operator [SEL_5] (rows=26 width=16)
+        Select Operator [SEL_5] (rows=135 width=16)
           Output:["_col0","_col1","_col2","_col3"]
-          Merge Join Operator [MERGEJOIN_7] (rows=26 width=16)
+          Merge Join Operator [MERGEJOIN_7] (rows=135 width=16)
             Conds:RS_2.key=RS_3.key(Right Outer),Output:["_col0","_col1","_col5","_col6"]
           <-Map 1 [SIMPLE_EDGE] llap
             SHUFFLE [RS_2]
@@ -3838,9 +3838,9 @@ Stage-0
     Stage-1
       Reducer 2 llap
       File Output Operator [FS_6]
-        Select Operator [SEL_5] (rows=26 width=16)
+        Select Operator [SEL_5] (rows=135 width=16)
           Output:["_col0","_col1","_col2","_col3"]
-          Merge Join Operator [MERGEJOIN_7] (rows=26 width=16)
+          Merge Join Operator [MERGEJOIN_7] (rows=135 width=16)
             Conds:RS_2.key=RS_3.key(Inner),Output:["_col0","_col1","_col5","_col6"]
           <-Map 1 [SIMPLE_EDGE] llap
             SHUFFLE [RS_2]
@@ -3868,9 +3868,9 @@ Stage-0
     Stage-1
       Reducer 2 llap
       File Output Operator [FS_6]
-        Select Operator [SEL_5] (rows=26 width=16)
+        Select Operator [SEL_5] (rows=135 width=16)
           Output:["_col0","_col1","_col2","_col3"]
-          Merge Join Operator [MERGEJOIN_7] (rows=26 width=16)
+          Merge Join Operator [MERGEJOIN_7] (rows=135 width=16)
             Conds:RS_2.key=RS_3.key(Left Outer),Output:["_col0","_col1","_col5","_col6"]
           <-Map 1 [SIMPLE_EDGE] llap
             SHUFFLE [RS_2]

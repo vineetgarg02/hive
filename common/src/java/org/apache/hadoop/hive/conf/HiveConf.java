@@ -2260,7 +2260,8 @@ public class HiveConf extends Configuration {
 
     HIVE_LOG_EXPLAIN_OUTPUT("hive.log.explain.output", false,
         "Whether to log explain output for every query.\n" +
-        "When enabled, will log EXPLAIN EXTENDED output for the query at INFO log4j log level."),
+        "When enabled, will log EXPLAIN EXTENDED output for the query at INFO log4j log level\n" +
+        "and in WebUI / Drilldown / Show Query."),
     HIVE_EXPLAIN_USER("hive.explain.user", true,
         "Whether to show explain result at user level.\n" +
         "When enabled, will log EXPLAIN output for the query at user level. Tez only."),
@@ -3429,6 +3430,10 @@ public class HiveConf extends Configuration {
     SPARK_DYNAMIC_PARTITION_PRUNING_MAX_DATA_SIZE(
         "hive.spark.dynamic.partition.pruning.max.data.size", 100*1024*1024L,
         "Maximum total data size in dynamic pruning."),
+    SPARK_DYNAMIC_PARTITION_PRUNING_MAP_JOIN_ONLY(
+        "hive.spark.dynamic.partition.pruning.map.join.only", false,
+        "Turn on dynamic partition pruning only for map joins.\n" +
+        "If hive.spark.dynamic.partition.pruning is set to true, this parameter value is ignored."),
     SPARK_USE_GROUPBY_SHUFFLE(
         "hive.spark.use.groupby.shuffle", true,
         "Spark groupByKey transformation has better performance but uses unbounded memory." +
@@ -4048,6 +4053,17 @@ public class HiveConf extends Configuration {
     conf.setBoolean(var.varname, val);
   }
 
+  /* Dynamic partition pruning is enabled in some or all cases if either
+   * hive.spark.dynamic.partition.pruning is true or
+   * hive.spark.dynamic.partition.pruning.map.join.only is true
+   */
+  public static boolean isSparkDPPAny(Configuration conf) {
+    return (conf.getBoolean(ConfVars.SPARK_DYNAMIC_PARTITION_PRUNING.varname,
+            ConfVars.SPARK_DYNAMIC_PARTITION_PRUNING.defaultBoolVal) ||
+            conf.getBoolean(ConfVars.SPARK_DYNAMIC_PARTITION_PRUNING_MAP_JOIN_ONLY.varname,
+            ConfVars.SPARK_DYNAMIC_PARTITION_PRUNING_MAP_JOIN_ONLY.defaultBoolVal));
+  }
+
   public boolean getBoolVar(ConfVars var) {
     return getBoolVar(this, var);
   }
@@ -4661,6 +4677,20 @@ public class HiveConf extends Configuration {
     return isWebUiEnabled() && this.getIntVar(ConfVars.HIVE_SERVER2_WEBUI_MAX_HISTORIC_QUERIES) > 0;
   }
 
+  /* Dynamic partition pruning is enabled in some or all cases
+   */
+  public boolean isSparkDPPAny() {
+    return isSparkDPPAny(this);
+  }
+
+  /* Dynamic partition pruning is enabled only for map join
+   * hive.spark.dynamic.partition.pruning is false and
+   * hive.spark.dynamic.partition.pruning.map.join.only is true
+   */
+  public boolean isSparkDPPOnlyMapjoin() {
+    return (!this.getBoolVar(ConfVars.SPARK_DYNAMIC_PARTITION_PRUNING) &&
+            this.getBoolVar(ConfVars.SPARK_DYNAMIC_PARTITION_PRUNING_MAP_JOIN_ONLY));
+  }
 
   public static boolean isLoadMetastoreConfig() {
     return loadMetastoreConfig;

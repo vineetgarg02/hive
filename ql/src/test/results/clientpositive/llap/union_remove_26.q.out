@@ -172,19 +172,19 @@ STAGE PLANS:
             Map Operator Tree:
                 TableScan
                   alias: inputtbl2
-                  Statistics: Num rows: 6 Data size: 24 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 6 Data size: 24 Basic stats: COMPLETE Column stats: COMPLETE
                   Select Operator
                     expressions: val (type: int)
                     outputColumnNames: val
-                    Statistics: Num rows: 6 Data size: 24 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 6 Data size: 24 Basic stats: COMPLETE Column stats: COMPLETE
                     Group By Operator
                       aggregations: count(), min(val), max(val)
                       mode: hash
                       outputColumnNames: _col0, _col1, _col2
-                      Statistics: Num rows: 1 Data size: 16 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 1 Data size: 16 Basic stats: COMPLETE Column stats: COMPLETE
                       Reduce Output Operator
                         sort order: 
-                        Statistics: Num rows: 1 Data size: 16 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 1 Data size: 16 Basic stats: COMPLETE Column stats: COMPLETE
                         value expressions: _col0 (type: bigint), _col1 (type: int), _col2 (type: int)
             Execution mode: llap
             LLAP IO: no inputs
@@ -230,10 +230,10 @@ STAGE PLANS:
                 aggregations: count(VALUE._col0), min(VALUE._col1), max(VALUE._col2)
                 mode: mergepartial
                 outputColumnNames: _col0, _col1, _col2
-                Statistics: Num rows: 1 Data size: 16 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 1 Data size: 16 Basic stats: COMPLETE Column stats: COMPLETE
                 File Output Operator
                   compressed: false
-                  Statistics: Num rows: 1 Data size: 16 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 1 Data size: 16 Basic stats: COMPLETE Column stats: COMPLETE
                   table:
                       input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                       output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat

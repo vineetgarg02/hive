@@ -283,7 +283,7 @@ public class StatsUtils {
       List<ColStatistics> colStats = Lists.newArrayList();
       if (fetchColStats) {
         colStats = getTableColumnStats(table, schema, neededColumns);
-        if(colStats.size() < 1) {
+        if(colStats == null || colStats.size() < 1) {
           colStats = estimateStats(table,schema,neededColumns, conf, nr);
         }
         long betterDS = getDataSizeFromColumnStats(nr, colStats);

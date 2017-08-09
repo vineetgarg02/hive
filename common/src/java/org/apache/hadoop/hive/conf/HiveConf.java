@@ -1751,6 +1751,10 @@ public class HiveConf extends Configuration {
         "When estimating output rows for a join involving multiple columns, the default behavior assumes" +
         "the columns are independent. Setting this flag to true will cause the estimator to assume" +
         "the columns are correlated."),
+    HIVE_STATS_LOGICAL_CORRELATED_MULTI_KEY_JOINS("hive.stats.logical.correlated.multi.key.joins", true,
+        "When estimating output rows for a join involving multiple columns, the default behavior assumes" +
+            "the columns are independent. Setting this flag to true will cause the estimator to assume" +
+            "the columns are correlated."),
     // in the absence of uncompressed/raw data size, total file size will be used for statistics
     // annotation. But the file may be compressed, encoded and serialized which may be lesser in size
     // than the actual uncompressed/raw data size. This factor will be multiplied to file size to estimate

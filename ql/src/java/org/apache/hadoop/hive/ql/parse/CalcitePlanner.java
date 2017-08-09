@@ -141,18 +141,8 @@ import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.ql.metadata.VirtualColumn;
-import org.apache.hadoop.hive.ql.optimizer.calcite.CalciteSemanticException;
-import org.apache.hadoop.hive.ql.optimizer.calcite.CalciteSubquerySemanticException;
+import org.apache.hadoop.hive.ql.optimizer.calcite.*;
 import org.apache.hadoop.hive.ql.optimizer.calcite.CalciteSemanticException.UnsupportedFeature;
-import org.apache.hadoop.hive.ql.optimizer.calcite.CalciteViewSemanticException;
-import org.apache.hadoop.hive.ql.optimizer.calcite.HiveCalciteUtil;
-import org.apache.hadoop.hive.ql.optimizer.calcite.HiveDefaultRelMetadataProvider;
-import org.apache.hadoop.hive.ql.optimizer.calcite.HivePlannerContext;
-import org.apache.hadoop.hive.ql.optimizer.calcite.HiveRelFactories;
-import org.apache.hadoop.hive.ql.optimizer.calcite.HiveRexExecutorImpl;
-import org.apache.hadoop.hive.ql.optimizer.calcite.HiveTypeSystemImpl;
-import org.apache.hadoop.hive.ql.optimizer.calcite.RelOptHiveTable;
-import org.apache.hadoop.hive.ql.optimizer.calcite.TraitsUtil;
 import org.apache.hadoop.hive.ql.optimizer.calcite.cost.HiveAlgorithmsConf;
 import org.apache.hadoop.hive.ql.optimizer.calcite.cost.HiveVolcanoPlanner;
 import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveAggregate;
@@ -1334,8 +1324,10 @@ public class CalcitePlanner extends SemanticAnalyzer {
               CalciteConnectionProperty.MATERIALIZATIONS_ENABLED.camelName(),
               Boolean.FALSE.toString());
       CalciteConnectionConfig calciteConfig = new CalciteConnectionConfigImpl(calciteConfigProperties);
+      boolean isCorrelatedColumns = HiveConf.getBoolVar(conf,
+          ConfVars.AGGR_JOIN_TRANSPOSE.HIVE_STATS_LOGICAL_CORRELATED_MULTI_KEY_JOINS);
       HivePlannerContext confContext = new HivePlannerContext(algorithmsConf, registry, calciteConfig,
-                 corrScalarRexSQWithAgg, scalarAggNoGbyNoWin);
+                 corrScalarRexSQWithAgg, scalarAggNoGbyNoWin, new HiveConfPlannerContext(isCorrelatedColumns));
       RelOptPlanner planner = HiveVolcanoPlanner.createPlanner(confContext);
       final RexBuilder rexBuilder = cluster.getRexBuilder();
       final RelOptCluster optCluster = RelOptCluster.create(planner, rexBuilder);

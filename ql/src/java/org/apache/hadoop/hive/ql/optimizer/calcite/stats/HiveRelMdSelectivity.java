@@ -120,7 +120,9 @@ public class HiveRelMdSelectivity extends RelMdSelectivity {
       if (noOfPE > 1 && isCorrelatedColumns ){
         ndvCrossProduct = maxNdvForCorrelatedColumns(peLst, colStatMap);
       }
-      ndvCrossProduct = exponentialBackoff(peLst, colStatMap);
+      else {
+        ndvCrossProduct = exponentialBackoff(peLst, colStatMap);
+      }
 
       if (j instanceof SemiJoin) {
         ndvCrossProduct = Math.min(mq.getRowCount(j.getLeft()),

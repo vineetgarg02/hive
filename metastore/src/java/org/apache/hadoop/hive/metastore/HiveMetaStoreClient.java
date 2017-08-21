@@ -60,11 +60,11 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.conf.HiveConfUtil;
 import org.apache.hadoop.hive.metastore.api.*;
+import org.apache.hadoop.hive.metastore.conf.MetastoreConf;
 import org.apache.hadoop.hive.metastore.partition.spec.PartitionSpecProxy;
+import org.apache.hadoop.hive.metastore.security.HadoopThriftAuthBridge;
 import org.apache.hadoop.hive.metastore.txn.TxnUtils;
-import org.apache.hadoop.hive.shims.ShimLoader;
 import org.apache.hadoop.hive.shims.Utils;
-import org.apache.hadoop.hive.thrift.HadoopThriftAuthBridge;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.thrift.TApplicationException;
@@ -123,7 +123,7 @@ public class HiveMetaStoreClient implements IMetaStoreClient, AutoCloseable {
   private long retryDelaySeconds = 0;
   private final ClientCapabilities version;
 
-  static final protected Logger LOG = LoggerFactory.getLogger("hive.metastore");
+  static final protected Logger LOG = LoggerFactory.getLogger(HiveMetaStoreClient.class);
 
   public HiveMetaStoreClient(HiveConf conf) throws MetaException {
     this(conf, null, true);
@@ -191,7 +191,15 @@ public class HiveMetaStoreClient implements IMetaStoreClient, AutoCloseable {
             throw new IllegalArgumentException("URI: " + s
                 + " does not have a scheme");
           }
-          metastoreUris[i++] = tmpUri;
+          metastoreUris[i++] = new URI(
+              tmpUri.getScheme(),
+              tmpUri.getUserInfo(),
+              HadoopThriftAuthBridge.getBridge().getCanonicalHostName(tmpUri.getHost()),
+              tmpUri.getPort(),
+              tmpUri.getPath(),
+              tmpUri.getQuery(),
+              tmpUri.getFragment()
+          );
 
         }
         // make metastore URIS random
@@ -414,8 +422,8 @@ public class HiveMetaStoreClient implements IMetaStoreClient, AutoCloseable {
                 throw new IllegalArgumentException(ConfVars.HIVE_METASTORE_SSL_TRUSTSTORE_PATH.varname
                     + " Not configured for SSL connection");
               }
-              String trustStorePassword = ShimLoader.getHadoopShims().getPassword(conf,
-                  HiveConf.ConfVars.HIVE_METASTORE_SSL_TRUSTSTORE_PASSWORD.varname);
+              String trustStorePassword =
+                  MetastoreConf.getPassword(conf, MetastoreConf.ConfVars.SSL_TRUSTSTORE_PASSWORD);
 
               // Create an SSL socket and connect
               transport = HiveAuthUtils.getSSLSocket(store.getHost(), store.getPort(), clientSocketTimeout, trustStorePath, trustStorePassword );
@@ -434,7 +442,7 @@ public class HiveMetaStoreClient implements IMetaStoreClient, AutoCloseable {
             // Wrap thrift connection with SASL for secure connection.
             try {
               HadoopThriftAuthBridge.Client authBridge =
-                ShimLoader.getHadoopThriftAuthBridge().createClient();
+                HadoopThriftAuthBridge.getBridge().createClient();
 
               // check if we should use delegation tokens to authenticate
               // the call below gets hold of the tokens if they are set up by hadoop

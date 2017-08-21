@@ -19,6 +19,7 @@
 package org.apache.hadoop.hive.conf;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.Iterables;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.common.FileUtils;
@@ -1690,7 +1691,7 @@ public class HiveConf extends Configuration {
         "Whether column accesses are tracked in the QueryPlan.\n" +
         "This is useful to identify how tables are accessed and to determine if there are wasted columns that can be trimmed."),
     HIVE_STATS_NDV_ALGO("hive.stats.ndv.algo", "hll", new PatternSet("hll", "fm"),
-        "hll and fm stand for HyperLogLog and FM-sketch, respectively for computing ndv."), 
+        "hll and fm stand for HyperLogLog and FM-sketch, respectively for computing ndv."),
     HIVE_STATS_FETCH_BITVECTOR("hive.stats.fetch.bitvector", false,
         "Whether we fetch bitvector when we compute ndv. Users can turn it off if they want to use old schema"),
     // standard error allowed for ndv estimates for FM-sketch. A lower value indicates higher accuracy and a
@@ -1841,12 +1842,9 @@ public class HiveConf extends Configuration {
         " of the lock manager is dumped to log file.  This is for debugging.  See also " +
         "hive.lock.numretries and hive.lock.sleep.between.retries."),
 
-    HIVE_TXN_OPERATIONAL_PROPERTIES("hive.txn.operational.properties", 0,
-        "Sets the operational properties that control the appropriate behavior for various\n"
-        + "versions of the Hive ACID subsystem. Setting it to zero will turn on the legacy mode\n"
-        + "for ACID, while setting it to one will enable a split-update feature found in the newer\n"
-        + "version of Hive ACID subsystem. Mostly it is intended to be used as an internal property\n"
-        + "for future versions of ACID. (See HIVE-14035 for details.)"),
+    HIVE_TXN_OPERATIONAL_PROPERTIES("hive.txn.operational.properties", 1,
+        "This is intended to be used as an internal property for future versions of ACID. (See\n" +
+        "HIVE-14035 for details.)"),
 
     HIVE_MAX_OPEN_TXNS("hive.max.open.txns", 100000, "Maximum number of open transactions. If \n" +
         "current open transactions reach this limit, future open transaction requests will be \n" +
@@ -2433,7 +2431,9 @@ public class HiveConf extends Configuration {
     HIVE_SERVER2_THRIFT_HTTP_REQUEST_HEADER_SIZE("hive.server2.thrift.http.request.header.size", 6*1024,
         "Request header size in bytes, when using HTTP transport mode. Jetty defaults used."),
     HIVE_SERVER2_THRIFT_HTTP_RESPONSE_HEADER_SIZE("hive.server2.thrift.http.response.header.size", 6*1024,
-        "Response header size in bytes, when using HTTP transport mode. Jetty defaults used."),
+        "Response header size in bytes, when using HTTP transport mode. Jetty defaults used."), 
+    HIVE_SERVER2_THRIFT_HTTP_COMPRESSION_ENABLED("hive.server2.thrift.http.compression.enabled", true,
+        "Enable thrift http compression via Jetty compression support"),
 
     // Cookie based authentication when using HTTP Transport
     HIVE_SERVER2_THRIFT_HTTP_COOKIE_AUTH_ENABLED("hive.server2.thrift.http.cookie.auth.enabled", true,
@@ -2595,10 +2595,9 @@ public class HiveConf extends Configuration {
     HIVE_SERVER2_ENABLE_DOAS("hive.server2.enable.doAs", true,
         "Setting this property to true will have HiveServer2 execute\n" +
         "Hive operations as the user making the calls to it."),
-    HIVE_DISTCP_DOAS_USER("hive.distcp.privileged.doAs","hdfs",
+    HIVE_DISTCP_DOAS_USER("hive.distcp.privileged.doAs","hive",
         "This property allows privileged distcp executions done by hive\n" +
-        "to run as this user. Typically, it should be the user you\n" +
-        "run the namenode as, such as the 'hdfs' user."),
+        "to run as this user."),
     HIVE_SERVER2_TABLE_TYPE_MAPPING("hive.server2.table.type.mapping", "CLASSIC", new StringSet("CLASSIC", "HIVE"),
         "This setting reflects how HiveServer2 will report the table types for JDBC and other\n" +
         "client implementations that retrieve the available tables and supported table types\n" +
@@ -3019,6 +3018,10 @@ public class HiveConf extends Configuration {
         "modification time, which is almost certain to identify file uniquely. However, if you\n" +
         "use a FS without file IDs and rewrite files a lot (or are paranoid), you might want\n" +
         "to avoid this setting."),
+    LLAP_CACHE_DEFAULT_FS_FILE_ID("hive.llap.cache.defaultfs.only.native.fileid", true,
+        "Whether LLAP cache should use native file IDs from the default FS only. This is to\n" +
+        "avoid file ID collisions when several different DFS instances are in use at the same\n" +
+        "time. Disable this check to allow native file IDs from non-default DFS."),
     LLAP_CACHE_ENABLE_ORC_GAP_CACHE("hive.llap.orc.gap.cache", true,
         "Whether LLAP cache for ORC should remember gaps in ORC compression buffer read\n" +
         "estimates, to avoid re-reading the data that was read once and discarded because it\n" +
@@ -3759,9 +3762,9 @@ public class HiveConf extends Configuration {
             + "It is not in list of params that are allowed to be modified at runtime");
       }
     }
-    if (restrictList.contains(name)) {
+    if (Iterables.any(restrictList, restrictedVar -> restrictedVar.startsWith(name))) {
       throw new IllegalArgumentException("Cannot modify " + name + " at runtime. It is in the list"
-          + " of parameters that can't be modified at runtime");
+          + " of parameters that can't be modified at runtime or is prefixed by a restricted variable");
     }
     String oldValue = name != null ? get(name) : null;
     if (name == null || value == null || !value.equals(oldValue)) {
@@ -3913,9 +3916,9 @@ public class HiveConf extends Configuration {
     } else if (unit.equals("gb")) {
       return 1024*1024*1024;
     } else if (unit.equals("tb")) {
-      return 1024*1024*1024*1024;
+      return 1024L*1024*1024*1024;
     } else if (unit.equals("pb")) {
-      return 1024*1024*1024*1024*1024;
+      return 1024L*1024*1024*1024*1024;
     }
     throw new IllegalArgumentException("Invalid size unit " + unit);
   }

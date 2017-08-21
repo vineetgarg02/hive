@@ -28,14 +28,14 @@ import org.apache.hadoop.hive.ql.plan.Explain.Level;
  * AlterDatabaseDesc.
  *
  */
-@Explain(displayName = "Create Database", explainLevels = { Level.USER, Level.DEFAULT, Level.EXTENDED })
+@Explain(displayName = "Alter Database", explainLevels = { Level.USER, Level.DEFAULT, Level.EXTENDED })
 public class AlterDatabaseDesc extends DDLDesc implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
   // Only altering the database property and owner is currently supported
   public static enum ALTER_DB_TYPES {
-    ALTER_PROPERTY, ALTER_OWNER
+    ALTER_PROPERTY, ALTER_OWNER, ALTER_LOCATION
   };
 
   ALTER_DB_TYPES alterType;
@@ -43,6 +43,7 @@ public class AlterDatabaseDesc extends DDLDesc implements Serializable {
   Map<String, String> dbProperties;
   PrincipalDesc ownerPrincipal;
   ReplicationSpec replicationSpec;
+  String location;
 
   /**
    * For serialization only.
@@ -53,8 +54,8 @@ public class AlterDatabaseDesc extends DDLDesc implements Serializable {
   public AlterDatabaseDesc(String databaseName, Map<String, String> dbProps, ReplicationSpec replicationSpec) {
     super();
     this.databaseName = databaseName;
-    this.dbProperties = dbProps;
     this.replicationSpec = replicationSpec;
+    this.setDatabaseProperties(dbProps);
     this.setAlterType(ALTER_DB_TYPES.ALTER_PROPERTY);
   }
 
@@ -62,6 +63,12 @@ public class AlterDatabaseDesc extends DDLDesc implements Serializable {
     this.databaseName = databaseName;
     this.setOwnerPrincipal(ownerPrincipal);
     this.setAlterType(ALTER_DB_TYPES.ALTER_OWNER);
+  }
+
+  public AlterDatabaseDesc(String databaseName, String newLocation) {
+    this.databaseName = databaseName;
+    this.setLocation(newLocation);
+    this.setAlterType(ALTER_DB_TYPES.ALTER_LOCATION);
   }
 
   @Explain(displayName="properties")
@@ -91,6 +98,14 @@ public class AlterDatabaseDesc extends DDLDesc implements Serializable {
     this.ownerPrincipal = ownerPrincipal;
   }
 
+  @Explain(displayName="location")
+  public String getLocation() {
+    return location;
+  }
+
+  public void setLocation(String location) {
+    this.location = location;
+  }
   public ALTER_DB_TYPES getAlterType() {
     return alterType;
   }

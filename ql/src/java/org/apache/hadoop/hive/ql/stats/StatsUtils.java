@@ -34,6 +34,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -187,7 +188,7 @@ public class StatsUtils {
    * @return
    */
   public static long getNumRows(HiveConf conf, List<ColumnInfo> schema, Table table,
-                                PrunedPartitionList partitionList) {
+                                PrunedPartitionList partitionList, AtomicInteger noColsMissingStats) {
     //for non-partitioned table
     List<String> neededColumns = new ArrayList<>();
     for(ColumnInfo ci:schema) {
@@ -240,6 +241,7 @@ public class StatsUtils {
         // number of rows -1 means that statistics from metastore is not reliable
         if (nr <= 0) {
           nr = ds / avgRowSize;
+          noColsMissingStats.getAndIncrement();
         }
       }
       if (nr == 0) {
@@ -867,10 +869,10 @@ public class StatsUtils {
     ColStatistics cs = new ColStatistics(colName, cinfo.getTypeName());
 
     String colTypeLowerCase = cinfo.getTypeName().toLowerCase();
-    double avgColLenString = 5;
 
-    long ndvPercent = Math.min(100L, HiveConf.getLongVar(conf, ConfVars.HIVE_STATS_NDV_ESTIMATE_PERC));
-    long nullPercent = Math.min(100L, HiveConf.getLongVar(conf, ConfVars.HIVE_STATS_NUM_NULLS_ESTIMATE_PERC));
+    float ndvPercent = Math.min(100L, HiveConf.getFloatVar(conf, ConfVars.HIVE_STATS_NDV_ESTIMATE_PERC));
+    float nullPercent = Math.min(100L, HiveConf.getFloatVar(conf, ConfVars.HIVE_STATS_NUM_NULLS_ESTIMATE_PERC));
+    long avgColLenString = Math.min(100L, HiveConf.getLongVar(conf, ConfVars.HIVE_STATS_MAX_VAR_LEN_ESTIMATE));
 
     cs.setCountDistint(Math.max(1, (long)(numRows * ndvPercent/100.00)));
     cs.setNumNulls(Math.min(numRows, (long)(numRows * nullPercent/100.00)));

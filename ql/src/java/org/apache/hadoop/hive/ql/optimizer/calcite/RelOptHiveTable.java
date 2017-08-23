@@ -206,11 +206,9 @@ public class RelOptHiveTable extends RelOptAbstractTable {
         // predicates
         computePartitionList(hiveConf, null, new HashSet<Integer>());
       }
-      rowCount = StatsUtils.getNumRows(hiveConf, getNonPartColumns(), hiveTblMetadata, partitionList);
+      rowCount = StatsUtils.getNumRows(hiveConf, getNonPartColumns(), hiveTblMetadata,
+          partitionList, noColsMissingStats);
     }
-
-    if (rowCount == -1)
-      noColsMissingStats.getAndIncrement();
 
     return rowCount;
   }

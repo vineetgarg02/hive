@@ -17,35 +17,28 @@
  */
 package org.apache.hadoop.hive.ql.parse;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.Collections2;
 import org.antlr.runtime.tree.Tree;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.Database;
-import org.apache.hadoop.hive.metastore.api.InvalidOperationException;
 import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.QueryState;
 import org.apache.hadoop.hive.ql.exec.Task;
 import org.apache.hadoop.hive.ql.exec.TaskFactory;
-import org.apache.hadoop.hive.ql.exec.repl.ReplDumpTask;
 import org.apache.hadoop.hive.ql.exec.repl.ReplDumpWork;
+import org.apache.hadoop.hive.ql.exec.repl.bootstrap.ReplLoadWork;
 import org.apache.hadoop.hive.ql.hooks.ReadEntity;
-import org.apache.hadoop.hive.ql.hooks.WriteEntity;
-import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.ql.parse.repl.dump.Utils;
 import org.apache.hadoop.hive.ql.parse.repl.load.DumpMetaData;
 import org.apache.hadoop.hive.ql.parse.repl.load.EventDumpDirComparator;
-import org.apache.hadoop.hive.ql.parse.repl.load.MetaData;
-import org.apache.hadoop.hive.ql.parse.repl.load.message.CreateFunctionHandler;
+import org.apache.hadoop.hive.ql.parse.repl.load.UpdatedMetaDataTracker;
 import org.apache.hadoop.hive.ql.parse.repl.load.message.MessageHandler;
 import org.apache.hadoop.hive.ql.plan.AlterDatabaseDesc;
 import org.apache.hadoop.hive.ql.plan.AlterTableDesc;
-import org.apache.hadoop.hive.ql.plan.CreateDatabaseDesc;
 import org.apache.hadoop.hive.ql.plan.DDLWork;
 import org.apache.hadoop.hive.ql.plan.DependencyCollectionWork;
 import org.apache.hadoop.hive.ql.plan.PlanUtils;
@@ -53,14 +46,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.Serializable;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -85,7 +75,7 @@ public class ReplicationSemanticAnalyzer extends BaseSemanticAnalyzer {
   private static String testInjectDumpDir = null; // unit tests can overwrite this to affect default dump behaviour
   private static final String dumpSchema = "dump_dir,last_repl_id#string,string";
 
-  private static final String FUNCTIONS_ROOT_DIR_NAME = "_functions";
+  public static final String FUNCTIONS_ROOT_DIR_NAME = "_functions";
   private final static Logger REPL_STATE_LOG = LoggerFactory.getLogger("ReplState");
 
   ReplicationSemanticAnalyzer(QueryState queryState) throws SemanticException {
@@ -294,8 +284,9 @@ public class ReplicationSemanticAnalyzer extends BaseSemanticAnalyzer {
       }
 
       if ((!evDump) && (tblNameOrPattern != null) && !(tblNameOrPattern.isEmpty())) {
-        // not an event dump, and table name pattern specified, this has to be a tbl-level dump
-        rootTasks.addAll(analyzeTableLoad(dbNameOrPattern, tblNameOrPattern, path, null, null, null));
+        ReplLoadWork replLoadWork =
+            new ReplLoadWork(conf, loadPath.toString(), dbNameOrPattern, tblNameOrPattern);
+        rootTasks.add(TaskFactory.get(replLoadWork, conf));
         return;
       }
 
@@ -324,9 +315,12 @@ public class ReplicationSemanticAnalyzer extends BaseSemanticAnalyzer {
                   + " does not correspond to REPL LOAD expecting to load to a singular destination point.");
         }
 
-        for (FileStatus dir : dirsInLoadPath) {
-          analyzeDatabaseLoad(dbNameOrPattern, fs, dir);
-        }
+        ReplLoadWork replLoadWork = new ReplLoadWork(conf, loadPath.toString(), dbNameOrPattern);
+        rootTasks.add(TaskFactory.get(replLoadWork, conf));
+        //
+        //        for (FileStatus dir : dirsInLoadPath) {
+        //          analyzeDatabaseLoad(dbNameOrPattern, fs, dir);
+        //        }
       } else {
         // Event dump, each sub-dir is an individual event dump.
         // We need to guarantee that the directory listing we got is in order of evid.
@@ -337,9 +331,6 @@ public class ReplicationSemanticAnalyzer extends BaseSemanticAnalyzer {
 
         int evstage = 0;
         int evIter = 0;
-        Long lastEvid = null;
-        Map<String,Long> dbsUpdated = new ReplicationSpec.ReplStateMap<String,Long>();
-        Map<String,Long> tablesUpdated = new ReplicationSpec.ReplStateMap<String,Long>();
 
         REPL_STATE_LOG.info("Repl Load: Started analyzing Repl load for DB: {} from path {}, Dump Type: INCREMENTAL",
                 (null != dbNameOrPattern && !dbNameOrPattern.isEmpty()) ? dbNameOrPattern : "?",
@@ -369,8 +360,7 @@ public class ReplicationSemanticAnalyzer extends BaseSemanticAnalyzer {
           String locn = dir.getPath().toUri().toString();
           DumpMetaData eventDmd = new DumpMetaData(new Path(locn), conf);
           List<Task<? extends Serializable>> evTasks = analyzeEventLoad(
-              dbNameOrPattern, tblNameOrPattern, locn, taskChainTail,
-              dbsUpdated, tablesUpdated, eventDmd);
+              dbNameOrPattern, tblNameOrPattern, locn, taskChainTail, eventDmd);
           evIter++;
           REPL_STATE_LOG.info("Repl Load: Analyzed load for event {}/{} " +
                               "with ID: {}, Type: {}, Path: {}",
@@ -389,79 +379,7 @@ public class ReplicationSemanticAnalyzer extends BaseSemanticAnalyzer {
                 taskChainTail.getClass(), taskChainTail.getId(), barrierTask.getClass(), barrierTask.getId());
             taskChainTail = barrierTask;
             evstage++;
-            lastEvid = dmd.getEventTo();
           }
-        }
-
-        // Now, we need to update repl.last.id for the various parent objects that were updated.
-        // This update logic will work differently based on what "level" REPL LOAD was run on.
-        //  a) If this was a REPL LOAD at a table level, i.e. both dbNameOrPattern and
-        //     tblNameOrPattern were specified, then the table is the only thing we should
-        //     update the repl.last.id for.
-        //  b) If this was a db-level REPL LOAD, then we should update the db, as well as any
-        //     tables affected by partition level operations. (any table level ops will
-        //     automatically be updated as the table gets updated. Note - renames will need
-        //     careful handling.
-        //  c) If this was a wh-level REPL LOAD, then we should update every db for which there
-        //     were events occurring, as well as tables for which there were ptn-level ops
-        //     happened. Again, renames must be taken care of.
-        //
-        // So, what we're going to do is have each event load update dbsUpdated and tablesUpdated
-        // accordingly, but ignore updates to tablesUpdated & dbsUpdated in the case of a
-        // table-level REPL LOAD, using only the table itself. In the case of a db-level REPL
-        // LOAD, we ignore dbsUpdated, but inject our own, and do not ignore tblsUpdated.
-        // And for wh-level, we do no special processing, and use all of dbsUpdated and
-        // tblsUpdated as-is.
-
-        // Additional Note - although this var says "dbNameOrPattern", on REPL LOAD side,
-        // we do not support a pattern It can be null or empty, in which case
-        // we re-use the existing name from the dump, or it can be specified,
-        // in which case we honour it. However, having this be a pattern is an error.
-        // Ditto for tblNameOrPattern.
-
-
-        if (evstage > 0){
-          if ((tblNameOrPattern != null) && (!tblNameOrPattern.isEmpty())){
-            // if tblNameOrPattern is specified, then dbNameOrPattern will be too, and
-            // thus, this is a table-level REPL LOAD - only table needs updating.
-            // If any of the individual events logged any other dbs as having changed,
-            // null them out.
-            dbsUpdated.clear();
-            tablesUpdated.clear();
-            tablesUpdated.put(dbNameOrPattern + "." + tblNameOrPattern, lastEvid);
-          } else  if ((dbNameOrPattern != null) && (!dbNameOrPattern.isEmpty())){
-            // if dbNameOrPattern is specified and tblNameOrPattern isn't, this is a
-            // db-level update, and thus, the database needs updating. In addition.
-            dbsUpdated.clear();
-            dbsUpdated.put(dbNameOrPattern, lastEvid);
-          }
-        }
-
-        for (String tableName : tablesUpdated.keySet()){
-          // weird - AlterTableDesc requires a HashMap to update props instead of a Map.
-          HashMap<String,String> mapProp = new HashMap<String,String>();
-          String eventId = tablesUpdated.get(tableName).toString();
-
-          mapProp.put(ReplicationSpec.KEY.CURR_STATE_ID.toString(), eventId);
-          AlterTableDesc alterTblDesc =  new AlterTableDesc(
-              AlterTableDesc.AlterTableTypes.ADDPROPS, new ReplicationSpec(eventId, eventId));
-          alterTblDesc.setProps(mapProp);
-          alterTblDesc.setOldName(tableName);
-          Task<? extends Serializable> updateReplIdTask = TaskFactory.get(
-              new DDLWork(inputs, outputs, alterTblDesc), conf);
-          taskChainTail.addDependentTask(updateReplIdTask);
-          taskChainTail = updateReplIdTask;
-        }
-        for (String dbName : dbsUpdated.keySet()){
-          Map<String,String> mapProp = new HashMap<String,String>();
-          String eventId = dbsUpdated.get(dbName).toString();
-
-          mapProp.put(ReplicationSpec.KEY.CURR_STATE_ID.toString(), eventId);
-          AlterDatabaseDesc alterDbDesc = new AlterDatabaseDesc(dbName, mapProp, new ReplicationSpec(eventId, eventId));
-          Task<? extends Serializable> updateReplIdTask = TaskFactory.get(
-              new DDLWork(inputs, outputs, alterDbDesc), conf);
-          taskChainTail.addDependentTask(updateReplIdTask);
-          taskChainTail = updateReplIdTask;
         }
         rootTasks.add(evTaskRoot);
         REPL_STATE_LOG.info("Repl Load: Completed analyzing Repl load for DB: {} from path {} and created import " +
@@ -474,12 +392,13 @@ public class ReplicationSemanticAnalyzer extends BaseSemanticAnalyzer {
       // TODO : simple wrap & rethrow for now, clean up with error codes
       throw new SemanticException(e);
     }
-
   }
 
   private List<Task<? extends Serializable>> analyzeEventLoad(
-      String dbName, String tblName, String location, Task<? extends Serializable> precursor,
-      Map<String, Long> dbsUpdated, Map<String, Long> tablesUpdated, DumpMetaData dmd)
+      String dbName, String tblName,
+      String location,
+      Task<? extends Serializable> precursor,
+      DumpMetaData dmd)
       throws SemanticException {
     MessageHandler.Context context =
         new MessageHandler.Context(dbName, tblName, location, precursor, dmd, conf, db, ctx, LOG);
@@ -493,192 +412,111 @@ public class ReplicationSemanticAnalyzer extends BaseSemanticAnalyzer {
             precursor.getClass(), precursor.getId(), t.getClass(), t.getId());
       }
     }
-    dbsUpdated.putAll(messageHandler.databasesUpdated());
-    tablesUpdated.putAll(messageHandler.tablesUpdated());
     inputs.addAll(messageHandler.readEntities());
     outputs.addAll(messageHandler.writeEntities());
-    return tasks;
+    return addUpdateReplStateTasks(StringUtils.isEmpty(tblName),
+                            messageHandler.getUpdatedMetadata(), tasks);
   }
 
-  private boolean existEmptyDb(String dbName) throws InvalidOperationException, HiveException {
-    Hive hiveDb = Hive.get();
-    Database db = hiveDb.getDatabase(dbName);
-    if (null != db) {
-      List<String> allTables = hiveDb.getAllTables(dbName);
-      List<String> allFunctions = hiveDb.getFunctions(dbName, "*");
-      if (!allTables.isEmpty()) {
-        throw new InvalidOperationException(
-                "Database " + db.getName() + " is not empty. One or more tables exist.");
-      }
-      if (!allFunctions.isEmpty()) {
-        throw new InvalidOperationException(
-                "Database " + db.getName() + " is not empty. One or more functions exist.");
-      }
+  private Task<? extends Serializable> tableUpdateReplStateTask(
+                                                        String dbName,
+                                                        String tableName,
+                                                        Map<String, String> partSpec,
+                                                        String replState,
+                                                        Task<? extends Serializable> preCursor) {
+    HashMap<String, String> mapProp = new HashMap<>();
+    mapProp.put(ReplicationSpec.KEY.CURR_STATE_ID.toString(), replState);
 
-      return true;
+    AlterTableDesc alterTblDesc =  new AlterTableDesc(
+            AlterTableDesc.AlterTableTypes.ADDPROPS, new ReplicationSpec(replState, replState));
+    alterTblDesc.setProps(mapProp);
+    alterTblDesc.setOldName(dbName + "." + tableName);
+    alterTblDesc.setPartSpec((HashMap<String, String>)partSpec);
+
+    Task<? extends Serializable> updateReplIdTask = TaskFactory.get(
+                      new DDLWork(inputs, outputs, alterTblDesc), conf);
+
+    // Link the update repl state task with dependency collection task
+    if (preCursor != null) {
+      preCursor.addDependentTask(updateReplIdTask);
+      LOG.debug("Added {}:{} as a precursor of {}:{}",
+              preCursor.getClass(), preCursor.getId(),
+              updateReplIdTask.getClass(), updateReplIdTask.getId());
     }
-
-    return false;
+    return updateReplIdTask;
   }
 
-  private void analyzeDatabaseLoad(String dbName, FileSystem fs, FileStatus dir)
-      throws SemanticException {
-    try {
-      // Path being passed to us is a db dump location. We go ahead and load as needed.
-      // dbName might be null or empty, in which case we keep the original db name for the new
-      // database creation
+  private Task<? extends Serializable> dbUpdateReplStateTask(
+                                                        String dbName,
+                                                        String replState,
+                                                        Task<? extends Serializable> preCursor) {
+    HashMap<String, String> mapProp = new HashMap<>();
+    mapProp.put(ReplicationSpec.KEY.CURR_STATE_ID.toString(), replState);
 
-      // Two steps here - first, we read the _metadata file here, and create a CreateDatabaseDesc
-      // associated with that
-      // Then, we iterate over all subdirs, and create table imports for each.
+    AlterDatabaseDesc alterDbDesc = new AlterDatabaseDesc(
+                            dbName, mapProp, new ReplicationSpec(replState, replState));
+    Task<? extends Serializable> updateReplIdTask = TaskFactory.get(
+                            new DDLWork(inputs, outputs, alterDbDesc), conf);
 
-      MetaData rv = new MetaData();
-      try {
-        rv = EximUtil.readMetaData(fs, new Path(dir.getPath(), EximUtil.METADATA_NAME));
-      } catch (IOException e) {
-        throw new SemanticException(ErrorMsg.INVALID_PATH.getMsg(), e);
-      }
-
-      Database dbObj = rv.getDatabase();
-
-      if (dbObj == null) {
-        throw new IllegalArgumentException(
-            "_metadata file read did not contain a db object - invalid dump.");
-      }
-
-      if ((dbName == null) || (dbName.isEmpty())) {
-        // We use dbName specified as long as it is not null/empty. If so, then we use the original
-        // name
-        // recorded in the thrift object.
-        dbName = dbObj.getName();
-      }
-
-      REPL_STATE_LOG.info("Repl Load: Started analyzing Repl Load for DB: {} from Dump Dir: {}, Dump Type: BOOTSTRAP",
-                          dbName, dir.getPath().toUri().toString());
-
-      Task<? extends Serializable> dbRootTask = null;
-      if (existEmptyDb(dbName)) {
-        AlterDatabaseDesc alterDbDesc = new AlterDatabaseDesc(dbName, dbObj.getParameters(), null);
-        dbRootTask = TaskFactory.get(new DDLWork(inputs, outputs, alterDbDesc), conf);
-      } else {
-        CreateDatabaseDesc createDbDesc = new CreateDatabaseDesc();
-        createDbDesc.setName(dbName);
-        createDbDesc.setComment(dbObj.getDescription());
-        createDbDesc.setDatabaseProperties(dbObj.getParameters());
-        // note that we do not set location - for repl load, we want that auto-created.
-
-        createDbDesc.setIfNotExists(false);
-        // If it exists, we want this to be an error condition. Repl Load is not intended to replace a
-        // db.
-        // TODO: we might revisit this in create-drop-recreate cases, needs some thinking on.
-        dbRootTask = TaskFactory.get(new DDLWork(inputs, outputs, createDbDesc), conf);
-      }
-
-      rootTasks.add(dbRootTask);
-      FileStatus[] dirsInDbPath = fs.listStatus(dir.getPath(), EximUtil.getDirectoryFilter(fs));
-
-      for (FileStatus tableDir : Collections2.filter(Arrays.asList(dirsInDbPath), new TableDirPredicate())) {
-        analyzeTableLoad(
-            dbName, null, tableDir.getPath().toUri().toString(), dbRootTask, null, null);
-        REPL_STATE_LOG.info("Repl Load: Analyzed table/view/partition load from path {}",
-                            tableDir.getPath().toUri().toString());
-      }
-
-      //Function load
-      Path functionMetaDataRoot = new Path(dir.getPath(), FUNCTIONS_ROOT_DIR_NAME);
-      if (fs.exists(functionMetaDataRoot)) {
-        List<FileStatus> functionDirectories =
-            Arrays.asList(fs.listStatus(functionMetaDataRoot, EximUtil.getDirectoryFilter(fs)));
-        for (FileStatus functionDir : functionDirectories) {
-          analyzeFunctionLoad(dbName, functionDir, dbRootTask);
-          REPL_STATE_LOG.info("Repl Load: Analyzed function load from path {}",
-                              functionDir.getPath().toUri().toString());
-        }
-      }
-
-      REPL_STATE_LOG.info("Repl Load: Completed analyzing Repl Load for DB: {} and created import (DDL/COPY/MOVE) tasks",
-              dbName);
-    } catch (Exception e) {
-      throw new SemanticException(e);
+    // Link the update repl state task with dependency collection task
+    if (preCursor != null) {
+      preCursor.addDependentTask(updateReplIdTask);
+      LOG.debug("Added {}:{} as a precursor of {}:{}",
+              preCursor.getClass(), preCursor.getId(),
+              updateReplIdTask.getClass(), updateReplIdTask.getId());
     }
+    return updateReplIdTask;
   }
 
-  private static class TableDirPredicate implements Predicate<FileStatus> {
-    @Override
-    public boolean apply(FileStatus fileStatus) {
-      return !fileStatus.getPath().getName().contains(FUNCTIONS_ROOT_DIR_NAME);
-    }
-  }
+  private List<Task<? extends Serializable>> addUpdateReplStateTasks(
+          boolean isDatabaseLoad,
+          UpdatedMetaDataTracker updatedMetadata,
+          List<Task<? extends Serializable>> importTasks) {
+    String replState = updatedMetadata.getReplicationState();
+    String dbName = updatedMetadata.getDatabase();
+    String tableName = updatedMetadata.getTable();
 
-  private void analyzeFunctionLoad(String dbName, FileStatus functionDir,
-      Task<? extends Serializable> createDbTask) throws IOException, SemanticException {
-    URI fromURI = EximUtil
-        .getValidatedURI(conf, stripQuotes(functionDir.getPath().toUri().toString()));
-    Path fromPath = new Path(fromURI.getScheme(), fromURI.getAuthority(), fromURI.getPath());
-
-    try {
-      CreateFunctionHandler handler = new CreateFunctionHandler();
-      List<Task<? extends Serializable>> tasksList = handler.handle(
-          new MessageHandler.Context(
-              dbName, null, fromPath.toString(), createDbTask, null, conf, db,
-              null, LOG)
-      );
-
-      tasksList.forEach(task -> {
-        createDbTask.addDependentTask(task);
-        LOG.debug("Added {}:{} as a precursor of {}:{}",
-            createDbTask.getClass(), createDbTask.getId(), task.getClass(),
-            task.getId());
-
-      });
-      inputs.addAll(handler.readEntities());
-    } catch (Exception e) {
-      throw new SemanticException(ErrorMsg.INVALID_PATH.getMsg(), e);
-    }
-  }
-
-  private List<Task<? extends Serializable>> analyzeTableLoad(
-      String dbName, String tblName, String locn,
-      Task<? extends Serializable> precursor,
-      Map<String,Long> dbsUpdated, Map<String,Long> tablesUpdated) throws SemanticException {
-    // Path being passed to us is a table dump location. We go ahead and load it in as needed.
-    // If tblName is null, then we default to the table name specified in _metadata, which is good.
-    // or are both specified, in which case, that's what we are intended to create the new table as.
-    if (dbName == null || dbName.isEmpty()) {
-      throw new SemanticException("Database name cannot be null for a table load");
-    }
-    try {
-      // no location set on repl loads
-      boolean isLocationSet = false;
-      // all repl imports are non-external
-      boolean isExternalSet = false;
-      // bootstrap loads are not partition level
-      boolean isPartSpecSet = false;
-      // repl loads are not partition level
-      LinkedHashMap<String, String> parsedPartSpec = null;
-      // no location for repl imports
-      String parsedLocation = null;
-      List<Task<? extends Serializable>> importTasks = new ArrayList<Task<? extends Serializable>>();
-
-      EximUtil.SemanticAnalyzerWrapperContext x =
-          new EximUtil.SemanticAnalyzerWrapperContext(conf, db, inputs, outputs, importTasks, LOG,
-              ctx);
-      ImportSemanticAnalyzer.prepareImport(isLocationSet, isExternalSet, isPartSpecSet,
-          (precursor != null), parsedLocation, tblName, dbName, parsedPartSpec, locn, x,
-          dbsUpdated, tablesUpdated);
-
-      if (precursor != null) {
-        for (Task<? extends Serializable> t : importTasks) {
-          precursor.addDependentTask(t);
-          LOG.debug("Added {}:{} as a precursor of {}:{}",
-              precursor.getClass(), precursor.getId(), t.getClass(), t.getId());
-        }
-      }
-
+    // If no import tasks generated by the event or no table updated for table level load, then no
+    // need to update the repl state to any object.
+    if (importTasks.isEmpty() || (!isDatabaseLoad && (tableName == null))) {
+      LOG.debug("No objects need update of repl state: Either 0 import tasks or table level load");
       return importTasks;
-    } catch (Exception e) {
-      throw new SemanticException(e);
     }
+
+    // Create a barrier task for dependency collection of import tasks
+    Task<? extends Serializable> barrierTask = TaskFactory.get(new DependencyCollectionWork(), conf);
+
+    // Link import tasks to the barrier task which will in-turn linked with repl state update tasks
+    for (Task<? extends Serializable> t : importTasks){
+      t.addDependentTask(barrierTask);
+      LOG.debug("Added {}:{} as a precursor of barrier task {}:{}",
+              t.getClass(), t.getId(), barrierTask.getClass(), barrierTask.getId());
+    }
+
+    List<Task<? extends Serializable>> tasks = new ArrayList<>();
+    Task<? extends Serializable> updateReplIdTask;
+
+    // If any partition is updated, then update repl state in partition object
+    for (final Map<String, String> partSpec : updatedMetadata.getPartitions()) {
+      updateReplIdTask = tableUpdateReplStateTask(dbName, tableName, partSpec, replState, barrierTask);
+      tasks.add(updateReplIdTask);
+    }
+
+    if (tableName != null) {
+      // If any table/partition is updated, then update repl state in table object
+      updateReplIdTask = tableUpdateReplStateTask(dbName, tableName, null, replState, barrierTask);
+      tasks.add(updateReplIdTask);
+    }
+
+    // For table level load, need not update replication state for the database
+    if (isDatabaseLoad) {
+      // If any table/partition is updated, then update repl state in db object
+      updateReplIdTask = dbUpdateReplStateTask(dbName, replState, barrierTask);
+      tasks.add(updateReplIdTask);
+    }
+
+    // At least one task would have been added to update the repl state
+    return tasks;
   }
 
   // REPL STATUS

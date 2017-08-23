@@ -81,19 +81,15 @@ import org.apache.hadoop.hive.metastore.api.Type;
 import org.apache.hadoop.hive.metastore.api.UnknownDBException;
 import org.apache.hadoop.hive.metastore.api.UnknownPartitionException;
 import org.apache.hadoop.hive.metastore.api.UnknownTableException;
-import org.apache.hadoop.hive.metastore.columnstats.merge.ColumnStatsMerger;
-import org.apache.hadoop.hive.metastore.columnstats.merge.ColumnStatsMergerFactory;
 import org.apache.hadoop.hive.metastore.partition.spec.PartitionSpecProxy;
 import org.apache.hadoop.hive.serde2.typeinfo.PrimitiveTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
-import org.apache.hadoop.util.StringUtils;
 import org.apache.hive.common.util.HiveStringUtils;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Lists;
 
 // TODO filter->expr
 // TODO functionCache
@@ -277,6 +273,7 @@ public class CachedStore implements RawStore, Configurable {
   synchronized void startCacheUpdateService() {
     if (cacheUpdateMaster == null) {
       cacheUpdateMaster = Executors.newScheduledThreadPool(1, new ThreadFactory() {
+        @Override
         public Thread newThread(Runnable r) {
           Thread t = Executors.defaultThreadFactory().newThread(r);
           t.setName("CachedStore-CacheUpdateService: Thread-" + t.getId());
@@ -321,7 +318,7 @@ public class CachedStore implements RawStore, Configurable {
 
   static class CacheUpdateMasterWork implements Runnable {
 
-    private CachedStore cachedStore;
+    private final CachedStore cachedStore;
 
     public CacheUpdateMasterWork(CachedStore cachedStore) {
       this.cachedStore = cachedStore;
@@ -1540,62 +1537,50 @@ public class CachedStore implements RawStore, Configurable {
   }
 
   @Override
-  public AggrStats get_aggr_stats_for(String dbName, String tblName, List<String> partNames,
-      List<String> colNames) throws MetaException, NoSuchObjectException {
-    List<ColumnStatisticsObj> colStats = new ArrayList<ColumnStatisticsObj>(colNames.size());
-    for (String colName : colNames) {
-      ColumnStatisticsObj colStat =
-          mergeColStatsForPartitions(HiveStringUtils.normalizeIdentifier(dbName),
-              HiveStringUtils.normalizeIdentifier(tblName), partNames, colName);
-      if (colStat == null) {
-        // Stop and fall back to underlying RawStore
-        colStats = null;
-        break;
-      } else {
-        colStats.add(colStat);
-      }
-    }
-    if (colStats == null) {
-      return rawStore.get_aggr_stats_for(dbName, tblName, partNames, colNames);
-    } else {
+    public AggrStats get_aggr_stats_for(String dbName, String tblName, List<String> partNames,
+	  List<String> colNames) throws MetaException, NoSuchObjectException {
+	  List<ColumnStatisticsObj> colStats = mergeColStatsForPartitions(
+	    HiveStringUtils.normalizeIdentifier(dbName), HiveStringUtils.normalizeIdentifier(tblName),
+	    partNames, colNames);
       return new AggrStats(colStats, partNames.size());
-    }
-  }
 
-  private ColumnStatisticsObj mergeColStatsForPartitions(String dbName, String tblName,
-      List<String> partNames, String colName) throws MetaException {
+	  }
+
+  private List<ColumnStatisticsObj> mergeColStatsForPartitions(String dbName, String tblName,
+      List<String> partNames, List<String> colNames) throws MetaException {
     final boolean useDensityFunctionForNDVEstimation = HiveConf.getBoolVar(getConf(),
         HiveConf.ConfVars.HIVE_METASTORE_STATS_NDV_DENSITY_FUNCTION);
     final double ndvTuner = HiveConf.getFloatVar(getConf(),
         HiveConf.ConfVars.HIVE_METASTORE_STATS_NDV_TUNER);
     Map<String, List<ColumnStatistics>> map = new HashMap<>();
-    List<ColumnStatistics> list = new ArrayList<>();
-    boolean areAllPartsFound = true;
-    for (String partName : partNames) {
-      String colStatsCacheKey = CacheUtils.buildKey(dbName, tblName, partNameToVals(partName),
-          colName);
-      List<ColumnStatisticsObj> singleObj = new ArrayList<>();
-      ColumnStatisticsObj colStatsForPart = SharedCache
-          .getCachedPartitionColStats(colStatsCacheKey);
-      if (colStatsForPart != null) {
-        singleObj.add(colStatsForPart);
-        ColumnStatisticsDesc css = new ColumnStatisticsDesc(false, dbName, tblName);
-        css.setPartName(partName);
-        list.add(new ColumnStatistics(css, singleObj));
-      } else {
-        areAllPartsFound = false;
+
+    for (String colName : colNames) {
+      List<ColumnStatistics> colStats = new ArrayList<>();
+      for (String partName : partNames) {
+        String colStatsCacheKey = CacheUtils.buildKey(dbName, tblName, partNameToVals(partName),
+            colName);
+        List<ColumnStatisticsObj> colStat = new ArrayList<>();
+        ColumnStatisticsObj colStatsForPart = SharedCache
+            .getCachedPartitionColStats(colStatsCacheKey);
+        if (colStatsForPart != null) {
+          colStat.add(colStatsForPart);
+          ColumnStatisticsDesc csDesc = new ColumnStatisticsDesc(false, dbName, tblName);
+          csDesc.setPartName(partName);
+          colStats.add(new ColumnStatistics(csDesc, colStat));
+        } else {
+          LOG.debug("Stats not found in CachedStore for: dbName={} tblName={} partName={} colName={}",
+            dbName, tblName,partName, colName);
+        }
       }
+      map.put(colName, colStats);
     }
-    map.put(colName, list);
-    List<String> colNames = new ArrayList<>();
-    colNames.add(colName);
     // Note that enableBitVector does not apply here because ColumnStatisticsObj
     // itself will tell whether
     // bitvector is null or not and aggr logic can automatically apply.
-    return MetaStoreUtils
-        .aggrPartitionStats(map, dbName, tblName, partNames, colNames, areAllPartsFound,
-            useDensityFunctionForNDVEstimation, ndvTuner).iterator().next();
+    return MetaStoreUtils.aggrPartitionStats(map, dbName, tblName, partNames, colNames,
+        useDensityFunctionForNDVEstimation, ndvTuner);
   }
+
 
   @Override
   public long cleanupEvents() {
@@ -1895,16 +1880,17 @@ public class CachedStore implements RawStore, Configurable {
   }
 
   @Override
-  public void createTableWithConstraints(Table tbl,
+  public List<String> createTableWithConstraints(Table tbl,
       List<SQLPrimaryKey> primaryKeys, List<SQLForeignKey> foreignKeys,
       List<SQLUniqueConstraint> uniqueConstraints,
       List<SQLNotNullConstraint> notNullConstraints)
       throws InvalidObjectException, MetaException {
     // TODO constraintCache
-    rawStore.createTableWithConstraints(tbl, primaryKeys, foreignKeys,
+    List<String> constraintNames = rawStore.createTableWithConstraints(tbl, primaryKeys, foreignKeys,
             uniqueConstraints, notNullConstraints);
     SharedCache.addTableToCache(HiveStringUtils.normalizeIdentifier(tbl.getDbName()),
         HiveStringUtils.normalizeIdentifier(tbl.getTableName()), tbl);
+    return constraintNames;
   }
 
   @Override
@@ -1915,31 +1901,31 @@ public class CachedStore implements RawStore, Configurable {
   }
 
   @Override
-  public void addPrimaryKeys(List<SQLPrimaryKey> pks)
+  public List<String> addPrimaryKeys(List<SQLPrimaryKey> pks)
       throws InvalidObjectException, MetaException {
     // TODO constraintCache
-    rawStore.addPrimaryKeys(pks);
+    return rawStore.addPrimaryKeys(pks);
   }
 
   @Override
-  public void addForeignKeys(List<SQLForeignKey> fks)
+  public List<String> addForeignKeys(List<SQLForeignKey> fks)
       throws InvalidObjectException, MetaException {
     // TODO constraintCache
-    rawStore.addForeignKeys(fks);
+    return rawStore.addForeignKeys(fks);
   }
 
   @Override
-  public void addUniqueConstraints(List<SQLUniqueConstraint> uks)
+  public List<String> addUniqueConstraints(List<SQLUniqueConstraint> uks)
       throws InvalidObjectException, MetaException {
     // TODO constraintCache
-    rawStore.addUniqueConstraints(uks);
+    return rawStore.addUniqueConstraints(uks);
   }
 
   @Override
-  public void addNotNullConstraints(List<SQLNotNullConstraint> nns)
+  public List<String> addNotNullConstraints(List<SQLNotNullConstraint> nns)
       throws InvalidObjectException, MetaException {
     // TODO constraintCache
-    rawStore.addNotNullConstraints(nns);
+    return rawStore.addNotNullConstraints(nns);
   }
 
   @Override

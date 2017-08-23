@@ -480,6 +480,9 @@ public class DDLSemanticAnalyzer extends BaseSemanticAnalyzer {
     case HiveParser.TOK_ALTERDATABASE_OWNER:
       analyzeAlterDatabaseOwner(ast);
       break;
+    case HiveParser.TOK_ALTERDATABASE_LOCATION:
+      analyzeAlterDatabaseLocation(ast);
+      break;
     case HiveParser.TOK_CREATEROLE:
       analyzeCreateRole(ast);
       break;
@@ -722,6 +725,14 @@ public class DDLSemanticAnalyzer extends BaseSemanticAnalyzer {
     }
 
     AlterDatabaseDesc alterDesc = new AlterDatabaseDesc(dbName, principalDesc);
+    addAlterDbDesc(alterDesc);
+  }
+
+  private void analyzeAlterDatabaseLocation(ASTNode ast) throws SemanticException {
+    String dbName = getUnescapedName((ASTNode) ast.getChild(0));
+    String newLocation = unescapeSQLString(ast.getChild(1).getText());
+    addLocationToOutputs(newLocation);
+    AlterDatabaseDesc alterDesc = new AlterDatabaseDesc(dbName, newLocation);
     addAlterDbDesc(alterDesc);
   }
 
@@ -1782,7 +1793,7 @@ public class DDLSemanticAnalyzer extends BaseSemanticAnalyzer {
   private void analyzeAlterTableDropConstraint(ASTNode ast, String tableName)
     throws SemanticException {
     String dropConstraintName = unescapeIdentifier(ast.getChild(0).getText());
-    AlterTableDesc alterTblDesc = new AlterTableDesc(tableName, dropConstraintName);
+    AlterTableDesc alterTblDesc = new AlterTableDesc(tableName, dropConstraintName, (ReplicationSpec)null);
 
     rootTasks.add(TaskFactory.get(new DDLWork(getInputs(), getOutputs(),
         alterTblDesc), conf));
@@ -1815,7 +1826,7 @@ public class DDLSemanticAnalyzer extends BaseSemanticAnalyzer {
                 child.getToken().getText()));
     }
     AlterTableDesc alterTblDesc = new AlterTableDesc(tableName, primaryKeys, foreignKeys,
-            uniqueConstraints);
+            uniqueConstraints, null);
 
     rootTasks.add(TaskFactory.get(new DDLWork(getInputs(), getOutputs(),
         alterTblDesc), conf));

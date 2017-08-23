@@ -325,6 +325,11 @@ public class RelOptHiveTable extends RelOptAbstractTable {
                 new HashMap<String, ColStatistics>(hiveColStats.size());
             for (ColStatistics cs : hiveColStats) {
               columnStatsMap.put(cs.getColumnName(), cs);
+              // even though the stats were estimated we need to warn user that
+              // stats are not available
+              if(cs.isEstimated()) {
+                colNamesFailedStats.add(cs.getColumnName());
+              }
             }
             hiveColStats.clear();
             for (String colName : nonPartColNamesThatRqrStats) {
@@ -357,6 +362,9 @@ public class RelOptHiveTable extends RelOptAbstractTable {
               ColStatistics cs = stats.getColumnStatisticsFromColName(c);
               if (cs != null) {
                 hiveColStats.add(cs);
+                if(cs.isEstimated()) {
+                  colNamesFailedStats.add(c);
+                }
               } else {
                 colNamesFailedStats.add(c);
               }

@@ -385,6 +385,12 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
 
       AlterTableDesc alterTbl = work.getAlterTblDesc();
       if (alterTbl != null) {
+        if (!allowOperationInReplicationScope(db, alterTbl.getOldName(), null, alterTbl.getReplicationSpec())) {
+          // no alter, the table is missing either due to drop/rename which follows the alter.
+          // or the existing table is newer than our update.
+          LOG.debug("DDLTask: Alter Table is skipped as table {} is newer than update", alterTbl.getOldName());
+          return 0;
+        }
         if (alterTbl.getOp() == AlterTableTypes.DROPCONSTRAINT ) {
           return dropConstraint(db, alterTbl);
         } else if (alterTbl.getOp() == AlterTableTypes.ADDCONSTRAINT) {
@@ -951,6 +957,26 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
     case ALTER_OWNER:
       database.setOwnerName(alterDbDesc.getOwnerPrincipal().getName());
       database.setOwnerType(alterDbDesc.getOwnerPrincipal().getType());
+      break;
+
+    case ALTER_LOCATION:
+      try {
+        String newLocation = alterDbDesc.getLocation();
+        URI locationURI = new URI(newLocation);
+        if (   !locationURI.isAbsolute()
+            || StringUtils.isBlank(locationURI.getScheme())) {
+          throw new HiveException(ErrorMsg.BAD_LOCATION_VALUE, newLocation);
+        }
+        if (newLocation.equals(database.getLocationUri())) {
+          LOG.info("AlterDatabase skipped. No change in location.");
+        }
+        else {
+          database.setLocationUri(newLocation);
+        }
+      }
+      catch (URISyntaxException e) {
+        throw new HiveException(e);
+      }
       break;
 
     default:
@@ -3571,13 +3597,6 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
    *           Throws this exception if an unexpected error occurs.
    */
   private int alterTable(Hive db, AlterTableDesc alterTbl) throws HiveException {
-    if (!allowOperationInReplicationScope(db, alterTbl.getOldName(), null, alterTbl.getReplicationSpec())) {
-      // no alter, the table is missing either due to drop/rename which follows the alter.
-      // or the existing table is newer than our update.
-      LOG.debug("DDLTask: Alter Table is skipped as table {} is newer than update", alterTbl.getOldName());
-      return 0;
-    }
-
     // alter the table
     Table tbl = db.getTable(alterTbl.getOldName());
 
@@ -3627,7 +3646,7 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
       if (allPartitions == null) {
         db.alterTable(alterTbl.getOldName(), tbl, alterTbl.getIsCascade(), alterTbl.getEnvironmentContext());
       } else {
-        db.alterPartitions(tbl.getTableName(), allPartitions, alterTbl.getEnvironmentContext());
+        db.alterPartitions(alterTbl.getOldName(), allPartitions, alterTbl.getEnvironmentContext());
       }
       // Add constraints if necessary
       addConstraints(db, alterTbl);

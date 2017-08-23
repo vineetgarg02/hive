@@ -759,7 +759,8 @@ public class StatsUtils {
         hasNull = (colStats == null) || (colStats.size() < neededColumns.size());
     if (colStats != null) {
       for (ColStatistics cs : colStats) {
-        boolean isNull = cs == null;
+        // either colstats is null or is estimated
+        boolean isNull = (cs == null) ? true: (cs.isEstimated());
         hasStats |= !isNull;
         hasNull |= isNull;
         if (hasNull && hasStats) break;
@@ -867,6 +868,7 @@ public class StatsUtils {
       List<ColumnInfo> schema) {
     ColumnInfo cinfo = getColumnInfoForColumn(colName, schema);
     ColStatistics cs = new ColStatistics(colName, cinfo.getTypeName());
+    cs.setIsEstimated(true);
 
     String colTypeLowerCase = cinfo.getTypeName().toLowerCase();
 

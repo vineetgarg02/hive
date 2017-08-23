@@ -19,6 +19,7 @@
 package org.apache.hadoop.hive.metastore;
 
 import java.lang.reflect.Field;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -30,6 +31,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -42,6 +44,7 @@ import org.datanucleus.api.jdo.JDOPersistenceManager;
 import org.datanucleus.api.jdo.JDOPersistenceManagerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -83,6 +86,7 @@ import org.apache.hadoop.hive.ql.io.HiveInputFormat;
 import org.apache.hadoop.hive.ql.io.HiveOutputFormat;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.hive.serde.serdeConstants;
+import org.apache.hadoop.hive.serde2.SerDeException;
 import org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.thrift.TException;
@@ -1725,6 +1729,61 @@ public abstract class TestHiveMetaStore extends TestCase {
     }
   }
 
+  static class ClassNotFoundSerde extends LazySimpleSerDe {
+
+    public ClassNotFoundSerde() throws Exception {
+    }
+
+    @Override
+    public void initialize(Configuration job, Properties tbl) throws SerDeException {
+      super.initialize(job, tbl);
+      throw new NoClassDefFoundError();
+    }
+
+  }
+
+  public void testGetSchemaWithNoClassDefFoundError() throws Exception {
+    try {
+      String dbName = "testDb";
+      String tblName = "testTable";
+
+      client.dropTable(dbName, tblName);
+      silentDropDatabase(dbName);
+
+      Database db = new Database();
+      db.setName(dbName);
+      client.createDatabase(db);
+
+      Table tbl = new Table();
+      tbl.setDbName(dbName);
+      tbl.setTableName(tblName);
+
+      ArrayList<FieldSchema> cols = new ArrayList<FieldSchema>(1);
+      cols.add(new FieldSchema("name", serdeConstants.STRING_TYPE_NAME, ""));
+
+      StorageDescriptor sd = new StorageDescriptor();
+      tbl.setSd(sd);
+      sd.setCols(cols);
+      SerDeInfo serdeInfo = new SerDeInfo();
+      sd.setSerdeInfo(serdeInfo);
+      serdeInfo.setSerializationLib(ClassNotFoundSerde.class.getName());
+
+      client.createTable(tbl);
+
+      Boolean MetaExceptionCaught = false;
+      try {
+        client.getSchema(dbName, tblName);
+      } catch (MetaException me) {
+        MetaExceptionCaught = true;
+      }
+      assertTrue("MetaException is expected to be caught for throwing NoClassDefFoundError", MetaExceptionCaught);
+    } catch (Throwable e) {
+      System.err.println(StringUtils.stringifyException(e));
+      System.err.println("testGetSchemaWithNoClassDefFoundError() failed.");
+      throw e;
+    }
+  }
+
   public void testAlterTable() throws Exception {
     String dbName = "alterdb";
     String invTblName = "alter-tbl";
@@ -3219,6 +3278,34 @@ public abstract class TestHiveMetaStore extends TestCase {
 
     // Cleanup
     client.dropDatabase(dbName, true, true, true);
+  }
+
+  @Test
+  public void testDBLocationChange() throws IOException, TException {
+    final String dbName = "alterDbLocation";
+    String defaultUri = HiveConf.getVar(hiveConf, HiveConf.ConfVars.METASTOREWAREHOUSE) + "/default_location.db";
+    String newUri = HiveConf.getVar(hiveConf, HiveConf.ConfVars.METASTOREWAREHOUSE) + "/new_location.db";
+
+    Database db = new Database();
+    db.setName(dbName);
+    db.setLocationUri(defaultUri);
+    client.createDatabase(db);
+
+    db = client.getDatabase(dbName);
+
+    assertEquals("Incorrect default location of the database",
+        warehouse.getDnsPath(new Path(defaultUri)).toString(), db.getLocationUri());
+
+    db.setLocationUri(newUri);
+    client.alterDatabase(dbName, db);
+
+    db = client.getDatabase(dbName);
+
+    assertEquals("Incorrect new location of the database",
+        warehouse.getDnsPath(new Path(newUri)).toString(), db.getLocationUri());
+
+    client.dropDatabase(dbName);
+    silentDropDatabase(dbName);
   }
 
   private void checkDbOwnerType(String dbName, String ownerName, PrincipalType ownerType)

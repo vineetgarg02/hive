@@ -48,7 +48,7 @@ STAGE PLANS:
   Stage: Stage-1
     Spark
       Edges:
-        Reducer 2 <- Map 1 (GROUP, 2)
+        Reducer 2 <- Map 1 (GROUP, 4)
 #### A masked pattern was here ####
       Vertices:
         Map 1 
@@ -235,7 +235,7 @@ STAGE PLANS:
   Stage: Stage-1
     Spark
       Edges:
-        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 2), Map 4 (PARTITION-LEVEL SORT, 2)
+        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 4), Map 4 (PARTITION-LEVEL SORT, 4)
         Reducer 3 <- Reducer 2 (GROUP, 1)
 #### A masked pattern was here ####
       Vertices:
@@ -342,7 +342,7 @@ STAGE PLANS:
   Stage: Stage-1
     Spark
       Edges:
-        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 2), Map 4 (PARTITION-LEVEL SORT, 2)
+        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 4), Map 4 (PARTITION-LEVEL SORT, 4)
         Reducer 3 <- Reducer 2 (GROUP, 1)
 #### A masked pattern was here ####
       Vertices:
@@ -491,7 +491,7 @@ STAGE PLANS:
   Stage: Stage-1
     Spark
       Edges:
-        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 2), Map 4 (PARTITION-LEVEL SORT, 2)
+        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 4), Map 4 (PARTITION-LEVEL SORT, 4)
         Reducer 3 <- Reducer 2 (GROUP, 1)
 #### A masked pattern was here ####
       Vertices:
@@ -598,7 +598,7 @@ STAGE PLANS:
   Stage: Stage-1
     Spark
       Edges:
-        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 2), Map 4 (PARTITION-LEVEL SORT, 2)
+        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 4), Map 4 (PARTITION-LEVEL SORT, 4)
         Reducer 3 <- Reducer 2 (GROUP, 1)
 #### A masked pattern was here ####
       Vertices:
@@ -711,10 +711,10 @@ STAGE PLANS:
             Map Operator Tree:
                 TableScan
                   alias: srcpart_date
-                  filterExpr: ((date = '2008-04-08') and ds is not null) (type: boolean)
+                  filterExpr: ((date = '2008-04-08') and abs(((- UDFToLong(concat(UDFToString(day(ds)), '0'))) + 10)) is not null) (type: boolean)
                   Statistics: Num rows: 2 Data size: 42 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
-                    predicate: ((date = '2008-04-08') and ds is not null) (type: boolean)
+                    predicate: ((date = '2008-04-08') and abs(((- UDFToLong(concat(UDFToString(day(ds)), '0'))) + 10)) is not null) (type: boolean)
                     Statistics: Num rows: 1 Data size: 21 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: ds (type: string)
@@ -738,7 +738,7 @@ STAGE PLANS:
   Stage: Stage-1
     Spark
       Edges:
-        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 2), Map 4 (PARTITION-LEVEL SORT, 2)
+        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 4), Map 4 (PARTITION-LEVEL SORT, 4)
         Reducer 3 <- Reducer 2 (GROUP, 1)
 #### A masked pattern was here ####
       Vertices:
@@ -746,25 +746,28 @@ STAGE PLANS:
             Map Operator Tree:
                 TableScan
                   alias: srcpart
-                  filterExpr: ds is not null (type: boolean)
+                  filterExpr: abs(((- UDFToLong(concat(UDFToString(day(ds)), '0'))) + 10)) is not null (type: boolean)
                   Statistics: Num rows: 2000 Data size: 21248 Basic stats: COMPLETE Column stats: NONE
-                  Select Operator
-                    expressions: ds (type: string)
-                    outputColumnNames: _col0
+                  Filter Operator
+                    predicate: abs(((- UDFToLong(concat(UDFToString(day(ds)), '0'))) + 10)) is not null (type: boolean)
                     Statistics: Num rows: 2000 Data size: 21248 Basic stats: COMPLETE Column stats: NONE
-                    Reduce Output Operator
-                      key expressions: abs(((- UDFToLong(concat(UDFToString(day(_col0)), '0'))) + 10)) (type: bigint)
-                      sort order: +
-                      Map-reduce partition columns: abs(((- UDFToLong(concat(UDFToString(day(_col0)), '0'))) + 10)) (type: bigint)
+                    Select Operator
+                      expressions: ds (type: string)
+                      outputColumnNames: _col0
                       Statistics: Num rows: 2000 Data size: 21248 Basic stats: COMPLETE Column stats: NONE
+                      Reduce Output Operator
+                        key expressions: abs(((- UDFToLong(concat(UDFToString(day(_col0)), '0'))) + 10)) (type: bigint)
+                        sort order: +
+                        Map-reduce partition columns: abs(((- UDFToLong(concat(UDFToString(day(_col0)), '0'))) + 10)) (type: bigint)
+                        Statistics: Num rows: 2000 Data size: 21248 Basic stats: COMPLETE Column stats: NONE
         Map 4 
             Map Operator Tree:
                 TableScan
                   alias: srcpart_date
-                  filterExpr: ((date = '2008-04-08') and ds is not null) (type: boolean)
+                  filterExpr: ((date = '2008-04-08') and abs(((- UDFToLong(concat(UDFToString(day(ds)), '0'))) + 10)) is not null) (type: boolean)
                   Statistics: Num rows: 2 Data size: 42 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
-                    predicate: ((date = '2008-04-08') and ds is not null) (type: boolean)
+                    predicate: ((date = '2008-04-08') and abs(((- UDFToLong(concat(UDFToString(day(ds)), '0'))) + 10)) is not null) (type: boolean)
                     Statistics: Num rows: 1 Data size: 21 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: ds (type: string)
@@ -878,7 +881,7 @@ STAGE PLANS:
   Stage: Stage-1
     Spark
       Edges:
-        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 2), Map 4 (PARTITION-LEVEL SORT, 2)
+        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 4), Map 4 (PARTITION-LEVEL SORT, 4)
         Reducer 3 <- Reducer 2 (GROUP, 1)
 #### A masked pattern was here ####
       Vertices:
@@ -1047,8 +1050,8 @@ STAGE PLANS:
   Stage: Stage-1
     Spark
       Edges:
-        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 2), Map 5 (PARTITION-LEVEL SORT, 2)
-        Reducer 3 <- Map 6 (PARTITION-LEVEL SORT, 2), Reducer 2 (PARTITION-LEVEL SORT, 2)
+        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 4), Map 5 (PARTITION-LEVEL SORT, 4)
+        Reducer 3 <- Map 6 (PARTITION-LEVEL SORT, 4), Reducer 2 (PARTITION-LEVEL SORT, 4)
         Reducer 4 <- Reducer 3 (GROUP, 1)
 #### A masked pattern was here ####
       Vertices:
@@ -1194,8 +1197,8 @@ STAGE PLANS:
   Stage: Stage-1
     Spark
       Edges:
-        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 2), Map 5 (PARTITION-LEVEL SORT, 2)
-        Reducer 3 <- Map 6 (PARTITION-LEVEL SORT, 2), Reducer 2 (PARTITION-LEVEL SORT, 2)
+        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 4), Map 5 (PARTITION-LEVEL SORT, 4)
+        Reducer 3 <- Map 6 (PARTITION-LEVEL SORT, 4), Reducer 2 (PARTITION-LEVEL SORT, 4)
         Reducer 4 <- Reducer 3 (GROUP, 1)
 #### A masked pattern was here ####
       Vertices:
@@ -1396,7 +1399,7 @@ STAGE PLANS:
   Stage: Stage-1
     Spark
       Edges:
-        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 2), Map 4 (PARTITION-LEVEL SORT, 2)
+        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 4), Map 4 (PARTITION-LEVEL SORT, 4)
         Reducer 3 <- Reducer 2 (GROUP, 1)
 #### A masked pattern was here ####
       Vertices:
@@ -1502,7 +1505,7 @@ STAGE PLANS:
   Stage: Stage-1
     Spark
       Edges:
-        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 2), Map 4 (PARTITION-LEVEL SORT, 2)
+        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 4), Map 4 (PARTITION-LEVEL SORT, 4)
         Reducer 3 <- Reducer 2 (GROUP, 1)
 #### A masked pattern was here ####
       Vertices:
@@ -1651,7 +1654,7 @@ STAGE PLANS:
   Stage: Stage-1
     Spark
       Edges:
-        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 2), Map 4 (PARTITION-LEVEL SORT, 2)
+        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 4), Map 4 (PARTITION-LEVEL SORT, 4)
         Reducer 3 <- Reducer 2 (GROUP, 1)
 #### A masked pattern was here ####
       Vertices:
@@ -1758,7 +1761,7 @@ STAGE PLANS:
   Stage: Stage-1
     Spark
       Edges:
-        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 2), Map 4 (PARTITION-LEVEL SORT, 2)
+        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 4), Map 4 (PARTITION-LEVEL SORT, 4)
         Reducer 3 <- Reducer 2 (GROUP, 1)
 #### A masked pattern was here ####
       Vertices:
@@ -1907,7 +1910,7 @@ STAGE PLANS:
   Stage: Stage-1
     Spark
       Edges:
-        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 2), Map 4 (PARTITION-LEVEL SORT, 2)
+        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 4), Map 4 (PARTITION-LEVEL SORT, 4)
         Reducer 3 <- Reducer 2 (GROUP, 1)
 #### A masked pattern was here ####
       Vertices:
@@ -2047,7 +2050,7 @@ STAGE PLANS:
   Stage: Stage-1
     Spark
       Edges:
-        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 2), Map 4 (PARTITION-LEVEL SORT, 2)
+        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 4), Map 4 (PARTITION-LEVEL SORT, 4)
         Reducer 3 <- Reducer 2 (GROUP, 1)
 #### A masked pattern was here ####
       Vertices:
@@ -2154,7 +2157,7 @@ STAGE PLANS:
   Stage: Stage-1
     Spark
       Edges:
-        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 2), Map 4 (PARTITION-LEVEL SORT, 2)
+        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 4), Map 4 (PARTITION-LEVEL SORT, 4)
         Reducer 3 <- Reducer 2 (GROUP, 1)
 #### A masked pattern was here ####
       Vertices:
@@ -2261,7 +2264,7 @@ STAGE PLANS:
   Stage: Stage-1
     Spark
       Edges:
-        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 2), Map 4 (PARTITION-LEVEL SORT, 2)
+        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 4), Map 4 (PARTITION-LEVEL SORT, 4)
         Reducer 3 <- Reducer 2 (GROUP, 1)
 #### A masked pattern was here ####
       Vertices:
@@ -2410,7 +2413,7 @@ STAGE PLANS:
   Stage: Stage-1
     Spark
       Edges:
-        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 2), Map 4 (PARTITION-LEVEL SORT, 2)
+        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 4), Map 4 (PARTITION-LEVEL SORT, 4)
         Reducer 3 <- Reducer 2 (GROUP, 1)
 #### A masked pattern was here ####
       Vertices:
@@ -2529,7 +2532,7 @@ STAGE PLANS:
       Edges:
         Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 1), Reducer 5 (PARTITION-LEVEL SORT, 1)
         Reducer 3 <- Reducer 2 (GROUP, 1)
-        Reducer 5 <- Map 4 (GROUP, 2)
+        Reducer 5 <- Map 4 (GROUP, 4)
 #### A masked pattern was here ####
       Vertices:
         Map 1 
@@ -2806,7 +2809,7 @@ STAGE PLANS:
   Stage: Stage-1
     Spark
       Edges:
-        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 2), Map 4 (PARTITION-LEVEL SORT, 2)
+        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 4), Map 4 (PARTITION-LEVEL SORT, 4)
         Reducer 3 <- Reducer 2 (GROUP, 1)
 #### A masked pattern was here ####
       Vertices:
@@ -2945,7 +2948,7 @@ STAGE PLANS:
   Stage: Stage-1
     Spark
       Edges:
-        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 2), Map 4 (PARTITION-LEVEL SORT, 2)
+        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 4), Map 4 (PARTITION-LEVEL SORT, 4)
         Reducer 3 <- Reducer 2 (GROUP, 1)
 #### A masked pattern was here ####
       Vertices:
@@ -3066,7 +3069,7 @@ STAGE PLANS:
   Stage: Stage-1
     Spark
       Edges:
-        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 2), Map 4 (PARTITION-LEVEL SORT, 2)
+        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 4), Map 4 (PARTITION-LEVEL SORT, 4)
         Reducer 3 <- Reducer 2 (GROUP, 1)
 #### A masked pattern was here ####
       Vertices:
@@ -3186,7 +3189,7 @@ STAGE PLANS:
   Stage: Stage-1
     Spark
       Edges:
-        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 2), Map 4 (PARTITION-LEVEL SORT, 2)
+        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 4), Map 4 (PARTITION-LEVEL SORT, 4)
         Reducer 3 <- Reducer 2 (GROUP, 1)
 #### A masked pattern was here ####
       Vertices:
@@ -3335,8 +3338,8 @@ STAGE PLANS:
   Stage: Stage-1
     Spark
       Edges:
-        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 2), Map 5 (PARTITION-LEVEL SORT, 2)
-        Reducer 3 <- Map 6 (PARTITION-LEVEL SORT, 2), Reducer 2 (PARTITION-LEVEL SORT, 2)
+        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 4), Map 5 (PARTITION-LEVEL SORT, 4)
+        Reducer 3 <- Map 6 (PARTITION-LEVEL SORT, 4), Reducer 2 (PARTITION-LEVEL SORT, 4)
         Reducer 4 <- Reducer 3 (GROUP, 1)
 #### A masked pattern was here ####
       Vertices:
@@ -3478,8 +3481,8 @@ STAGE PLANS:
   Stage: Stage-1
     Spark
       Edges:
-        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 2), Map 5 (PARTITION-LEVEL SORT, 2)
-        Reducer 3 <- Map 6 (PARTITION-LEVEL SORT, 2), Reducer 2 (PARTITION-LEVEL SORT, 2)
+        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 4), Map 5 (PARTITION-LEVEL SORT, 4)
+        Reducer 3 <- Map 6 (PARTITION-LEVEL SORT, 4), Reducer 2 (PARTITION-LEVEL SORT, 4)
         Reducer 4 <- Reducer 3 (GROUP, 1)
 #### A masked pattern was here ####
       Vertices:
@@ -3722,7 +3725,7 @@ STAGE PLANS:
   Stage: Stage-1
     Spark
       Edges:
-        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 2), Reducer 5 (PARTITION-LEVEL SORT, 2), Reducer 7 (PARTITION-LEVEL SORT, 2)
+        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 4), Reducer 5 (PARTITION-LEVEL SORT, 4), Reducer 7 (PARTITION-LEVEL SORT, 4)
         Reducer 3 <- Reducer 2 (GROUP, 1)
         Reducer 5 <- Map 4 (GROUP, 1)
         Reducer 7 <- Map 6 (GROUP, 1)
@@ -3990,8 +3993,8 @@ STAGE PLANS:
   Stage: Stage-1
     Spark
       Edges:
-        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 2), Reducer 5 (PARTITION-LEVEL SORT, 2), Reducer 7 (PARTITION-LEVEL SORT, 2)
-        Reducer 3 <- Reducer 2 (GROUP, 2)
+        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 4), Reducer 5 (PARTITION-LEVEL SORT, 4), Reducer 7 (PARTITION-LEVEL SORT, 4)
+        Reducer 3 <- Reducer 2 (GROUP, 4)
         Reducer 5 <- Map 4 (GROUP, 1)
         Reducer 7 <- Map 6 (GROUP, 1)
 #### A masked pattern was here ####
@@ -4228,20 +4231,6 @@ STAGE PLANS:
                           partition key expr: ds
                           Statistics: Num rows: 2 Data size: 368 Basic stats: COMPLETE Column stats: NONE
                           target work: Map 1
-                    Select Operator
-                      expressions: _col0 (type: string)
-                      outputColumnNames: _col0
-                      Statistics: Num rows: 2 Data size: 368 Basic stats: COMPLETE Column stats: NONE
-                      Group By Operator
-                        keys: _col0 (type: string)
-                        mode: hash
-                        outputColumnNames: _col0
-                        Statistics: Num rows: 2 Data size: 368 Basic stats: COMPLETE Column stats: NONE
-                        Spark Partition Pruning Sink Operator
-                          Target column: ds (string)
-                          partition key expr: ds
-                          Statistics: Num rows: 2 Data size: 368 Basic stats: COMPLETE Column stats: NONE
-                          target work: Map 4
         Reducer 13 
             Reduce Operator Tree:
               Group By Operator
@@ -4271,26 +4260,12 @@ STAGE PLANS:
                           partition key expr: ds
                           Statistics: Num rows: 2 Data size: 368 Basic stats: COMPLETE Column stats: NONE
                           target work: Map 1
-                    Select Operator
-                      expressions: _col0 (type: string)
-                      outputColumnNames: _col0
-                      Statistics: Num rows: 2 Data size: 368 Basic stats: COMPLETE Column stats: NONE
-                      Group By Operator
-                        keys: _col0 (type: string)
-                        mode: hash
-                        outputColumnNames: _col0
-                        Statistics: Num rows: 2 Data size: 368 Basic stats: COMPLETE Column stats: NONE
-                        Spark Partition Pruning Sink Operator
-                          Target column: ds (string)
-                          partition key expr: ds
-                          Statistics: Num rows: 2 Data size: 368 Basic stats: COMPLETE Column stats: NONE
-                          target work: Map 4
 
   Stage: Stage-1
     Spark
       Edges:
-        Reducer 2 <- Map 1 (GROUP, 2)
-        Reducer 3 <- Reducer 2 (PARTITION-LEVEL SORT, 2), Reducer 2 (PARTITION-LEVEL SORT, 2), Reducer 7 (PARTITION-LEVEL SORT, 2), Reducer 9 (PARTITION-LEVEL SORT, 2)
+        Reducer 2 <- Map 1 (GROUP, 4)
+        Reducer 3 <- Reducer 2 (PARTITION-LEVEL SORT, 4), Reducer 2 (PARTITION-LEVEL SORT, 4), Reducer 7 (PARTITION-LEVEL SORT, 4), Reducer 9 (PARTITION-LEVEL SORT, 4)
         Reducer 7 <- Map 6 (GROUP, 1)
         Reducer 9 <- Map 8 (GROUP, 1)
 #### A masked pattern was here ####
@@ -5403,7 +5378,7 @@ STAGE PLANS:
   Stage: Stage-2
     Spark
       Edges:
-        Reducer 4 <- Map 3 (GROUP, 2)
+        Reducer 4 <- Map 3 (GROUP, 4)
 #### A masked pattern was here ####
       Vertices:
         Map 3 
@@ -6341,8 +6316,8 @@ STAGE PLANS:
   Stage: Stage-1
     Spark
       Edges:
-        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 2), Reducer 5 (PARTITION-LEVEL SORT, 2), Reducer 7 (PARTITION-LEVEL SORT, 2)
-        Reducer 3 <- Reducer 2 (GROUP, 2)
+        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 4), Reducer 5 (PARTITION-LEVEL SORT, 4), Reducer 7 (PARTITION-LEVEL SORT, 4)
+        Reducer 3 <- Reducer 2 (GROUP, 4)
         Reducer 5 <- Map 4 (GROUP, 1)
         Reducer 7 <- Map 6 (GROUP, 1)
 #### A masked pattern was here ####

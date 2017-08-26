@@ -15,14 +15,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.hadoop.hive.ql;
+package org.apache.hadoop.hive.ql.optimizer.calcite;
+
+import org.apache.calcite.sql.type.AbstractSqlType;
+import org.apache.calcite.sql.type.SqlTypeName;
 
 /**
- * Same as parent class but covers Acid 2.0 tables
+ * Hive-specific type.
+ *
+ * TODO: Created to represent timestamp with time-zone type.
+ * It can be removed once the type exists in Calcite.
  */
-public class TestAcidOnTezWithSplitUpdate extends TestAcidOnTez {
-  @Override
-  String getTblProperties() {
-    return "TBLPROPERTIES ('transactional'='true', 'transactional_properties'='default')";
+public class HiveType extends AbstractSqlType {
+  private final Class clazz;
+
+  public HiveType(Class clazz) {
+    super(SqlTypeName.NULL, true, null);
+    this.clazz = clazz;
+    computeDigest();
   }
+
+  protected void generateTypeString(StringBuilder sb, boolean withDetail) {
+    sb.append("HiveType(");
+    sb.append(clazz);
+    sb.append(")");
+  }
+
+  public Class getTypeClass() {
+    return clazz;
+  }
+
 }

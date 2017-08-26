@@ -17,20 +17,13 @@
  */
 package org.apache.hadoop.hive.serde2.objectinspector.primitive;
 
-import org.apache.hadoop.hive.serde2.io.TimestampTZWritable;
-import org.apache.hadoop.hive.serde2.objectinspector.ConstantObjectInspector;
+import org.apache.hadoop.hive.common.type.TimestampTZ;
+import org.apache.hadoop.hive.serde2.io.TimestampLocalTZWritable;
+import org.apache.hadoop.hive.serde2.objectinspector.PrimitiveObjectInspector;
 
-public class WritableConstantTimestampTZObjectInspector
-    extends WritableTimestampTZObjectInspector implements ConstantObjectInspector {
+public interface TimestampLocalTZObjectInspector extends PrimitiveObjectInspector {
 
-  private TimestampTZWritable value;
+  TimestampLocalTZWritable getPrimitiveWritableObject(Object o);
 
-  public WritableConstantTimestampTZObjectInspector(TimestampTZWritable value) {
-    this.value = value;
-  }
-
-  @Override
-  public Object getWritableConstantValue() {
-    return value;
-  }
+  TimestampTZ getPrimitiveJavaObject(Object o);
 }

@@ -314,11 +314,11 @@ public class RelOptHiveTable extends RelOptAbstractTable {
               hiveColStats.add(cs);
             }
           }
+          colStatsCached.updateState(stats.getColumnStatsState());
 
           // 2.1.1 Record Column Names that we needed stats for but couldn't
           if (hiveColStats.isEmpty()) {
             colNamesFailedStats.addAll(nonPartColNamesThatRqrStats);
-	    colStatsCached.updateState(State.NONE);
           } else if (hiveColStats.size() != nonPartColNamesThatRqrStats.size()) {
             Set<String> setOfFiledCols = new HashSet<String>(nonPartColNamesThatRqrStats);
 
@@ -329,7 +329,6 @@ public class RelOptHiveTable extends RelOptAbstractTable {
             setOfFiledCols.removeAll(setOfObtainedColStats);
 
             colNamesFailedStats.addAll(setOfFiledCols);
-	    colStatsCached.updateState(State.PARTIAL);
           } else {
             // Column stats in hiveColStats might not be in the same order as the columns in
             // nonPartColNamesThatRqrStats. reorder hiveColStats so we can build hiveColStatsMap
@@ -349,7 +348,6 @@ public class RelOptHiveTable extends RelOptAbstractTable {
               hiveColStats.add(columnStatsMap.get(colName));
             }
           }
-	  //TODO: colStatsCached.updateState()
         } catch (HiveException e) {
           String logMsg = "Collecting stats for table: " + hiveTblMetadata.getTableName() + " failed.";
           LOG.error(logMsg, e);

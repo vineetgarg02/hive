@@ -156,22 +156,22 @@ STAGE PLANS:
             Map Operator Tree:
                 TableScan
                   alias: a
-                  Statistics: Num rows: 1 Data size: 203 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 1 Data size: 89 Basic stats: COMPLETE Column stats: NONE
                   GatherStats: false
                   Filter Operator
                     isSamplingPred: false
                     predicate: key is not null (type: boolean)
-                    Statistics: Num rows: 1 Data size: 203 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 1 Data size: 89 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: string)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 1 Data size: 203 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 1 Data size: 89 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: _col0 (type: string)
                         null sort order: a
                         sort order: +
                         Map-reduce partition columns: _col0 (type: string)
-                        Statistics: Num rows: 1 Data size: 203 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 1 Data size: 89 Basic stats: COMPLETE Column stats: NONE
                         tag: 0
                         auto parallelism: true
             Execution mode: llap
@@ -234,22 +234,22 @@ STAGE PLANS:
             Map Operator Tree:
                 TableScan
                   alias: b
-                  Statistics: Num rows: 1 Data size: 259 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 1 Data size: 89 Basic stats: COMPLETE Column stats: NONE
                   GatherStats: false
                   Filter Operator
                     isSamplingPred: false
                     predicate: key is not null (type: boolean)
-                    Statistics: Num rows: 1 Data size: 259 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 1 Data size: 89 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: string)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 1 Data size: 259 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 1 Data size: 89 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: _col0 (type: string)
                         null sort order: a
                         sort order: +
                         Map-reduce partition columns: _col0 (type: string)
-                        Statistics: Num rows: 1 Data size: 259 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 1 Data size: 89 Basic stats: COMPLETE Column stats: NONE
                         tag: 1
                         auto parallelism: true
             Execution mode: llap
@@ -312,16 +312,16 @@ STAGE PLANS:
             Map Operator Tree:
                 TableScan
                   alias: c
-                  Statistics: Num rows: 116 Data size: 21592 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 116 Data size: 9968 Basic stats: COMPLETE Column stats: NONE
                   GatherStats: false
                   Filter Operator
                     isSamplingPred: false
                     predicate: key is not null (type: boolean)
-                    Statistics: Num rows: 111 Data size: 20661 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 111 Data size: 9538 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: string)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 111 Data size: 20661 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 111 Data size: 9538 Basic stats: COMPLETE Column stats: NONE
                       Map Join Operator
                         condition map:
                              Inner Join 0 to 1
@@ -335,7 +335,7 @@ STAGE PLANS:
                           0 Map 1
                           1 Map 2
                         Position of Big Table: 2
-                        Statistics: Num rows: 244 Data size: 45454 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 244 Data size: 20983 Basic stats: COMPLETE Column stats: NONE
                         Map Join Operator
                           condition map:
                                Inner Join 0 to 1
@@ -346,7 +346,7 @@ STAGE PLANS:
                           input vertices:
                             1 Map 5
                           Position of Big Table: 0
-                          Statistics: Num rows: 244 Data size: 47650 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 244 Data size: 23179 Basic stats: COMPLETE Column stats: NONE
                           Group By Operator
                             aggregations: count()
                             mode: hash

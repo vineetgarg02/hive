@@ -540,27 +540,17 @@ STAGE PLANS:
             Map Operator Tree:
                 TableScan
                   alias: s2
-                  Statistics: Num rows: 242 Data size: 3490 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 242 Data size: 924 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: key is not null (type: boolean)
-                    Statistics: Num rows: 230 Data size: 3316 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 230 Data size: 878 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 230 Data size: 3316 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 230 Data size: 878 Basic stats: COMPLETE Column stats: NONE
             Map Operator Tree:
                 TableScan
                   alias: s3
-<<<<<<< HEAD
-                  Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: NONE
-                  Filter Operator
-                    predicate: key is not null (type: boolean)
-                    Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: NONE
-                    Select Operator
-                      expressions: key (type: int)
-                      outputColumnNames: _col0
-                      Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: NONE
-=======
                   Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: COMPLETE
                   Filter Operator
                     predicate: key is not null (type: boolean)
@@ -569,18 +559,17 @@ STAGE PLANS:
                       expressions: key (type: int)
                       outputColumnNames: _col0
                       Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: COMPLETE
->>>>>>> origin/master
             Map Operator Tree:
                 TableScan
                   alias: s1
-                  Statistics: Num rows: 242 Data size: 3490 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 242 Data size: 924 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: key is not null (type: boolean)
-                    Statistics: Num rows: 230 Data size: 3316 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 230 Data size: 878 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 230 Data size: 3316 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 230 Data size: 878 Basic stats: COMPLETE Column stats: NONE
                       Merge Join Operator
                         condition map:
                              Left Outer Join 0 to 1
@@ -589,7 +578,7 @@ STAGE PLANS:
                           0 _col0 (type: int)
                           1 _col0 (type: int)
                           2 _col0 (type: int)
-                        Statistics: Num rows: 506 Data size: 7295 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 506 Data size: 1931 Basic stats: COMPLETE Column stats: NONE
                         Group By Operator
                           aggregations: count()
                           mode: hash
@@ -657,16 +646,6 @@ STAGE PLANS:
             Map Operator Tree:
                 TableScan
                   alias: s2
-<<<<<<< HEAD
-                  Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: NONE
-                  Filter Operator
-                    predicate: key is not null (type: boolean)
-                    Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: NONE
-                    Select Operator
-                      expressions: key (type: int)
-                      outputColumnNames: _col0
-                      Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: NONE
-=======
                   Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: COMPLETE
                   Filter Operator
                     predicate: key is not null (type: boolean)
@@ -675,29 +654,28 @@ STAGE PLANS:
                       expressions: key (type: int)
                       outputColumnNames: _col0
                       Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: COMPLETE
->>>>>>> origin/master
             Map Operator Tree:
                 TableScan
                   alias: s3
-                  Statistics: Num rows: 242 Data size: 3490 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 242 Data size: 924 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: key is not null (type: boolean)
-                    Statistics: Num rows: 230 Data size: 3316 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 230 Data size: 878 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 230 Data size: 3316 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 230 Data size: 878 Basic stats: COMPLETE Column stats: NONE
             Map Operator Tree:
                 TableScan
                   alias: s1
-                  Statistics: Num rows: 242 Data size: 3490 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 242 Data size: 924 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: key is not null (type: boolean)
-                    Statistics: Num rows: 230 Data size: 3316 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 230 Data size: 878 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 230 Data size: 3316 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 230 Data size: 878 Basic stats: COMPLETE Column stats: NONE
                       Merge Join Operator
                         condition map:
                              Left Outer Join 0 to 1
@@ -706,7 +684,7 @@ STAGE PLANS:
                           0 _col0 (type: int)
                           1 _col0 (type: int)
                           2 _col0 (type: int)
-                        Statistics: Num rows: 506 Data size: 7295 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 506 Data size: 1931 Basic stats: COMPLETE Column stats: NONE
                         Group By Operator
                           aggregations: count()
                           mode: hash

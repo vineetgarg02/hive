@@ -285,10 +285,13 @@ public class StatsUtils {
 
     float deserFactor =
         HiveConf.getFloatVar(conf, HiveConf.ConfVars.HIVE_STATS_DESERIALIZATION_FACTOR);
+    boolean shouldEstimateStats = HiveConf.getBoolVar(conf, ConfVars.HIVE_STATS_ESTIMATE_STATS);
 
     if (!table.isPartitioned()) {
 
-      long ds = getDataSize(conf, table);
+      //getDataSize tries to estimate stats if it doesn't exist using file size
+      // we would like to avoid file system calls  if it too expensive
+      long ds = shouldEstimateStats? getDataSize(conf, table): getRawDataSize(table);
       long nr = getNumRows(conf, schema, neededColumns, table, ds);
       stats.setNumRows(nr);
       List<ColStatistics> colStats = Lists.newArrayList();
@@ -332,7 +335,7 @@ public class StatsUtils {
 
       // if data size still could not be determined, then fall back to filesytem to get file
       // sizes
-      if (ds <= 0) {
+      if (ds <= 0 && shouldEstimateStats) {
         dataSizes = getFileSizeForPartitions(conf, partList.getNotDeniedPartns());
       }
       ds = getSumIgnoreNegatives(dataSizes);
@@ -433,10 +436,10 @@ public class StatsUtils {
           // Update the stats with empty list to reflect that in the
           // state/initialize structures.
 
-	  if(columnStats.isEmpty()) {
-          // estimate stats
-          columnStats = estimateStats(table, schema, neededColumns, conf, nr);
-	  }
+          if(columnStats.isEmpty()) {
+            // estimate stats
+            columnStats = estimateStats(table, schema, neededColumns, conf, nr);
+          }
 
           // add partition column stats
           addPartitionColumnStats(conf, partitionColsToRetrieve, schema, table, partList, columnStats);

@@ -865,7 +865,7 @@ STAGE PLANS:
                 TableScan
                   alias: agg_01
                   filterExpr: dim_shops_id is not null (type: boolean)
-                  Statistics: Num rows: 9 Data size: 1071 Basic stats: COMPLETE Column stats: PARTIAL
+                  Statistics: Num rows: 9 Data size: 1044 Basic stats: COMPLETE Column stats: PARTIAL
                   Select Operator
                     expressions: amount (type: decimal(10,0)), dim_shops_id (type: int)
                     outputColumnNames: _col0, _col1
@@ -929,7 +929,7 @@ STAGE PLANS:
                 TableScan
                   alias: agg_01
                   filterExpr: dim_shops_id is not null (type: boolean)
-                  Statistics: Num rows: 9 Data size: 1071 Basic stats: COMPLETE Column stats: PARTIAL
+                  Statistics: Num rows: 9 Data size: 1044 Basic stats: COMPLETE Column stats: PARTIAL
                   Select Operator
                     expressions: amount (type: decimal(10,0)), dim_shops_id (type: int)
                     outputColumnNames: _col0, _col1

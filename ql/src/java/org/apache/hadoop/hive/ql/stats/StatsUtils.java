@@ -225,7 +225,8 @@ public class StatsUtils {
 
       // if data size still could not be determined, then fall back to filesytem to get file
       // sizes
-      if (ds <= 0) {
+      boolean shouldEstimateStats = HiveConf.getBoolVar(conf, ConfVars.HIVE_STATS_ESTIMATE_STATS);
+      if (ds <= 0 && shouldEstimateStats) {
         dataSizes = getFileSizeForPartitions(conf, partitionList.getNotDeniedPartns());
       }
       ds = getSumIgnoreNegatives(dataSizes);

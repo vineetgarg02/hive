@@ -1072,10 +1072,10 @@ public class StatsUtils {
     }
     // Merge stats from cache with metastore cache
     if (colStatsCache != null) {
-      for (int i = 0; i < neededColumns.size(); i++) {
-        ColStatistics cs = colStatsCache.getColStats().get(neededColumns.get(i));
+      for(String col:neededColumns) {
+        ColStatistics cs = colStatsCache.getColStats().get(col);
         if (cs != null) {
-          stats.add(i, cs);
+          stats.add(cs);
           if (LOG.isDebugEnabled()) {
             LOG.debug("Stats for column " + cs.getColumnName() +
                 " in table " + table.getCompleteName() + " retrieved from cache");

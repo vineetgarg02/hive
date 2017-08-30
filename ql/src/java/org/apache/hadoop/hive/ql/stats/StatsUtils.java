@@ -195,27 +195,53 @@ public class StatsUtils {
     for(ColumnInfo ci:schema) {
       neededColumns.add(ci.getInternalName());
     }
+
+    boolean shouldEstimateStats = HiveConf.getBoolVar(conf, ConfVars.HIVE_STATS_ESTIMATE_STATS);
+
     if(!table.isPartitioned()) {
+      //get actual number of rows from metastore
+      long nr = getNumRows(table);
+
+      // log warning if row count is missing
+      if(nr == -1) {
+        noColsMissingStats.getAndIncrement();
+      }
+
+      // if row count exists or stats aren't to be estimated return
+      // whatever we have
+      if(nr >= 0 || !shouldEstimateStats) {
+        return nr;
+      }
+      // go ahead with the estimation
       long ds = getDataSize(conf, table);
       return getNumRows(conf, schema, neededColumns, table, ds);
     }
     else { // partitioned table
       long nr = 0;
-      long ds = 0;
-
       List<Long> rowCounts = Lists.newArrayList();
-      List<Long> dataSizes = Lists.newArrayList();
-
       rowCounts = getBasicStatForPartitions(
           table, partitionList.getNotDeniedPartns(), StatsSetupConst.ROW_COUNT);
+      nr = getSumIgnoreNegatives(rowCounts);
+
+      // log warning if row count is missing
+      if(nr == -1) {
+        noColsMissingStats.getAndIncrement();
+      }
+
+      // if row count exists or stats aren't to be estimated return
+      // whatever we have
+      if(nr >= 0 || !shouldEstimateStats) {
+        return nr;
+      }
+
+      // estimate row count
+      long ds = 0;
+      List<Long> dataSizes = Lists.newArrayList();
+
       dataSizes =  getBasicStatForPartitions(
           table, partitionList.getNotDeniedPartns(), StatsSetupConst.RAW_DATA_SIZE);
 
-      nr = getSumIgnoreNegatives(rowCounts);
       ds = getSumIgnoreNegatives(dataSizes);
-
-      // we have actual number of rows
-      if(nr > 0) return nr;
 
       if (ds <= 0) {
         dataSizes = getBasicStatForPartitions(
@@ -225,7 +251,6 @@ public class StatsUtils {
 
       // if data size still could not be determined, then fall back to filesytem to get file
       // sizes
-      boolean shouldEstimateStats = HiveConf.getBoolVar(conf, ConfVars.HIVE_STATS_ESTIMATE_STATS);
       if (ds <= 0 && shouldEstimateStats) {
         dataSizes = getFileSizeForPartitions(conf, partitionList.getNotDeniedPartns());
       }
@@ -243,7 +268,6 @@ public class StatsUtils {
         // number of rows -1 means that statistics from metastore is not reliable
         if (nr <= 0) {
           nr = ds / avgRowSize;
-          noColsMissingStats.getAndIncrement();
         }
       }
       if (nr == 0) {
@@ -1313,6 +1337,7 @@ public class StatsUtils {
     } else if (colTypeLowerCase.equals(serdeConstants.INTERVAL_DAY_TIME_TYPE_NAME)) {
       return JavaDataModel.JAVA32_META;
     } else {
+      //TODO: support complex types
       // for complex type we simply return 0
       return 0;
     }

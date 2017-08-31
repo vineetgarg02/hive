@@ -1258,7 +1258,6 @@ public class StatsRulesProcFactory {
           // be full aggregation query like count(*) in which case number of
           // rows will be 1
           if (colExprMap.isEmpty()) {
-            stats.setNumRows(1);
             updateStats(stats, 1, true, gop);
           }
         }

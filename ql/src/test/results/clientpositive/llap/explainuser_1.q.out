@@ -131,11 +131,11 @@ Stage-0
     Stage-1
       Reducer 2 llap
       File Output Operator [FS_8]
-        Group By Operator [GBY_6] (rows=1 width=9223372036854775807)
+        Group By Operator [GBY_6] (rows=1 width=109)
           Output:["_col0","_col1"],aggregations:["sum(VALUE._col0)","sum(VALUE._col1)"]
         <-Map 1 [CUSTOM_SIMPLE_EDGE] llap
           PARTITION_ONLY_SHUFFLE [RS_5]
-            Group By Operator [GBY_4] (rows=1 width=9223372036854775807)
+            Group By Operator [GBY_4] (rows=1 width=109)
               Output:["_col0","_col1"],aggregations:["sum(_col0)","sum(_col1)"]
               Select Operator [SEL_2] (rows=500 width=182)
                 Output:["_col0","_col1"]
@@ -190,11 +190,11 @@ Stage-0
     Stage-1
       Reducer 2 llap
       File Output Operator [FS_8]
-        Group By Operator [GBY_6] (rows=1 width=9223372036854775807)
+        Group By Operator [GBY_6] (rows=1 width=109)
           Output:["_col0","_col1"],aggregations:["sum(VALUE._col0)","sum(VALUE._col1)"]
         <-Map 1 [CUSTOM_SIMPLE_EDGE] llap
           PARTITION_ONLY_SHUFFLE [RS_5]
-            Group By Operator [GBY_4] (rows=1 width=9223372036854775807)
+            Group By Operator [GBY_4] (rows=1 width=109)
               Output:["_col0","_col1"],aggregations:["sum(_col0)","sum(_col1)"]
               Select Operator [SEL_2] (rows=500 width=182)
                 Output:["_col0","_col1"]

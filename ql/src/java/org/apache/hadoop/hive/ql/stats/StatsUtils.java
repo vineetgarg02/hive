@@ -999,9 +999,14 @@ public class StatsUtils {
     cs.setCountDistint(Math.max(1, (long)(numRows * ndvPercent/100.00)));
     cs.setNumNulls(Math.min(numRows, (long)(numRows * nullPercent/100.00)));
 
-    if (colTypeLowerCase.equals(serdeConstants.TINYINT_TYPE_NAME)
-        || colTypeLowerCase.equals(serdeConstants.SMALLINT_TYPE_NAME)
-        || colTypeLowerCase.equals(serdeConstants.INT_TYPE_NAME)) {
+    if (colTypeLowerCase.equals(serdeConstants.TINYINT_TYPE_NAME)){
+      cs.setAvgColLen(JavaDataModel.get().primitive1());
+      cs.setRange(-128,127);
+    }
+    else if(colTypeLowerCase.equals(serdeConstants.SMALLINT_TYPE_NAME)){
+      cs.setAvgColLen(JavaDataModel.get().primitive1());
+      cs.setRange(-32768, 32767);
+    } else if(colTypeLowerCase.equals(serdeConstants.INT_TYPE_NAME)) {
       cs.setAvgColLen(JavaDataModel.get().primitive1());
       cs.setRange(Long.MIN_VALUE, Long.MAX_VALUE);
     } else if (colTypeLowerCase.equals(serdeConstants.BIGINT_TYPE_NAME)) {

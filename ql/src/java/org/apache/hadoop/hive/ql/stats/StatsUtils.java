@@ -203,13 +203,13 @@ public class StatsUtils {
       long nr = getNumRows(table);
 
       // log warning if row count is missing
-      if(nr == -1) {
+      if(nr <= 0) {
         noColsMissingStats.getAndIncrement();
       }
 
       // if row count exists or stats aren't to be estimated return
       // whatever we have
-      if(nr >= 0 || !shouldEstimateStats) {
+      if(nr > 0 || !shouldEstimateStats) {
         return nr;
       }
       // go ahead with the estimation
@@ -224,13 +224,13 @@ public class StatsUtils {
       nr = getSumIgnoreNegatives(rowCounts);
 
       // log warning if row count is missing
-      if(nr == -1) {
+      if(nr <= 0) {
         noColsMissingStats.getAndIncrement();
       }
 
       // if row count exists or stats aren't to be estimated return
       // whatever we have
-      if(nr >= 0 || !shouldEstimateStats) {
+      if(nr > 0 || !shouldEstimateStats) {
         return nr;
       }
 
@@ -1003,7 +1003,7 @@ public class StatsUtils {
         || colTypeLowerCase.equals(serdeConstants.SMALLINT_TYPE_NAME)
         || colTypeLowerCase.equals(serdeConstants.INT_TYPE_NAME)) {
       cs.setAvgColLen(JavaDataModel.get().primitive1());
-      cs.setRange(Integer.MIN_VALUE, Integer.MAX_VALUE);
+      cs.setRange(Long.MIN_VALUE, Long.MAX_VALUE);
     } else if (colTypeLowerCase.equals(serdeConstants.BIGINT_TYPE_NAME)) {
       cs.setAvgColLen(JavaDataModel.get().primitive2());
       cs.setRange(Integer.MIN_VALUE, Integer.MAX_VALUE);
@@ -1031,7 +1031,8 @@ public class StatsUtils {
       cs.setRange(Float.MIN_VALUE, Float.MAX_VALUE);
     } else if (colTypeLowerCase.equals(serdeConstants.DATE_TYPE_NAME)) {
       cs.setAvgColLen(JavaDataModel.get().lengthOfDate());
-      cs.setRange(null, null);
+      // epoch, days since epoch
+      cs.setRange(0, 25201);
     } else {
       // Columns statistics for complex datatypes are not supported yet
       return null;

@@ -995,7 +995,6 @@ public class StatsUtils {
 
     float ndvPercent = Math.min(100L, HiveConf.getFloatVar(conf, ConfVars.HIVE_STATS_NDV_ESTIMATE_PERC));
     float nullPercent = Math.min(100L, HiveConf.getFloatVar(conf, ConfVars.HIVE_STATS_NUM_NULLS_ESTIMATE_PERC));
-    long avgColLenString = Math.min(100L, HiveConf.getLongVar(conf, ConfVars.HIVE_STATS_MAX_VAR_LEN_ESTIMATE));
 
     cs.setCountDistint(Math.max(1, (long)(numRows * ndvPercent/100.00)));
     cs.setNumNulls(Math.min(numRows, (long)(numRows * nullPercent/100.00)));
@@ -1015,16 +1014,15 @@ public class StatsUtils {
       cs.setAvgColLen(JavaDataModel.get().primitive2());
       cs.setRange(Double.MIN_VALUE, Double.MAX_VALUE);
     } else if (colTypeLowerCase.equals(serdeConstants.STRING_TYPE_NAME)
+        || colTypeLowerCase.startsWith(serdeConstants.BINARY_TYPE_NAME)
         || colTypeLowerCase.startsWith(serdeConstants.CHAR_TYPE_NAME)
         || colTypeLowerCase.startsWith(serdeConstants.VARCHAR_TYPE_NAME)) {
-      cs.setAvgColLen(avgColLenString);
+      cs.setAvgColLen(getAvgColLenOf(conf,cinfo.getObjectInspector(), cinfo.getTypeName()));
     } else if (colTypeLowerCase.equals(serdeConstants.BOOLEAN_TYPE_NAME)) {
         cs.setCountDistint(2);
         cs.setNumTrues(Math.max(1, (long)numRows/2));
         cs.setNumFalses(Math.max(1, (long)numRows/2));
         cs.setAvgColLen(JavaDataModel.get().primitive1());
-    } else if (colTypeLowerCase.equals(serdeConstants.BINARY_TYPE_NAME)) {
-      cs.setAvgColLen(avgColLenString);
     } else if (colTypeLowerCase.equals(serdeConstants.TIMESTAMP_TYPE_NAME) ||
         colTypeLowerCase.equals(serdeConstants.TIMESTAMPLOCALTZ_TYPE_NAME)) {
       cs.setAvgColLen(JavaDataModel.get().lengthOfTimestamp());

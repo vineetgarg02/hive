@@ -1673,8 +1673,6 @@ public class HiveConf extends Configuration {
         "This many percentage of rows will be estimated as count distinct in absence of statistics."),
     HIVE_STATS_NUM_NULLS_ESTIMATE_PERC("hive.stats.num.nulls.estimate.percent", (float)5,
         "This many percentage of rows will be estimated as number of nulls in absence of statistics."),
-    HIVE_STATS_MAX_VAR_LEN_ESTIMATE("hive.stats.max.var.length.estimate", (long)5,
-        "This is used as an average column length for varchar type in absence of statistics."),
     HIVESTATSAUTOGATHER("hive.stats.autogather", true,
         "A flag to gather statistics (only basic) automatically during the INSERT OVERWRITE command."),
     HIVESTATSCOLAUTOGATHER("hive.stats.column.autogather", false,

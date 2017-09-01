@@ -98,11 +98,11 @@ Stage-3
         <-Map 4 [SIMPLE_EDGE] llap
           SHUFFLE [RS_12]
             PartitionCols:UDFToDouble(_col0)
-            Select Operator [SEL_10] (rows=1 width=89)
+            Select Operator [SEL_10] (rows=1 width=184)
               Output:["_col0"]
-              Filter Operator [FIL_19] (rows=1 width=89)
+              Filter Operator [FIL_19] (rows=1 width=184)
                 predicate:key is not null
-                TableScan [TS_8] (rows=1 width=89)
+                TableScan [TS_8] (rows=1 width=184)
                   default@q1,b,Tbl:COMPLETE,Col:NONE,Output:["key"]
         Stage-2
           Dependency Collection{}

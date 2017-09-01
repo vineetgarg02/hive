@@ -57,13 +57,13 @@ Stage-3
         Stage-0
           Reducer 2
           File Output Operator [FS_5]
-            Group By Operator [GBY_3] (rows=1/1 width=9223372036854775807)
+            Group By Operator [GBY_3] (rows=1/1 width=1248)
               Output:["_col0","_col1"],aggregations:["compute_stats(VALUE._col0, 'hll')","compute_stats(VALUE._col2, 'hll')"]
             <-Map 1 [CUSTOM_SIMPLE_EDGE]
               PARTITION_ONLY_SHUFFLE [RS_2]
-                Select Operator [SEL_1] (rows=500/500 width=169)
+                Select Operator [SEL_1] (rows=500/500 width=350)
                   Output:["key","value"]
-                  TableScan [TS_0] (rows=500/500 width=169)
+                  TableScan [TS_0] (rows=500/500 width=350)
                     default@src_stats,src_stats,Tbl:COMPLETE,Col:NONE,Output:["key","value"]
 
 PREHOOK: query: drop table src_multi2

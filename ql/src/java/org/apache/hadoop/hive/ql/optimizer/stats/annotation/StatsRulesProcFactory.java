@@ -1844,9 +1844,33 @@ public class StatsRulesProcFactory {
 
       // No need for overflow checks, assume selectivity is always <= 1.0
       float selMultiParent = 1.0f;
-      for(Operator<? extends OperatorDesc> parent : multiParentOp.getParentOperators()) {
-        // In the above example, TS-1 -> RS-1 and TS-2 -> RS-2 are simple trees
-        selMultiParent *= getSelectivitySimpleTree(parent);
+
+      boolean isSelComputed = false;
+
+      // if it is two way left outer or right outer join take selectivity only for
+      // corresponding branch since only that branch will factor is the reduction
+      if(multiParentOp instanceof JoinOperator) {
+        JoinOperator jop = ((JoinOperator)multiParentOp);
+        // check for two way join
+        if(jop.getConf().getConds().length == 1) {
+          switch(jop.getConf().getCondsList().get(0).getType()) {
+            case JoinDesc.LEFT_OUTER_JOIN:
+              selMultiParent *= getSelectivitySimpleTree(multiParentOp.getParentOperators().get(0));
+              isSelComputed = true;
+              break;
+            case JoinDesc.RIGHT_OUTER_JOIN:
+              selMultiParent *= getSelectivitySimpleTree(multiParentOp.getParentOperators().get(1));
+              isSelComputed = true;
+              break;
+          }
+        }
+      }
+
+      if(!isSelComputed) {
+        for (Operator<? extends OperatorDesc> parent : multiParentOp.getParentOperators()) {
+          // In the above example, TS-1 -> RS-1 and TS-2 -> RS-2 are simple trees
+          selMultiParent *= getSelectivitySimpleTree(parent);
+        }
       }
 
       float selCurrOp = ((float) currentOp.getStatistics().getNumRows() /

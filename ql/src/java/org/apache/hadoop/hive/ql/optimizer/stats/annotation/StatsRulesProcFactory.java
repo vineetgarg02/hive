@@ -340,14 +340,16 @@ public class StatsRulesProcFactory {
           aspCtx.setAndExprStats(andStats);
 
           // evaluate children
+          evaluatedRowCount = stats.getNumRows();
           for (ExprNodeDesc child : genFunc.getChildren()) {
-            newNumRows = evaluateChildExpr(aspCtx.getAndExprStats(), child,
+            evaluatedRowCount = evaluateChildExpr(aspCtx.getAndExprStats(), child,
                 aspCtx, neededCols, op, evaluatedRowCount);
-            if (satisfyPrecondition(aspCtx.getAndExprStats())) {
-              updateStats(aspCtx.getAndExprStats(), newNumRows, true, op);
-            } else {
-              updateStats(aspCtx.getAndExprStats(), newNumRows, false, op);
-            }
+          }
+          newNumRows = evaluatedRowCount;
+          if (satisfyPrecondition(aspCtx.getAndExprStats())) {
+            updateStats(aspCtx.getAndExprStats(), newNumRows, true, op);
+          } else {
+            updateStats(aspCtx.getAndExprStats(), newNumRows, false, op);
           }
         } else if (udf instanceof GenericUDFOPOr) {
           // for OR condition independently compute and update stats.
@@ -374,7 +376,7 @@ public class StatsRulesProcFactory {
           return evaluateNotNullExpr(stats, genFunc);
         } else {
           // single predicate condition
-          newNumRows = evaluateChildExpr(stats, pred, aspCtx, neededCols, op, evaluatedRowCount);
+          newNumRows = evaluateChildExpr(stats, pred, aspCtx, neededCols, op, stats.getNumRows());
         }
       } else if (pred instanceof ExprNodeColumnDesc) {
 
@@ -551,7 +553,7 @@ public class StatsRulesProcFactory {
             long newNumRows = 0;
             for (ExprNodeDesc child : genFunc.getChildren()) {
               newNumRows = evaluateChildExpr(stats, child, aspCtx, neededCols,
-                  op, 0);
+                  op, numRows);
             }
             return numRows - newNumRows;
           } else if (leaf instanceof ExprNodeConstantDesc) {
@@ -838,7 +840,7 @@ public class StatsRulesProcFactory {
         AnnotateStatsProcCtx aspCtx, List<String> neededCols,
         Operator<?> op, long evaluatedRowCount) throws CloneNotSupportedException, SemanticException {
 
-      long numRows = stats.getNumRows();
+      long numRows = evaluatedRowCount;
 
       if (child instanceof ExprNodeGenericFuncDesc) {
 

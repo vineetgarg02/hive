@@ -917,11 +917,11 @@ public class StatsRulesProcFactory {
                 || udf instanceof GenericUDFOPEqualOrLessThan
                 || udf instanceof GenericUDFOPGreaterThan
                 || udf instanceof GenericUDFOPLessThan) {
-          return evaluateComparator(stats, genFunc);
+          return evaluateComparator(stats, genFunc, evaluatedRowCount);
         } else if (udf instanceof GenericUDFOPNotNull) {
-          return evaluateNotNullExpr(stats, genFunc);
+          return evaluateNotNullExpr(stats, genFunc, evaluatedRowCount);
         } else if (udf instanceof GenericUDFOPNull) {
-          return evaluateColEqualsNullExpr(stats, genFunc);
+          return evaluateColEqualsNullExpr(stats, genFunc, evaluatedRowCount);
         } else if (udf instanceof GenericUDFOPAnd || udf instanceof GenericUDFOPOr
                 || udf instanceof GenericUDFIn || udf instanceof GenericUDFBetween
                 || udf instanceof GenericUDFOPNot) {

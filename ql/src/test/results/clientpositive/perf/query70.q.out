@@ -123,9 +123,9 @@ Stage-0
                                 <-Reducer 11 [SIMPLE_EDGE]
                                   SHUFFLE [RS_44]
                                     PartitionCols:_col0
-                                    Select Operator [SEL_32] (rows=116159124 width=88)
+                                    Select Operator [SEL_32] (rows=348477374 width=88)
                                       Output:["_col0"]
-                                      Filter Operator [FIL_81] (rows=116159124 width=88)
+                                      Filter Operator [FIL_81] (rows=348477374 width=88)
                                         predicate:(rank_window_0 <= 5)
                                         PTF Operator [PTF_31] (rows=348477374 width=88)
                                           Function definitions:[{},{"name:":"windowingtablefunction","order by:":"_col1 DESC NULLS LAST","partition by:":"_col0"}]
@@ -169,9 +169,9 @@ Stage-0
                                                         <-Map 12 [SIMPLE_EDGE]
                                                           SHUFFLE [RS_19]
                                                             PartitionCols:_col0
-                                                            Select Operator [SEL_5] (rows=8116 width=1119)
+                                                            Select Operator [SEL_5] (rows=24349 width=1119)
                                                               Output:["_col0"]
-                                                              Filter Operator [FIL_79] (rows=8116 width=1119)
+                                                              Filter Operator [FIL_79] (rows=24349 width=1119)
                                                                 predicate:(d_month_seq BETWEEN 1212 AND 1223 and d_date_sk is not null)
                                                                 TableScan [TS_3] (rows=73049 width=1119)
                                                                   default@date_dim,d1,Tbl:COMPLETE,Col:NONE,Output:["d_date_sk","d_month_seq"]

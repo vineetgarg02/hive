@@ -289,9 +289,9 @@ Stage-0
                                     <-Map 24 [SIMPLE_EDGE]
                                       SHUFFLE [RS_97]
                                         PartitionCols:_col0
-                                        Select Operator [SEL_113] (rows=36524 width=1119)
+                                        Select Operator [SEL_113] (rows=73049 width=1119)
                                           Output:["_col0"]
-                                          Filter Operator [FIL_279] (rows=36524 width=1119)
+                                          Filter Operator [FIL_279] (rows=73049 width=1119)
                                             predicate:((d_year = 2002) and d_date_sk is not null)
                                             TableScan [TS_111] (rows=73049 width=1119)
                                               default@date_dim,date_dim,Tbl:COMPLETE,Col:NONE,Output:["d_date_sk","d_year"]
@@ -334,9 +334,9 @@ Stage-0
                                       <-Map 24 [SIMPLE_EDGE]
                                         SHUFFLE [RS_53]
                                           PartitionCols:_col0
-                                          Select Operator [SEL_48] (rows=36524 width=1119)
+                                          Select Operator [SEL_48] (rows=73049 width=1119)
                                             Output:["_col0"]
-                                            Filter Operator [FIL_270] (rows=36524 width=1119)
+                                            Filter Operator [FIL_270] (rows=73049 width=1119)
                                               predicate:((d_year = 2001) and d_date_sk is not null)
                                                Please refer to the previous TableScan [TS_111]
                                       <-Map 10 [SIMPLE_EDGE]
@@ -411,9 +411,9 @@ Stage-0
                                       <-Map 24 [SIMPLE_EDGE]
                                         SHUFFLE [RS_31]
                                           PartitionCols:_col0
-                                          Select Operator [SEL_26] (rows=36524 width=1119)
+                                          Select Operator [SEL_26] (rows=73049 width=1119)
                                             Output:["_col0"]
-                                            Filter Operator [FIL_267] (rows=36524 width=1119)
+                                            Filter Operator [FIL_267] (rows=73049 width=1119)
                                               predicate:((d_year = 2001) and d_date_sk is not null)
                                                Please refer to the previous TableScan [TS_111]
                                       <-Map 17 [SIMPLE_EDGE]
@@ -488,9 +488,9 @@ Stage-0
                                       <-Map 24 [SIMPLE_EDGE]
                                         SHUFFLE [RS_75]
                                           PartitionCols:_col0
-                                          Select Operator [SEL_70] (rows=36524 width=1119)
+                                          Select Operator [SEL_70] (rows=73049 width=1119)
                                             Output:["_col0"]
-                                            Filter Operator [FIL_273] (rows=36524 width=1119)
+                                            Filter Operator [FIL_273] (rows=73049 width=1119)
                                               predicate:((d_year = 2001) and d_date_sk is not null)
                                                Please refer to the previous TableScan [TS_111]
                                       <-Map 1 [SIMPLE_EDGE]

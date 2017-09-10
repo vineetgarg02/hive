@@ -211,16 +211,16 @@ Stage-0
                                   <-Reducer 9 [ONE_TO_ONE_EDGE]
                                     FORWARD [RS_56]
                                       PartitionCols:_col0
-                                      Group By Operator [GBY_8] (rows=9131 width=1119)
+                                      Group By Operator [GBY_8] (rows=36524 width=1119)
                                         Output:["_col0"],keys:KEY._col0
                                       <-Map 8 [SIMPLE_EDGE]
                                         SHUFFLE [RS_7]
                                           PartitionCols:_col0
-                                          Group By Operator [GBY_6] (rows=18262 width=1119)
+                                          Group By Operator [GBY_6] (rows=73049 width=1119)
                                             Output:["_col0"],keys:d_month_seq
-                                            Select Operator [SEL_5] (rows=18262 width=1119)
+                                            Select Operator [SEL_5] (rows=73049 width=1119)
                                               Output:["d_month_seq"]
-                                              Filter Operator [FIL_101] (rows=18262 width=1119)
+                                              Filter Operator [FIL_101] (rows=73049 width=1119)
                                                 predicate:((d_year = 2000) and (d_moy = 2) and d_month_seq is not null)
                                                  Please refer to the previous TableScan [TS_3]
 

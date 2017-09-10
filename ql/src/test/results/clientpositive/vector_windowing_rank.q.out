@@ -1366,16 +1366,16 @@ STAGE PLANS:
             Statistics: Num rows: 6204 Data size: 1017544 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
               predicate: ((t < 10) and b is not null) (type: boolean)
-              Statistics: Num rows: 2068 Data size: 339181 Basic stats: COMPLETE Column stats: NONE
+              Statistics: Num rows: 6204 Data size: 1017544 Basic stats: COMPLETE Column stats: NONE
               Select Operator
                 expressions: b (type: bigint), ts (type: timestamp), dec (type: decimal(4,2))
                 outputColumnNames: _col1, _col2, _col3
-                Statistics: Num rows: 2068 Data size: 339181 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 6204 Data size: 1017544 Basic stats: COMPLETE Column stats: NONE
                 Reduce Output Operator
                   key expressions: _col1 (type: bigint)
                   sort order: +
                   Map-reduce partition columns: _col1 (type: bigint)
-                  Statistics: Num rows: 2068 Data size: 339181 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 6204 Data size: 1017544 Basic stats: COMPLETE Column stats: NONE
                   value expressions: _col2 (type: timestamp), _col3 (type: decimal(4,2))
           TableScan
             alias: over10k

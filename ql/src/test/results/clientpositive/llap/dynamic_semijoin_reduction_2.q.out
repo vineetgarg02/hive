@@ -600,16 +600,16 @@ STAGE PLANS:
                   Statistics: Num rows: 25 Data size: 4375 Basic stats: COMPLETE Column stats: COMPLETE
                   Filter Operator
                     predicate: ((UDFToDouble(key) < 0.0) and value is not null and (value BETWEEN DynamicValue(RS_21_x__col1_min) AND DynamicValue(RS_21_x__col1_max) and in_bloom_filter(value, DynamicValue(RS_21_x__col1_bloom_filter)))) (type: boolean)
-                    Statistics: Num rows: 8 Data size: 1400 Basic stats: COMPLETE Column stats: COMPLETE
+                    Statistics: Num rows: 25 Data size: 4375 Basic stats: COMPLETE Column stats: COMPLETE
                     Select Operator
                       expressions: value (type: string)
                       outputColumnNames: _col1
-                      Statistics: Num rows: 8 Data size: 1400 Basic stats: COMPLETE Column stats: COMPLETE
+                      Statistics: Num rows: 25 Data size: 4375 Basic stats: COMPLETE Column stats: COMPLETE
                       Reduce Output Operator
                         key expressions: _col1 (type: string)
                         sort order: +
                         Map-reduce partition columns: _col1 (type: string)
-                        Statistics: Num rows: 8 Data size: 1400 Basic stats: COMPLETE Column stats: COMPLETE
+                        Statistics: Num rows: 25 Data size: 4375 Basic stats: COMPLETE Column stats: COMPLETE
             Execution mode: llap
             LLAP IO: no inputs
         Reducer 2 

@@ -100,9 +100,9 @@ Stage-0
                             <-Map 9 [SIMPLE_EDGE]
                               SHUFFLE [RS_19]
                                 PartitionCols:_col0
-                                Select Operator [SEL_8] (rows=36524 width=1119)
+                                Select Operator [SEL_8] (rows=73049 width=1119)
                                   Output:["_col0"]
-                                  Filter Operator [FIL_52] (rows=36524 width=1119)
+                                  Filter Operator [FIL_52] (rows=73049 width=1119)
                                     predicate:((d_year = 1998) and d_date_sk is not null)
                                     TableScan [TS_6] (rows=73049 width=1119)
                                       default@date_dim,date_dim,Tbl:COMPLETE,Col:NONE,Output:["d_date_sk","d_year"]
@@ -123,9 +123,9 @@ Stage-0
                                 <-Map 8 [SIMPLE_EDGE]
                                   SHUFFLE [RS_16]
                                     PartitionCols:_col0
-                                    Select Operator [SEL_5] (rows=232725 width=385)
+                                    Select Operator [SEL_5] (rows=1861800 width=385)
                                       Output:["_col0"]
-                                      Filter Operator [FIL_51] (rows=232725 width=385)
+                                      Filter Operator [FIL_51] (rows=1861800 width=385)
                                         predicate:((cd_gender = 'F') and (cd_marital_status = 'W') and (cd_education_status = 'Primary') and cd_demo_sk is not null)
                                         TableScan [TS_3] (rows=1861800 width=385)
                                           default@customer_demographics,customer_demographics,Tbl:COMPLETE,Col:NONE,Output:["cd_demo_sk","cd_gender","cd_marital_status","cd_education_status"]

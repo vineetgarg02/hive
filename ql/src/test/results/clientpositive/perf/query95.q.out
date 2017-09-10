@@ -185,9 +185,9 @@ Stage-0
                                 <-Map 11 [SIMPLE_EDGE]
                                   SHUFFLE [RS_56]
                                     PartitionCols:_col0
-                                    Select Operator [SEL_11] (rows=42 width=1850)
+                                    Select Operator [SEL_11] (rows=84 width=1850)
                                       Output:["_col0"]
-                                      Filter Operator [FIL_109] (rows=42 width=1850)
+                                      Filter Operator [FIL_109] (rows=84 width=1850)
                                         predicate:((web_company_name = 'pri') and web_site_sk is not null)
                                         TableScan [TS_9] (rows=84 width=1850)
                                           default@web_site,web_site,Tbl:COMPLETE,Col:NONE,Output:["web_site_sk","web_company_name"]
@@ -199,9 +199,9 @@ Stage-0
                                     <-Map 10 [SIMPLE_EDGE]
                                       SHUFFLE [RS_53]
                                         PartitionCols:_col0
-                                        Select Operator [SEL_8] (rows=20000000 width=1014)
+                                        Select Operator [SEL_8] (rows=40000000 width=1014)
                                           Output:["_col0"]
-                                          Filter Operator [FIL_108] (rows=20000000 width=1014)
+                                          Filter Operator [FIL_108] (rows=40000000 width=1014)
                                             predicate:((ca_state = 'TX') and ca_address_sk is not null)
                                             TableScan [TS_6] (rows=40000000 width=1014)
                                               default@customer_address,customer_address,Tbl:COMPLETE,Col:NONE,Output:["ca_address_sk","ca_state"]
@@ -222,9 +222,9 @@ Stage-0
                                         <-Map 9 [SIMPLE_EDGE]
                                           SHUFFLE [RS_50]
                                             PartitionCols:_col0
-                                            Select Operator [SEL_5] (rows=8116 width=1119)
+                                            Select Operator [SEL_5] (rows=24349 width=1119)
                                               Output:["_col0"]
-                                              Filter Operator [FIL_107] (rows=8116 width=1119)
+                                              Filter Operator [FIL_107] (rows=24349 width=1119)
                                                 predicate:(CAST( d_date AS TIMESTAMP) BETWEEN 1999-05-01 00:00:00.0 AND 1999-06-30 00:00:00.0 and d_date_sk is not null)
                                                 TableScan [TS_3] (rows=73049 width=1119)
                                                   default@date_dim,date_dim,Tbl:COMPLETE,Col:NONE,Output:["d_date_sk","d_date"]

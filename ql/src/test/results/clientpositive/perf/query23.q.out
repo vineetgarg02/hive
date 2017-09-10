@@ -1,5 +1,5 @@
-Warning: Shuffle Join MERGEJOIN[367][tables = [$hdt$_1, $hdt$_2, $hdt$_0]] in Stage 'Reducer 25' is a cross product
 Warning: Shuffle Join MERGEJOIN[369][tables = [$hdt$_1, $hdt$_2, $hdt$_0]] in Stage 'Reducer 30' is a cross product
+Warning: Shuffle Join MERGEJOIN[367][tables = [$hdt$_1, $hdt$_2, $hdt$_0]] in Stage 'Reducer 25' is a cross product
 PREHOOK: query: explain
 with frequent_ss_items as 
  (select substr(i_item_desc,1,30) itemdesc,i_item_sk item_sk,d_date solddate,count(*) cnt
@@ -209,9 +209,9 @@ Stage-0
                                                         <-Map 31 [SIMPLE_EDGE]
                                                           SHUFFLE [RS_162]
                                                             PartitionCols:_col0
-                                                            Select Operator [SEL_38] (rows=36525 width=1119)
+                                                            Select Operator [SEL_38] (rows=73049 width=1119)
                                                               Output:["_col0"]
-                                                              Filter Operator [FIL_327] (rows=36525 width=1119)
+                                                              Filter Operator [FIL_327] (rows=73049 width=1119)
                                                                 predicate:((d_year) IN (1999, 2000, 2001, 2002) and d_date_sk is not null)
                                                                 TableScan [TS_36] (rows=73049 width=1119)
                                                                   default@date_dim,date_dim,Tbl:COMPLETE,Col:NONE,Output:["d_date_sk","d_year"]
@@ -346,9 +346,9 @@ Stage-0
                                                 <-Map 18 [SIMPLE_EDGE]
                                                   SHUFFLE [RS_135]
                                                     PartitionCols:_col0
-                                                    Select Operator [SEL_11] (rows=36525 width=1119)
+                                                    Select Operator [SEL_11] (rows=73049 width=1119)
                                                       Output:["_col0","_col1"]
-                                                      Filter Operator [FIL_324] (rows=36525 width=1119)
+                                                      Filter Operator [FIL_324] (rows=73049 width=1119)
                                                         predicate:((d_year) IN (1999, 2000, 2001, 2002) and d_date_sk is not null)
                                                         TableScan [TS_9] (rows=73049 width=1119)
                                                           default@date_dim,date_dim,Tbl:COMPLETE,Col:NONE,Output:["d_date_sk","d_date","d_year"]
@@ -360,9 +360,9 @@ Stage-0
                             <-Map 7 [SIMPLE_EDGE]
                               SHUFFLE [RS_229]
                                 PartitionCols:_col0
-                                Select Operator [SEL_5] (rows=18262 width=1119)
+                                Select Operator [SEL_5] (rows=73049 width=1119)
                                   Output:["_col0"]
-                                  Filter Operator [FIL_322] (rows=18262 width=1119)
+                                  Filter Operator [FIL_322] (rows=73049 width=1119)
                                     predicate:((d_year = 1999) and (d_moy = 1) and d_date_sk is not null)
                                     TableScan [TS_3] (rows=73049 width=1119)
                                       default@date_dim,date_dim,Tbl:COMPLETE,Col:NONE,Output:["d_date_sk","d_year","d_moy"]

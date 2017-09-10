@@ -62,9 +62,9 @@ Stage-0
                       <-Map 9 [SIMPLE_EDGE]
                         SHUFFLE [RS_19]
                           PartitionCols:_col0
-                          Select Operator [SEL_11] (rows=852 width=1910)
+                          Select Operator [SEL_11] (rows=1704 width=1910)
                             Output:["_col0"]
-                            Filter Operator [FIL_43] (rows=852 width=1910)
+                            Filter Operator [FIL_43] (rows=1704 width=1910)
                               predicate:((s_store_name = 'ese') and s_store_sk is not null)
                               TableScan [TS_9] (rows=1704 width=1910)
                                 default@store,store,Tbl:COMPLETE,Col:NONE,Output:["s_store_sk","s_store_name"]
@@ -76,9 +76,9 @@ Stage-0
                           <-Map 8 [SIMPLE_EDGE]
                             SHUFFLE [RS_16]
                               PartitionCols:_col0
-                              Select Operator [SEL_8] (rows=3600 width=107)
+                              Select Operator [SEL_8] (rows=7200 width=107)
                                 Output:["_col0"]
-                                Filter Operator [FIL_42] (rows=3600 width=107)
+                                Filter Operator [FIL_42] (rows=7200 width=107)
                                   predicate:((hd_dep_count = 5) and hd_demo_sk is not null)
                                   TableScan [TS_6] (rows=7200 width=107)
                                     default@household_demographics,household_demographics,Tbl:COMPLETE,Col:NONE,Output:["hd_demo_sk","hd_dep_count"]
@@ -99,9 +99,9 @@ Stage-0
                               <-Map 7 [SIMPLE_EDGE]
                                 SHUFFLE [RS_13]
                                   PartitionCols:_col0
-                                  Select Operator [SEL_5] (rows=14400 width=471)
+                                  Select Operator [SEL_5] (rows=86400 width=471)
                                     Output:["_col0"]
-                                    Filter Operator [FIL_41] (rows=14400 width=471)
+                                    Filter Operator [FIL_41] (rows=86400 width=471)
                                       predicate:((t_hour = 8) and (t_minute >= 30) and t_time_sk is not null)
                                       TableScan [TS_3] (rows=86400 width=471)
                                         default@time_dim,time_dim,Tbl:COMPLETE,Col:NONE,Output:["t_time_sk","t_hour","t_minute"]

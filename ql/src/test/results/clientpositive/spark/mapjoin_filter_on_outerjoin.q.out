@@ -65,7 +65,7 @@ STAGE PLANS:
                   Statistics: Num rows: 25 Data size: 191 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: ((key < 300) and (key < 10)) (type: boolean)
-                    Statistics: Num rows: 2 Data size: 15 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 8 Data size: 61 Basic stats: COMPLETE Column stats: NONE
                     Spark HashTable Sink Operator
                       filter predicates:
                         0 
@@ -226,7 +226,7 @@ STAGE PLANS:
                   Statistics: Num rows: 25 Data size: 191 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: ((key < 300) and (key < 10)) (type: boolean)
-                    Statistics: Num rows: 2 Data size: 15 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 8 Data size: 61 Basic stats: COMPLETE Column stats: NONE
                     Spark HashTable Sink Operator
                       filter predicates:
                         0 

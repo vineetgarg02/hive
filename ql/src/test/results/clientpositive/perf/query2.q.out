@@ -154,9 +154,9 @@ Stage-0
                   <-Map 13 [SIMPLE_EDGE]
                     SHUFFLE [RS_51]
                       PartitionCols:_col0
-                      Select Operator [SEL_49] (rows=36524 width=1119)
+                      Select Operator [SEL_49] (rows=73049 width=1119)
                         Output:["_col0"]
-                        Filter Operator [FIL_90] (rows=36524 width=1119)
+                        Filter Operator [FIL_90] (rows=73049 width=1119)
                           predicate:((d_year = 2002) and d_week_seq is not null)
                           TableScan [TS_20] (rows=73049 width=1119)
                             default@date_dim,date_dim,Tbl:COMPLETE,Col:NONE,Output:["d_week_seq","d_year"]
@@ -210,9 +210,9 @@ Stage-0
                   <-Map 13 [SIMPLE_EDGE]
                     SHUFFLE [RS_24]
                       PartitionCols:_col0
-                      Select Operator [SEL_22] (rows=36524 width=1119)
+                      Select Operator [SEL_22] (rows=73049 width=1119)
                         Output:["_col0"]
-                        Filter Operator [FIL_86] (rows=36524 width=1119)
+                        Filter Operator [FIL_86] (rows=73049 width=1119)
                           predicate:((d_year = 2001) and d_week_seq is not null)
                            Please refer to the previous TableScan [TS_20]
                   <-Reducer 4 [ONE_TO_ONE_EDGE]

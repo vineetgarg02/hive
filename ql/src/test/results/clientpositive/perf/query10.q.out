@@ -174,9 +174,9 @@ Stage-0
                                       <-Map 16 [SIMPLE_EDGE]
                                         SHUFFLE [RS_55]
                                           PartitionCols:_col0
-                                          Select Operator [SEL_28] (rows=4058 width=1119)
+                                          Select Operator [SEL_28] (rows=24349 width=1119)
                                             Output:["_col0"]
-                                            Filter Operator [FIL_103] (rows=4058 width=1119)
+                                            Filter Operator [FIL_103] (rows=24349 width=1119)
                                               predicate:((d_year = 2002) and d_moy BETWEEN 4 AND 7 and d_date_sk is not null)
                                               TableScan [TS_26] (rows=73049 width=1119)
                                                 default@date_dim,date_dim,Tbl:COMPLETE,Col:NONE,Output:["d_date_sk","d_year","d_moy"]
@@ -279,9 +279,9 @@ Stage-0
                                         <-Map 8 [SIMPLE_EDGE]
                                           SHUFFLE [RS_38]
                                             PartitionCols:_col0
-                                            Select Operator [SEL_5] (rows=20000000 width=1014)
+                                            Select Operator [SEL_5] (rows=40000000 width=1014)
                                               Output:["_col0"]
-                                              Filter Operator [FIL_98] (rows=20000000 width=1014)
+                                              Filter Operator [FIL_98] (rows=40000000 width=1014)
                                                 predicate:((ca_county) IN ('Walker County', 'Richland County', 'Gaines County', 'Douglas County', 'Dona Ana County') and ca_address_sk is not null)
                                                 TableScan [TS_3] (rows=40000000 width=1014)
                                                   default@customer_address,ca,Tbl:COMPLETE,Col:NONE,Output:["ca_address_sk","ca_county"]

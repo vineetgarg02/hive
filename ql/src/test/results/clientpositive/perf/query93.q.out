@@ -89,9 +89,9 @@ Stage-0
                           <-Map 6 [SIMPLE_EDGE]
                             SHUFFLE [RS_10]
                               PartitionCols:_col0
-                              Select Operator [SEL_5] (rows=72 width=200)
+                              Select Operator [SEL_5] (rows=36 width=200)
                                 Output:["_col0"]
-                                Filter Operator [FIL_31] (rows=72 width=200)
+                                Filter Operator [FIL_31] (rows=36 width=200)
                                   predicate:((r_reason_desc = 'Did not like the warranty') and r_reason_sk is not null)
                                   TableScan [TS_3] (rows=72 width=200)
                                     default@reason,reason,Tbl:COMPLETE,Col:NONE,Output:["r_reason_sk","r_reason_desc"]

@@ -146,9 +146,9 @@ Stage-0
                                       <-Map 11 [SIMPLE_EDGE]
                                         SHUFFLE [RS_33]
                                           PartitionCols:_col0
-                                          Select Operator [SEL_11] (rows=60 width=2045)
+                                          Select Operator [SEL_11] (rows=30 width=2045)
                                             Output:["_col0"]
-                                            Filter Operator [FIL_70] (rows=60 width=2045)
+                                            Filter Operator [FIL_70] (rows=30 width=2045)
                                               predicate:((cc_county) IN ('Ziebach County', 'Levy County', 'Huron County', 'Franklin Parish', 'Daviess County') and cc_call_center_sk is not null)
                                               TableScan [TS_9] (rows=60 width=2045)
                                                 default@call_center,call_center,Tbl:COMPLETE,Col:NONE,Output:["cc_call_center_sk","cc_county"]
@@ -160,9 +160,9 @@ Stage-0
                                           <-Map 10 [SIMPLE_EDGE]
                                             SHUFFLE [RS_30]
                                               PartitionCols:_col0
-                                              Select Operator [SEL_8] (rows=40000000 width=1014)
+                                              Select Operator [SEL_8] (rows=20000000 width=1014)
                                                 Output:["_col0"]
-                                                Filter Operator [FIL_69] (rows=40000000 width=1014)
+                                                Filter Operator [FIL_69] (rows=20000000 width=1014)
                                                   predicate:((ca_state = 'NY') and ca_address_sk is not null)
                                                   TableScan [TS_6] (rows=40000000 width=1014)
                                                     default@customer_address,customer_address,Tbl:COMPLETE,Col:NONE,Output:["ca_address_sk","ca_state"]
@@ -183,9 +183,9 @@ Stage-0
                                               <-Map 9 [SIMPLE_EDGE]
                                                 SHUFFLE [RS_27]
                                                   PartitionCols:_col0
-                                                  Select Operator [SEL_5] (rows=24349 width=1119)
+                                                  Select Operator [SEL_5] (rows=8116 width=1119)
                                                     Output:["_col0"]
-                                                    Filter Operator [FIL_68] (rows=24349 width=1119)
+                                                    Filter Operator [FIL_68] (rows=8116 width=1119)
                                                       predicate:(CAST( d_date AS TIMESTAMP) BETWEEN 2001-04-01 00:00:00.0 AND 2001-05-31 01:00:00.0 and d_date_sk is not null)
                                                       TableScan [TS_3] (rows=73049 width=1119)
                                                         default@date_dim,date_dim,Tbl:COMPLETE,Col:NONE,Output:["d_date_sk","d_date"]

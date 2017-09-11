@@ -209,9 +209,9 @@ Stage-0
                                   <-Map 26 [SIMPLE_EDGE]
                                     SHUFFLE [RS_60]
                                       PartitionCols:_col0
-                                      Select Operator [SEL_18] (rows=40000000 width=1014)
+                                      Select Operator [SEL_18] (rows=20000000 width=1014)
                                         Output:["_col0"]
-                                        Filter Operator [FIL_162] (rows=40000000 width=1014)
+                                        Filter Operator [FIL_162] (rows=20000000 width=1014)
                                           predicate:((ca_gmt_offset = -6) and ca_address_sk is not null)
                                           TableScan [TS_16] (rows=40000000 width=1014)
                                             default@customer_address,customer_address,Tbl:COMPLETE,Col:NONE,Output:["ca_address_sk","ca_gmt_offset"]
@@ -223,9 +223,9 @@ Stage-0
                                       <-Map 21 [SIMPLE_EDGE]
                                         SHUFFLE [RS_57]
                                           PartitionCols:_col0
-                                          Select Operator [SEL_15] (rows=73049 width=1119)
+                                          Select Operator [SEL_15] (rows=18262 width=1119)
                                             Output:["_col0"]
-                                            Filter Operator [FIL_161] (rows=73049 width=1119)
+                                            Filter Operator [FIL_161] (rows=18262 width=1119)
                                               predicate:((d_year = 1999) and (d_moy = 3) and d_date_sk is not null)
                                               TableScan [TS_13] (rows=73049 width=1119)
                                                 default@date_dim,date_dim,Tbl:COMPLETE,Col:NONE,Output:["d_date_sk","d_year","d_moy"]
@@ -255,16 +255,16 @@ Stage-0
                                 <-Reducer 16 [ONE_TO_ONE_EDGE]
                                   FORWARD [RS_64]
                                     PartitionCols:_col0
-                                    Group By Operator [GBY_45] (rows=231000 width=1436)
+                                    Group By Operator [GBY_45] (rows=115500 width=1436)
                                       Output:["_col0"],keys:KEY._col0
                                     <-Map 14 [SIMPLE_EDGE]
                                       SHUFFLE [RS_44]
                                         PartitionCols:_col0
-                                        Group By Operator [GBY_6] (rows=462000 width=1436)
+                                        Group By Operator [GBY_6] (rows=231000 width=1436)
                                           Output:["_col0"],keys:i_manufact_id
-                                          Select Operator [SEL_5] (rows=462000 width=1436)
+                                          Select Operator [SEL_5] (rows=231000 width=1436)
                                             Output:["i_manufact_id"]
-                                            Filter Operator [FIL_159] (rows=462000 width=1436)
+                                            Filter Operator [FIL_159] (rows=231000 width=1436)
                                               predicate:((i_category) IN ('Books') and i_manufact_id is not null)
                                               TableScan [TS_3] (rows=462000 width=1436)
                                                 default@item,item,Tbl:COMPLETE,Col:NONE,Output:["i_category","i_manufact_id"]
@@ -294,7 +294,7 @@ Stage-0
                                 <-Reducer 17 [ONE_TO_ONE_EDGE]
                                   FORWARD [RS_102]
                                     PartitionCols:_col0
-                                    Group By Operator [GBY_83] (rows=231000 width=1436)
+                                    Group By Operator [GBY_83] (rows=115500 width=1436)
                                       Output:["_col0"],keys:KEY._col0
                                     <-Map 14 [SIMPLE_EDGE]
                                       SHUFFLE [RS_82]
@@ -355,7 +355,7 @@ Stage-0
                                 <-Reducer 15 [ONE_TO_ONE_EDGE]
                                   FORWARD [RS_27]
                                     PartitionCols:_col0
-                                    Group By Operator [GBY_8] (rows=231000 width=1436)
+                                    Group By Operator [GBY_8] (rows=115500 width=1436)
                                       Output:["_col0"],keys:KEY._col0
                                     <-Map 14 [SIMPLE_EDGE]
                                       SHUFFLE [RS_7]

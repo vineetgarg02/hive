@@ -94,9 +94,9 @@ Stage-0
                         <-Map 11 [SIMPLE_EDGE]
                           SHUFFLE [RS_19]
                             PartitionCols:_col0
-                            Select Operator [SEL_17] (rows=20 width=12)
+                            Select Operator [SEL_17] (rows=2 width=12)
                               Output:["_col0"]
-                              Filter Operator [FIL_64] (rows=20 width=12)
+                              Filter Operator [FIL_64] (rows=2 width=12)
                                 predicate:((ib_lower_bound >= 32287) and (ib_upper_bound <= 82287) and ib_income_band_sk is not null)
                                 TableScan [TS_15] (rows=20 width=12)
                                   default@income_band,income_band,Tbl:COMPLETE,Col:NONE,Output:["ib_income_band_sk","ib_lower_bound","ib_upper_bound"]
@@ -126,9 +126,9 @@ Stage-0
                         <-Map 8 [SIMPLE_EDGE]
                           SHUFFLE [RS_23]
                             PartitionCols:_col0
-                            Select Operator [SEL_11] (rows=40000000 width=1014)
+                            Select Operator [SEL_11] (rows=20000000 width=1014)
                               Output:["_col0"]
-                              Filter Operator [FIL_62] (rows=40000000 width=1014)
+                              Filter Operator [FIL_62] (rows=20000000 width=1014)
                                 predicate:((ca_city = 'Hopewell') and ca_address_sk is not null)
                                 TableScan [TS_9] (rows=40000000 width=1014)
                                   default@customer_address,customer_address,Tbl:COMPLETE,Col:NONE,Output:["ca_address_sk","ca_city"]

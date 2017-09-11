@@ -159,9 +159,9 @@ Stage-0
                                   <-Map 14 [SIMPLE_EDGE]
                                     SHUFFLE [RS_28]
                                       PartitionCols:_col0
-                                      Select Operator [SEL_17] (rows=7200 width=107)
+                                      Select Operator [SEL_17] (rows=1 width=107)
                                         Output:["_col0"]
-                                        Filter Operator [FIL_79] (rows=7200 width=107)
+                                        Filter Operator [FIL_79] (rows=1 width=107)
                                           predicate:(((hd_dep_count = 2) or (hd_vehicle_count = 1)) and hd_demo_sk is not null)
                                           TableScan [TS_15] (rows=7200 width=107)
                                             default@household_demographics,household_demographics,Tbl:COMPLETE,Col:NONE,Output:["hd_demo_sk","hd_dep_count","hd_vehicle_count"]
@@ -173,9 +173,9 @@ Stage-0
                                       <-Map 13 [SIMPLE_EDGE]
                                         SHUFFLE [RS_25]
                                           PartitionCols:_col0
-                                          Select Operator [SEL_14] (rows=1704 width=1910)
+                                          Select Operator [SEL_14] (rows=852 width=1910)
                                             Output:["_col0"]
-                                            Filter Operator [FIL_78] (rows=1704 width=1910)
+                                            Filter Operator [FIL_78] (rows=852 width=1910)
                                               predicate:((s_city) IN ('Cedar Grove', 'Wildwood') and s_store_sk is not null)
                                               TableScan [TS_12] (rows=1704 width=1910)
                                                 default@store,store,Tbl:COMPLETE,Col:NONE,Output:["s_store_sk","s_city"]
@@ -187,9 +187,9 @@ Stage-0
                                           <-Map 12 [SIMPLE_EDGE]
                                             SHUFFLE [RS_22]
                                               PartitionCols:_col0
-                                              Select Operator [SEL_11] (rows=24349 width=1119)
+                                              Select Operator [SEL_11] (rows=4058 width=1119)
                                                 Output:["_col0"]
-                                                Filter Operator [FIL_77] (rows=24349 width=1119)
+                                                Filter Operator [FIL_77] (rows=4058 width=1119)
                                                   predicate:((d_year) IN (1998, 1999, 2000) and d_dom BETWEEN 1 AND 2 and d_date_sk is not null)
                                                   TableScan [TS_9] (rows=73049 width=1119)
                                                     default@date_dim,date_dim,Tbl:COMPLETE,Col:NONE,Output:["d_date_sk","d_year","d_dom"]

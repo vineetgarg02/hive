@@ -84,9 +84,9 @@ Stage-0
                           <-Map 14 [SIMPLE_EDGE]
                             SHUFFLE [RS_45]
                               PartitionCols:_col0
-                              Select Operator [SEL_11] (rows=7200 width=107)
+                              Select Operator [SEL_11] (rows=3600 width=107)
                                 Output:["_col0"]
-                                Filter Operator [FIL_81] (rows=7200 width=107)
+                                Filter Operator [FIL_81] (rows=3600 width=107)
                                   predicate:((hd_dep_count = 8) and hd_demo_sk is not null)
                                   TableScan [TS_9] (rows=7200 width=107)
                                     default@household_demographics,household_demographics,Tbl:COMPLETE,Col:NONE,Output:["hd_demo_sk","hd_dep_count"]
@@ -98,9 +98,9 @@ Stage-0
                               <-Map 13 [SIMPLE_EDGE]
                                 SHUFFLE [RS_42]
                                   PartitionCols:_col0
-                                  Select Operator [SEL_34] (rows=28800 width=471)
+                                  Select Operator [SEL_34] (rows=9600 width=471)
                                     Output:["_col0"]
-                                    Filter Operator [FIL_84] (rows=28800 width=471)
+                                    Filter Operator [FIL_84] (rows=9600 width=471)
                                       predicate:(t_hour BETWEEN 14 AND 15 and t_time_sk is not null)
                                       TableScan [TS_6] (rows=86400 width=471)
                                         default@time_dim,time_dim,Tbl:COMPLETE,Col:NONE,Output:["t_time_sk","t_hour"]
@@ -121,9 +121,9 @@ Stage-0
                                   <-Map 12 [SIMPLE_EDGE]
                                     SHUFFLE [RS_39]
                                       PartitionCols:_col0
-                                      Select Operator [SEL_5] (rows=1534 width=585)
+                                      Select Operator [SEL_5] (rows=511 width=585)
                                         Output:["_col0"]
-                                        Filter Operator [FIL_79] (rows=1534 width=585)
+                                        Filter Operator [FIL_79] (rows=511 width=585)
                                           predicate:(wp_char_count BETWEEN 5000 AND 5200 and wp_web_page_sk is not null)
                                           TableScan [TS_3] (rows=4602 width=585)
                                             default@web_page,web_page,Tbl:COMPLETE,Col:NONE,Output:["wp_web_page_sk","wp_char_count"]
@@ -149,9 +149,9 @@ Stage-0
                               <-Map 13 [SIMPLE_EDGE]
                                 SHUFFLE [RS_16]
                                   PartitionCols:_col0
-                                  Select Operator [SEL_8] (rows=28800 width=471)
+                                  Select Operator [SEL_8] (rows=9600 width=471)
                                     Output:["_col0"]
-                                    Filter Operator [FIL_80] (rows=28800 width=471)
+                                    Filter Operator [FIL_80] (rows=9600 width=471)
                                       predicate:(t_hour BETWEEN 6 AND 7 and t_time_sk is not null)
                                        Please refer to the previous TableScan [TS_6]
                               <-Reducer 2 [SIMPLE_EDGE]

@@ -96,9 +96,9 @@ Stage-0
                     <-Map 5 [SIMPLE_EDGE]
                       SHUFFLE [RS_57]
                         PartitionCols:_col0
-                        Select Operator [SEL_5] (rows=40000000 width=1014)
+                        Select Operator [SEL_5] (rows=20000000 width=1014)
                           Output:["_col0"]
-                          Filter Operator [FIL_94] (rows=40000000 width=1014)
+                          Filter Operator [FIL_94] (rows=20000000 width=1014)
                             predicate:((ca_state = 'IL') and ca_address_sk is not null)
                             TableScan [TS_3] (rows=40000000 width=1014)
                               default@customer_address,customer_address,Tbl:COMPLETE,Col:NONE,Output:["ca_address_sk","ca_state"]
@@ -163,9 +163,9 @@ Stage-0
                                             <-Map 14 [SIMPLE_EDGE]
                                               SHUFFLE [RS_36]
                                                 PartitionCols:_col0
-                                                Select Operator [SEL_11] (rows=73049 width=1119)
+                                                Select Operator [SEL_11] (rows=36524 width=1119)
                                                   Output:["_col0"]
-                                                  Filter Operator [FIL_96] (rows=73049 width=1119)
+                                                  Filter Operator [FIL_96] (rows=36524 width=1119)
                                                     predicate:((d_year = 2002) and d_date_sk is not null)
                                                     TableScan [TS_9] (rows=73049 width=1119)
                                                       default@date_dim,date_dim,Tbl:COMPLETE,Col:NONE,Output:["d_date_sk","d_year"]

@@ -167,9 +167,9 @@ Stage-0
                                       <-Map 12 [SIMPLE_EDGE]
                                         SHUFFLE [RS_19]
                                           PartitionCols:_col0
-                                          Select Operator [SEL_17] (rows=24349 width=1119)
+                                          Select Operator [SEL_17] (rows=4058 width=1119)
                                             Output:["_col0"]
-                                            Filter Operator [FIL_90] (rows=24349 width=1119)
+                                            Filter Operator [FIL_90] (rows=4058 width=1119)
                                               predicate:(d_moy BETWEEN 4 AND 7 and (d_year = 1999) and d_date_sk is not null)
                                               TableScan [TS_9] (rows=73049 width=1119)
                                                 default@date_dim,d1,Tbl:COMPLETE,Col:NONE,Output:["d_date_sk","d_year","d_moy"]
@@ -190,9 +190,9 @@ Stage-0
                                       <-Map 12 [SIMPLE_EDGE]
                                         SHUFFLE [RS_29]
                                           PartitionCols:_col0
-                                          Select Operator [SEL_11] (rows=73049 width=1119)
+                                          Select Operator [SEL_11] (rows=18262 width=1119)
                                             Output:["_col0"]
-                                            Filter Operator [FIL_88] (rows=73049 width=1119)
+                                            Filter Operator [FIL_88] (rows=18262 width=1119)
                                               predicate:((d_moy = 4) and (d_year = 1999) and d_date_sk is not null)
                                                Please refer to the previous TableScan [TS_9]
                                       <-Map 7 [SIMPLE_EDGE]
@@ -221,9 +221,9 @@ Stage-0
                         <-Map 6 [SIMPLE_EDGE]
                           SHUFFLE [RS_42]
                             PartitionCols:_col0
-                            Select Operator [SEL_5] (rows=73049 width=1119)
+                            Select Operator [SEL_5] (rows=36525 width=1119)
                               Output:["_col0"]
-                              Filter Operator [FIL_86] (rows=73049 width=1119)
+                              Filter Operator [FIL_86] (rows=36525 width=1119)
                                 predicate:((d_year) IN (1999, 2000, 2001) and d_date_sk is not null)
                                 TableScan [TS_3] (rows=73049 width=1119)
                                   default@date_dim,d3,Tbl:COMPLETE,Col:NONE,Output:["d_date_sk","d_year"]

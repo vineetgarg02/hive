@@ -1,6 +1,6 @@
-Warning: Shuffle Join MERGEJOIN[891][tables = [$hdt$_1, $hdt$_2, $hdt$_0]] in Stage 'Reducer 12' is a cross product
 Warning: Shuffle Join MERGEJOIN[890][tables = [$hdt$_1, $hdt$_2, $hdt$_0]] in Stage 'Reducer 5' is a cross product
 Warning: Shuffle Join MERGEJOIN[892][tables = [$hdt$_2, $hdt$_3, $hdt$_1]] in Stage 'Reducer 16' is a cross product
+Warning: Shuffle Join MERGEJOIN[891][tables = [$hdt$_1, $hdt$_2, $hdt$_0]] in Stage 'Reducer 12' is a cross product
 PREHOOK: query: explain
 with  cross_items as
  (select i_item_sk ss_item_sk
@@ -337,9 +337,9 @@ Stage-0
                                                     <-Map 21 [SIMPLE_EDGE]
                                                       SHUFFLE [RS_205]
                                                         PartitionCols:_col0
-                                                        Select Operator [SEL_15] (rows=24349 width=1119)
+                                                        Select Operator [SEL_15] (rows=8116 width=1119)
                                                           Output:["_col0"]
-                                                          Filter Operator [FIL_773] (rows=24349 width=1119)
+                                                          Filter Operator [FIL_773] (rows=8116 width=1119)
                                                             predicate:(d_year BETWEEN 1998 AND 2000 and d_date_sk is not null)
                                                             TableScan [TS_13] (rows=73049 width=1119)
                                                               default@date_dim,date_dim,Tbl:COMPLETE,Col:NONE,Output:["d_date_sk","d_year"]
@@ -365,9 +365,9 @@ Stage-0
                                                     <-Map 35 [SIMPLE_EDGE]
                                                       SHUFFLE [RS_216]
                                                         PartitionCols:_col0
-                                                        Select Operator [SEL_26] (rows=24349 width=1119)
+                                                        Select Operator [SEL_26] (rows=8116 width=1119)
                                                           Output:["_col0"]
-                                                          Filter Operator [FIL_775] (rows=24349 width=1119)
+                                                          Filter Operator [FIL_775] (rows=8116 width=1119)
                                                             predicate:(d_year BETWEEN 1998 AND 2000 and d_date_sk is not null)
                                                             TableScan [TS_24] (rows=73049 width=1119)
                                                               default@date_dim,date_dim,Tbl:COMPLETE,Col:NONE,Output:["d_date_sk","d_year"]
@@ -393,9 +393,9 @@ Stage-0
                                                     <-Map 91 [SIMPLE_EDGE]
                                                       SHUFFLE [RS_195]
                                                         PartitionCols:_col0
-                                                        Select Operator [SEL_98] (rows=24349 width=1119)
+                                                        Select Operator [SEL_98] (rows=8116 width=1119)
                                                           Output:["_col0"]
-                                                          Filter Operator [FIL_787] (rows=24349 width=1119)
+                                                          Filter Operator [FIL_787] (rows=8116 width=1119)
                                                             predicate:(d_year BETWEEN 1999 AND 2001 and d_date_sk is not null)
                                                             TableScan [TS_96] (rows=73049 width=1119)
                                                               default@date_dim,d1,Tbl:COMPLETE,Col:NONE,Output:["d_date_sk","d_year"]
@@ -512,9 +512,9 @@ Stage-0
                                             <-Map 49 [SIMPLE_EDGE]
                                               SHUFFLE [RS_358]
                                                 PartitionCols:_col0
-                                                Select Operator [SEL_86] (rows=73049 width=1119)
+                                                Select Operator [SEL_86] (rows=18262 width=1119)
                                                   Output:["_col0"]
-                                                  Filter Operator [FIL_783] (rows=73049 width=1119)
+                                                  Filter Operator [FIL_783] (rows=18262 width=1119)
                                                     predicate:((d_year = 2000) and (d_moy = 11) and d_date_sk is not null)
                                                     TableScan [TS_84] (rows=73049 width=1119)
                                                       default@date_dim,date_dim,Tbl:COMPLETE,Col:NONE,Output:["d_date_sk","d_year","d_moy"]

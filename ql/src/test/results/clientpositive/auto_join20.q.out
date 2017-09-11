@@ -175,7 +175,7 @@ STAGE PLANS:
             Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
               predicate: ((key < 15) and (key < 10)) (type: boolean)
-              Statistics: Num rows: 166 Data size: 1763 Basic stats: COMPLETE Column stats: NONE
+              Statistics: Num rows: 55 Data size: 584 Basic stats: COMPLETE Column stats: NONE
               HashTable Sink Operator
                 filter predicates:
                   0 
@@ -191,7 +191,7 @@ STAGE PLANS:
             Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
               predicate: ((key < 10) and (key < 15)) (type: boolean)
-              Statistics: Num rows: 166 Data size: 1763 Basic stats: COMPLETE Column stats: NONE
+              Statistics: Num rows: 55 Data size: 584 Basic stats: COMPLETE Column stats: NONE
               HashTable Sink Operator
                 filter predicates:
                   0 

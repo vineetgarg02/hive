@@ -150,9 +150,9 @@ Stage-0
                                       <-Map 13 [SIMPLE_EDGE]
                                         SHUFFLE [RS_57]
                                           PartitionCols:_col0
-                                          Select Operator [SEL_14] (rows=24349 width=1119)
+                                          Select Operator [SEL_14] (rows=4058 width=1119)
                                             Output:["_col0"]
-                                            Filter Operator [FIL_103] (rows=24349 width=1119)
+                                            Filter Operator [FIL_103] (rows=4058 width=1119)
                                               predicate:((d_year = 1999) and d_moy BETWEEN 1 AND 3 and d_date_sk is not null)
                                               TableScan [TS_12] (rows=73049 width=1119)
                                                 default@date_dim,date_dim,Tbl:COMPLETE,Col:NONE,Output:["d_date_sk","d_year","d_moy"]
@@ -259,9 +259,9 @@ Stage-0
                                             <-Map 8 [SIMPLE_EDGE]
                                               SHUFFLE [RS_38]
                                                 PartitionCols:_col0
-                                                Select Operator [SEL_5] (rows=40000000 width=1014)
+                                                Select Operator [SEL_5] (rows=20000000 width=1014)
                                                   Output:["_col0"]
-                                                  Filter Operator [FIL_100] (rows=40000000 width=1014)
+                                                  Filter Operator [FIL_100] (rows=20000000 width=1014)
                                                     predicate:((ca_state) IN ('CO', 'IL', 'MN') and ca_address_sk is not null)
                                                     TableScan [TS_3] (rows=40000000 width=1014)
                                                       default@customer_address,ca,Tbl:COMPLETE,Col:NONE,Output:["ca_address_sk","ca_state"]

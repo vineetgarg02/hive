@@ -243,9 +243,9 @@ Stage-0
                     <-Map 37 [SIMPLE_EDGE]
                       SHUFFLE [RS_45]
                         PartitionCols:_col0
-                        Select Operator [SEL_11] (rows=1704 width=1910)
+                        Select Operator [SEL_11] (rows=852 width=1910)
                           Output:["_col0"]
-                          Filter Operator [FIL_294] (rows=1704 width=1910)
+                          Filter Operator [FIL_294] (rows=852 width=1910)
                             predicate:((s_store_name = 'ese') and s_store_sk is not null)
                             TableScan [TS_9] (rows=1704 width=1910)
                               default@store,store,Tbl:COMPLETE,Col:NONE,Output:["s_store_sk","s_store_name"]
@@ -257,9 +257,9 @@ Stage-0
                         <-Map 36 [SIMPLE_EDGE]
                           SHUFFLE [RS_42]
                             PartitionCols:_col0
-                            Select Operator [SEL_8] (rows=7200 width=107)
+                            Select Operator [SEL_8] (rows=2 width=107)
                               Output:["_col0"]
-                              Filter Operator [FIL_293] (rows=7200 width=107)
+                              Filter Operator [FIL_293] (rows=2 width=107)
                                 predicate:((((hd_dep_count = 3) and (hd_vehicle_count <= 5)) or ((hd_dep_count = 0) and (hd_vehicle_count <= 2)) or ((hd_dep_count = 1) and (hd_vehicle_count <= 3))) and hd_demo_sk is not null)
                                 TableScan [TS_6] (rows=7200 width=107)
                                   default@household_demographics,household_demographics,Tbl:COMPLETE,Col:NONE,Output:["hd_demo_sk","hd_dep_count","hd_vehicle_count"]
@@ -280,9 +280,9 @@ Stage-0
                             <-Map 35 [SIMPLE_EDGE]
                               SHUFFLE [RS_39]
                                 PartitionCols:_col0
-                                Select Operator [SEL_31] (rows=86400 width=471)
+                                Select Operator [SEL_31] (rows=14400 width=471)
                                   Output:["_col0"]
-                                  Filter Operator [FIL_296] (rows=86400 width=471)
+                                  Filter Operator [FIL_296] (rows=14400 width=471)
                                     predicate:((t_hour = 12) and (t_minute < 30) and t_time_sk is not null)
                                     TableScan [TS_3] (rows=86400 width=471)
                                       default@time_dim,time_dim,Tbl:COMPLETE,Col:NONE,Output:["t_time_sk","t_hour","t_minute"]
@@ -321,9 +321,9 @@ Stage-0
                             <-Map 35 [SIMPLE_EDGE]
                               SHUFFLE [RS_65]
                                 PartitionCols:_col0
-                                Select Operator [SEL_57] (rows=86400 width=471)
+                                Select Operator [SEL_57] (rows=14400 width=471)
                                   Output:["_col0"]
-                                  Filter Operator [FIL_300] (rows=86400 width=471)
+                                  Filter Operator [FIL_300] (rows=14400 width=471)
                                     predicate:((t_hour = 11) and (t_minute >= 30) and t_time_sk is not null)
                                      Please refer to the previous TableScan [TS_3]
           <-Reducer 18 [CUSTOM_SIMPLE_EDGE]
@@ -361,9 +361,9 @@ Stage-0
                             <-Map 35 [SIMPLE_EDGE]
                               SHUFFLE [RS_91]
                                 PartitionCols:_col0
-                                Select Operator [SEL_83] (rows=86400 width=471)
+                                Select Operator [SEL_83] (rows=14400 width=471)
                                   Output:["_col0"]
-                                  Filter Operator [FIL_304] (rows=86400 width=471)
+                                  Filter Operator [FIL_304] (rows=14400 width=471)
                                     predicate:((t_hour = 11) and (t_minute < 30) and t_time_sk is not null)
                                      Please refer to the previous TableScan [TS_3]
           <-Reducer 22 [CUSTOM_SIMPLE_EDGE]
@@ -401,9 +401,9 @@ Stage-0
                             <-Map 35 [SIMPLE_EDGE]
                               SHUFFLE [RS_117]
                                 PartitionCols:_col0
-                                Select Operator [SEL_109] (rows=86400 width=471)
+                                Select Operator [SEL_109] (rows=14400 width=471)
                                   Output:["_col0"]
-                                  Filter Operator [FIL_308] (rows=86400 width=471)
+                                  Filter Operator [FIL_308] (rows=14400 width=471)
                                     predicate:((t_hour = 10) and (t_minute >= 30) and t_time_sk is not null)
                                      Please refer to the previous TableScan [TS_3]
           <-Reducer 26 [CUSTOM_SIMPLE_EDGE]
@@ -441,9 +441,9 @@ Stage-0
                             <-Map 35 [SIMPLE_EDGE]
                               SHUFFLE [RS_143]
                                 PartitionCols:_col0
-                                Select Operator [SEL_135] (rows=86400 width=471)
+                                Select Operator [SEL_135] (rows=14400 width=471)
                                   Output:["_col0"]
-                                  Filter Operator [FIL_312] (rows=86400 width=471)
+                                  Filter Operator [FIL_312] (rows=14400 width=471)
                                     predicate:((t_hour = 10) and (t_minute < 30) and t_time_sk is not null)
                                      Please refer to the previous TableScan [TS_3]
           <-Reducer 30 [CUSTOM_SIMPLE_EDGE]
@@ -481,9 +481,9 @@ Stage-0
                             <-Map 35 [SIMPLE_EDGE]
                               SHUFFLE [RS_169]
                                 PartitionCols:_col0
-                                Select Operator [SEL_161] (rows=86400 width=471)
+                                Select Operator [SEL_161] (rows=14400 width=471)
                                   Output:["_col0"]
-                                  Filter Operator [FIL_316] (rows=86400 width=471)
+                                  Filter Operator [FIL_316] (rows=14400 width=471)
                                     predicate:((t_hour = 9) and (t_minute >= 30) and t_time_sk is not null)
                                      Please refer to the previous TableScan [TS_3]
           <-Reducer 34 [CUSTOM_SIMPLE_EDGE]
@@ -521,9 +521,9 @@ Stage-0
                             <-Map 35 [SIMPLE_EDGE]
                               SHUFFLE [RS_195]
                                 PartitionCols:_col0
-                                Select Operator [SEL_187] (rows=86400 width=471)
+                                Select Operator [SEL_187] (rows=14400 width=471)
                                   Output:["_col0"]
-                                  Filter Operator [FIL_320] (rows=86400 width=471)
+                                  Filter Operator [FIL_320] (rows=14400 width=471)
                                     predicate:((t_hour = 9) and (t_minute < 30) and t_time_sk is not null)
                                      Please refer to the previous TableScan [TS_3]
           <-Reducer 5 [CUSTOM_SIMPLE_EDGE]
@@ -561,9 +561,9 @@ Stage-0
                             <-Map 35 [SIMPLE_EDGE]
                               SHUFFLE [RS_13]
                                 PartitionCols:_col0
-                                Select Operator [SEL_5] (rows=86400 width=471)
+                                Select Operator [SEL_5] (rows=14400 width=471)
                                   Output:["_col0"]
-                                  Filter Operator [FIL_292] (rows=86400 width=471)
+                                  Filter Operator [FIL_292] (rows=14400 width=471)
                                     predicate:((t_hour = 8) and (t_minute >= 30) and t_time_sk is not null)
                                      Please refer to the previous TableScan [TS_3]
 

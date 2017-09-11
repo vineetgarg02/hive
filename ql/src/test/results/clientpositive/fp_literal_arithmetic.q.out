@@ -19,11 +19,11 @@ STAGE PLANS:
             Statistics: Num rows: 100 Data size: 11999 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
               predicate: l_discount BETWEEN 0.05 AND 0.07 (type: boolean)
-              Statistics: Num rows: 33 Data size: 3959 Basic stats: COMPLETE Column stats: NONE
+              Statistics: Num rows: 11 Data size: 1319 Basic stats: COMPLETE Column stats: NONE
               Select Operator
                 expressions: l_extendedprice (type: double)
                 outputColumnNames: l_extendedprice
-                Statistics: Num rows: 33 Data size: 3959 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 11 Data size: 1319 Basic stats: COMPLETE Column stats: NONE
                 Group By Operator
                   aggregations: sum(l_extendedprice)
                   mode: hash
@@ -85,11 +85,11 @@ STAGE PLANS:
             Statistics: Num rows: 100 Data size: 11999 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
               predicate: l_discount BETWEEN 0.05 AND 0.07 (type: boolean)
-              Statistics: Num rows: 33 Data size: 3959 Basic stats: COMPLETE Column stats: NONE
+              Statistics: Num rows: 11 Data size: 1319 Basic stats: COMPLETE Column stats: NONE
               Select Operator
                 expressions: l_extendedprice (type: double)
                 outputColumnNames: l_extendedprice
-                Statistics: Num rows: 33 Data size: 3959 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 11 Data size: 1319 Basic stats: COMPLETE Column stats: NONE
                 Group By Operator
                   aggregations: sum(l_extendedprice)
                   mode: hash
@@ -188,11 +188,11 @@ STAGE PLANS:
             Statistics: Num rows: 100 Data size: 11999 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
               predicate: l_discount BETWEEN CAST( '0.05' AS decimal(3,2)) AND CAST( '0.07' AS decimal(3,2)) (type: boolean)
-              Statistics: Num rows: 33 Data size: 3959 Basic stats: COMPLETE Column stats: NONE
+              Statistics: Num rows: 11 Data size: 1319 Basic stats: COMPLETE Column stats: NONE
               Select Operator
                 expressions: l_extendedprice (type: double)
                 outputColumnNames: l_extendedprice
-                Statistics: Num rows: 33 Data size: 3959 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 11 Data size: 1319 Basic stats: COMPLETE Column stats: NONE
                 Group By Operator
                   aggregations: sum(l_extendedprice)
                   mode: hash
@@ -254,11 +254,11 @@ STAGE PLANS:
             Statistics: Num rows: 100 Data size: 11999 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
               predicate: l_discount BETWEEN (0.06 - 0.01) AND (0.06 + 0.01) (type: boolean)
-              Statistics: Num rows: 33 Data size: 3959 Basic stats: COMPLETE Column stats: NONE
+              Statistics: Num rows: 11 Data size: 1319 Basic stats: COMPLETE Column stats: NONE
               Select Operator
                 expressions: l_extendedprice (type: double)
                 outputColumnNames: l_extendedprice
-                Statistics: Num rows: 33 Data size: 3959 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 11 Data size: 1319 Basic stats: COMPLETE Column stats: NONE
                 Group By Operator
                   aggregations: sum(l_extendedprice)
                   mode: hash

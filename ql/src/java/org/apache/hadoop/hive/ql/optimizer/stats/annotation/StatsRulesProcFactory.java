@@ -340,8 +340,7 @@ public class StatsRulesProcFactory {
           aspCtx.setAndExprStats(andStats);
 
           // evaluate children
-          long evaluatedRowCount = stats.getNumRows();
-          evaluatedRowCount = currNumRows;
+          long evaluatedRowCount = currNumRows;
           for (ExprNodeDesc child : genFunc.getChildren()) {
             evaluatedRowCount = evaluateChildExpr(aspCtx.getAndExprStats(), child,
                 aspCtx, neededCols, op, evaluatedRowCount);

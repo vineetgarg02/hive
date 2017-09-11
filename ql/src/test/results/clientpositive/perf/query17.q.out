@@ -149,9 +149,9 @@ Stage-0
                                   <-Map 8 [SIMPLE_EDGE]
                                     SHUFFLE [RS_22]
                                       PartitionCols:_col0
-                                      Select Operator [SEL_20] (rows=73049 width=1119)
+                                      Select Operator [SEL_20] (rows=36525 width=1119)
                                         Output:["_col0"]
-                                        Filter Operator [FIL_90] (rows=73049 width=1119)
+                                        Filter Operator [FIL_90] (rows=36525 width=1119)
                                           predicate:((d_quarter_name) IN ('2000Q1', '2000Q2', '2000Q3') and d_date_sk is not null)
                                           TableScan [TS_3] (rows=73049 width=1119)
                                             default@date_dim,d1,Tbl:COMPLETE,Col:NONE,Output:["d_date_sk","d_quarter_name"]
@@ -172,9 +172,9 @@ Stage-0
                                   <-Map 8 [SIMPLE_EDGE]
                                     SHUFFLE [RS_26]
                                       PartitionCols:_col0
-                                      Select Operator [SEL_14] (rows=73049 width=1119)
+                                      Select Operator [SEL_14] (rows=36525 width=1119)
                                         Output:["_col0"]
-                                        Filter Operator [FIL_88] (rows=73049 width=1119)
+                                        Filter Operator [FIL_88] (rows=36525 width=1119)
                                           predicate:((d_quarter_name) IN ('2000Q1', '2000Q2', '2000Q3') and d_date_sk is not null)
                                            Please refer to the previous TableScan [TS_3]
                                   <-Map 13 [SIMPLE_EDGE]
@@ -208,9 +208,9 @@ Stage-0
                                   <-Map 8 [SIMPLE_EDGE]
                                     SHUFFLE [RS_36]
                                       PartitionCols:_col0
-                                      Select Operator [SEL_5] (rows=73049 width=1119)
+                                      Select Operator [SEL_5] (rows=36524 width=1119)
                                         Output:["_col0"]
-                                        Filter Operator [FIL_85] (rows=73049 width=1119)
+                                        Filter Operator [FIL_85] (rows=36524 width=1119)
                                           predicate:((d_quarter_name = '2000Q1') and d_date_sk is not null)
                                            Please refer to the previous TableScan [TS_3]
                                   <-Map 1 [SIMPLE_EDGE]

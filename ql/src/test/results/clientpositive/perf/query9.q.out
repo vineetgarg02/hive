@@ -187,9 +187,9 @@ Stage-0
                                         PARTITION_ONLY_SHUFFLE [RS_63]
                                           Group By Operator [GBY_62] (rows=1 width=288)
                                             Output:["_col0"],aggregations:["avg(ss_net_paid_inc_tax)"]
-                                            Select Operator [SEL_61] (rows=191998545 width=88)
+                                            Select Operator [SEL_61] (rows=63999515 width=88)
                                               Output:["ss_net_paid_inc_tax"]
-                                              Filter Operator [FIL_164] (rows=191998545 width=88)
+                                              Filter Operator [FIL_164] (rows=63999515 width=88)
                                                 predicate:ss_quantity BETWEEN 41 AND 60
                                                 TableScan [TS_80] (rows=575995635 width=88)
                                                   default@store_sales,store_sales,Tbl:COMPLETE,Col:NONE,Output:["ss_quantity","ss_net_paid_inc_tax"]
@@ -205,9 +205,9 @@ Stage-0
                                             PARTITION_ONLY_SHUFFLE [RS_56]
                                               Group By Operator [GBY_55] (rows=1 width=288)
                                                 Output:["_col0"],aggregations:["avg(ss_ext_list_price)"]
-                                                Select Operator [SEL_54] (rows=191998545 width=88)
+                                                Select Operator [SEL_54] (rows=63999515 width=88)
                                                   Output:["ss_ext_list_price"]
-                                                  Filter Operator [FIL_163] (rows=191998545 width=88)
+                                                  Filter Operator [FIL_163] (rows=63999515 width=88)
                                                     predicate:ss_quantity BETWEEN 41 AND 60
                                                     TableScan [TS_73] (rows=575995635 width=88)
                                                       default@store_sales,store_sales,Tbl:COMPLETE,Col:NONE,Output:["ss_quantity","ss_ext_list_price"]
@@ -223,8 +223,8 @@ Stage-0
                                                 PARTITION_ONLY_SHUFFLE [RS_49]
                                                   Group By Operator [GBY_48] (rows=1 width=8)
                                                     Output:["_col0"],aggregations:["count()"]
-                                                    Select Operator [SEL_47] (rows=191998545 width=88)
-                                                      Filter Operator [FIL_162] (rows=191998545 width=88)
+                                                    Select Operator [SEL_47] (rows=63999515 width=88)
+                                                      Filter Operator [FIL_162] (rows=63999515 width=88)
                                                         predicate:ss_quantity BETWEEN 41 AND 60
                                                         TableScan [TS_66] (rows=575995635 width=88)
                                                           default@store_sales,store_sales,Tbl:COMPLETE,Col:NONE,Output:["ss_quantity"]
@@ -240,9 +240,9 @@ Stage-0
                                                     PARTITION_ONLY_SHUFFLE [RS_42]
                                                       Group By Operator [GBY_41] (rows=1 width=288)
                                                         Output:["_col0"],aggregations:["avg(ss_net_paid_inc_tax)"]
-                                                        Select Operator [SEL_40] (rows=191998545 width=88)
+                                                        Select Operator [SEL_40] (rows=63999515 width=88)
                                                           Output:["ss_net_paid_inc_tax"]
-                                                          Filter Operator [FIL_161] (rows=191998545 width=88)
+                                                          Filter Operator [FIL_161] (rows=63999515 width=88)
                                                             predicate:ss_quantity BETWEEN 21 AND 40
                                                              Please refer to the previous TableScan [TS_80]
                                               <-Reducer 6 [CUSTOM_SIMPLE_EDGE]
@@ -257,9 +257,9 @@ Stage-0
                                                         PARTITION_ONLY_SHUFFLE [RS_35]
                                                           Group By Operator [GBY_34] (rows=1 width=288)
                                                             Output:["_col0"],aggregations:["avg(ss_ext_list_price)"]
-                                                            Select Operator [SEL_33] (rows=191998545 width=88)
+                                                            Select Operator [SEL_33] (rows=63999515 width=88)
                                                               Output:["ss_ext_list_price"]
-                                                              Filter Operator [FIL_160] (rows=191998545 width=88)
+                                                              Filter Operator [FIL_160] (rows=63999515 width=88)
                                                                 predicate:ss_quantity BETWEEN 21 AND 40
                                                                  Please refer to the previous TableScan [TS_73]
                                                   <-Reducer 5 [CUSTOM_SIMPLE_EDGE]
@@ -274,8 +274,8 @@ Stage-0
                                                             PARTITION_ONLY_SHUFFLE [RS_28]
                                                               Group By Operator [GBY_27] (rows=1 width=8)
                                                                 Output:["_col0"],aggregations:["count()"]
-                                                                Select Operator [SEL_26] (rows=191998545 width=88)
-                                                                  Filter Operator [FIL_159] (rows=191998545 width=88)
+                                                                Select Operator [SEL_26] (rows=63999515 width=88)
+                                                                  Filter Operator [FIL_159] (rows=63999515 width=88)
                                                                     predicate:ss_quantity BETWEEN 21 AND 40
                                                                      Please refer to the previous TableScan [TS_66]
                                                       <-Reducer 4 [CUSTOM_SIMPLE_EDGE]
@@ -305,8 +305,8 @@ Stage-0
                                                                         PARTITION_ONLY_SHUFFLE [RS_7]
                                                                           Group By Operator [GBY_6] (rows=1 width=8)
                                                                             Output:["_col0"],aggregations:["count()"]
-                                                                            Select Operator [SEL_5] (rows=191998545 width=88)
-                                                                              Filter Operator [FIL_156] (rows=191998545 width=88)
+                                                                            Select Operator [SEL_5] (rows=63999515 width=88)
+                                                                              Filter Operator [FIL_156] (rows=63999515 width=88)
                                                                                 predicate:ss_quantity BETWEEN 1 AND 20
                                                                                  Please refer to the previous TableScan [TS_66]
                                                               <-Reducer 26 [CUSTOM_SIMPLE_EDGE]
@@ -317,9 +317,9 @@ Stage-0
                                                                     PARTITION_ONLY_SHUFFLE [RS_14]
                                                                       Group By Operator [GBY_13] (rows=1 width=288)
                                                                         Output:["_col0"],aggregations:["avg(ss_ext_list_price)"]
-                                                                        Select Operator [SEL_12] (rows=191998545 width=88)
+                                                                        Select Operator [SEL_12] (rows=63999515 width=88)
                                                                           Output:["ss_ext_list_price"]
-                                                                          Filter Operator [FIL_157] (rows=191998545 width=88)
+                                                                          Filter Operator [FIL_157] (rows=63999515 width=88)
                                                                             predicate:ss_quantity BETWEEN 1 AND 20
                                                                              Please refer to the previous TableScan [TS_73]
                                                           <-Reducer 32 [CUSTOM_SIMPLE_EDGE]
@@ -330,9 +330,9 @@ Stage-0
                                                                 PARTITION_ONLY_SHUFFLE [RS_21]
                                                                   Group By Operator [GBY_20] (rows=1 width=288)
                                                                     Output:["_col0"],aggregations:["avg(ss_net_paid_inc_tax)"]
-                                                                    Select Operator [SEL_19] (rows=191998545 width=88)
+                                                                    Select Operator [SEL_19] (rows=63999515 width=88)
                                                                       Output:["ss_net_paid_inc_tax"]
-                                                                      Filter Operator [FIL_158] (rows=191998545 width=88)
+                                                                      Filter Operator [FIL_158] (rows=63999515 width=88)
                                                                         predicate:ss_quantity BETWEEN 1 AND 20
                                                                          Please refer to the previous TableScan [TS_80]
                               <-Reducer 18 [CUSTOM_SIMPLE_EDGE]
@@ -343,8 +343,8 @@ Stage-0
                                     PARTITION_ONLY_SHUFFLE [RS_70]
                                       Group By Operator [GBY_69] (rows=1 width=8)
                                         Output:["_col0"],aggregations:["count()"]
-                                        Select Operator [SEL_68] (rows=191998545 width=88)
-                                          Filter Operator [FIL_165] (rows=191998545 width=88)
+                                        Select Operator [SEL_68] (rows=63999515 width=88)
+                                          Filter Operator [FIL_165] (rows=63999515 width=88)
                                             predicate:ss_quantity BETWEEN 61 AND 80
                                              Please refer to the previous TableScan [TS_66]
                           <-Reducer 24 [CUSTOM_SIMPLE_EDGE]
@@ -355,9 +355,9 @@ Stage-0
                                 PARTITION_ONLY_SHUFFLE [RS_77]
                                   Group By Operator [GBY_76] (rows=1 width=288)
                                     Output:["_col0"],aggregations:["avg(ss_ext_list_price)"]
-                                    Select Operator [SEL_75] (rows=191998545 width=88)
+                                    Select Operator [SEL_75] (rows=63999515 width=88)
                                       Output:["ss_ext_list_price"]
-                                      Filter Operator [FIL_166] (rows=191998545 width=88)
+                                      Filter Operator [FIL_166] (rows=63999515 width=88)
                                         predicate:ss_quantity BETWEEN 61 AND 80
                                          Please refer to the previous TableScan [TS_73]
                       <-Reducer 30 [CUSTOM_SIMPLE_EDGE]
@@ -368,9 +368,9 @@ Stage-0
                             PARTITION_ONLY_SHUFFLE [RS_84]
                               Group By Operator [GBY_83] (rows=1 width=288)
                                 Output:["_col0"],aggregations:["avg(ss_net_paid_inc_tax)"]
-                                Select Operator [SEL_82] (rows=191998545 width=88)
+                                Select Operator [SEL_82] (rows=63999515 width=88)
                                   Output:["ss_net_paid_inc_tax"]
-                                  Filter Operator [FIL_167] (rows=191998545 width=88)
+                                  Filter Operator [FIL_167] (rows=63999515 width=88)
                                     predicate:ss_quantity BETWEEN 61 AND 80
                                      Please refer to the previous TableScan [TS_80]
                   <-Reducer 19 [CUSTOM_SIMPLE_EDGE]
@@ -381,8 +381,8 @@ Stage-0
                         PARTITION_ONLY_SHUFFLE [RS_91]
                           Group By Operator [GBY_90] (rows=1 width=8)
                             Output:["_col0"],aggregations:["count()"]
-                            Select Operator [SEL_89] (rows=191998545 width=88)
-                              Filter Operator [FIL_168] (rows=191998545 width=88)
+                            Select Operator [SEL_89] (rows=63999515 width=88)
+                              Filter Operator [FIL_168] (rows=63999515 width=88)
                                 predicate:ss_quantity BETWEEN 81 AND 100
                                  Please refer to the previous TableScan [TS_66]
               <-Reducer 25 [CUSTOM_SIMPLE_EDGE]
@@ -393,9 +393,9 @@ Stage-0
                     PARTITION_ONLY_SHUFFLE [RS_98]
                       Group By Operator [GBY_97] (rows=1 width=288)
                         Output:["_col0"],aggregations:["avg(ss_ext_list_price)"]
-                        Select Operator [SEL_96] (rows=191998545 width=88)
+                        Select Operator [SEL_96] (rows=63999515 width=88)
                           Output:["ss_ext_list_price"]
-                          Filter Operator [FIL_169] (rows=191998545 width=88)
+                          Filter Operator [FIL_169] (rows=63999515 width=88)
                             predicate:ss_quantity BETWEEN 81 AND 100
                              Please refer to the previous TableScan [TS_73]
           <-Reducer 31 [CUSTOM_SIMPLE_EDGE]
@@ -406,9 +406,9 @@ Stage-0
                 PARTITION_ONLY_SHUFFLE [RS_105]
                   Group By Operator [GBY_104] (rows=1 width=288)
                     Output:["_col0"],aggregations:["avg(ss_net_paid_inc_tax)"]
-                    Select Operator [SEL_103] (rows=191998545 width=88)
+                    Select Operator [SEL_103] (rows=63999515 width=88)
                       Output:["ss_net_paid_inc_tax"]
-                      Filter Operator [FIL_170] (rows=191998545 width=88)
+                      Filter Operator [FIL_170] (rows=63999515 width=88)
                         predicate:ss_quantity BETWEEN 81 AND 100
                          Please refer to the previous TableScan [TS_80]
 

@@ -98,9 +98,9 @@ Stage-0
                           <-Map 11 [SIMPLE_EDGE]
                             SHUFFLE [RS_40]
                               PartitionCols:_col0
-                              Select Operator [SEL_16] (rows=1704 width=1910)
+                              Select Operator [SEL_16] (rows=852 width=1910)
                                 Output:["_col0"]
-                                Filter Operator [FIL_73] (rows=1704 width=1910)
+                                Filter Operator [FIL_73] (rows=852 width=1910)
                                   predicate:((s_state = 'NM') and s_store_sk is not null)
                                   TableScan [TS_14] (rows=1704 width=1910)
                                     default@store,store,Tbl:COMPLETE,Col:NONE,Output:["s_store_sk","s_state"]
@@ -130,9 +130,9 @@ Stage-0
                                       <-Map 10 [SIMPLE_EDGE]
                                         SHUFFLE [RS_7]
                                           PartitionCols:_col0
-                                          Select Operator [SEL_5] (rows=73049 width=1119)
+                                          Select Operator [SEL_5] (rows=36524 width=1119)
                                             Output:["_col0"]
-                                            Filter Operator [FIL_72] (rows=73049 width=1119)
+                                            Filter Operator [FIL_72] (rows=36524 width=1119)
                                               predicate:((d_year = 2000) and d_date_sk is not null)
                                               TableScan [TS_3] (rows=73049 width=1119)
                                                 default@date_dim,date_dim,Tbl:COMPLETE,Col:NONE,Output:["d_date_sk","d_year"]

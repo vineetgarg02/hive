@@ -352,18 +352,15 @@ public class StatsRulesProcFactory {
             updateStats(aspCtx.getAndExprStats(), newNumRows, false, op);
           }
         } else if (udf instanceof GenericUDFOPOr) {
-          long evaluatedRowCount = 0;
           // for OR condition independently compute and update stats.
           for (ExprNodeDesc child : genFunc.getChildren()) {
             // early exit if OR evaluation yields more rows than input rows
-            if (evaluatedRowCount >= stats.getNumRows()) {
-              evaluatedRowCount = stats.getNumRows();
-            } else {
               newNumRows = StatsUtils.safeAdd(
-                  evaluateChildExpr(stats, child, aspCtx, neededCols, op, evaluatedRowCount),
+                  evaluateChildExpr(stats, child, aspCtx, neededCols, op, currNumRows),
                   newNumRows);
-              evaluatedRowCount = newNumRows;
-            }
+          }
+          if(newNumRows > currNumRows) {
+            newNumRows = currNumRows;
           }
         } else if (udf instanceof GenericUDFIn) {
           // for IN clause
@@ -377,7 +374,7 @@ public class StatsRulesProcFactory {
           return evaluateNotNullExpr(stats, genFunc, currNumRows);
         } else {
           // single predicate condition
-          newNumRows = evaluateChildExpr(stats, pred, aspCtx, neededCols, op, stats.getNumRows());
+          newNumRows = evaluateChildExpr(stats, pred, aspCtx, neededCols, op,currNumRows);
         }
       } else if (pred instanceof ExprNodeColumnDesc) {
 

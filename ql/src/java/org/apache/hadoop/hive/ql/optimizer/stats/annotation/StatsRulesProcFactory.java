@@ -1853,17 +1853,21 @@ public class StatsRulesProcFactory {
       // corresponding branch since only that branch will factor is the reduction
       if(multiParentOp instanceof JoinOperator) {
         JoinOperator jop = ((JoinOperator)multiParentOp);
+        isSelComputed = true;
         // check for two way join
         if(jop.getConf().getConds().length == 1) {
           switch(jop.getConf().getCondsList().get(0).getType()) {
             case JoinDesc.LEFT_OUTER_JOIN:
               selMultiParent *= getSelectivitySimpleTree(multiParentOp.getParentOperators().get(0));
-              isSelComputed = true;
               break;
             case JoinDesc.RIGHT_OUTER_JOIN:
               selMultiParent *= getSelectivitySimpleTree(multiParentOp.getParentOperators().get(1));
-              isSelComputed = true;
               break;
+            default:
+              // for rest of the join type we will take min of the reduction.
+              float selMultiParentLeft = getSelectivitySimpleTree(multiParentOp.getParentOperators().get(0));
+              float selMultiParentRight = getSelectivitySimpleTree(multiParentOp.getParentOperators().get(1));
+              selMultiParent = Math.min(selMultiParentLeft, selMultiParentRight);
           }
         }
       }

@@ -43,7 +43,7 @@ STAGE PLANS:
                         native: true
                         predicateExpression: FilterExprAndExpr(children: SelectColumnIsNotNull(col 0) -> boolean, SelectColumnIsNotNull(col 1) -> boolean) -> boolean
                     predicate: (cint is not null and cdouble is not null) (type: boolean)
-                    Statistics: Num rows: 11674 Data size: 1996493 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 11060 Data size: 1891486 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: cdate (type: date), cdecimal (type: decimal(20,10))
                       outputColumnNames: _col0, _col1
@@ -51,7 +51,7 @@ STAGE PLANS:
                           className: VectorSelectOperator
                           native: true
                           projectedOutputColumns: [2, 3]
-                      Statistics: Num rows: 11674 Data size: 1996493 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 11060 Data size: 1891486 Basic stats: COMPLETE Column stats: NONE
                       Limit
                         Number of rows: 10
                         Limit Vectorization:

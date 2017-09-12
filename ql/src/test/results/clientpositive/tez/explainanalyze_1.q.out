@@ -287,23 +287,23 @@ Stage-0
           Output:["_col0"],aggregations:["count()"]
         <-Reducer 2 [CUSTOM_SIMPLE_EDGE]
           PARTITION_ONLY_SHUFFLE [RS_10]
-            Merge Join Operator [MERGEJOIN_18] (rows=809/0 width=8)
+            Merge Join Operator [MERGEJOIN_18] (rows=267/0 width=8)
               Conds:RS_6._col0=RS_7._col0(Inner)
             <-Map 1 [SIMPLE_EDGE]
               SHUFFLE [RS_6]
                 PartitionCols:_col0
-                Select Operator [SEL_2] (rows=500/497 width=87)
+                Select Operator [SEL_2] (rows=166/497 width=87)
                   Output:["_col0"]
-                  Filter Operator [FIL_16] (rows=500/497 width=87)
+                  Filter Operator [FIL_16] (rows=166/497 width=87)
                     predicate:(UDFToDouble(key) > 0.0)
                     TableScan [TS_0] (rows=500/500 width=87)
                       default@src,a,Tbl:COMPLETE,Col:COMPLETE,Output:["key"]
             <-Map 4 [SIMPLE_EDGE]
               SHUFFLE [RS_7]
                 PartitionCols:_col0
-                Select Operator [SEL_5] (rows=500/0 width=91)
+                Select Operator [SEL_5] (rows=166/0 width=91)
                   Output:["_col0"]
-                  Filter Operator [FIL_17] (rows=500/0 width=91)
+                  Filter Operator [FIL_17] (rows=166/0 width=91)
                     predicate:(UDFToDouble(value) > 0.0)
                     TableScan [TS_3] (rows=500/500 width=91)
                       default@src,b,Tbl:COMPLETE,Col:COMPLETE,Output:["value"]
@@ -336,23 +336,23 @@ Stage-0
           Output:["_col0"],aggregations:["count()"]
         <-Reducer 2 [CUSTOM_SIMPLE_EDGE]
           PARTITION_ONLY_SHUFFLE [RS_10]
-            Merge Join Operator [MERGEJOIN_18] (rows=809/1019 width=8)
+            Merge Join Operator [MERGEJOIN_18] (rows=267/1019 width=8)
               Conds:RS_6._col0=RS_7._col0(Inner)
             <-Map 1 [SIMPLE_EDGE]
               SHUFFLE [RS_6]
                 PartitionCols:_col0
-                Select Operator [SEL_2] (rows=500/497 width=87)
+                Select Operator [SEL_2] (rows=166/497 width=87)
                   Output:["_col0"]
-                  Filter Operator [FIL_16] (rows=500/497 width=87)
+                  Filter Operator [FIL_16] (rows=166/497 width=87)
                     predicate:(UDFToDouble(key) > 0.0)
                     TableScan [TS_0] (rows=500/500 width=87)
                       default@src,a,Tbl:COMPLETE,Col:COMPLETE,Output:["key"]
             <-Map 4 [SIMPLE_EDGE]
               SHUFFLE [RS_7]
                 PartitionCols:_col0
-                Select Operator [SEL_5] (rows=500/497 width=87)
+                Select Operator [SEL_5] (rows=166/497 width=87)
                   Output:["_col0"]
-                  Filter Operator [FIL_17] (rows=500/497 width=87)
+                  Filter Operator [FIL_17] (rows=166/497 width=87)
                     predicate:(UDFToDouble(key) > 0.0)
                     TableScan [TS_3] (rows=500/500 width=87)
                       default@src,b,Tbl:COMPLETE,Col:COMPLETE,Output:["key"]

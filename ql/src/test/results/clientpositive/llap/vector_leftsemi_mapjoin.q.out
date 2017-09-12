@@ -1330,21 +1330,21 @@ STAGE PLANS:
                   Statistics: Num rows: 11 Data size: 2068 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: ((value < 'val_10') and key is not null) (type: boolean)
-                    Statistics: Num rows: 11 Data size: 2068 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 3 Data size: 564 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int), value (type: string)
                       outputColumnNames: _col0, _col1
-                      Statistics: Num rows: 11 Data size: 2068 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 3 Data size: 564 Basic stats: COMPLETE Column stats: NONE
                       Group By Operator
                         keys: _col0 (type: int), _col1 (type: string)
                         mode: hash
                         outputColumnNames: _col0, _col1
-                        Statistics: Num rows: 11 Data size: 2068 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 3 Data size: 564 Basic stats: COMPLETE Column stats: NONE
                         Reduce Output Operator
                           key expressions: _col0 (type: int)
                           sort order: +
                           Map-reduce partition columns: _col0 (type: int)
-                          Statistics: Num rows: 11 Data size: 2068 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 3 Data size: 564 Basic stats: COMPLETE Column stats: NONE
             Execution mode: llap
             LLAP IO: all inputs
         Reducer 2 
@@ -1411,21 +1411,21 @@ STAGE PLANS:
                   Statistics: Num rows: 22 Data size: 88 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: (key > 5) (type: boolean)
-                    Statistics: Num rows: 22 Data size: 88 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 22 Data size: 88 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: NONE
                       Group By Operator
                         keys: _col0 (type: int)
                         mode: hash
                         outputColumnNames: _col0
-                        Statistics: Num rows: 22 Data size: 88 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: NONE
                         Reduce Output Operator
                           key expressions: _col0 (type: int)
                           sort order: +
                           Map-reduce partition columns: _col0 (type: int)
-                          Statistics: Num rows: 22 Data size: 88 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: NONE
             Execution mode: llap
             LLAP IO: all inputs
         Map 2 
@@ -1445,15 +1445,15 @@ STAGE PLANS:
                       outputColumnNames: _col1
                       input vertices:
                         1 Map 1
-                      Statistics: Num rows: 24 Data size: 96 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 12 Data size: 2274 Basic stats: COMPLETE Column stats: NONE
                       Select Operator
                         expressions: _col1 (type: string)
                         outputColumnNames: _col0
-                        Statistics: Num rows: 24 Data size: 96 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 12 Data size: 2274 Basic stats: COMPLETE Column stats: NONE
                         Reduce Output Operator
                           key expressions: _col0 (type: string)
                           sort order: +
-                          Statistics: Num rows: 24 Data size: 96 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 12 Data size: 2274 Basic stats: COMPLETE Column stats: NONE
             Execution mode: llap
             LLAP IO: all inputs
         Reducer 3 
@@ -1462,10 +1462,10 @@ STAGE PLANS:
               Select Operator
                 expressions: KEY.reducesinkkey0 (type: string)
                 outputColumnNames: _col0
-                Statistics: Num rows: 24 Data size: 96 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 12 Data size: 2274 Basic stats: COMPLETE Column stats: NONE
                 File Output Operator
                   compressed: false
-                  Statistics: Num rows: 24 Data size: 96 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 12 Data size: 2274 Basic stats: COMPLETE Column stats: NONE
                   table:
                       input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                       output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
@@ -1520,21 +1520,21 @@ STAGE PLANS:
                   Statistics: Num rows: 11 Data size: 2068 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: ((key > 5) and (value <= 'val_20')) (type: boolean)
-                    Statistics: Num rows: 11 Data size: 2068 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int), value (type: string)
                       outputColumnNames: _col0, _col1
-                      Statistics: Num rows: 11 Data size: 2068 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
                       Group By Operator
                         keys: _col0 (type: int), _col1 (type: string)
                         mode: hash
                         outputColumnNames: _col0, _col1
-                        Statistics: Num rows: 11 Data size: 2068 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
                         Reduce Output Operator
                           key expressions: _col0 (type: int)
                           sort order: +
                           Map-reduce partition columns: _col0 (type: int)
-                          Statistics: Num rows: 11 Data size: 2068 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
             Execution mode: llap
             LLAP IO: all inputs
         Map 2 
@@ -1626,21 +1626,21 @@ STAGE PLANS:
                   Statistics: Num rows: 11 Data size: 44 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: (key > 2) (type: boolean)
-                    Statistics: Num rows: 11 Data size: 44 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 11 Data size: 44 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: NONE
                       Group By Operator
                         keys: _col0 (type: int)
                         mode: hash
                         outputColumnNames: _col0
-                        Statistics: Num rows: 11 Data size: 44 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: NONE
                         Reduce Output Operator
                           key expressions: _col0 (type: int)
                           sort order: +
                           Map-reduce partition columns: _col0 (type: int)
-                          Statistics: Num rows: 11 Data size: 44 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: NONE
             Execution mode: llap
             LLAP IO: all inputs
         Map 2 
@@ -1733,7 +1733,7 @@ STAGE PLANS:
                   Statistics: Num rows: 22 Data size: 88 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: key is not null (type: boolean)
-                    Statistics: Num rows: 22 Data size: 88 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 21 Data size: 84 Basic stats: COMPLETE Column stats: NONE
                     Map Join Operator
                       condition map:
                            Left Semi Join 0 to 1
@@ -1743,11 +1743,11 @@ STAGE PLANS:
                       outputColumnNames: _col0
                       input vertices:
                         1 Map 3
-                      Statistics: Num rows: 24 Data size: 96 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 23 Data size: 92 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: _col0 (type: int)
                         sort order: +
-                        Statistics: Num rows: 24 Data size: 96 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 23 Data size: 92 Basic stats: COMPLETE Column stats: NONE
             Execution mode: llap
             LLAP IO: all inputs
         Map 3 
@@ -1780,10 +1780,10 @@ STAGE PLANS:
               Select Operator
                 expressions: KEY.reducesinkkey0 (type: int)
                 outputColumnNames: _col0
-                Statistics: Num rows: 24 Data size: 96 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 23 Data size: 92 Basic stats: COMPLETE Column stats: NONE
                 File Output Operator
                   compressed: false
-                  Statistics: Num rows: 24 Data size: 96 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 23 Data size: 92 Basic stats: COMPLETE Column stats: NONE
                   table:
                       input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                       output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
@@ -1973,15 +1973,15 @@ STAGE PLANS:
                       input vertices:
                         1 Map 3
                         2 Map 4
-                      Statistics: Num rows: 48 Data size: 193 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 46 Data size: 184 Basic stats: COMPLETE Column stats: NONE
                       Select Operator
                         expressions: _col0 (type: int), _col1 (type: string), _col5 (type: int), _col6 (type: string)
                         outputColumnNames: _col0, _col1, _col2, _col3
-                        Statistics: Num rows: 48 Data size: 193 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 46 Data size: 184 Basic stats: COMPLETE Column stats: NONE
                         Reduce Output Operator
                           key expressions: _col0 (type: int), _col1 (type: string)
                           sort order: ++
-                          Statistics: Num rows: 48 Data size: 193 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 46 Data size: 184 Basic stats: COMPLETE Column stats: NONE
                           value expressions: _col2 (type: int), _col3 (type: string)
             Execution mode: llap
             LLAP IO: all inputs
@@ -2008,21 +2008,21 @@ STAGE PLANS:
                   Statistics: Num rows: 22 Data size: 88 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: key is not null (type: boolean)
-                    Statistics: Num rows: 22 Data size: 88 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 21 Data size: 84 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 22 Data size: 88 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 21 Data size: 84 Basic stats: COMPLETE Column stats: NONE
                       Group By Operator
                         keys: _col0 (type: int)
                         mode: hash
                         outputColumnNames: _col0
-                        Statistics: Num rows: 22 Data size: 88 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 21 Data size: 84 Basic stats: COMPLETE Column stats: NONE
                         Reduce Output Operator
                           key expressions: _col0 (type: int)
                           sort order: +
                           Map-reduce partition columns: _col0 (type: int)
-                          Statistics: Num rows: 22 Data size: 88 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 21 Data size: 84 Basic stats: COMPLETE Column stats: NONE
             Execution mode: llap
             LLAP IO: all inputs
         Reducer 2 
@@ -2031,10 +2031,10 @@ STAGE PLANS:
               Select Operator
                 expressions: KEY.reducesinkkey0 (type: int), KEY.reducesinkkey1 (type: string), VALUE._col0 (type: int), VALUE._col1 (type: string)
                 outputColumnNames: _col0, _col1, _col2, _col3
-                Statistics: Num rows: 48 Data size: 193 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 46 Data size: 184 Basic stats: COMPLETE Column stats: NONE
                 File Output Operator
                   compressed: false
-                  Statistics: Num rows: 48 Data size: 193 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 46 Data size: 184 Basic stats: COMPLETE Column stats: NONE
                   table:
                       input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                       output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
@@ -2102,7 +2102,7 @@ STAGE PLANS:
                   Statistics: Num rows: 22 Data size: 4136 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: (key is not null and value is not null) (type: boolean)
-                    Statistics: Num rows: 22 Data size: 4136 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 20 Data size: 3760 Basic stats: COMPLETE Column stats: NONE
                     Map Join Operator
                       condition map:
                            Left Semi Join 0 to 1
@@ -2112,11 +2112,11 @@ STAGE PLANS:
                       outputColumnNames: _col0, _col1
                       input vertices:
                         1 Map 3
-                      Statistics: Num rows: 24 Data size: 4549 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 22 Data size: 4136 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: _col0 (type: int), _col1 (type: string)
                         sort order: ++
-                        Statistics: Num rows: 24 Data size: 4549 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 22 Data size: 4136 Basic stats: COMPLETE Column stats: NONE
             Execution mode: llap
             LLAP IO: all inputs
         Map 3 
@@ -2149,10 +2149,10 @@ STAGE PLANS:
               Select Operator
                 expressions: KEY.reducesinkkey0 (type: int), KEY.reducesinkkey1 (type: string)
                 outputColumnNames: _col0, _col1
-                Statistics: Num rows: 24 Data size: 4549 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 22 Data size: 4136 Basic stats: COMPLETE Column stats: NONE
                 File Output Operator
                   compressed: false
-                  Statistics: Num rows: 24 Data size: 4549 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 22 Data size: 4136 Basic stats: COMPLETE Column stats: NONE
                   table:
                       input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                       output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
@@ -2218,7 +2218,7 @@ STAGE PLANS:
                   Statistics: Num rows: 22 Data size: 88 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: key is not null (type: boolean)
-                    Statistics: Num rows: 22 Data size: 88 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 21 Data size: 84 Basic stats: COMPLETE Column stats: NONE
                     Map Join Operator
                       condition map:
                            Left Semi Join 0 to 1
@@ -2231,11 +2231,11 @@ STAGE PLANS:
                       input vertices:
                         1 Map 3
                         2 Map 4
-                      Statistics: Num rows: 48 Data size: 193 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 46 Data size: 184 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: _col0 (type: int)
                         sort order: +
-                        Statistics: Num rows: 48 Data size: 193 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 46 Data size: 184 Basic stats: COMPLETE Column stats: NONE
             Execution mode: llap
             LLAP IO: all inputs
         Map 3 
@@ -2292,10 +2292,10 @@ STAGE PLANS:
               Select Operator
                 expressions: KEY.reducesinkkey0 (type: int)
                 outputColumnNames: _col0
-                Statistics: Num rows: 48 Data size: 193 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 46 Data size: 184 Basic stats: COMPLETE Column stats: NONE
                 File Output Operator
                   compressed: false
-                  Statistics: Num rows: 48 Data size: 193 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 46 Data size: 184 Basic stats: COMPLETE Column stats: NONE
                   table:
                       input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                       output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
@@ -3105,7 +3105,7 @@ STAGE PLANS:
                   Statistics: Num rows: 22 Data size: 4136 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: key is not null (type: boolean)
-                    Statistics: Num rows: 22 Data size: 4136 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 21 Data size: 3948 Basic stats: COMPLETE Column stats: NONE
                     Map Join Operator
                       condition map:
                            Left Semi Join 0 to 1
@@ -3115,7 +3115,7 @@ STAGE PLANS:
                       outputColumnNames: _col0, _col1
                       input vertices:
                         1 Map 3
-                      Statistics: Num rows: 24 Data size: 4549 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 23 Data size: 4342 Basic stats: COMPLETE Column stats: NONE
                       Map Join Operator
                         condition map:
                              Left Outer Join 0 to 1
@@ -3125,11 +3125,11 @@ STAGE PLANS:
                         outputColumnNames: _col0
                         input vertices:
                           1 Map 4
-                        Statistics: Num rows: 26 Data size: 5003 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 25 Data size: 4776 Basic stats: COMPLETE Column stats: NONE
                         Reduce Output Operator
                           key expressions: _col0 (type: int)
                           sort order: +
-                          Statistics: Num rows: 26 Data size: 5003 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 25 Data size: 4776 Basic stats: COMPLETE Column stats: NONE
             Execution mode: llap
             LLAP IO: all inputs
         Map 3 
@@ -3174,10 +3174,10 @@ STAGE PLANS:
               Select Operator
                 expressions: KEY.reducesinkkey0 (type: int)
                 outputColumnNames: _col0
-                Statistics: Num rows: 26 Data size: 5003 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 25 Data size: 4776 Basic stats: COMPLETE Column stats: NONE
                 File Output Operator
                   compressed: false
-                  Statistics: Num rows: 26 Data size: 5003 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 25 Data size: 4776 Basic stats: COMPLETE Column stats: NONE
                   table:
                       input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                       output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
@@ -3265,11 +3265,11 @@ STAGE PLANS:
                   Statistics: Num rows: 22 Data size: 4136 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: ((key > 100) and value is not null) (type: boolean)
-                    Statistics: Num rows: 22 Data size: 4136 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int), value (type: string)
                       outputColumnNames: _col0, _col1
-                      Statistics: Num rows: 22 Data size: 4136 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
                       Map Join Operator
                         condition map:
                              Left Semi Join 0 to 1
@@ -3279,10 +3279,10 @@ STAGE PLANS:
                         outputColumnNames: _col0
                         input vertices:
                           1 Map 2
-                        Statistics: Num rows: 24 Data size: 4549 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 12 Data size: 2226 Basic stats: COMPLETE Column stats: NONE
                         File Output Operator
                           compressed: false
-                          Statistics: Num rows: 24 Data size: 4549 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 12 Data size: 2226 Basic stats: COMPLETE Column stats: NONE
                           table:
                               input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                               output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
@@ -6783,7 +6783,7 @@ STAGE PLANS:
                         native: true
                         predicateExpression: FilterExprAndExpr(children: FilterStringGroupColLessStringScalar(col 1, val val_10) -> boolean, SelectColumnIsNotNull(col 0) -> boolean) -> boolean
                     predicate: ((value < 'val_10') and key is not null) (type: boolean)
-                    Statistics: Num rows: 11 Data size: 2068 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 3 Data size: 564 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int), value (type: string)
                       outputColumnNames: _col0, _col1
@@ -6791,7 +6791,7 @@ STAGE PLANS:
                           className: VectorSelectOperator
                           native: true
                           projectedOutputColumns: [0, 1]
-                      Statistics: Num rows: 11 Data size: 2068 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 3 Data size: 564 Basic stats: COMPLETE Column stats: NONE
                       Group By Operator
                         Group By Vectorization:
                             className: VectorGroupByOperator
@@ -6804,7 +6804,7 @@ STAGE PLANS:
                         keys: _col0 (type: int), _col1 (type: string)
                         mode: hash
                         outputColumnNames: _col0, _col1
-                        Statistics: Num rows: 11 Data size: 2068 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 3 Data size: 564 Basic stats: COMPLETE Column stats: NONE
                         Reduce Output Operator
                           key expressions: _col0 (type: int)
                           sort order: +
@@ -6815,7 +6815,7 @@ STAGE PLANS:
                               native: true
                               nativeConditionsMet: hive.vectorized.execution.reducesink.new.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true, No PTF TopN IS true, No DISTINCT columns IS true, BinarySortableSerDe for keys IS true, LazyBinarySerDe for values IS true
                               valueColumns: []
-                          Statistics: Num rows: 11 Data size: 2068 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 3 Data size: 564 Basic stats: COMPLETE Column stats: NONE
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
@@ -6922,7 +6922,7 @@ STAGE PLANS:
                         native: true
                         predicateExpression: FilterLongColGreaterLongScalar(col 0, val 5) -> boolean
                     predicate: (key > 5) (type: boolean)
-                    Statistics: Num rows: 22 Data size: 88 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int)
                       outputColumnNames: _col0
@@ -6930,7 +6930,7 @@ STAGE PLANS:
                           className: VectorSelectOperator
                           native: true
                           projectedOutputColumns: [0]
-                      Statistics: Num rows: 22 Data size: 88 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: NONE
                       Group By Operator
                         Group By Vectorization:
                             className: VectorGroupByOperator
@@ -6943,7 +6943,7 @@ STAGE PLANS:
                         keys: _col0 (type: int)
                         mode: hash
                         outputColumnNames: _col0
-                        Statistics: Num rows: 22 Data size: 88 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: NONE
                         Reduce Output Operator
                           key expressions: _col0 (type: int)
                           sort order: +
@@ -6954,7 +6954,7 @@ STAGE PLANS:
                               native: true
                               nativeConditionsMet: hive.vectorized.execution.reducesink.new.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true, No PTF TopN IS true, No DISTINCT columns IS true, BinarySortableSerDe for keys IS true, LazyBinarySerDe for values IS true
                               valueColumns: []
-                          Statistics: Num rows: 22 Data size: 88 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: NONE
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
@@ -6999,7 +6999,7 @@ STAGE PLANS:
                       outputColumnNames: _col1
                       input vertices:
                         1 Map 1
-                      Statistics: Num rows: 24 Data size: 96 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 12 Data size: 2274 Basic stats: COMPLETE Column stats: NONE
                       Select Operator
                         expressions: _col1 (type: string)
                         outputColumnNames: _col0
@@ -7007,7 +7007,7 @@ STAGE PLANS:
                             className: VectorSelectOperator
                             native: true
                             projectedOutputColumns: [0]
-                        Statistics: Num rows: 24 Data size: 96 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 12 Data size: 2274 Basic stats: COMPLETE Column stats: NONE
                         Reduce Output Operator
                           key expressions: _col0 (type: string)
                           sort order: +
@@ -7017,7 +7017,7 @@ STAGE PLANS:
                               native: true
                               nativeConditionsMet: hive.vectorized.execution.reducesink.new.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true, No PTF TopN IS true, No DISTINCT columns IS true, BinarySortableSerDe for keys IS true, LazyBinarySerDe for values IS true
                               valueColumns: []
-                          Statistics: Num rows: 24 Data size: 96 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 12 Data size: 2274 Basic stats: COMPLETE Column stats: NONE
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
@@ -7056,13 +7056,13 @@ STAGE PLANS:
                     className: VectorSelectOperator
                     native: true
                     projectedOutputColumns: [0]
-                Statistics: Num rows: 24 Data size: 96 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 12 Data size: 2274 Basic stats: COMPLETE Column stats: NONE
                 File Output Operator
                   compressed: false
                   File Sink Vectorization:
                       className: VectorFileSinkOperator
                       native: false
-                  Statistics: Num rows: 24 Data size: 96 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 12 Data size: 2274 Basic stats: COMPLETE Column stats: NONE
                   table:
                       input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                       output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
@@ -7124,7 +7124,7 @@ STAGE PLANS:
                         native: true
                         predicateExpression: FilterExprAndExpr(children: FilterLongColGreaterLongScalar(col 0, val 5) -> boolean, FilterStringGroupColLessEqualStringScalar(col 1, val val_20) -> boolean) -> boolean
                     predicate: ((key > 5) and (value <= 'val_20')) (type: boolean)
-                    Statistics: Num rows: 11 Data size: 2068 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int), value (type: string)
                       outputColumnNames: _col0, _col1
@@ -7132,7 +7132,7 @@ STAGE PLANS:
                           className: VectorSelectOperator
                           native: true
                           projectedOutputColumns: [0, 1]
-                      Statistics: Num rows: 11 Data size: 2068 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
                       Group By Operator
                         Group By Vectorization:
                             className: VectorGroupByOperator
@@ -7145,7 +7145,7 @@ STAGE PLANS:
                         keys: _col0 (type: int), _col1 (type: string)
                         mode: hash
                         outputColumnNames: _col0, _col1
-                        Statistics: Num rows: 11 Data size: 2068 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
                         Reduce Output Operator
                           key expressions: _col0 (type: int)
                           sort order: +
@@ -7156,7 +7156,7 @@ STAGE PLANS:
                               native: true
                               nativeConditionsMet: hive.vectorized.execution.reducesink.new.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true, No PTF TopN IS true, No DISTINCT columns IS true, BinarySortableSerDe for keys IS true, LazyBinarySerDe for values IS true
                               valueColumns: []
-                          Statistics: Num rows: 11 Data size: 2068 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
@@ -7323,7 +7323,7 @@ STAGE PLANS:
                         native: true
                         predicateExpression: FilterLongColGreaterLongScalar(col 0, val 2) -> boolean
                     predicate: (key > 2) (type: boolean)
-                    Statistics: Num rows: 11 Data size: 44 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int)
                       outputColumnNames: _col0
@@ -7331,7 +7331,7 @@ STAGE PLANS:
                           className: VectorSelectOperator
                           native: true
                           projectedOutputColumns: [0]
-                      Statistics: Num rows: 11 Data size: 44 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: NONE
                       Group By Operator
                         Group By Vectorization:
                             className: VectorGroupByOperator
@@ -7344,7 +7344,7 @@ STAGE PLANS:
                         keys: _col0 (type: int)
                         mode: hash
                         outputColumnNames: _col0
-                        Statistics: Num rows: 11 Data size: 44 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: NONE
                         Reduce Output Operator
                           key expressions: _col0 (type: int)
                           sort order: +
@@ -7355,7 +7355,7 @@ STAGE PLANS:
                               native: true
                               nativeConditionsMet: hive.vectorized.execution.reducesink.new.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true, No PTF TopN IS true, No DISTINCT columns IS true, BinarySortableSerDe for keys IS true, LazyBinarySerDe for values IS true
                               valueColumns: []
-                          Statistics: Num rows: 11 Data size: 44 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: NONE
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
@@ -7519,7 +7519,7 @@ STAGE PLANS:
                         native: true
                         predicateExpression: SelectColumnIsNotNull(col 0) -> boolean
                     predicate: key is not null (type: boolean)
-                    Statistics: Num rows: 22 Data size: 88 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 21 Data size: 84 Basic stats: COMPLETE Column stats: NONE
                     Map Join Operator
                       condition map:
                            Left Semi Join 0 to 1
@@ -7534,7 +7534,7 @@ STAGE PLANS:
                       outputColumnNames: _col0
                       input vertices:
                         1 Map 3
-                      Statistics: Num rows: 24 Data size: 96 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 23 Data size: 92 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: _col0 (type: int)
                         sort order: +
@@ -7544,7 +7544,7 @@ STAGE PLANS:
                             native: true
                             nativeConditionsMet: hive.vectorized.execution.reducesink.new.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true, No PTF TopN IS true, No DISTINCT columns IS true, BinarySortableSerDe for keys IS true, LazyBinarySerDe for values IS true
                             valueColumns: []
-                        Statistics: Num rows: 24 Data size: 96 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 23 Data size: 92 Basic stats: COMPLETE Column stats: NONE
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
@@ -7645,13 +7645,13 @@ STAGE PLANS:
                     className: VectorSelectOperator
                     native: true
                     projectedOutputColumns: [0]
-                Statistics: Num rows: 24 Data size: 96 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 23 Data size: 92 Basic stats: COMPLETE Column stats: NONE
                 File Output Operator
                   compressed: false
                   File Sink Vectorization:
                       className: VectorFileSinkOperator
                       native: false
-                  Statistics: Num rows: 24 Data size: 96 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 23 Data size: 92 Basic stats: COMPLETE Column stats: NONE
                   table:
                       input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                       output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
@@ -7944,7 +7944,7 @@ STAGE PLANS:
                       input vertices:
                         1 Map 3
                         2 Map 4
-                      Statistics: Num rows: 48 Data size: 193 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 46 Data size: 184 Basic stats: COMPLETE Column stats: NONE
                       Select Operator
                         expressions: _col0 (type: int), _col1 (type: string), _col5 (type: int), _col6 (type: string)
                         outputColumnNames: _col0, _col1, _col2, _col3
@@ -7952,7 +7952,7 @@ STAGE PLANS:
                             className: VectorSelectOperator
                             native: true
                             projectedOutputColumns: [0, 1, 2, 3]
-                        Statistics: Num rows: 48 Data size: 193 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 46 Data size: 184 Basic stats: COMPLETE Column stats: NONE
                         Reduce Output Operator
                           key expressions: _col0 (type: int), _col1 (type: string)
                           sort order: ++
@@ -7962,7 +7962,7 @@ STAGE PLANS:
                               native: true
                               nativeConditionsMet: hive.vectorized.execution.reducesink.new.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true, No PTF TopN IS true, No DISTINCT columns IS true, BinarySortableSerDe for keys IS true, LazyBinarySerDe for values IS true
                               valueColumns: [2, 3]
-                          Statistics: Num rows: 48 Data size: 193 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 46 Data size: 184 Basic stats: COMPLETE Column stats: NONE
                           value expressions: _col2 (type: int), _col3 (type: string)
             Execution mode: vectorized, llap
             LLAP IO: all inputs
@@ -8036,7 +8036,7 @@ STAGE PLANS:
                         native: true
                         predicateExpression: SelectColumnIsNotNull(col 0) -> boolean
                     predicate: key is not null (type: boolean)
-                    Statistics: Num rows: 22 Data size: 88 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 21 Data size: 84 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int)
                       outputColumnNames: _col0
@@ -8044,7 +8044,7 @@ STAGE PLANS:
                           className: VectorSelectOperator
                           native: true
                           projectedOutputColumns: [0]
-                      Statistics: Num rows: 22 Data size: 88 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 21 Data size: 84 Basic stats: COMPLETE Column stats: NONE
                       Group By Operator
                         Group By Vectorization:
                             className: VectorGroupByOperator
@@ -8057,7 +8057,7 @@ STAGE PLANS:
                         keys: _col0 (type: int)
                         mode: hash
                         outputColumnNames: _col0
-                        Statistics: Num rows: 22 Data size: 88 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 21 Data size: 84 Basic stats: COMPLETE Column stats: NONE
                         Reduce Output Operator
                           key expressions: _col0 (type: int)
                           sort order: +
@@ -8068,7 +8068,7 @@ STAGE PLANS:
                               native: true
                               nativeConditionsMet: hive.vectorized.execution.reducesink.new.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true, No PTF TopN IS true, No DISTINCT columns IS true, BinarySortableSerDe for keys IS true, LazyBinarySerDe for values IS true
                               valueColumns: []
-                          Statistics: Num rows: 22 Data size: 88 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 21 Data size: 84 Basic stats: COMPLETE Column stats: NONE
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
@@ -8107,13 +8107,13 @@ STAGE PLANS:
                     className: VectorSelectOperator
                     native: true
                     projectedOutputColumns: [0, 1, 2, 3]
-                Statistics: Num rows: 48 Data size: 193 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 46 Data size: 184 Basic stats: COMPLETE Column stats: NONE
                 File Output Operator
                   compressed: false
                   File Sink Vectorization:
                       className: VectorFileSinkOperator
                       native: false
-                  Statistics: Num rows: 48 Data size: 193 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 46 Data size: 184 Basic stats: COMPLETE Column stats: NONE
                   table:
                       input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                       output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
@@ -8188,7 +8188,7 @@ STAGE PLANS:
                         native: true
                         predicateExpression: FilterExprAndExpr(children: SelectColumnIsNotNull(col 0) -> boolean, SelectColumnIsNotNull(col 1) -> boolean) -> boolean
                     predicate: (key is not null and value is not null) (type: boolean)
-                    Statistics: Num rows: 22 Data size: 4136 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 20 Data size: 3760 Basic stats: COMPLETE Column stats: NONE
                     Map Join Operator
                       condition map:
                            Left Semi Join 0 to 1
@@ -8203,7 +8203,7 @@ STAGE PLANS:
                       outputColumnNames: _col0, _col1
                       input vertices:
                         1 Map 3
-                      Statistics: Num rows: 24 Data size: 4549 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 22 Data size: 4136 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: _col0 (type: int), _col1 (type: string)
                         sort order: ++
@@ -8213,7 +8213,7 @@ STAGE PLANS:
                             native: true
                             nativeConditionsMet: hive.vectorized.execution.reducesink.new.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true, No PTF TopN IS true, No DISTINCT columns IS true, BinarySortableSerDe for keys IS true, LazyBinarySerDe for values IS true
                             valueColumns: []
-                        Statistics: Num rows: 24 Data size: 4549 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 22 Data size: 4136 Basic stats: COMPLETE Column stats: NONE
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
@@ -8314,13 +8314,13 @@ STAGE PLANS:
                     className: VectorSelectOperator
                     native: true
                     projectedOutputColumns: [0, 1]
-                Statistics: Num rows: 24 Data size: 4549 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 22 Data size: 4136 Basic stats: COMPLETE Column stats: NONE
                 File Output Operator
                   compressed: false
                   File Sink Vectorization:
                       className: VectorFileSinkOperator
                       native: false
-                  Statistics: Num rows: 24 Data size: 4549 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 22 Data size: 4136 Basic stats: COMPLETE Column stats: NONE
                   table:
                       input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                       output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
@@ -8393,7 +8393,7 @@ STAGE PLANS:
                         native: true
                         predicateExpression: SelectColumnIsNotNull(col 0) -> boolean
                     predicate: key is not null (type: boolean)
-                    Statistics: Num rows: 22 Data size: 88 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 21 Data size: 84 Basic stats: COMPLETE Column stats: NONE
                     Map Join Operator
                       condition map:
                            Left Semi Join 0 to 1
@@ -8411,7 +8411,7 @@ STAGE PLANS:
                       input vertices:
                         1 Map 3
                         2 Map 4
-                      Statistics: Num rows: 48 Data size: 193 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 46 Data size: 184 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: _col0 (type: int)
                         sort order: +
@@ -8421,7 +8421,7 @@ STAGE PLANS:
                             native: true
                             nativeConditionsMet: hive.vectorized.execution.reducesink.new.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true, No PTF TopN IS true, No DISTINCT columns IS true, BinarySortableSerDe for keys IS true, LazyBinarySerDe for values IS true
                             valueColumns: []
-                        Statistics: Num rows: 48 Data size: 193 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 46 Data size: 184 Basic stats: COMPLETE Column stats: NONE
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
@@ -8584,13 +8584,13 @@ STAGE PLANS:
                     className: VectorSelectOperator
                     native: true
                     projectedOutputColumns: [0]
-                Statistics: Num rows: 48 Data size: 193 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 46 Data size: 184 Basic stats: COMPLETE Column stats: NONE
                 File Output Operator
                   compressed: false
                   File Sink Vectorization:
                       className: VectorFileSinkOperator
                       native: false
-                  Statistics: Num rows: 48 Data size: 193 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 46 Data size: 184 Basic stats: COMPLETE Column stats: NONE
                   table:
                       input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                       output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
@@ -9902,7 +9902,7 @@ STAGE PLANS:
                         native: true
                         predicateExpression: SelectColumnIsNotNull(col 0) -> boolean
                     predicate: key is not null (type: boolean)
-                    Statistics: Num rows: 22 Data size: 4136 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 21 Data size: 3948 Basic stats: COMPLETE Column stats: NONE
                     Map Join Operator
                       condition map:
                            Left Semi Join 0 to 1
@@ -9917,7 +9917,7 @@ STAGE PLANS:
                       outputColumnNames: _col0, _col1
                       input vertices:
                         1 Map 3
-                      Statistics: Num rows: 24 Data size: 4549 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 23 Data size: 4342 Basic stats: COMPLETE Column stats: NONE
                       Map Join Operator
                         condition map:
                              Left Outer Join 0 to 1
@@ -9932,7 +9932,7 @@ STAGE PLANS:
                         outputColumnNames: _col0
                         input vertices:
                           1 Map 4
-                        Statistics: Num rows: 26 Data size: 5003 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 25 Data size: 4776 Basic stats: COMPLETE Column stats: NONE
                         Reduce Output Operator
                           key expressions: _col0 (type: int)
                           sort order: +
@@ -9942,7 +9942,7 @@ STAGE PLANS:
                               native: true
                               nativeConditionsMet: hive.vectorized.execution.reducesink.new.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true, No PTF TopN IS true, No DISTINCT columns IS true, BinarySortableSerDe for keys IS true, LazyBinarySerDe for values IS true
                               valueColumns: []
-                          Statistics: Num rows: 26 Data size: 5003 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 25 Data size: 4776 Basic stats: COMPLETE Column stats: NONE
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
@@ -10077,13 +10077,13 @@ STAGE PLANS:
                     className: VectorSelectOperator
                     native: true
                     projectedOutputColumns: [0]
-                Statistics: Num rows: 26 Data size: 5003 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 25 Data size: 4776 Basic stats: COMPLETE Column stats: NONE
                 File Output Operator
                   compressed: false
                   File Sink Vectorization:
                       className: VectorFileSinkOperator
                       native: false
-                  Statistics: Num rows: 26 Data size: 5003 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 25 Data size: 4776 Basic stats: COMPLETE Column stats: NONE
                   table:
                       input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                       output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
@@ -10178,7 +10178,7 @@ STAGE PLANS:
                         native: true
                         predicateExpression: FilterExprAndExpr(children: FilterLongColGreaterLongScalar(col 0, val 100) -> boolean, SelectColumnIsNotNull(col 1) -> boolean) -> boolean
                     predicate: ((key > 100) and value is not null) (type: boolean)
-                    Statistics: Num rows: 22 Data size: 4136 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int), value (type: string)
                       outputColumnNames: _col0, _col1
@@ -10186,7 +10186,7 @@ STAGE PLANS:
                           className: VectorSelectOperator
                           native: true
                           projectedOutputColumns: [0, 1]
-                      Statistics: Num rows: 22 Data size: 4136 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
                       Map Join Operator
                         condition map:
                              Left Semi Join 0 to 1
@@ -10201,13 +10201,13 @@ STAGE PLANS:
                         outputColumnNames: _col0
                         input vertices:
                           1 Map 2
-                        Statistics: Num rows: 24 Data size: 4549 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 12 Data size: 2226 Basic stats: COMPLETE Column stats: NONE
                         File Output Operator
                           compressed: false
                           File Sink Vectorization:
                               className: VectorFileSinkOperator
                               native: false
-                          Statistics: Num rows: 24 Data size: 4549 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 12 Data size: 2226 Basic stats: COMPLETE Column stats: NONE
                           table:
                               input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                               output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
@@ -11210,7 +11210,7 @@ STAGE PLANS:
                         native: true
                         predicateExpression: FilterExprAndExpr(children: FilterStringGroupColLessStringScalar(col 1, val val_10) -> boolean, SelectColumnIsNotNull(col 0) -> boolean) -> boolean
                     predicate: ((value < 'val_10') and key is not null) (type: boolean)
-                    Statistics: Num rows: 11 Data size: 2068 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 3 Data size: 564 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int), value (type: string)
                       outputColumnNames: _col0, _col1
@@ -11218,7 +11218,7 @@ STAGE PLANS:
                           className: VectorSelectOperator
                           native: true
                           projectedOutputColumns: [0, 1]
-                      Statistics: Num rows: 11 Data size: 2068 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 3 Data size: 564 Basic stats: COMPLETE Column stats: NONE
                       Group By Operator
                         Group By Vectorization:
                             className: VectorGroupByOperator
@@ -11231,7 +11231,7 @@ STAGE PLANS:
                         keys: _col0 (type: int), _col1 (type: string)
                         mode: hash
                         outputColumnNames: _col0, _col1
-                        Statistics: Num rows: 11 Data size: 2068 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 3 Data size: 564 Basic stats: COMPLETE Column stats: NONE
                         Reduce Output Operator
                           key expressions: _col0 (type: int)
                           sort order: +
@@ -11242,7 +11242,7 @@ STAGE PLANS:
                               native: true
                               nativeConditionsMet: hive.vectorized.execution.reducesink.new.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true, No PTF TopN IS true, No DISTINCT columns IS true, BinarySortableSerDe for keys IS true, LazyBinarySerDe for values IS true
                               valueColumns: []
-                          Statistics: Num rows: 11 Data size: 2068 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 3 Data size: 564 Basic stats: COMPLETE Column stats: NONE
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
@@ -11349,7 +11349,7 @@ STAGE PLANS:
                         native: true
                         predicateExpression: FilterLongColGreaterLongScalar(col 0, val 5) -> boolean
                     predicate: (key > 5) (type: boolean)
-                    Statistics: Num rows: 22 Data size: 88 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int)
                       outputColumnNames: _col0
@@ -11357,7 +11357,7 @@ STAGE PLANS:
                           className: VectorSelectOperator
                           native: true
                           projectedOutputColumns: [0]
-                      Statistics: Num rows: 22 Data size: 88 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: NONE
                       Group By Operator
                         Group By Vectorization:
                             className: VectorGroupByOperator
@@ -11370,7 +11370,7 @@ STAGE PLANS:
                         keys: _col0 (type: int)
                         mode: hash
                         outputColumnNames: _col0
-                        Statistics: Num rows: 22 Data size: 88 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: NONE
                         Reduce Output Operator
                           key expressions: _col0 (type: int)
                           sort order: +
@@ -11381,7 +11381,7 @@ STAGE PLANS:
                               native: true
                               nativeConditionsMet: hive.vectorized.execution.reducesink.new.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true, No PTF TopN IS true, No DISTINCT columns IS true, BinarySortableSerDe for keys IS true, LazyBinarySerDe for values IS true
                               valueColumns: []
-                          Statistics: Num rows: 22 Data size: 88 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: NONE
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
@@ -11429,7 +11429,7 @@ STAGE PLANS:
                       outputColumnNames: _col1
                       input vertices:
                         1 Map 1
-                      Statistics: Num rows: 24 Data size: 96 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 12 Data size: 2274 Basic stats: COMPLETE Column stats: NONE
                       Select Operator
                         expressions: _col1 (type: string)
                         outputColumnNames: _col0
@@ -11437,7 +11437,7 @@ STAGE PLANS:
                             className: VectorSelectOperator
                             native: true
                             projectedOutputColumns: [1]
-                        Statistics: Num rows: 24 Data size: 96 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 12 Data size: 2274 Basic stats: COMPLETE Column stats: NONE
                         Reduce Output Operator
                           key expressions: _col0 (type: string)
                           sort order: +
@@ -11447,7 +11447,7 @@ STAGE PLANS:
                               native: true
                               nativeConditionsMet: hive.vectorized.execution.reducesink.new.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true, No PTF TopN IS true, No DISTINCT columns IS true, BinarySortableSerDe for keys IS true, LazyBinarySerDe for values IS true
                               valueColumns: []
-                          Statistics: Num rows: 24 Data size: 96 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 12 Data size: 2274 Basic stats: COMPLETE Column stats: NONE
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
@@ -11486,13 +11486,13 @@ STAGE PLANS:
                     className: VectorSelectOperator
                     native: true
                     projectedOutputColumns: [0]
-                Statistics: Num rows: 24 Data size: 96 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 12 Data size: 2274 Basic stats: COMPLETE Column stats: NONE
                 File Output Operator
                   compressed: false
                   File Sink Vectorization:
                       className: VectorFileSinkOperator
                       native: false
-                  Statistics: Num rows: 24 Data size: 96 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 12 Data size: 2274 Basic stats: COMPLETE Column stats: NONE
                   table:
                       input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                       output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
@@ -11554,7 +11554,7 @@ STAGE PLANS:
                         native: true
                         predicateExpression: FilterExprAndExpr(children: FilterLongColGreaterLongScalar(col 0, val 5) -> boolean, FilterStringGroupColLessEqualStringScalar(col 1, val val_20) -> boolean) -> boolean
                     predicate: ((key > 5) and (value <= 'val_20')) (type: boolean)
-                    Statistics: Num rows: 11 Data size: 2068 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int), value (type: string)
                       outputColumnNames: _col0, _col1
@@ -11562,7 +11562,7 @@ STAGE PLANS:
                           className: VectorSelectOperator
                           native: true
                           projectedOutputColumns: [0, 1]
-                      Statistics: Num rows: 11 Data size: 2068 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
                       Group By Operator
                         Group By Vectorization:
                             className: VectorGroupByOperator
@@ -11575,7 +11575,7 @@ STAGE PLANS:
                         keys: _col0 (type: int), _col1 (type: string)
                         mode: hash
                         outputColumnNames: _col0, _col1
-                        Statistics: Num rows: 11 Data size: 2068 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
                         Reduce Output Operator
                           key expressions: _col0 (type: int)
                           sort order: +
@@ -11586,7 +11586,7 @@ STAGE PLANS:
                               native: true
                               nativeConditionsMet: hive.vectorized.execution.reducesink.new.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true, No PTF TopN IS true, No DISTINCT columns IS true, BinarySortableSerDe for keys IS true, LazyBinarySerDe for values IS true
                               valueColumns: []
-                          Statistics: Num rows: 11 Data size: 2068 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
@@ -11756,7 +11756,7 @@ STAGE PLANS:
                         native: true
                         predicateExpression: FilterLongColGreaterLongScalar(col 0, val 2) -> boolean
                     predicate: (key > 2) (type: boolean)
-                    Statistics: Num rows: 11 Data size: 44 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int)
                       outputColumnNames: _col0
@@ -11764,7 +11764,7 @@ STAGE PLANS:
                           className: VectorSelectOperator
                           native: true
                           projectedOutputColumns: [0]
-                      Statistics: Num rows: 11 Data size: 44 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: NONE
                       Group By Operator
                         Group By Vectorization:
                             className: VectorGroupByOperator
@@ -11777,7 +11777,7 @@ STAGE PLANS:
                         keys: _col0 (type: int)
                         mode: hash
                         outputColumnNames: _col0
-                        Statistics: Num rows: 11 Data size: 44 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: NONE
                         Reduce Output Operator
                           key expressions: _col0 (type: int)
                           sort order: +
@@ -11788,7 +11788,7 @@ STAGE PLANS:
                               native: true
                               nativeConditionsMet: hive.vectorized.execution.reducesink.new.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true, No PTF TopN IS true, No DISTINCT columns IS true, BinarySortableSerDe for keys IS true, LazyBinarySerDe for values IS true
                               valueColumns: []
-                          Statistics: Num rows: 11 Data size: 44 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: NONE
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
@@ -11955,7 +11955,7 @@ STAGE PLANS:
                         native: true
                         predicateExpression: SelectColumnIsNotNull(col 0) -> boolean
                     predicate: key is not null (type: boolean)
-                    Statistics: Num rows: 22 Data size: 88 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 21 Data size: 84 Basic stats: COMPLETE Column stats: NONE
                     Map Join Operator
                       condition map:
                            Left Semi Join 0 to 1
@@ -11973,7 +11973,7 @@ STAGE PLANS:
                       outputColumnNames: _col0
                       input vertices:
                         1 Map 3
-                      Statistics: Num rows: 24 Data size: 96 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 23 Data size: 92 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: _col0 (type: int)
                         sort order: +
@@ -11983,7 +11983,7 @@ STAGE PLANS:
                             native: true
                             nativeConditionsMet: hive.vectorized.execution.reducesink.new.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true, No PTF TopN IS true, No DISTINCT columns IS true, BinarySortableSerDe for keys IS true, LazyBinarySerDe for values IS true
                             valueColumns: []
-                        Statistics: Num rows: 24 Data size: 96 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 23 Data size: 92 Basic stats: COMPLETE Column stats: NONE
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
@@ -12084,13 +12084,13 @@ STAGE PLANS:
                     className: VectorSelectOperator
                     native: true
                     projectedOutputColumns: [0]
-                Statistics: Num rows: 24 Data size: 96 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 23 Data size: 92 Basic stats: COMPLETE Column stats: NONE
                 File Output Operator
                   compressed: false
                   File Sink Vectorization:
                       className: VectorFileSinkOperator
                       native: false
-                  Statistics: Num rows: 24 Data size: 96 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 23 Data size: 92 Basic stats: COMPLETE Column stats: NONE
                   table:
                       input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                       output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
@@ -12386,7 +12386,7 @@ STAGE PLANS:
                       input vertices:
                         1 Map 3
                         2 Map 4
-                      Statistics: Num rows: 48 Data size: 193 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 46 Data size: 184 Basic stats: COMPLETE Column stats: NONE
                       Select Operator
                         expressions: _col0 (type: int), _col1 (type: string), _col5 (type: int), _col6 (type: string)
                         outputColumnNames: _col0, _col1, _col2, _col3
@@ -12394,7 +12394,7 @@ STAGE PLANS:
                             className: VectorSelectOperator
                             native: true
                             projectedOutputColumns: [0, 1, 2, 3]
-                        Statistics: Num rows: 48 Data size: 193 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 46 Data size: 184 Basic stats: COMPLETE Column stats: NONE
                         Reduce Output Operator
                           key expressions: _col0 (type: int), _col1 (type: string)
                           sort order: ++
@@ -12404,7 +12404,7 @@ STAGE PLANS:
                               native: true
                               nativeConditionsMet: hive.vectorized.execution.reducesink.new.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true, No PTF TopN IS true, No DISTINCT columns IS true, BinarySortableSerDe for keys IS true, LazyBinarySerDe for values IS true
                               valueColumns: [2, 3]
-                          Statistics: Num rows: 48 Data size: 193 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 46 Data size: 184 Basic stats: COMPLETE Column stats: NONE
                           value expressions: _col2 (type: int), _col3 (type: string)
             Execution mode: vectorized, llap
             LLAP IO: all inputs
@@ -12478,7 +12478,7 @@ STAGE PLANS:
                         native: true
                         predicateExpression: SelectColumnIsNotNull(col 0) -> boolean
                     predicate: key is not null (type: boolean)
-                    Statistics: Num rows: 22 Data size: 88 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 21 Data size: 84 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int)
                       outputColumnNames: _col0
@@ -12486,7 +12486,7 @@ STAGE PLANS:
                           className: VectorSelectOperator
                           native: true
                           projectedOutputColumns: [0]
-                      Statistics: Num rows: 22 Data size: 88 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 21 Data size: 84 Basic stats: COMPLETE Column stats: NONE
                       Group By Operator
                         Group By Vectorization:
                             className: VectorGroupByOperator
@@ -12499,7 +12499,7 @@ STAGE PLANS:
                         keys: _col0 (type: int)
                         mode: hash
                         outputColumnNames: _col0
-                        Statistics: Num rows: 22 Data size: 88 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 21 Data size: 84 Basic stats: COMPLETE Column stats: NONE
                         Reduce Output Operator
                           key expressions: _col0 (type: int)
                           sort order: +
@@ -12510,7 +12510,7 @@ STAGE PLANS:
                               native: true
                               nativeConditionsMet: hive.vectorized.execution.reducesink.new.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true, No PTF TopN IS true, No DISTINCT columns IS true, BinarySortableSerDe for keys IS true, LazyBinarySerDe for values IS true
                               valueColumns: []
-                          Statistics: Num rows: 22 Data size: 88 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 21 Data size: 84 Basic stats: COMPLETE Column stats: NONE
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
@@ -12549,13 +12549,13 @@ STAGE PLANS:
                     className: VectorSelectOperator
                     native: true
                     projectedOutputColumns: [0, 1, 2, 3]
-                Statistics: Num rows: 48 Data size: 193 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 46 Data size: 184 Basic stats: COMPLETE Column stats: NONE
                 File Output Operator
                   compressed: false
                   File Sink Vectorization:
                       className: VectorFileSinkOperator
                       native: false
-                  Statistics: Num rows: 48 Data size: 193 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 46 Data size: 184 Basic stats: COMPLETE Column stats: NONE
                   table:
                       input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                       output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
@@ -12630,7 +12630,7 @@ STAGE PLANS:
                         native: true
                         predicateExpression: FilterExprAndExpr(children: SelectColumnIsNotNull(col 0) -> boolean, SelectColumnIsNotNull(col 1) -> boolean) -> boolean
                     predicate: (key is not null and value is not null) (type: boolean)
-                    Statistics: Num rows: 22 Data size: 4136 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 20 Data size: 3760 Basic stats: COMPLETE Column stats: NONE
                     Map Join Operator
                       condition map:
                            Left Semi Join 0 to 1
@@ -12648,7 +12648,7 @@ STAGE PLANS:
                       outputColumnNames: _col0, _col1
                       input vertices:
                         1 Map 3
-                      Statistics: Num rows: 24 Data size: 4549 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 22 Data size: 4136 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: _col0 (type: int), _col1 (type: string)
                         sort order: ++
@@ -12658,7 +12658,7 @@ STAGE PLANS:
                             native: true
                             nativeConditionsMet: hive.vectorized.execution.reducesink.new.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true, No PTF TopN IS true, No DISTINCT columns IS true, BinarySortableSerDe for keys IS true, LazyBinarySerDe for values IS true
                             valueColumns: []
-                        Statistics: Num rows: 24 Data size: 4549 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 22 Data size: 4136 Basic stats: COMPLETE Column stats: NONE
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
@@ -12759,13 +12759,13 @@ STAGE PLANS:
                     className: VectorSelectOperator
                     native: true
                     projectedOutputColumns: [0, 1]
-                Statistics: Num rows: 24 Data size: 4549 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 22 Data size: 4136 Basic stats: COMPLETE Column stats: NONE
                 File Output Operator
                   compressed: false
                   File Sink Vectorization:
                       className: VectorFileSinkOperator
                       native: false
-                  Statistics: Num rows: 24 Data size: 4549 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 22 Data size: 4136 Basic stats: COMPLETE Column stats: NONE
                   table:
                       input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                       output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
@@ -12838,7 +12838,7 @@ STAGE PLANS:
                         native: true
                         predicateExpression: SelectColumnIsNotNull(col 0) -> boolean
                     predicate: key is not null (type: boolean)
-                    Statistics: Num rows: 22 Data size: 88 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 21 Data size: 84 Basic stats: COMPLETE Column stats: NONE
                     Map Join Operator
                       condition map:
                            Left Semi Join 0 to 1
@@ -12856,7 +12856,7 @@ STAGE PLANS:
                       input vertices:
                         1 Map 3
                         2 Map 4
-                      Statistics: Num rows: 48 Data size: 193 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 46 Data size: 184 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: _col0 (type: int)
                         sort order: +
@@ -12866,7 +12866,7 @@ STAGE PLANS:
                             native: true
                             nativeConditionsMet: hive.vectorized.execution.reducesink.new.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true, No PTF TopN IS true, No DISTINCT columns IS true, BinarySortableSerDe for keys IS true, LazyBinarySerDe for values IS true
                             valueColumns: []
-                        Statistics: Num rows: 48 Data size: 193 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 46 Data size: 184 Basic stats: COMPLETE Column stats: NONE
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
@@ -13029,13 +13029,13 @@ STAGE PLANS:
                     className: VectorSelectOperator
                     native: true
                     projectedOutputColumns: [0]
-                Statistics: Num rows: 48 Data size: 193 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 46 Data size: 184 Basic stats: COMPLETE Column stats: NONE
                 File Output Operator
                   compressed: false
                   File Sink Vectorization:
                       className: VectorFileSinkOperator
                       native: false
-                  Statistics: Num rows: 48 Data size: 193 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 46 Data size: 184 Basic stats: COMPLETE Column stats: NONE
                   table:
                       input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                       output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
@@ -14347,7 +14347,7 @@ STAGE PLANS:
                         native: true
                         predicateExpression: SelectColumnIsNotNull(col 0) -> boolean
                     predicate: key is not null (type: boolean)
-                    Statistics: Num rows: 22 Data size: 4136 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 21 Data size: 3948 Basic stats: COMPLETE Column stats: NONE
                     Map Join Operator
                       condition map:
                            Left Semi Join 0 to 1
@@ -14365,7 +14365,7 @@ STAGE PLANS:
                       outputColumnNames: _col0, _col1
                       input vertices:
                         1 Map 3
-                      Statistics: Num rows: 24 Data size: 4549 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 23 Data size: 4342 Basic stats: COMPLETE Column stats: NONE
                       Map Join Operator
                         condition map:
                              Left Outer Join 0 to 1
@@ -14383,7 +14383,7 @@ STAGE PLANS:
                         outputColumnNames: _col0
                         input vertices:
                           1 Map 4
-                        Statistics: Num rows: 26 Data size: 5003 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 25 Data size: 4776 Basic stats: COMPLETE Column stats: NONE
                         Reduce Output Operator
                           key expressions: _col0 (type: int)
                           sort order: +
@@ -14393,7 +14393,7 @@ STAGE PLANS:
                               native: true
                               nativeConditionsMet: hive.vectorized.execution.reducesink.new.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true, No PTF TopN IS true, No DISTINCT columns IS true, BinarySortableSerDe for keys IS true, LazyBinarySerDe for values IS true
                               valueColumns: []
-                          Statistics: Num rows: 26 Data size: 5003 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 25 Data size: 4776 Basic stats: COMPLETE Column stats: NONE
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
@@ -14528,13 +14528,13 @@ STAGE PLANS:
                     className: VectorSelectOperator
                     native: true
                     projectedOutputColumns: [0]
-                Statistics: Num rows: 26 Data size: 5003 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 25 Data size: 4776 Basic stats: COMPLETE Column stats: NONE
                 File Output Operator
                   compressed: false
                   File Sink Vectorization:
                       className: VectorFileSinkOperator
                       native: false
-                  Statistics: Num rows: 26 Data size: 5003 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 25 Data size: 4776 Basic stats: COMPLETE Column stats: NONE
                   table:
                       input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                       output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
@@ -14629,7 +14629,7 @@ STAGE PLANS:
                         native: true
                         predicateExpression: FilterExprAndExpr(children: FilterLongColGreaterLongScalar(col 0, val 100) -> boolean, SelectColumnIsNotNull(col 1) -> boolean) -> boolean
                     predicate: ((key > 100) and value is not null) (type: boolean)
-                    Statistics: Num rows: 22 Data size: 4136 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int), value (type: string)
                       outputColumnNames: _col0, _col1
@@ -14637,7 +14637,7 @@ STAGE PLANS:
                           className: VectorSelectOperator
                           native: true
                           projectedOutputColumns: [0, 1]
-                      Statistics: Num rows: 22 Data size: 4136 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
                       Map Join Operator
                         condition map:
                              Left Semi Join 0 to 1
@@ -14655,13 +14655,13 @@ STAGE PLANS:
                         outputColumnNames: _col0
                         input vertices:
                           1 Map 2
-                        Statistics: Num rows: 24 Data size: 4549 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 12 Data size: 2226 Basic stats: COMPLETE Column stats: NONE
                         File Output Operator
                           compressed: false
                           File Sink Vectorization:
                               className: VectorFileSinkOperator
                               native: false
-                          Statistics: Num rows: 24 Data size: 4549 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 12 Data size: 2226 Basic stats: COMPLETE Column stats: NONE
                           table:
                               input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                               output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
@@ -15664,7 +15664,7 @@ STAGE PLANS:
                         native: true
                         predicateExpression: FilterExprAndExpr(children: FilterStringGroupColLessStringScalar(col 1, val val_10) -> boolean, SelectColumnIsNotNull(col 0) -> boolean) -> boolean
                     predicate: ((value < 'val_10') and key is not null) (type: boolean)
-                    Statistics: Num rows: 11 Data size: 2068 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 3 Data size: 564 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int), value (type: string)
                       outputColumnNames: _col0, _col1
@@ -15672,7 +15672,7 @@ STAGE PLANS:
                           className: VectorSelectOperator
                           native: true
                           projectedOutputColumns: [0, 1]
-                      Statistics: Num rows: 11 Data size: 2068 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 3 Data size: 564 Basic stats: COMPLETE Column stats: NONE
                       Group By Operator
                         Group By Vectorization:
                             className: VectorGroupByOperator
@@ -15685,7 +15685,7 @@ STAGE PLANS:
                         keys: _col0 (type: int), _col1 (type: string)
                         mode: hash
                         outputColumnNames: _col0, _col1
-                        Statistics: Num rows: 11 Data size: 2068 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 3 Data size: 564 Basic stats: COMPLETE Column stats: NONE
                         Reduce Output Operator
                           key expressions: _col0 (type: int)
                           sort order: +
@@ -15696,7 +15696,7 @@ STAGE PLANS:
                               native: true
                               nativeConditionsMet: hive.vectorized.execution.reducesink.new.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true, No PTF TopN IS true, No DISTINCT columns IS true, BinarySortableSerDe for keys IS true, LazyBinarySerDe for values IS true
                               valueColumns: []
-                          Statistics: Num rows: 11 Data size: 2068 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 3 Data size: 564 Basic stats: COMPLETE Column stats: NONE
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
@@ -15803,7 +15803,7 @@ STAGE PLANS:
                         native: true
                         predicateExpression: FilterLongColGreaterLongScalar(col 0, val 5) -> boolean
                     predicate: (key > 5) (type: boolean)
-                    Statistics: Num rows: 22 Data size: 88 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int)
                       outputColumnNames: _col0
@@ -15811,7 +15811,7 @@ STAGE PLANS:
                           className: VectorSelectOperator
                           native: true
                           projectedOutputColumns: [0]
-                      Statistics: Num rows: 22 Data size: 88 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: NONE
                       Group By Operator
                         Group By Vectorization:
                             className: VectorGroupByOperator
@@ -15824,7 +15824,7 @@ STAGE PLANS:
                         keys: _col0 (type: int)
                         mode: hash
                         outputColumnNames: _col0
-                        Statistics: Num rows: 22 Data size: 88 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: NONE
                         Reduce Output Operator
                           key expressions: _col0 (type: int)
                           sort order: +
@@ -15835,7 +15835,7 @@ STAGE PLANS:
                               native: true
                               nativeConditionsMet: hive.vectorized.execution.reducesink.new.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true, No PTF TopN IS true, No DISTINCT columns IS true, BinarySortableSerDe for keys IS true, LazyBinarySerDe for values IS true
                               valueColumns: []
-                          Statistics: Num rows: 22 Data size: 88 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: NONE
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
@@ -15883,7 +15883,7 @@ STAGE PLANS:
                       outputColumnNames: _col1
                       input vertices:
                         1 Map 1
-                      Statistics: Num rows: 24 Data size: 96 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 12 Data size: 2274 Basic stats: COMPLETE Column stats: NONE
                       Select Operator
                         expressions: _col1 (type: string)
                         outputColumnNames: _col0
@@ -15891,7 +15891,7 @@ STAGE PLANS:
                             className: VectorSelectOperator
                             native: true
                             projectedOutputColumns: [1]
-                        Statistics: Num rows: 24 Data size: 96 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 12 Data size: 2274 Basic stats: COMPLETE Column stats: NONE
                         Reduce Output Operator
                           key expressions: _col0 (type: string)
                           sort order: +
@@ -15901,7 +15901,7 @@ STAGE PLANS:
                               native: true
                               nativeConditionsMet: hive.vectorized.execution.reducesink.new.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true, No PTF TopN IS true, No DISTINCT columns IS true, BinarySortableSerDe for keys IS true, LazyBinarySerDe for values IS true
                               valueColumns: []
-                          Statistics: Num rows: 24 Data size: 96 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 12 Data size: 2274 Basic stats: COMPLETE Column stats: NONE
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
@@ -15940,13 +15940,13 @@ STAGE PLANS:
                     className: VectorSelectOperator
                     native: true
                     projectedOutputColumns: [0]
-                Statistics: Num rows: 24 Data size: 96 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 12 Data size: 2274 Basic stats: COMPLETE Column stats: NONE
                 File Output Operator
                   compressed: false
                   File Sink Vectorization:
                       className: VectorFileSinkOperator
                       native: false
-                  Statistics: Num rows: 24 Data size: 96 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 12 Data size: 2274 Basic stats: COMPLETE Column stats: NONE
                   table:
                       input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                       output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
@@ -16008,7 +16008,7 @@ STAGE PLANS:
                         native: true
                         predicateExpression: FilterExprAndExpr(children: FilterLongColGreaterLongScalar(col 0, val 5) -> boolean, FilterStringGroupColLessEqualStringScalar(col 1, val val_20) -> boolean) -> boolean
                     predicate: ((key > 5) and (value <= 'val_20')) (type: boolean)
-                    Statistics: Num rows: 11 Data size: 2068 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int), value (type: string)
                       outputColumnNames: _col0, _col1
@@ -16016,7 +16016,7 @@ STAGE PLANS:
                           className: VectorSelectOperator
                           native: true
                           projectedOutputColumns: [0, 1]
-                      Statistics: Num rows: 11 Data size: 2068 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
                       Group By Operator
                         Group By Vectorization:
                             className: VectorGroupByOperator
@@ -16029,7 +16029,7 @@ STAGE PLANS:
                         keys: _col0 (type: int), _col1 (type: string)
                         mode: hash
                         outputColumnNames: _col0, _col1
-                        Statistics: Num rows: 11 Data size: 2068 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
                         Reduce Output Operator
                           key expressions: _col0 (type: int)
                           sort order: +
@@ -16040,7 +16040,7 @@ STAGE PLANS:
                               native: true
                               nativeConditionsMet: hive.vectorized.execution.reducesink.new.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true, No PTF TopN IS true, No DISTINCT columns IS true, BinarySortableSerDe for keys IS true, LazyBinarySerDe for values IS true
                               valueColumns: []
-                          Statistics: Num rows: 11 Data size: 2068 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
@@ -16210,7 +16210,7 @@ STAGE PLANS:
                         native: true
                         predicateExpression: FilterLongColGreaterLongScalar(col 0, val 2) -> boolean
                     predicate: (key > 2) (type: boolean)
-                    Statistics: Num rows: 11 Data size: 44 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int)
                       outputColumnNames: _col0
@@ -16218,7 +16218,7 @@ STAGE PLANS:
                           className: VectorSelectOperator
                           native: true
                           projectedOutputColumns: [0]
-                      Statistics: Num rows: 11 Data size: 44 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: NONE
                       Group By Operator
                         Group By Vectorization:
                             className: VectorGroupByOperator
@@ -16231,7 +16231,7 @@ STAGE PLANS:
                         keys: _col0 (type: int)
                         mode: hash
                         outputColumnNames: _col0
-                        Statistics: Num rows: 11 Data size: 44 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: NONE
                         Reduce Output Operator
                           key expressions: _col0 (type: int)
                           sort order: +
@@ -16242,7 +16242,7 @@ STAGE PLANS:
                               native: true
                               nativeConditionsMet: hive.vectorized.execution.reducesink.new.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true, No PTF TopN IS true, No DISTINCT columns IS true, BinarySortableSerDe for keys IS true, LazyBinarySerDe for values IS true
                               valueColumns: []
-                          Statistics: Num rows: 11 Data size: 44 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: NONE
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
@@ -16409,7 +16409,7 @@ STAGE PLANS:
                         native: true
                         predicateExpression: SelectColumnIsNotNull(col 0) -> boolean
                     predicate: key is not null (type: boolean)
-                    Statistics: Num rows: 22 Data size: 88 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 21 Data size: 84 Basic stats: COMPLETE Column stats: NONE
                     Map Join Operator
                       condition map:
                            Left Semi Join 0 to 1
@@ -16427,7 +16427,7 @@ STAGE PLANS:
                       outputColumnNames: _col0
                       input vertices:
                         1 Map 3
-                      Statistics: Num rows: 24 Data size: 96 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 23 Data size: 92 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: _col0 (type: int)
                         sort order: +
@@ -16437,7 +16437,7 @@ STAGE PLANS:
                             native: true
                             nativeConditionsMet: hive.vectorized.execution.reducesink.new.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true, No PTF TopN IS true, No DISTINCT columns IS true, BinarySortableSerDe for keys IS true, LazyBinarySerDe for values IS true
                             valueColumns: []
-                        Statistics: Num rows: 24 Data size: 96 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 23 Data size: 92 Basic stats: COMPLETE Column stats: NONE
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
@@ -16538,13 +16538,13 @@ STAGE PLANS:
                     className: VectorSelectOperator
                     native: true
                     projectedOutputColumns: [0]
-                Statistics: Num rows: 24 Data size: 96 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 23 Data size: 92 Basic stats: COMPLETE Column stats: NONE
                 File Output Operator
                   compressed: false
                   File Sink Vectorization:
                       className: VectorFileSinkOperator
                       native: false
-                  Statistics: Num rows: 24 Data size: 96 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 23 Data size: 92 Basic stats: COMPLETE Column stats: NONE
                   table:
                       input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                       output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
@@ -16840,7 +16840,7 @@ STAGE PLANS:
                       input vertices:
                         1 Map 3
                         2 Map 4
-                      Statistics: Num rows: 48 Data size: 193 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 46 Data size: 184 Basic stats: COMPLETE Column stats: NONE
                       Select Operator
                         expressions: _col0 (type: int), _col1 (type: string), _col5 (type: int), _col6 (type: string)
                         outputColumnNames: _col0, _col1, _col2, _col3
@@ -16848,7 +16848,7 @@ STAGE PLANS:
                             className: VectorSelectOperator
                             native: true
                             projectedOutputColumns: [0, 1, 2, 3]
-                        Statistics: Num rows: 48 Data size: 193 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 46 Data size: 184 Basic stats: COMPLETE Column stats: NONE
                         Reduce Output Operator
                           key expressions: _col0 (type: int), _col1 (type: string)
                           sort order: ++
@@ -16858,7 +16858,7 @@ STAGE PLANS:
                               native: true
                               nativeConditionsMet: hive.vectorized.execution.reducesink.new.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true, No PTF TopN IS true, No DISTINCT columns IS true, BinarySortableSerDe for keys IS true, LazyBinarySerDe for values IS true
                               valueColumns: [2, 3]
-                          Statistics: Num rows: 48 Data size: 193 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 46 Data size: 184 Basic stats: COMPLETE Column stats: NONE
                           value expressions: _col2 (type: int), _col3 (type: string)
             Execution mode: vectorized, llap
             LLAP IO: all inputs
@@ -16932,7 +16932,7 @@ STAGE PLANS:
                         native: true
                         predicateExpression: SelectColumnIsNotNull(col 0) -> boolean
                     predicate: key is not null (type: boolean)
-                    Statistics: Num rows: 22 Data size: 88 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 21 Data size: 84 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int)
                       outputColumnNames: _col0
@@ -16940,7 +16940,7 @@ STAGE PLANS:
                           className: VectorSelectOperator
                           native: true
                           projectedOutputColumns: [0]
-                      Statistics: Num rows: 22 Data size: 88 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 21 Data size: 84 Basic stats: COMPLETE Column stats: NONE
                       Group By Operator
                         Group By Vectorization:
                             className: VectorGroupByOperator
@@ -16953,7 +16953,7 @@ STAGE PLANS:
                         keys: _col0 (type: int)
                         mode: hash
                         outputColumnNames: _col0
-                        Statistics: Num rows: 22 Data size: 88 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 21 Data size: 84 Basic stats: COMPLETE Column stats: NONE
                         Reduce Output Operator
                           key expressions: _col0 (type: int)
                           sort order: +
@@ -16964,7 +16964,7 @@ STAGE PLANS:
                               native: true
                               nativeConditionsMet: hive.vectorized.execution.reducesink.new.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true, No PTF TopN IS true, No DISTINCT columns IS true, BinarySortableSerDe for keys IS true, LazyBinarySerDe for values IS true
                               valueColumns: []
-                          Statistics: Num rows: 22 Data size: 88 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 21 Data size: 84 Basic stats: COMPLETE Column stats: NONE
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
@@ -17003,13 +17003,13 @@ STAGE PLANS:
                     className: VectorSelectOperator
                     native: true
                     projectedOutputColumns: [0, 1, 2, 3]
-                Statistics: Num rows: 48 Data size: 193 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 46 Data size: 184 Basic stats: COMPLETE Column stats: NONE
                 File Output Operator
                   compressed: false
                   File Sink Vectorization:
                       className: VectorFileSinkOperator
                       native: false
-                  Statistics: Num rows: 48 Data size: 193 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 46 Data size: 184 Basic stats: COMPLETE Column stats: NONE
                   table:
                       input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                       output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
@@ -17084,7 +17084,7 @@ STAGE PLANS:
                         native: true
                         predicateExpression: FilterExprAndExpr(children: SelectColumnIsNotNull(col 0) -> boolean, SelectColumnIsNotNull(col 1) -> boolean) -> boolean
                     predicate: (key is not null and value is not null) (type: boolean)
-                    Statistics: Num rows: 22 Data size: 4136 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 20 Data size: 3760 Basic stats: COMPLETE Column stats: NONE
                     Map Join Operator
                       condition map:
                            Left Semi Join 0 to 1
@@ -17102,7 +17102,7 @@ STAGE PLANS:
                       outputColumnNames: _col0, _col1
                       input vertices:
                         1 Map 3
-                      Statistics: Num rows: 24 Data size: 4549 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 22 Data size: 4136 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: _col0 (type: int), _col1 (type: string)
                         sort order: ++
@@ -17112,7 +17112,7 @@ STAGE PLANS:
                             native: true
                             nativeConditionsMet: hive.vectorized.execution.reducesink.new.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true, No PTF TopN IS true, No DISTINCT columns IS true, BinarySortableSerDe for keys IS true, LazyBinarySerDe for values IS true
                             valueColumns: []
-                        Statistics: Num rows: 24 Data size: 4549 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 22 Data size: 4136 Basic stats: COMPLETE Column stats: NONE
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
@@ -17213,13 +17213,13 @@ STAGE PLANS:
                     className: VectorSelectOperator
                     native: true
                     projectedOutputColumns: [0, 1]
-                Statistics: Num rows: 24 Data size: 4549 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 22 Data size: 4136 Basic stats: COMPLETE Column stats: NONE
                 File Output Operator
                   compressed: false
                   File Sink Vectorization:
                       className: VectorFileSinkOperator
                       native: false
-                  Statistics: Num rows: 24 Data size: 4549 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 22 Data size: 4136 Basic stats: COMPLETE Column stats: NONE
                   table:
                       input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                       output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
@@ -17292,7 +17292,7 @@ STAGE PLANS:
                         native: true
                         predicateExpression: SelectColumnIsNotNull(col 0) -> boolean
                     predicate: key is not null (type: boolean)
-                    Statistics: Num rows: 22 Data size: 88 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 21 Data size: 84 Basic stats: COMPLETE Column stats: NONE
                     Map Join Operator
                       condition map:
                            Left Semi Join 0 to 1
@@ -17310,7 +17310,7 @@ STAGE PLANS:
                       input vertices:
                         1 Map 3
                         2 Map 4
-                      Statistics: Num rows: 48 Data size: 193 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 46 Data size: 184 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: _col0 (type: int)
                         sort order: +
@@ -17320,7 +17320,7 @@ STAGE PLANS:
                             native: true
                             nativeConditionsMet: hive.vectorized.execution.reducesink.new.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true, No PTF TopN IS true, No DISTINCT columns IS true, BinarySortableSerDe for keys IS true, LazyBinarySerDe for values IS true
                             valueColumns: []
-                        Statistics: Num rows: 48 Data size: 193 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 46 Data size: 184 Basic stats: COMPLETE Column stats: NONE
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
@@ -17483,13 +17483,13 @@ STAGE PLANS:
                     className: VectorSelectOperator
                     native: true
                     projectedOutputColumns: [0]
-                Statistics: Num rows: 48 Data size: 193 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 46 Data size: 184 Basic stats: COMPLETE Column stats: NONE
                 File Output Operator
                   compressed: false
                   File Sink Vectorization:
                       className: VectorFileSinkOperator
                       native: false
-                  Statistics: Num rows: 48 Data size: 193 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 46 Data size: 184 Basic stats: COMPLETE Column stats: NONE
                   table:
                       input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                       output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
@@ -18801,7 +18801,7 @@ STAGE PLANS:
                         native: true
                         predicateExpression: SelectColumnIsNotNull(col 0) -> boolean
                     predicate: key is not null (type: boolean)
-                    Statistics: Num rows: 22 Data size: 4136 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 21 Data size: 3948 Basic stats: COMPLETE Column stats: NONE
                     Map Join Operator
                       condition map:
                            Left Semi Join 0 to 1
@@ -18819,7 +18819,7 @@ STAGE PLANS:
                       outputColumnNames: _col0, _col1
                       input vertices:
                         1 Map 3
-                      Statistics: Num rows: 24 Data size: 4549 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 23 Data size: 4342 Basic stats: COMPLETE Column stats: NONE
                       Map Join Operator
                         condition map:
                              Left Outer Join 0 to 1
@@ -18837,7 +18837,7 @@ STAGE PLANS:
                         outputColumnNames: _col0
                         input vertices:
                           1 Map 4
-                        Statistics: Num rows: 26 Data size: 5003 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 25 Data size: 4776 Basic stats: COMPLETE Column stats: NONE
                         Reduce Output Operator
                           key expressions: _col0 (type: int)
                           sort order: +
@@ -18847,7 +18847,7 @@ STAGE PLANS:
                               native: true
                               nativeConditionsMet: hive.vectorized.execution.reducesink.new.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true, No PTF TopN IS true, No DISTINCT columns IS true, BinarySortableSerDe for keys IS true, LazyBinarySerDe for values IS true
                               valueColumns: []
-                          Statistics: Num rows: 26 Data size: 5003 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 25 Data size: 4776 Basic stats: COMPLETE Column stats: NONE
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
@@ -18982,13 +18982,13 @@ STAGE PLANS:
                     className: VectorSelectOperator
                     native: true
                     projectedOutputColumns: [0]
-                Statistics: Num rows: 26 Data size: 5003 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 25 Data size: 4776 Basic stats: COMPLETE Column stats: NONE
                 File Output Operator
                   compressed: false
                   File Sink Vectorization:
                       className: VectorFileSinkOperator
                       native: false
-                  Statistics: Num rows: 26 Data size: 5003 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 25 Data size: 4776 Basic stats: COMPLETE Column stats: NONE
                   table:
                       input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                       output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
@@ -19083,7 +19083,7 @@ STAGE PLANS:
                         native: true
                         predicateExpression: FilterExprAndExpr(children: FilterLongColGreaterLongScalar(col 0, val 100) -> boolean, SelectColumnIsNotNull(col 1) -> boolean) -> boolean
                     predicate: ((key > 100) and value is not null) (type: boolean)
-                    Statistics: Num rows: 22 Data size: 4136 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int), value (type: string)
                       outputColumnNames: _col0, _col1
@@ -19091,7 +19091,7 @@ STAGE PLANS:
                           className: VectorSelectOperator
                           native: true
                           projectedOutputColumns: [0, 1]
-                      Statistics: Num rows: 22 Data size: 4136 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
                       Map Join Operator
                         condition map:
                              Left Semi Join 0 to 1
@@ -19109,13 +19109,13 @@ STAGE PLANS:
                         outputColumnNames: _col0
                         input vertices:
                           1 Map 2
-                        Statistics: Num rows: 24 Data size: 4549 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 12 Data size: 2226 Basic stats: COMPLETE Column stats: NONE
                         File Output Operator
                           compressed: false
                           File Sink Vectorization:
                               className: VectorFileSinkOperator
                               native: false
-                          Statistics: Num rows: 24 Data size: 4549 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 12 Data size: 2226 Basic stats: COMPLETE Column stats: NONE
                           table:
                               input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                               output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat

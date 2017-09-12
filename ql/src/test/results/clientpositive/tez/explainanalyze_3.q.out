@@ -835,25 +835,25 @@ Stage-0
     Stage-1
       Reducer 2
       File Output Operator [FS_10]
-        Select Operator [SEL_9] (rows=550/480 width=189)
+        Select Operator [SEL_9] (rows=522/480 width=189)
           Output:["_col0","_col1","_col2"]
-          Merge Join Operator [MERGEJOIN_25] (rows=550/480 width=189)
+          Merge Join Operator [MERGEJOIN_25] (rows=522/480 width=189)
             Conds:RS_6._col0=RS_7._col0(Inner),Output:["_col0","_col1","_col3"]
           <-Map 1 [SIMPLE_EDGE]
             SHUFFLE [RS_6]
               PartitionCols:_col0
-              Select Operator [SEL_2] (rows=242/242 width=190)
+              Select Operator [SEL_2] (rows=230/242 width=190)
                 Output:["_col0","_col1"]
-                Filter Operator [FIL_13] (rows=242/242 width=190)
+                Filter Operator [FIL_13] (rows=230/242 width=190)
                   predicate:key is not null
                   TableScan [TS_0] (rows=242/242 width=190)
                     default@tab,a,Tbl:COMPLETE,Col:NONE,Output:["key","value"]
           <-Map 3 [SIMPLE_EDGE]
             SHUFFLE [RS_7]
               PartitionCols:_col0
-              Select Operator [SEL_5] (rows=500/500 width=189)
+              Select Operator [SEL_5] (rows=475/500 width=189)
                 Output:["_col0","_col1"]
-                Filter Operator [FIL_14] (rows=500/500 width=189)
+                Filter Operator [FIL_14] (rows=475/500 width=189)
                   predicate:key is not null
                   TableScan [TS_3] (rows=500/500 width=189)
                     default@tab_part,b,Tbl:COMPLETE,Col:NONE,Output:["key","value"]

@@ -249,16 +249,16 @@ STAGE PLANS:
                   Statistics: Num rows: 12288 Data size: 862450 Basic stats: COMPLETE Column stats: COMPLETE
                   Filter Operator
                     predicate: (cstring is not null and (cstring BETWEEN DynamicValue(RS_9_srcpart_date_key_min) AND DynamicValue(RS_9_srcpart_date_key_max) and in_bloom_filter(cstring, DynamicValue(RS_9_srcpart_date_key_bloom_filter))) and (cstring BETWEEN DynamicValue(RS_10_srcpart_small_key1_min) AND DynamicValue(RS_10_srcpart_small_key1_max) and in_bloom_filter(cstring, DynamicValue(RS_10_srcpart_small_key1_bloom_filter)))) (type: boolean)
-                    Statistics: Num rows: 12288 Data size: 862450 Basic stats: COMPLETE Column stats: COMPLETE
+                    Statistics: Num rows: 9174 Data size: 643900 Basic stats: COMPLETE Column stats: COMPLETE
                     Select Operator
                       expressions: cstring (type: string)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 12288 Data size: 862450 Basic stats: COMPLETE Column stats: COMPLETE
+                      Statistics: Num rows: 9174 Data size: 643900 Basic stats: COMPLETE Column stats: COMPLETE
                       Reduce Output Operator
                         key expressions: _col0 (type: string)
                         sort order: +
                         Map-reduce partition columns: _col0 (type: string)
-                        Statistics: Num rows: 12288 Data size: 862450 Basic stats: COMPLETE Column stats: COMPLETE
+                        Statistics: Num rows: 9174 Data size: 643900 Basic stats: COMPLETE Column stats: COMPLETE
             Execution mode: llap
             LLAP IO: all inputs
         Map 11 
@@ -302,16 +302,16 @@ STAGE PLANS:
                   Statistics: Num rows: 12288 Data size: 862450 Basic stats: COMPLETE Column stats: COMPLETE
                   Filter Operator
                     predicate: (cstring is not null and (cstring BETWEEN DynamicValue(RS_23_srcpart_date_key_min) AND DynamicValue(RS_23_srcpart_date_key_max) and in_bloom_filter(cstring, DynamicValue(RS_23_srcpart_date_key_bloom_filter))) and (cstring BETWEEN DynamicValue(RS_24_srcpart_small_key1_min) AND DynamicValue(RS_24_srcpart_small_key1_max) and in_bloom_filter(cstring, DynamicValue(RS_24_srcpart_small_key1_bloom_filter)))) (type: boolean)
-                    Statistics: Num rows: 12288 Data size: 862450 Basic stats: COMPLETE Column stats: COMPLETE
+                    Statistics: Num rows: 9174 Data size: 643900 Basic stats: COMPLETE Column stats: COMPLETE
                     Select Operator
                       expressions: cstring (type: string)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 12288 Data size: 862450 Basic stats: COMPLETE Column stats: COMPLETE
+                      Statistics: Num rows: 9174 Data size: 643900 Basic stats: COMPLETE Column stats: COMPLETE
                       Reduce Output Operator
                         key expressions: _col0 (type: string)
                         sort order: +
                         Map-reduce partition columns: _col0 (type: string)
-                        Statistics: Num rows: 12288 Data size: 862450 Basic stats: COMPLETE Column stats: COMPLETE
+                        Statistics: Num rows: 9174 Data size: 643900 Basic stats: COMPLETE Column stats: COMPLETE
             Execution mode: llap
             LLAP IO: all inputs
         Map 6 
@@ -388,10 +388,10 @@ STAGE PLANS:
                   0 _col0 (type: string)
                   1 _col0 (type: string)
                   2 _col0 (type: string)
-                Statistics: Num rows: 27033 Data size: 1897390 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 20182 Data size: 1416580 Basic stats: COMPLETE Column stats: NONE
                 Reduce Output Operator
                   sort order: 
-                  Statistics: Num rows: 27033 Data size: 1897390 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 20182 Data size: 1416580 Basic stats: COMPLETE Column stats: NONE
         Reducer 3 
             Execution mode: llap
             Reduce Operator Tree:
@@ -401,7 +401,7 @@ STAGE PLANS:
                 keys:
                   0 
                   1 
-                Statistics: Num rows: 730783089 Data size: 103315070829 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 407313124 Data size: 57586148244 Basic stats: COMPLETE Column stats: NONE
                 Group By Operator
                   aggregations: count()
                   mode: hash
@@ -465,10 +465,10 @@ STAGE PLANS:
                   0 _col0 (type: string)
                   1 _col0 (type: string)
                   2 _col0 (type: string)
-                Statistics: Num rows: 27033 Data size: 1897390 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 20182 Data size: 1416580 Basic stats: COMPLETE Column stats: NONE
                 Reduce Output Operator
                   sort order: 
-                  Statistics: Num rows: 27033 Data size: 1897390 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 20182 Data size: 1416580 Basic stats: COMPLETE Column stats: NONE
         Reducer 9 
             Execution mode: llap
             Reduce Operator Tree:

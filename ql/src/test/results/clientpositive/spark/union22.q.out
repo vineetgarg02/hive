@@ -90,11 +90,11 @@ STAGE PLANS:
                   Filter Operator
                     isSamplingPred: false
                     predicate: ((UDFToDouble(k0) > 50.0) and (UDFToDouble(k1) > 20.0)) (type: boolean)
-                    Statistics: Num rows: 166 Data size: 5622 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 55 Data size: 1862 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: k1 (type: string), k3 (type: string), k4 (type: string)
                       outputColumnNames: _col0, _col1, _col2
-                      Statistics: Num rows: 166 Data size: 5622 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 55 Data size: 1862 Basic stats: COMPLETE Column stats: NONE
                       Spark HashTable Sink Operator
                         filter mappings:
                           0 [1, 1]

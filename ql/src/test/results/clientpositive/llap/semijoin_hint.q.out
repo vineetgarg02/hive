@@ -415,16 +415,16 @@ STAGE PLANS:
                   Statistics: Num rows: 12288 Data size: 862450 Basic stats: COMPLETE Column stats: COMPLETE
                   Filter Operator
                     predicate: cstring is not null (type: boolean)
-                    Statistics: Num rows: 12288 Data size: 862450 Basic stats: COMPLETE Column stats: COMPLETE
+                    Statistics: Num rows: 9174 Data size: 643900 Basic stats: COMPLETE Column stats: COMPLETE
                     Select Operator
                       expressions: cstring (type: string)
                       outputColumnNames: cstring
-                      Statistics: Num rows: 12288 Data size: 862450 Basic stats: COMPLETE Column stats: COMPLETE
+                      Statistics: Num rows: 9174 Data size: 643900 Basic stats: COMPLETE Column stats: COMPLETE
                       Reduce Output Operator
                         key expressions: cstring (type: string)
                         sort order: +
                         Map-reduce partition columns: cstring (type: string)
-                        Statistics: Num rows: 12288 Data size: 862450 Basic stats: COMPLETE Column stats: COMPLETE
+                        Statistics: Num rows: 9174 Data size: 643900 Basic stats: COMPLETE Column stats: COMPLETE
             Execution mode: llap
             LLAP IO: all inputs
         Map 6 
@@ -579,20 +579,20 @@ STAGE PLANS:
                   Statistics: Num rows: 12288 Data size: 862450 Basic stats: COMPLETE Column stats: COMPLETE
                   Filter Operator
                     predicate: cstring is not null (type: boolean)
-                    Statistics: Num rows: 12288 Data size: 862450 Basic stats: COMPLETE Column stats: COMPLETE
+                    Statistics: Num rows: 9174 Data size: 643900 Basic stats: COMPLETE Column stats: COMPLETE
                     Select Operator
                       expressions: cstring (type: string)
                       outputColumnNames: cstring
-                      Statistics: Num rows: 12288 Data size: 862450 Basic stats: COMPLETE Column stats: COMPLETE
+                      Statistics: Num rows: 9174 Data size: 643900 Basic stats: COMPLETE Column stats: COMPLETE
                       Reduce Output Operator
                         key expressions: cstring (type: string)
                         sort order: +
                         Map-reduce partition columns: cstring (type: string)
-                        Statistics: Num rows: 12288 Data size: 862450 Basic stats: COMPLETE Column stats: COMPLETE
+                        Statistics: Num rows: 9174 Data size: 643900 Basic stats: COMPLETE Column stats: COMPLETE
                       Select Operator
                         expressions: cstring (type: string)
                         outputColumnNames: _col0
-                        Statistics: Num rows: 12288 Data size: 862450 Basic stats: COMPLETE Column stats: COMPLETE
+                        Statistics: Num rows: 9174 Data size: 643900 Basic stats: COMPLETE Column stats: COMPLETE
                         Group By Operator
                           aggregations: min(_col0), max(_col0), bloom_filter(_col0, expectedEntries=3000)
                           mode: hash
@@ -1413,16 +1413,16 @@ STAGE PLANS:
                   Statistics: Num rows: 12288 Data size: 862450 Basic stats: COMPLETE Column stats: COMPLETE
                   Filter Operator
                     predicate: cstring is not null (type: boolean)
-                    Statistics: Num rows: 12288 Data size: 862450 Basic stats: COMPLETE Column stats: COMPLETE
+                    Statistics: Num rows: 9174 Data size: 643900 Basic stats: COMPLETE Column stats: COMPLETE
                     Select Operator
                       expressions: cstring (type: string)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 12288 Data size: 862450 Basic stats: COMPLETE Column stats: COMPLETE
+                      Statistics: Num rows: 9174 Data size: 643900 Basic stats: COMPLETE Column stats: COMPLETE
                       Reduce Output Operator
                         key expressions: _col0 (type: string)
                         sort order: +
                         Map-reduce partition columns: _col0 (type: string)
-                        Statistics: Num rows: 12288 Data size: 862450 Basic stats: COMPLETE Column stats: COMPLETE
+                        Statistics: Num rows: 9174 Data size: 643900 Basic stats: COMPLETE Column stats: COMPLETE
             Execution mode: llap
             LLAP IO: all inputs
         Map 6 
@@ -1575,20 +1575,20 @@ STAGE PLANS:
                   Statistics: Num rows: 12288 Data size: 862450 Basic stats: COMPLETE Column stats: COMPLETE
                   Filter Operator
                     predicate: cstring is not null (type: boolean)
-                    Statistics: Num rows: 12288 Data size: 862450 Basic stats: COMPLETE Column stats: COMPLETE
+                    Statistics: Num rows: 9174 Data size: 643900 Basic stats: COMPLETE Column stats: COMPLETE
                     Select Operator
                       expressions: cstring (type: string)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 12288 Data size: 862450 Basic stats: COMPLETE Column stats: COMPLETE
+                      Statistics: Num rows: 9174 Data size: 643900 Basic stats: COMPLETE Column stats: COMPLETE
                       Reduce Output Operator
                         key expressions: _col0 (type: string)
                         sort order: +
                         Map-reduce partition columns: _col0 (type: string)
-                        Statistics: Num rows: 12288 Data size: 862450 Basic stats: COMPLETE Column stats: COMPLETE
+                        Statistics: Num rows: 9174 Data size: 643900 Basic stats: COMPLETE Column stats: COMPLETE
                       Select Operator
                         expressions: _col0 (type: string)
                         outputColumnNames: _col0
-                        Statistics: Num rows: 12288 Data size: 862450 Basic stats: COMPLETE Column stats: COMPLETE
+                        Statistics: Num rows: 9174 Data size: 643900 Basic stats: COMPLETE Column stats: COMPLETE
                         Group By Operator
                           aggregations: min(_col0), max(_col0), bloom_filter(_col0, expectedEntries=3000)
                           mode: hash
@@ -2417,12 +2417,12 @@ STAGE PLANS:
                   Statistics: Num rows: 12288 Data size: 862450 Basic stats: COMPLETE Column stats: COMPLETE
                   Filter Operator
                     predicate: cstring is not null (type: boolean)
-                    Statistics: Num rows: 12288 Data size: 862450 Basic stats: COMPLETE Column stats: COMPLETE
+                    Statistics: Num rows: 9174 Data size: 643900 Basic stats: COMPLETE Column stats: COMPLETE
                     Reduce Output Operator
                       key expressions: cstring (type: string)
                       sort order: +
                       Map-reduce partition columns: cstring (type: string)
-                      Statistics: Num rows: 12288 Data size: 862450 Basic stats: COMPLETE Column stats: COMPLETE
+                      Statistics: Num rows: 9174 Data size: 643900 Basic stats: COMPLETE Column stats: COMPLETE
             Execution mode: llap
             LLAP IO: all inputs
         Reducer 2 
@@ -2553,16 +2553,16 @@ STAGE PLANS:
                   Statistics: Num rows: 12288 Data size: 862450 Basic stats: COMPLETE Column stats: COMPLETE
                   Filter Operator
                     predicate: cstring is not null (type: boolean)
-                    Statistics: Num rows: 12288 Data size: 862450 Basic stats: COMPLETE Column stats: COMPLETE
+                    Statistics: Num rows: 9174 Data size: 643900 Basic stats: COMPLETE Column stats: COMPLETE
                     Reduce Output Operator
                       key expressions: cstring (type: string)
                       sort order: +
                       Map-reduce partition columns: cstring (type: string)
-                      Statistics: Num rows: 12288 Data size: 862450 Basic stats: COMPLETE Column stats: COMPLETE
+                      Statistics: Num rows: 9174 Data size: 643900 Basic stats: COMPLETE Column stats: COMPLETE
                     Select Operator
                       expressions: cstring (type: string)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 12288 Data size: 862450 Basic stats: COMPLETE Column stats: COMPLETE
+                      Statistics: Num rows: 9174 Data size: 643900 Basic stats: COMPLETE Column stats: COMPLETE
                       Group By Operator
                         aggregations: min(_col0), max(_col0), bloom_filter(_col0, expectedEntries=3000)
                         mode: hash

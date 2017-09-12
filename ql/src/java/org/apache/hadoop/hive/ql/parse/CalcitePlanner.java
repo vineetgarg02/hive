@@ -709,7 +709,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
     boolean isSupportedRoot = root == HiveParser.TOK_QUERY || root == HiveParser.TOK_EXPLAIN
         || qb.isCTAS() || qb.isMaterializedView();
     // Queries without a source table currently are not supported by CBO
-    boolean isSupportedType = (qb.getIsQuery() && !qb.containsQueryWithoutSourceTable())
+    boolean isSupportedType = (qb.getIsQuery())
         || qb.isCTAS() || qb.isMaterializedView() || cboCtx.type == PreCboCtx.Type.INSERT
         || cboCtx.type == PreCboCtx.Type.MULTI_INSERT;
     boolean noBadTokens = HiveCalciteUtil.validateASTForUnsupportedTokens(ast);

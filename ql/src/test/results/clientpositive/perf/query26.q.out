@@ -86,9 +86,9 @@ Stage-0
                         <-Map 10 [SIMPLE_EDGE]
                           SHUFFLE [RS_22]
                             PartitionCols:_col0
-                            Select Operator [SEL_11] (rows=1 width=1179)
+                            Select Operator [SEL_11] (rows=2300 width=1179)
                               Output:["_col0"]
-                              Filter Operator [FIL_53] (rows=1 width=1179)
+                              Filter Operator [FIL_53] (rows=2300 width=1179)
                                 predicate:(((p_channel_email = 'N') or (p_channel_event = 'N')) and p_promo_sk is not null)
                                 TableScan [TS_9] (rows=2300 width=1179)
                                   default@promotion,promotion,Tbl:COMPLETE,Col:NONE,Output:["p_promo_sk","p_channel_email","p_channel_event"]

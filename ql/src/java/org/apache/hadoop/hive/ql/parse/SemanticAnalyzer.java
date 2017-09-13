@@ -10724,7 +10724,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     opParseCtx.get(operator).setRowResolver(newRR);
   }
 
-  private Table getDummyTable() throws SemanticException {
+  public Table getDummyTable() throws SemanticException {
     Path dummyPath = createDummyFile();
     Table desc = new Table(DUMMY_DATABASE, DUMMY_TABLE);
     desc.getTTable().getSd().setLocation(dummyPath.toString());

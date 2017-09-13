@@ -1671,7 +1671,7 @@ public class StatsRulesProcFactory {
           // evaluate filter expression and update statistics
           try {
             newNumRows = evaluateExpression(wcStats, pred,
-                aspCtx, jop.getSchema().getColumnNames(), jop, 0);
+                aspCtx, jop.getSchema().getColumnNames(), jop, wcStats.getNumRows());
           } catch (CloneNotSupportedException e) {
             throw new SemanticException(ErrorMsg.STATISTICS_CLONING_FAILED.getMsg());
           }

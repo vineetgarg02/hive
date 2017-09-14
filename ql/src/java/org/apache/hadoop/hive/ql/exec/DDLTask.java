@@ -79,6 +79,7 @@ import org.apache.hadoop.hive.metastore.api.EnvironmentContext;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.GetOpenTxnsInfoResponse;
 import org.apache.hadoop.hive.metastore.api.Index;
+import org.apache.hadoop.hive.metastore.api.InvalidObjectException;
 import org.apache.hadoop.hive.metastore.api.InvalidOperationException;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.metastore.api.NoSuchObjectException;
@@ -150,6 +151,7 @@ import org.apache.hadoop.hive.ql.parse.ExplainConfiguration.AnalyzeState;
 import org.apache.hadoop.hive.ql.parse.PreInsertTableDesc;
 import org.apache.hadoop.hive.ql.parse.ReplicationSpec;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
+import org.apache.hadoop.hive.ql.parse.repl.dump.Utils;
 import org.apache.hadoop.hive.ql.plan.AbortTxnsDesc;
 import org.apache.hadoop.hive.ql.plan.AddPartitionDesc;
 import org.apache.hadoop.hive.ql.plan.AlterDatabaseDesc;
@@ -1157,6 +1159,12 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
               tableName,
               FileUtils.makePartName(new ArrayList(oldPartSpec.keySet()), new ArrayList(oldPartSpec.values())));
       return 0;
+    }
+
+    String names[] = Utilities.getDbTableName(tableName);
+    if (Utils.isBootstrapDumpInProgress(db, names[0])) {
+      LOG.error("DDLTask: Rename Partition not allowed as bootstrap dump in progress");
+      throw new HiveException("Rename Partition: Not allowed as bootstrap dump in progress");
     }
 
     Table tbl = db.getTable(tableName);
@@ -3597,6 +3605,14 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
    *           Throws this exception if an unexpected error occurs.
    */
   private int alterTable(Hive db, AlterTableDesc alterTbl) throws HiveException {
+    if (alterTbl.getOp() == AlterTableDesc.AlterTableTypes.RENAME) {
+      String names[] = Utilities.getDbTableName(alterTbl.getOldName());
+      if (Utils.isBootstrapDumpInProgress(db, names[0])) {
+        LOG.error("DDLTask: Rename Table not allowed as bootstrap dump in progress");
+        throw new HiveException("Rename Table: Not allowed as bootstrap dump in progress");
+      }
+    }
+
     // alter the table
     Table tbl = db.getTable(alterTbl.getOldName());
 
@@ -4073,13 +4089,22 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
            throws SemanticException, HiveException {
     try {
       // This is either an alter table add foreign key or add primary key command.
-      if (alterTbl.getForeignKeyCols() != null
-              && !alterTbl.getForeignKeyCols().isEmpty()) {
-        db.addForeignKey(alterTbl.getForeignKeyCols());
-      }
-      if (alterTbl.getPrimaryKeyCols() != null
-              && !alterTbl.getPrimaryKeyCols().isEmpty()) {
+      if (alterTbl.getPrimaryKeyCols() != null && !alterTbl.getPrimaryKeyCols().isEmpty()) {
         db.addPrimaryKey(alterTbl.getPrimaryKeyCols());
+      }
+      if (alterTbl.getForeignKeyCols() != null && !alterTbl.getForeignKeyCols().isEmpty()) {
+        try {
+          db.addForeignKey(alterTbl.getForeignKeyCols());
+        } catch (HiveException e) {
+          if (e.getCause() instanceof InvalidObjectException
+              && alterTbl.getReplicationSpec()!= null && alterTbl.getReplicationSpec().isInReplicationScope()) {
+            // During repl load, NoSuchObjectException in foreign key shall
+            // ignore as the foreign table may not be part of the replication
+            LOG.debug(e.getMessage());
+          } else {
+            throw e;
+          }
+        }
       }
       if (alterTbl.getUniqueConstraintCols() != null
               && !alterTbl.getUniqueConstraintCols().isEmpty()) {
@@ -4173,7 +4198,7 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
 
   private void dropTable(Hive db, Table tbl, DropTableDesc dropTbl) throws HiveException {
     // This is a true DROP TABLE
-    if (tbl != null) {
+    if (tbl != null && dropTbl.getExpectedType() != null) {
       if (tbl.isView()) {
         if (!dropTbl.getExpectView()) {
           if (dropTbl.getIfExists()) {

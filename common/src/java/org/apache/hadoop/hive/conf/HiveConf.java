@@ -86,7 +86,6 @@ public class HiveConf extends Configuration {
 
   private static byte[] confVarByteArray = null;
 
-
   private static final Map<String, ConfVars> vars = new HashMap<String, ConfVars>();
   private static final Map<String, ConfVars> metaConfs = new HashMap<String, ConfVars>();
   private final List<String> restrictList = new ArrayList<String>();
@@ -450,6 +449,12 @@ public class HiveConf extends Configuration {
             "lead to an task increment that would cross the above limit"),
     REPL_PARTITIONS_DUMP_PARALLELISM("hive.repl.partitions.dump.parallelism",5,
         "Number of threads that will be used to dump partition data information during repl dump."),
+    REPL_DUMPDIR_CLEAN_FREQ("hive.repl.dumpdir.clean.freq", "0s",
+        new TimeValidator(TimeUnit.SECONDS),
+        "Frequency at which timer task runs to purge expired dump dirs."),
+    REPL_DUMPDIR_TTL("hive.repl.dumpdir.ttl", "7d",
+        new TimeValidator(TimeUnit.DAYS),
+        "TTL of dump dirs before cleanup."),
     LOCALSCRATCHDIR("hive.exec.local.scratchdir",
         "${system:java.io.tmpdir}" + File.separator + "${system:user.name}",
         "Local scratch space for Hive jobs"),
@@ -779,6 +784,13 @@ public class HiveConf extends Configuration {
     METASTORE_TRANSACTIONAL_EVENT_LISTENERS("hive.metastore.transactional.event.listeners", "",
         "A comma separated list of Java classes that implement the org.apache.hadoop.hive.metastore.MetaStoreEventListener" +
             " interface. Both the metastore event and corresponding listener method will be invoked in the same JDO transaction."),
+    NOTIFICATION_SEQUENCE_LOCK_MAX_RETRIES("hive.notification.sequence.lock.max.retries", 5,
+        "Number of retries required to acquire a lock when getting the next notification sequential ID for entries "
+            + "in the NOTIFICATION_LOG table."),
+    NOTIFICATION_SEQUENCE_LOCK_RETRY_SLEEP_INTERVAL("hive.notification.sequence.lock.retry.sleep.interval", 500,
+        new TimeValidator(TimeUnit.MILLISECONDS),
+        "Sleep interval between retries to acquire a notification lock as described part of property "
+            + NOTIFICATION_SEQUENCE_LOCK_MAX_RETRIES.name()),
     METASTORE_EVENT_DB_LISTENER_TTL("hive.metastore.event.db.listener.timetolive", "86400s",
         new TimeValidator(TimeUnit.SECONDS),
         "time after which events will be removed from the database listener queue"),
@@ -3267,6 +3279,12 @@ public class HiveConf extends Configuration {
       "llap.daemon.communicator.num.threads"),
     LLAP_DAEMON_DOWNLOAD_PERMANENT_FNS("hive.llap.daemon.download.permanent.fns", false,
         "Whether LLAP daemon should localize the resources for permanent UDFs."),
+    LLAP_TASK_SCHEDULER_AM_REGISTRY_NAME("hive.llap.task.scheduler.am.registry", "llap",
+      "AM registry name for LLAP task scheduler plugin to register with."),
+    LLAP_TASK_SCHEDULER_AM_REGISTRY_PRINCIPAL("hive.llap.task.scheduler.am.registry.principal", "",
+      "The name of the principal used to access ZK AM registry securely."),
+    LLAP_TASK_SCHEDULER_AM_REGISTRY_KEYTAB_FILE("hive.llap.task.scheduler.am.registry.keytab.file", "",
+      "The path to the Kerberos keytab file used to access ZK AM registry securely."),
     LLAP_TASK_SCHEDULER_NODE_REENABLE_MIN_TIMEOUT_MS(
       "hive.llap.task.scheduler.node.reenable.min.timeout.ms", "200ms",
       new TimeValidator(TimeUnit.MILLISECONDS),

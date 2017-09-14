@@ -67,6 +67,8 @@ import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.hive.metastore.model.MConstraint;
 import org.apache.hadoop.hive.metastore.model.MDatabase;
+import org.apache.hadoop.hive.metastore.model.MNotificationLog;
+import org.apache.hadoop.hive.metastore.model.MNotificationNextId;
 import org.apache.hadoop.hive.metastore.model.MPartitionColumnStatistics;
 import org.apache.hadoop.hive.metastore.model.MTableColumnStatistics;
 import org.apache.hadoop.hive.metastore.parser.ExpressionTree;
@@ -76,7 +78,6 @@ import org.apache.hadoop.hive.metastore.parser.ExpressionTree.LogicalOperator;
 import org.apache.hadoop.hive.metastore.parser.ExpressionTree.Operator;
 import org.apache.hadoop.hive.metastore.parser.ExpressionTree.TreeNode;
 import org.apache.hadoop.hive.metastore.parser.ExpressionTree.TreeVisitor;
-import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hive.common.util.BloomFilter;
 import org.datanucleus.store.rdbms.query.ForwardQueryResult;
 import org.slf4j.Logger;
@@ -137,7 +138,7 @@ class MetaStoreDirectSql {
     this.schema = schema;
     DatabaseProduct dbType = null;
     try {
-      dbType = DatabaseProduct.determineDatabaseProduct(getProductName());
+      dbType = DatabaseProduct.determineDatabaseProduct(getProductName(pm));
     } catch (SQLException e) {
       LOG.warn("Cannot determine database product; assuming OTHER", e);
       dbType = DatabaseProduct.OTHER;
@@ -191,7 +192,7 @@ class MetaStoreDirectSql {
     this(pm, conf, "");
   }
 
-  private String getProductName() {
+  static String getProductName(PersistenceManager pm) {
     JDOConnection jdoConn = pm.getDataStoreConnection();
     try {
       return ((Connection)jdoConn.getNativeConnection()).getMetaData().getDatabaseProductName();
@@ -222,6 +223,17 @@ class MetaStoreDirectSql {
 
       partColumnQuery = pm.newQuery(MPartitionColumnStatistics.class, "dbName == ''");
       partColumnQuery.execute();
+
+      /*
+        these queries for the notification related tables have to be executed so
+        that the tables are created. This was not required earlier because we were
+        interacting with these tables via DataNucleus so it would create them if
+        they did not exist (mostly used in test, schematool should be used for production).
+        however this has been changed and we used direct SQL
+        queries via DataNucleus to interact with them now.
+       */
+      pm.newQuery(MNotificationLog.class, "dbName == ''").execute();
+      pm.newQuery(MNotificationNextId.class, "nextEventId < -1").execute();
 
       return true;
     } catch (Exception ex) {
@@ -1112,11 +1124,11 @@ class MetaStoreDirectSql {
       Invalid;
 
       static FilterType fromType(String colTypeStr) {
-        if (colTypeStr.equals(serdeConstants.STRING_TYPE_NAME)) {
+        if (colTypeStr.equals(ColumnType.STRING_TYPE_NAME)) {
           return FilterType.String;
-        } else if (colTypeStr.equals(serdeConstants.DATE_TYPE_NAME)) {
+        } else if (colTypeStr.equals(ColumnType.DATE_TYPE_NAME)) {
           return FilterType.Date;
-        } else if (serdeConstants.IntegralTypes.contains(colTypeStr)) {
+        } else if (ColumnType.IntegralTypes.contains(colTypeStr)) {
           return FilterType.Integral;
         }
         return FilterType.Invalid;

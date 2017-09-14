@@ -18,13 +18,19 @@
 package org.apache.hadoop.hive.ql.exec.repl;
 
 import com.google.common.primitives.Ints;
+
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.metastore.api.Function;
+import org.apache.hadoop.hive.metastore.api.NoSuchObjectException;
 import org.apache.hadoop.hive.metastore.api.NotificationEvent;
+import org.apache.hadoop.hive.metastore.api.SQLForeignKey;
+import org.apache.hadoop.hive.metastore.api.SQLNotNullConstraint;
+import org.apache.hadoop.hive.metastore.api.SQLPrimaryKey;
+import org.apache.hadoop.hive.metastore.api.SQLUniqueConstraint;
 import org.apache.hadoop.hive.metastore.messaging.EventUtils;
 import org.apache.hadoop.hive.metastore.messaging.MessageFactory;
 import org.apache.hadoop.hive.metastore.messaging.event.filters.AndFilter;
@@ -48,11 +54,12 @@ import org.apache.hadoop.hive.ql.parse.repl.dump.TableExport;
 import org.apache.hadoop.hive.ql.parse.repl.dump.Utils;
 import org.apache.hadoop.hive.ql.parse.repl.dump.events.EventHandler;
 import org.apache.hadoop.hive.ql.parse.repl.dump.events.EventHandlerFactory;
+import org.apache.hadoop.hive.ql.parse.repl.dump.io.ConstraintsSerializer;
 import org.apache.hadoop.hive.ql.parse.repl.dump.io.FunctionSerializer;
 import org.apache.hadoop.hive.ql.parse.repl.dump.io.JsonWriter;
-import org.apache.hadoop.hive.ql.parse.repl.load.DumpMetaData;
 import org.apache.hadoop.hive.ql.parse.repl.dump.log.BootstrapDumpLogger;
 import org.apache.hadoop.hive.ql.parse.repl.dump.log.IncrementalDumpLogger;
+import org.apache.hadoop.hive.ql.parse.repl.load.DumpMetaData;
 import org.apache.hadoop.hive.ql.plan.api.StageType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,10 +67,12 @@ import org.slf4j.LoggerFactory;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 public class ReplDumpTask extends Task<ReplDumpWork> implements Serializable {
   private static final String dumpSchema = "dump_dir,last_repl_id#string,string";
   private static final String FUNCTIONS_ROOT_DIR_NAME = "_functions";
+  private static final String CONSTRAINTS_ROOT_DIR_NAME = "_constraints";
   private static final String FUNCTION_METADATA_FILE_NAME = "_metadata";
 
   private Logger LOG = LoggerFactory.getLogger(ReplDumpTask.class);
@@ -176,9 +185,9 @@ public class ReplDumpTask extends Task<ReplDumpWork> implements Serializable {
 
   private Long bootStrapDump(Path dumpRoot, DumpMetaData dmd, Path cmRoot) throws Exception {
     // bootstrap case
-    Long bootDumpBeginReplId = getHive().getMSC().getCurrentNotificationEventId().getEventId();
-
-    for (String dbName : Utils.matchesDb(getHive(), work.dbNameOrPattern)) {
+    Hive hiveDb = getHive();
+    Long bootDumpBeginReplId = hiveDb.getMSC().getCurrentNotificationEventId().getEventId();
+    for (String dbName : Utils.matchesDb(hiveDb, work.dbNameOrPattern)) {
       LOG.debug("ReplicationSemanticAnalyzer: analyzeReplDump dumping db: " + dbName);
       replLogger = new BootstrapDumpLogger(dbName, dumpRoot.toString(),
               Utils.getAllTables(getHive(), dbName).size(),
@@ -186,14 +195,18 @@ public class ReplDumpTask extends Task<ReplDumpWork> implements Serializable {
       replLogger.startLog();
       Path dbRoot = dumpDbMetadata(dbName, dumpRoot);
       dumpFunctionMetadata(dbName, dumpRoot);
-      for (String tblName : Utils.matchesTbl(getHive(), dbName, work.tableNameOrPattern)) {
+
+      String uniqueKey = Utils.setDbBootstrapDumpState(hiveDb, dbName);
+      for (String tblName : Utils.matchesTbl(hiveDb, dbName, work.tableNameOrPattern)) {
         LOG.debug(
             "analyzeReplDump dumping table: " + tblName + " to db root " + dbRoot.toUri());
         dumpTable(dbName, tblName, dbRoot);
+        dumpConstraintMetadata(dbName, tblName, dbRoot);
       }
+      Utils.resetDbBootstrapDumpState(hiveDb, dbName, uniqueKey);
       replLogger.endLog(bootDumpBeginReplId.toString());
     }
-    Long bootDumpEndReplId = getHive().getMSC().getCurrentNotificationEventId().getEventId();
+    Long bootDumpEndReplId = hiveDb.getMSC().getCurrentNotificationEventId().getEventId();
     LOG.info("Bootstrap object dump phase took from {} to {}", bootDumpBeginReplId,
         bootDumpEndReplId);
 
@@ -204,7 +217,7 @@ public class ReplDumpTask extends Task<ReplDumpWork> implements Serializable {
     IMetaStoreClient.NotificationFilter evFilter =
         new DatabaseAndTableFilter(work.dbNameOrPattern, work.tableNameOrPattern);
     EventUtils.MSClientNotificationFetcher evFetcher =
-        new EventUtils.MSClientNotificationFetcher(getHive().getMSC());
+        new EventUtils.MSClientNotificationFetcher(hiveDb.getMSC());
     EventUtils.NotificationEventIterator evIter = new EventUtils.NotificationEventIterator(
         evFetcher, bootDumpBeginReplId,
         Ints.checkedCast(bootDumpEndReplId - bootDumpBeginReplId) + 1,
@@ -223,7 +236,8 @@ public class ReplDumpTask extends Task<ReplDumpWork> implements Serializable {
     dmd.write();
 
     // Set the correct last repl id to return to the user
-    return bootDumpEndReplId;
+    // Currently returned bootDumpBeginReplId as we don't consolidate the events after bootstrap
+    return bootDumpBeginReplId;
   }
 
   private Path dumpDbMetadata(String dbName, Path dumpRoot) throws Exception {
@@ -270,7 +284,7 @@ public class ReplDumpTask extends Task<ReplDumpWork> implements Serializable {
         return ReplDumpWork.testInjectDumpDir;
       }
     } else {
-      return String.valueOf(System.currentTimeMillis());
+      return UUID.randomUUID().toString();
       // TODO: time good enough for now - we'll likely improve this.
       // We may also work in something the equivalent of pid, thrid and move to nanos to ensure
       // uniqueness.
@@ -293,6 +307,30 @@ public class ReplDumpTask extends Task<ReplDumpWork> implements Serializable {
         serializer.writeTo(jsonWriter, tuple.replicationSpec);
       }
       replLogger.functionLog(functionName);
+    }
+  }
+
+  private void dumpConstraintMetadata(String dbName, String tblName, Path dbRoot) throws Exception {
+    try {
+      Path constraintsRoot = new Path(dbRoot, CONSTRAINTS_ROOT_DIR_NAME);
+      Path constraintsFile = new Path(constraintsRoot, tblName);
+      Hive db = getHive();
+      List<SQLPrimaryKey> pks = db.getPrimaryKeyList(dbName, tblName);
+      List<SQLForeignKey> fks = db.getForeignKeyList(dbName, tblName);
+      List<SQLUniqueConstraint> uks = db.getUniqueConstraintList(dbName, tblName);
+      List<SQLNotNullConstraint> nns = db.getNotNullConstraintList(dbName, tblName);
+      if ((pks != null && !pks.isEmpty()) || (fks != null && !fks.isEmpty()) || (uks != null && !uks.isEmpty())
+          || (nns != null && !nns.isEmpty())) {
+        try (JsonWriter jsonWriter =
+            new JsonWriter(constraintsFile.getFileSystem(conf), constraintsFile)) {
+          ConstraintsSerializer serializer = new ConstraintsSerializer(pks, fks, uks, nns, conf);
+          serializer.writeTo(jsonWriter, null);
+        }
+      }
+    } catch (NoSuchObjectException e) {
+      // Bootstrap constraint dump shouldn't fail if the table is dropped/renamed while dumping it.
+      // Just log a debug message and skip it.
+      LOG.debug(e.getMessage());
     }
   }
 

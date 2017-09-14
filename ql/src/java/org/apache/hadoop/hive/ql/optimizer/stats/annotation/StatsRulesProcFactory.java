@@ -354,7 +354,6 @@ public class StatsRulesProcFactory {
         } else if (udf instanceof GenericUDFOPOr) {
           // for OR condition independently compute and update stats.
           for (ExprNodeDesc child : genFunc.getChildren()) {
-            // early exit if OR evaluation yields more rows than input rows
               newNumRows = StatsUtils.safeAdd(
                   evaluateChildExpr(stats, child, aspCtx, neededCols, op, currNumRows),
                   newNumRows);

@@ -938,16 +938,40 @@ public class CalcitePlanner extends SemanticAnalyzer {
     }
   }
 
-  ASTNode fixSelectWithDummyTable(ASTNode ast) throws SemanticException{
-    if(ast.getChildCount() > 0 && ast.getChild(0).getType() == HiveParser.TOK_FROM) {
-      ASTNode fromAST = (ASTNode)ast.getChild(0);
-      String[] qualTableName = getQualifiedTableName((ASTNode)(fromAST.getChild(0).getChild(0)));
-      if(qualTableName.length == 2 && qualTableName[0] == "_dummy_database" && qualTableName[1] == "_dummy_table"){
-        ast.deleteChild(0);
-        return ast;
-      }
+  // method to remove references to "DUMMY_TABLE"
+  void removeDummyTable(ASTNode ast) throws SemanticException {
+    switch(ast.getType()) {
+      case HiveParser.TOK_QUERY:
+        if(ast.getChildCount() > 0 && ast.getChild(0).getType() == HiveParser.TOK_FROM) {
+          ASTNode fromAST = (ASTNode)ast.getChild(0);
+          ASTNode fromChild = (ASTNode)fromAST.getChild(0);
+          if(fromChild.getType() == HiveParser.TOK_TABREF) {
+            String[] qualTableName = getQualifiedTableName((ASTNode)(fromChild.getChild(0)));
+
+            // delete FROM
+            if(qualTableName.length == 2 && qualTableName[0] == "_dummy_database" && qualTableName[1] == "_dummy_table"){
+              ast.deleteChild(0);
+            }
+            // we do not need to go deep since we can not hit subquery further
+            return;
+          }
+          else {
+            // This should be subquery
+            assert(fromChild.getType() == HiveParser.TOK_SUBQUERY);
+            if(fromChild.getChildCount() > 0) {
+              ASTNode subqueryChild = (ASTNode)fromChild.getChild(0);
+              removeDummyTable(subqueryChild);
+            }
+          }
+        }
+        break;
+
+      default:
+        for(int i=0; i<ast.getChildCount(); i++) {
+          removeDummyTable((ASTNode)ast.getChild(i));
+        }
     }
-    return ast;
+
   }
 
   ASTNode fixUpAfterCbo(ASTNode originalAst, ASTNode newAst, PreCboCtx cboCtx)
@@ -955,7 +979,11 @@ public class CalcitePlanner extends SemanticAnalyzer {
     switch (cboCtx.type) {
 
     case NONE:
-      return fixSelectWithDummyTable(newAst);
+      if(newAst.getType() == HiveParser.TOK_QUERY) {
+        // remove reference to dummy table/dummy database
+        removeDummyTable(newAst);
+      }
+      return newAst;
 
     case CTAS:
     case VIEW: {

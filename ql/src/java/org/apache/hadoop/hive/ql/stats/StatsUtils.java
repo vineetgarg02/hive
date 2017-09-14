@@ -1753,13 +1753,13 @@ public class StatsUtils {
    */
   public static long getBasicStatForTable(Table table, String statType) {
     Map<String, String> params = table.getParameters();
-    long result = 0;
+    long result = -1;
 
     if (params != null) {
       try {
         result = Long.parseLong(params.get(statType));
       } catch (NumberFormatException e) {
-        result = 0;
+        result = -1;
       }
     }
     return result;

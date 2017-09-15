@@ -281,7 +281,8 @@ public class StatsUtils {
     long nr = getNumRows(table);
     // number of rows -1 means that statistics from metastore is not reliable
     // and 0 means statistics gathering is disabled
-    if (nr <= 0) {
+    // estimate only if num rows is -1 since 0 could be actual number of rows
+    if (nr < 0) {
       int avgRowSize = estimateRowSizeFromSchema(conf, schema, neededColumns);
       if (avgRowSize > 0) {
         if (LOG.isDebugEnabled()) {

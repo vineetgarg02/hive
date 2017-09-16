@@ -247,9 +247,9 @@ STAGE PLANS:
           TableScan
             alias: _dummy_table
             Row Limit Per Split: 1
-            Statistics: Num rows: -1 Data size: 1 Basic stats: PARTIAL Column stats: COMPLETE
+            Statistics: Num rows: 1 Data size: 1 Basic stats: COMPLETE Column stats: COMPLETE
             Select Operator
-              Statistics: Num rows: -1 Data size: 1 Basic stats: PARTIAL Column stats: COMPLETE
+              Statistics: Num rows: 1 Data size: 1 Basic stats: COMPLETE Column stats: COMPLETE
               Group By Operator
                 aggregations: count(1)
                 Group By Vectorization:
@@ -337,14 +337,14 @@ STAGE PLANS:
           TableScan
             alias: _dummy_table
             Row Limit Per Split: 1
-            Statistics: Num rows: -1 Data size: 1 Basic stats: PARTIAL Column stats: COMPLETE
+            Statistics: Num rows: 1 Data size: 1 Basic stats: COMPLETE Column stats: COMPLETE
             Select Operator
               expressions: 1 (type: int)
               outputColumnNames: _col0
-              Statistics: Num rows: -1 Data size: 1 Basic stats: PARTIAL Column stats: COMPLETE
+              Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: COMPLETE
               File Output Operator
                 compressed: false
-                Statistics: Num rows: -1 Data size: 1 Basic stats: PARTIAL Column stats: COMPLETE
+                Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: COMPLETE
                 table:
                     input format: org.apache.hadoop.mapred.TextInputFormat
                     output format: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat

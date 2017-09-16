@@ -291,7 +291,10 @@ public class StatsUtils {
         nr = ds / avgRowSize;
       }
     }
-    return nr == 0 ? 1 : nr;
+    if(nr == 0 || nr == -1) {
+      return 1;
+    }
+    return nr;
   }
 
   public static Statistics collectStatistics(HiveConf conf, PrunedPartitionList partList,

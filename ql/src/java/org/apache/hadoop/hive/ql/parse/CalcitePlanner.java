@@ -938,51 +938,12 @@ public class CalcitePlanner extends SemanticAnalyzer {
     }
   }
 
-  // method to remove references to "DUMMY_TABLE"
-  void removeDummyTable(ASTNode ast) throws SemanticException {
-    switch(ast.getType()) {
-      case HiveParser.TOK_QUERY:
-        if(ast.getChildCount() > 0 && ast.getChild(0).getType() == HiveParser.TOK_FROM) {
-          ASTNode fromAST = (ASTNode)ast.getChild(0);
-          ASTNode fromChild = (ASTNode)fromAST.getChild(0);
-          if(fromChild.getType() == HiveParser.TOK_TABREF) {
-            String[] qualTableName = getQualifiedTableName((ASTNode)(fromChild.getChild(0)));
-
-            // delete FROM
-            if(qualTableName.length == 2 && qualTableName[0] == "_dummy_database" && qualTableName[1] == "_dummy_table"){
-              ast.deleteChild(0);
-            }
-            // we do not need to go deep since we can not hit subquery further
-            return;
-          }
-          else {
-            // This should be subquery
-            assert(fromChild.getType() == HiveParser.TOK_SUBQUERY);
-            if(fromChild.getChildCount() > 0) {
-              ASTNode subqueryChild = (ASTNode)fromChild.getChild(0);
-              removeDummyTable(subqueryChild);
-            }
-          }
-        }
-        break;
-
-      default:
-        for(int i=0; i<ast.getChildCount(); i++) {
-          removeDummyTable((ASTNode)ast.getChild(i));
-        }
-    }
-
-  }
-
   ASTNode fixUpAfterCbo(ASTNode originalAst, ASTNode newAst, PreCboCtx cboCtx)
       throws SemanticException {
     switch (cboCtx.type) {
 
     case NONE:
-      if(newAst.getType() == HiveParser.TOK_QUERY) {
-        // remove reference to dummy table/dummy database
-        //removeDummyTable(newAst);
-      }
+      // nothing to do
       return newAst;
 
     case CTAS:
@@ -4219,7 +4180,6 @@ public class CalcitePlanner extends SemanticAnalyzer {
         qb.setTabAlias(DUMMY_TABLE, DUMMY_TABLE);
         RelNode op = genTableLogicalPlan(DUMMY_TABLE, qb);
         aliasToRel.put(DUMMY_TABLE, op);
-        //throw new CalciteSemanticException("Unsupported", UnsupportedFeature.Others);
 
       }
 

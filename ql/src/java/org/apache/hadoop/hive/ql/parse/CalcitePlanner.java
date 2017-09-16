@@ -981,7 +981,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
     case NONE:
       if(newAst.getType() == HiveParser.TOK_QUERY) {
         // remove reference to dummy table/dummy database
-        removeDummyTable(newAst);
+        //removeDummyTable(newAst);
       }
       return newAst;
 

@@ -25,9 +25,11 @@ import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -54,6 +56,7 @@ import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.ExplainConfiguration;
 import org.apache.hadoop.hive.ql.parse.ExplainConfiguration.AnalyzeState;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
+import org.apache.hadoop.hive.ql.parse.QB;
 import org.apache.hadoop.hive.ql.plan.LoadTableDesc;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.hive.shims.ShimLoader;
@@ -101,6 +104,10 @@ public class Context {
   private TokenRewriteStream tokenRewriteStream;
 
   private final String executionId;
+  // Some statements, e.g., UPDATE, DELETE, or MERGE, get rewritten into different
+  // subqueries that create new contexts. We keep them here so we can clean them
+  // up when we are done.
+  private final Set<Context> rewrittenStatementContexts;
 
   // List of Locks for this query
   protected List<HiveLock> hiveLocks;
@@ -163,8 +170,17 @@ public class Context {
   /**
    * The suffix is always relative to a given ASTNode
    */
-  public DestClausePrefix getDestNamePrefix(ASTNode curNode) {
+  public DestClausePrefix getDestNamePrefix(ASTNode curNode, QB queryBlock) {
     assert curNode != null : "must supply curNode";
+    if(queryBlock.isInsideView() || queryBlock.getParseInfo().getIsSubQ()) {
+      /**
+       * Views get inlined in the logical plan but not in the AST
+       * {@link org.apache.hadoop.hive.ql.parse.SemanticAnalyzer#replaceViewReferenceWithDefinition(QB, Table, String, String)}
+       * Since here we only care to identify clauses representing Update/Delete which are not
+       * possible inside a view/subquery, we can immediately return the default {@link DestClausePrefix.INSERT}
+       */
+      return DestClausePrefix.INSERT;
+    }
     if(curNode.getType() != HiveParser.TOK_INSERT_INTO) {
       //select statement
       assert curNode.getType() == HiveParser.TOK_DESTINATION;
@@ -254,9 +270,10 @@ public class Context {
    * Create a Context with a given executionId.  ExecutionId, together with
    * user name and conf, will determine the temporary directory locations.
    */
-  public Context(Configuration conf, String executionId)  {
+  private Context(Configuration conf, String executionId)  {
     this.conf = conf;
     this.executionId = executionId;
+    this.rewrittenStatementContexts = new HashSet<>();
 
     // local & non-local tmp location is configurable. however it is the same across
     // all external file systems
@@ -267,6 +284,9 @@ public class Context {
     opContext = new CompilationOpContext();
   }
 
+  public Map<String, Path> getFsScratchDirs() {
+    return fsScratchDirs;
+  }
 
   public Map<LoadTableDesc, WriteEntity> getLoadTableOutputMap() {
     return loadTableOutputMap;
@@ -662,6 +682,11 @@ public class Context {
   }
 
   public void clear() throws IOException {
+    // First clear the other contexts created by this query
+    for (Context subContext : rewrittenStatementContexts) {
+      subContext.clear();
+    }
+    // Then clear this context
     if (resDir != null) {
       try {
         FileSystem fs = resDir.getFileSystem(conf);
@@ -839,6 +864,10 @@ public class Context {
       ShimLoader.getHadoopShims().setJobLauncherRpcAddress(conf, originalTracker);
       originalTracker = null;
     }
+  }
+
+  public void addRewrittenStatementContext(Context context) {
+    rewrittenStatementContexts.add(context);
   }
 
   public void addCS(String path, ContentSummary cs) {

@@ -344,15 +344,8 @@ public class StatsUtils {
       List<ColStatistics> colStats = Lists.newArrayList();
       if (fetchColStats) {
         colStats = getTableColumnStats(table, schema, neededColumns, colStatsCache);
-        if(colStats == null || colStats.size() < 1) {
-          colStats = estimateStats(table,schema,neededColumns, conf, nr);
-        }
-        else if(colStats.size() < neededColumns.size()) {
-          // not all columns had stat so we need to figure out which columns are missing stats and estimate
-          // for only those columns
+        estimateStatsForMissingCols(neededColumns, colStats, table, conf, nr, schema);
 
-          estimateStatsForMissingCols(neededColumns, colStats, table, conf, nr, schema);
-        }
         // we should have stats for all columns (estimated or actual)
         assert(neededColumns.size() == colStats.size());
         long betterDS = getDataSizeFromColumnStats(nr, colStats);
@@ -488,6 +481,8 @@ public class StatsUtils {
         if (neededColumns.size() == 0 ||
             (neededColsToRetrieve.size() > 0 && !statsRetrieved)) {
           estimateStatsForMissingCols(neededColumns, columnStats, table, conf, nr, schema);
+          // we should have stats for all columns (estimated or actual)
+          assert(neededColumns.size() == columnStats.size());
           // There are some partitions with no state (or we didn't fetch any state).
           // Update the stats with empty list to reflect that in the
           // state/initialize structures.
@@ -508,8 +503,10 @@ public class StatsUtils {
             LOG.debug("Column stats requested for : {} columns. Able to retrieve for {} columns",
                     columnStats.size(), colStatsAvailable);
           }
-
           estimateStatsForMissingCols(neededColumns, columnStats, table, conf, nr, schema);
+          // we should have stats for all columns (estimated or actual)
+          assert(neededColumns.size() == columnStats.size());
+
           addPartitionColumnStats(conf, partitionColsToRetrieve, schema, table, partList, columnStats);
           long betterDS = getDataSizeFromColumnStats(nr, columnStats);
           stats.setDataSize((betterDS < 1 || columnStats.isEmpty()) ? ds : betterDS);

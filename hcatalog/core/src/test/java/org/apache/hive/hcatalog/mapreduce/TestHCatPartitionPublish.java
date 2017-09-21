@@ -36,7 +36,9 @@ import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
+import org.apache.hadoop.hive.metastore.MetaStoreTestUtils;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
+import org.apache.hadoop.hive.metastore.Warehouse;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.SerDeInfo;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
@@ -103,9 +105,9 @@ public class TestHCatPartitionPublish {
       return;
     }
 
-    msPort = MetaStoreUtils.findFreePort();
+    msPort = MetaStoreTestUtils.findFreePort();
 
-    MetaStoreUtils.startMetaStore(msPort, HadoopThriftAuthBridge.getBridge());
+    MetaStoreTestUtils.startMetaStore(msPort, HadoopThriftAuthBridge.getBridge());
     Thread.sleep(10000);
     isServerRunning = true;
     securityManager = System.getSecurityManager();
@@ -222,7 +224,7 @@ public class TestHCatPartitionPublish {
   }
 
   private void createTable(String dbName, String tableName) throws Exception {
-    String databaseName = (dbName == null) ? MetaStoreUtils.DEFAULT_DATABASE_NAME
+    String databaseName = (dbName == null) ? Warehouse.DEFAULT_DATABASE_NAME
         : dbName;
     try {
       msc.dropTable(databaseName, tableName);

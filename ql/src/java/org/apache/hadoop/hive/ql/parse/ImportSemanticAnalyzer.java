@@ -39,7 +39,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.common.FileUtils;
 import org.apache.hadoop.hive.common.StatsSetupConst;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.Warehouse;
 import org.apache.hadoop.hive.metastore.api.Database;
@@ -376,12 +375,17 @@ public class ImportSemanticAnalyzer extends BaseSemanticAnalyzer {
       URI fromURI, FileSystem fs, ImportTableDesc tblDesc,
       Table table, Warehouse wh, AddPartitionDesc addPartitionDesc,
       ReplicationSpec replicationSpec, org.apache.hadoop.hive.ql.metadata.Partition ptn,
-      EximUtil.SemanticAnalyzerWrapperContext x) {
+      EximUtil.SemanticAnalyzerWrapperContext x) throws MetaException, IOException, HiveException {
     addPartitionDesc.setReplaceMode(true);
     if ((replicationSpec != null) && (replicationSpec.isInReplicationScope())){
       addPartitionDesc.setReplicationSpec(replicationSpec);
     }
-    addPartitionDesc.getPartition(0).setLocation(ptn.getLocation()); // use existing location
+    AddPartitionDesc.OnePartitionDesc partSpec = addPartitionDesc.getPartition(0);
+    if (ptn == null) {
+      fixLocationInPartSpec(fs, tblDesc, table, wh, replicationSpec, partSpec, x);
+    } else {
+      partSpec.setLocation(ptn.getLocation()); // use existing location
+    }
     return TaskFactory.get(new DDLWork(
         x.getInputs(),
         x.getOutputs(),
@@ -839,7 +843,7 @@ public class ImportSemanticAnalyzer extends BaseSemanticAnalyzer {
         tblDesc.setLocation(
             wh.getDnsPath(new Path(
                 wh.getDefaultDatabasePath(tblDesc.getDatabaseName()),
-                MetaStoreUtils.encodeTableName(tblDesc.getTableName().toLowerCase())
+                org.apache.hadoop.hive.metastore.utils.MetaStoreUtils.encodeTableName(tblDesc.getTableName().toLowerCase())
             )
         ).toString());
 
@@ -893,6 +897,12 @@ public class ImportSemanticAnalyzer extends BaseSemanticAnalyzer {
             if (!replicationSpec.isMetadataOnly()){
               x.getTasks().add(addSinglePartition(
                   fromURI, fs, tblDesc, table, wh, addPartitionDesc, replicationSpec, x));
+              if (updatedMetadata != null) {
+                updatedMetadata.addPartition(addPartitionDesc.getPartition(0).getPartSpec());
+              }
+            } else {
+              x.getTasks().add(alterSinglePartition(
+                      fromURI, fs, tblDesc, table, wh, addPartitionDesc, replicationSpec, null, x));
               if (updatedMetadata != null) {
                 updatedMetadata.addPartition(addPartitionDesc.getPartition(0).getPartSpec());
               }

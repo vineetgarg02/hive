@@ -277,7 +277,29 @@ public class StatsUtils {
     }
   }
 
-  private static long getNumRows(HiveConf conf, List<ColumnInfo> schema, List<String> neededColumns, Table table, long ds) {
+  private static void estimateStatsForMissingCols(List<String> neededColumns, List<ColStatistics> columnStats,
+                                           Table table, HiveConf conf, long nr, List<ColumnInfo> schema) {
+    List<String> missingColStats = Lists.newArrayList();
+    for(String colName:neededColumns) {
+      boolean hasColStats = false;
+      for(ColStatistics cstats:columnStats) {
+        if(colName.equals(cstats.getColumnName())){
+          hasColStats = true;
+          break;
+        }
+      }
+      if(!hasColStats) {
+        missingColStats.add(colName);
+      }
+      List<ColStatistics> estimatedColStats= estimateStats(table,schema,missingColStats, conf, nr);
+      for(ColStatistics estColStats:estimatedColStats) {
+        columnStats.add(estColStats);
+      }
+    }
+  }
+
+  private static long getNumRows(HiveConf conf, List<ColumnInfo> schema, List<String> neededColumns,
+                                 Table table, long ds) {
     long nr = getNumRows(table);
     // number of rows -1 means that statistics from metastore is not reliable
     // and 0 means statistics gathering is disabled
@@ -328,23 +350,8 @@ public class StatsUtils {
         else if(colStats.size() < neededColumns.size()) {
           // not all columns had stat so we need to figure out which columns are missing stats and estimate
           // for only those columns
-          List<String> missingColStats = Lists.newArrayList();
-          for(String colName:neededColumns) {
-            boolean hasColStats = false;
-            for(ColStatistics cstats:colStats) {
-              if(colName.equals(cstats.getColumnName())){
-                hasColStats = true;
-               break;
-              }
-            }
-            if(!hasColStats) {
-              missingColStats.add(colName);
-            }
-            List<ColStatistics> estimatedColStats= estimateStats(table,schema,missingColStats, conf, nr);
-            for(ColStatistics estColStats:estimatedColStats) {
-              colStats.add(estColStats);
-            }
-          }
+
+          estimateStatsForMissingCols(neededColumns, colStats, table, conf, nr, schema);
         }
         // we should have stats for all columns (estimated or actual)
         assert(neededColumns.size() == colStats.size());
@@ -480,6 +487,7 @@ public class StatsUtils {
             aggrStats.getColStats() != null && aggrStats.getColStatsSize() != 0;
         if (neededColumns.size() == 0 ||
             (neededColsToRetrieve.size() > 0 && !statsRetrieved)) {
+          estimateStatsForMissingCols(neededColumns, columnStats, table, conf, nr, schema);
           // There are some partitions with no state (or we didn't fetch any state).
           // Update the stats with empty list to reflect that in the
           // state/initialize structures.
@@ -501,6 +509,7 @@ public class StatsUtils {
                     columnStats.size(), colStatsAvailable);
           }
 
+          estimateStatsForMissingCols(neededColumns, columnStats, table, conf, nr, schema);
           addPartitionColumnStats(conf, partitionColsToRetrieve, schema, table, partList, columnStats);
           long betterDS = getDataSizeFromColumnStats(nr, columnStats);
           stats.setDataSize((betterDS < 1 || columnStats.isEmpty()) ? ds : betterDS);
@@ -524,23 +533,6 @@ public class StatsUtils {
           }
         }
 
-        List<String> missingColStats = Lists.newArrayList();
-        for(String colName:neededColumns) {
-          boolean hasColStats = false;
-          for(ColStatistics cstats:columnStats) {
-            if(colName.equals(cstats.getColumnName())){
-              hasColStats = true;
-              break;
-            }
-          }
-          if(!hasColStats) {
-            missingColStats.add(colName);
-          }
-          List<ColStatistics> estimatedColStats= estimateStats(table,schema,missingColStats, conf, nr);
-          for(ColStatistics estColStats:estimatedColStats) {
-            columnStats.add(estColStats);
-          }
-        }
         // This block exists for debugging purposes: we want to check whether
         // the col stats cache is working properly and we are retrieving the
         // stats from metastore only once.

@@ -282,17 +282,19 @@ public class StatsUtils {
     List<String> missingColStats = Lists.newArrayList();
     for(String colName:neededColumns) {
       boolean hasColStats = false;
-      for(ColStatistics cstats:columnStats) {
-        if(colName.equals(cstats.getColumnName())){
+      for (ColStatistics cstats : columnStats) {
+        if (colName.equals(cstats.getColumnName())) {
           hasColStats = true;
           break;
         }
       }
-      if(!hasColStats) {
+      if (!hasColStats) {
         missingColStats.add(colName);
       }
-      List<ColStatistics> estimatedColStats= estimateStats(table,schema,missingColStats, conf, nr);
-      for(ColStatistics estColStats:estimatedColStats) {
+    }
+    if(missingColStats.size() > 0) {
+      List<ColStatistics> estimatedColStats = estimateStats(table, schema, missingColStats, conf, nr);
+      for (ColStatistics estColStats : estimatedColStats) {
         columnStats.add(estColStats);
       }
     }
@@ -481,8 +483,6 @@ public class StatsUtils {
         if (neededColumns.size() == 0 ||
             (neededColsToRetrieve.size() > 0 && !statsRetrieved)) {
           estimateStatsForMissingCols(neededColsToRetrieve, columnStats, table, conf, nr, schema);
-          // we should have stats for all columns (estimated or actual)
-          assert(neededColsToRetrieve.size() == columnStats.size());
           // There are some partitions with no state (or we didn't fetch any state).
           // Update the stats with empty list to reflect that in the
           // state/initialize structures.
@@ -504,8 +504,6 @@ public class StatsUtils {
                     columnStats.size(), colStatsAvailable);
           }
           estimateStatsForMissingCols(neededColsToRetrieve, columnStats, table, conf, nr, schema);
-          // we should have stats for all columns (estimated or actual)
-          assert(neededColsToRetrieve.size() == columnStats.size());
 
           addPartitionColumnStats(conf, partitionColsToRetrieve, schema, table, partList, columnStats);
           long betterDS = getDataSizeFromColumnStats(nr, columnStats);

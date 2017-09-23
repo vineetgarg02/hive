@@ -35,6 +35,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.google.common.collect.Sets;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -280,18 +281,16 @@ public class StatsUtils {
   private static void estimateStatsForMissingCols(List<String> neededColumns, List<ColStatistics> columnStats,
                                            Table table, HiveConf conf, long nr, List<ColumnInfo> schema) {
     List<String> missingColStats = Lists.newArrayList();
-    for(String colName:neededColumns) {
-      boolean hasColStats = false;
-      for (ColStatistics cstats : columnStats) {
-        if (colName.equals(cstats.getColumnName())) {
-          hasColStats = true;
-          break;
-        }
-      }
-      if (!hasColStats) {
-        missingColStats.add(colName);
-      }
+
+    Set<String> neededCols = new HashSet<>(neededColumns);
+    Set<String> colsWithStats = new HashSet<>();
+
+    for (ColStatistics cstats : columnStats) {
+      colsWithStats.add(cstats.getColumnName());
     }
+
+    List<String> missingCols = new ArrayList<String>(Sets.difference(neededCols, colsWithStats));
+
     if(missingColStats.size() > 0) {
       List<ColStatistics> estimatedColStats = estimateStats(table, schema, missingColStats, conf, nr);
       for (ColStatistics estColStats : estimatedColStats) {
@@ -346,6 +345,9 @@ public class StatsUtils {
       List<ColStatistics> colStats = Lists.newArrayList();
       if (fetchColStats) {
         colStats = getTableColumnStats(table, schema, neededColumns, colStatsCache);
+        if(colStats == null) {
+          colStats = Lists.newArrayList();
+        }
         estimateStatsForMissingCols(neededColumns, colStats, table, conf, nr, schema);
 
         // we should have stats for all columns (estimated or actual)

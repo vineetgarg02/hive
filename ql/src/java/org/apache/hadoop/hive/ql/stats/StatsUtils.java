@@ -503,7 +503,6 @@ public class StatsUtils {
             LOG.debug("Column stats requested for : {} columns. Able to retrieve for {} columns",
                     columnStats.size(), colStatsAvailable);
           }
-          estimateStatsForMissingCols(neededColsToRetrieve, columnStats, table, conf, nr, schema);
 
           addPartitionColumnStats(conf, partitionColsToRetrieve, schema, table, partList, columnStats);
           long betterDS = getDataSizeFromColumnStats(nr, columnStats);

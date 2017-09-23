@@ -280,7 +280,6 @@ public class StatsUtils {
 
   private static void estimateStatsForMissingCols(List<String> neededColumns, List<ColStatistics> columnStats,
                                            Table table, HiveConf conf, long nr, List<ColumnInfo> schema) {
-    List<String> missingColStats = Lists.newArrayList();
 
     Set<String> neededCols = new HashSet<>(neededColumns);
     Set<String> colsWithStats = new HashSet<>();
@@ -289,7 +288,7 @@ public class StatsUtils {
       colsWithStats.add(cstats.getColumnName());
     }
 
-    List<String> missingCols = new ArrayList<String>(Sets.difference(neededCols, colsWithStats));
+    List<String> missingColStats = new ArrayList<String>(Sets.difference(neededCols, colsWithStats));
 
     if(missingColStats.size() > 0) {
       List<ColStatistics> estimatedColStats = estimateStats(table, schema, missingColStats, conf, nr);

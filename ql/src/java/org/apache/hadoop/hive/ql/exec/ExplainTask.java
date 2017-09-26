@@ -892,7 +892,11 @@ public class ExplainTask extends Task<ExplainWork> implements Serializable {
           try {
             if (inTest && postProcess(xpl_note)) {
               val = m.invoke(work, true);
-            } else {
+            }
+            else if( postProcess(xpl_note)) {
+              val = m.invoke(work, false);
+            }
+            else{
               val = m.invoke(work);
             }
           }

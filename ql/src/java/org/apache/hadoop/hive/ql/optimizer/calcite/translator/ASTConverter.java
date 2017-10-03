@@ -19,11 +19,11 @@ package org.apache.hadoop.hive.ql.optimizer.calcite.translator;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.TreeMap;
 
 
 import org.apache.calcite.adapter.druid.DruidQuery;
@@ -456,12 +456,15 @@ public class ASTConverter {
 
   }
 
+
   static class RexVisitor extends RexVisitorImpl<ASTNode> {
 
     private final Schema schema;
     private final boolean useTypeQualInLiteral;
     private final RexBuilder rexBuilder;
-    private Set<RexLiteral> nullLiteralSet;
+    //private Set<RexLiteral> nullLiteralSet;
+    private Map<RexLiteral, Boolean> nullLiteralMap ;
+
 
     protected RexVisitor(Schema schema, boolean useTypeQualInLiteral) {
       this(schema, useTypeQualInLiteral, null);
@@ -476,7 +479,18 @@ public class ASTConverter {
       this.schema = schema;
       this.useTypeQualInLiteral = useTypeQualInLiteral;
       this.rexBuilder = rexBuilder;
-      this.nullLiteralSet = new HashSet<>();
+
+      this.nullLiteralMap =
+          new TreeMap<>(new Comparator<RexLiteral>(){
+            // RexLiteral's equal only consider value and type which isn't sufficient
+            // so providing custom comparator which distinguishes b/w objects irrespective
+            // of value/type
+            @Override
+            public int compare(RexLiteral o1, RexLiteral o2) {
+              if(o1 == o2) return 0;
+              else return 1;
+            }
+          });
     }
 
     @Override
@@ -506,10 +520,10 @@ public class ASTConverter {
           && rexBuilder != null) {
         // It is NULL value with different type, we need to introduce a CAST
         // to keep it
-        if(nullLiteralSet.contains(literal)) {
+        if(nullLiteralMap.containsKey(literal)) {
           return ASTBuilder.literal(literal, useTypeQualInLiteral);
         }
-        nullLiteralSet.add(literal);
+        nullLiteralMap.put(literal, true);
         RexNode r = rexBuilder.makeAbstractCast(literal.getType(), literal);
 
         return r.accept(this);

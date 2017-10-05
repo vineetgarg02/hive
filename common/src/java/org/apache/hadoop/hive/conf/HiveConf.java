@@ -1029,6 +1029,8 @@ public class HiveConf extends Configuration {
     HIVEADDEDFILES("hive.added.files.path", "", "This an internal parameter."),
     HIVEADDEDJARS("hive.added.jars.path", "", "This an internal parameter."),
     HIVEADDEDARCHIVES("hive.added.archives.path", "", "This an internal parameter."),
+    HIVEADDFILESUSEHDFSLOCATION("hive.resource.use.hdfs.location", true, "Reference HDFS based files/jars directly instead of "
+        + "copy to session based HDFS scratch directory, to make distributed cache more useful."),
 
     HIVE_CURRENT_DATABASE("hive.current.database", "", "Database name used by current session. Internal usage only.", true),
 
@@ -4512,7 +4514,7 @@ public class HiveConf extends Configuration {
     "distcp\\.options\\.overwrite",
     "distcp\\.options\\.strategy",
     "distcp\\.options\\.i",
-    "distcp\\.options\\.p",
+    "distcp\\.options\\.p.*",
     "distcp\\.options\\.update",
     "distcp\\.options\\.delete",
     "mapred\\.map\\..*",

@@ -619,17 +619,9 @@ public class RexNodeConverter {
       }
       BigDecimal bd = (BigDecimal) value;
       BigInteger unscaled = bd.unscaledValue();
-      if (unscaled.compareTo(MIN_LONG_BI) >= 0 && unscaled.compareTo(MAX_LONG_BI) <= 0) {
-        calciteLiteral = rexBuilder.makeExactLiteral(bd);
-      } else {
-        // CBO doesn't support unlimited precision decimals. In practice, this
-        // will work...
-        // An alternative would be to throw CboSemanticException and fall back
-        // to no CBO.
-        RelDataType relType = cluster.getTypeFactory().createSqlType(SqlTypeName.DECIMAL,
-            unscaled.toString().length(), bd.scale());
-        calciteLiteral = rexBuilder.makeExactLiteral(bd, relType);
-      }
+      RelDataType relType = cluster.getTypeFactory().createSqlType(SqlTypeName.DECIMAL,
+          unscaled.toString().length(), bd.scale());
+      calciteLiteral = rexBuilder.makeExactLiteral(bd, relType);
       break;
     case FLOAT:
       calciteLiteral = rexBuilder.makeApproxLiteral(

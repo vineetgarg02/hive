@@ -619,8 +619,21 @@ public class RexNodeConverter {
       }
       BigDecimal bd = (BigDecimal) value;
       BigInteger unscaled = bd.unscaledValue();
-      RelDataType relType = cluster.getTypeFactory().createSqlType(SqlTypeName.DECIMAL,
-          unscaled.toString().length(), bd.scale());
+
+
+      int precision = bd.unscaledValue().abs().toString().length();
+      int scale = bd.scale();
+      RelDataType relType;
+
+      if (precision > scale) {
+        // bd is greater than or equal to 1
+        relType =
+            cluster.getTypeFactory().createSqlType(SqlTypeName.DECIMAL, precision, scale);
+      } else {
+        // bd is less than 1
+        relType =
+            cluster.getTypeFactory().createSqlType(SqlTypeName.DECIMAL, scale + 1, scale);
+      }
       calciteLiteral = rexBuilder.makeExactLiteral(bd, relType);
       break;
     case FLOAT:

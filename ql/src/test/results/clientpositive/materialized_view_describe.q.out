@@ -54,7 +54,6 @@ POSTHOOK: query: describe formatted cmv_mat_view
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@cmv_mat_view
 # col_name            	data_type           	comment             
-	 	 
 a                   	int                 	                    
 c                   	decimal(10,2)       	                    
 	 	 
@@ -82,7 +81,7 @@ Sort Columns:       	[]
 	 	 
 # View Information	 	 
 View Original Text: 	select a, c from cmv_basetable	 
-View Expanded Text: 	null                	 
+View Expanded Text: 	select `cmv_basetable`.`a`, `cmv_basetable`.`c` from `default`.`cmv_basetable`	 
 View Rewrite Enabled:	No                  	 
 PREHOOK: query: show tblproperties cmv_mat_view
 PREHOOK: type: SHOW_TBLPROPERTIES
@@ -137,7 +136,6 @@ POSTHOOK: query: describe formatted cmv_mat_view2
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@cmv_mat_view2
 # col_name            	data_type           	comment             
-	 	 
 a                   	int                 	                    
 	 	 
 # Detailed Table Information	 	 
@@ -157,7 +155,7 @@ Table Parameters:
 # Storage Information	 	 
 SerDe Library:      	org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe	 
 InputFormat:        	org.apache.hadoop.mapred.TextInputFormat	 
-OutputFormat:       	org.apache.hadoop.hive.ql.io.IgnoreKeyTextOutputFormat	 
+OutputFormat:       	org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat	 
 Compressed:         	No                  	 
 Num Buckets:        	-1                  	 
 Bucket Columns:     	[]                  	 
@@ -165,7 +163,7 @@ Sort Columns:       	[]
 	 	 
 # View Information	 	 
 View Original Text: 	select a from cmv_basetable	 
-View Expanded Text: 	null                	 
+View Expanded Text: 	select `cmv_basetable`.`a` from `default`.`cmv_basetable`	 
 View Rewrite Enabled:	No                  	 
 PREHOOK: query: select a from cmv_mat_view2
 PREHOOK: type: QUERY
@@ -213,7 +211,6 @@ POSTHOOK: query: describe formatted cmv_mat_view3
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@cmv_mat_view3
 # col_name            	data_type           	comment             
-	 	 
 a                   	int                 	                    
 b                   	varchar(256)        	                    
 c                   	decimal(10,2)       	                    
@@ -241,7 +238,7 @@ Sort Columns:       	[]
 	 	 
 # View Information	 	 
 View Original Text: 	select * from cmv_basetable	 
-View Expanded Text: 	null                	 
+View Expanded Text: 	select `cmv_basetable`.`a`, `cmv_basetable`.`b`, `cmv_basetable`.`c` from `default`.`cmv_basetable`	 
 View Rewrite Enabled:	No                  	 
 PREHOOK: query: select a, b, c from cmv_mat_view3
 PREHOOK: type: QUERY
@@ -302,7 +299,6 @@ POSTHOOK: query: describe formatted cmv_mat_view4
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@cmv_mat_view4
 # col_name            	data_type           	comment             
-	 	 
 a                   	int                 	                    
 	 	 
 # Detailed Table Information	 	 
@@ -320,7 +316,7 @@ Table Parameters:
 # Storage Information	 	 
 SerDe Library:      	org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe	 
 InputFormat:        	org.apache.hadoop.mapred.TextInputFormat	 
-OutputFormat:       	org.apache.hadoop.hive.ql.io.IgnoreKeyTextOutputFormat	 
+OutputFormat:       	org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat	 
 Compressed:         	No                  	 
 Num Buckets:        	-1                  	 
 Bucket Columns:     	[]                  	 
@@ -328,7 +324,7 @@ Sort Columns:       	[]
 	 	 
 # View Information	 	 
 View Original Text: 	select a from cmv_basetable	 
-View Expanded Text: 	null                	 
+View Expanded Text: 	select `cmv_basetable`.`a` from `default`.`cmv_basetable`	 
 View Rewrite Enabled:	No                  	 
 PREHOOK: query: select a from cmv_mat_view4
 PREHOOK: type: QUERY

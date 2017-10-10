@@ -211,12 +211,9 @@ public class Table implements Serializable {
       }
     }
 
-    if (isView()) {
+    if (isView() || isMaterializedView()) {
       assert (getViewOriginalText() != null);
       assert (getViewExpandedText() != null);
-    } else if (isMaterializedView()) {
-      assert(getViewOriginalText() != null);
-      assert(getViewExpandedText() == null);
     } else {
       assert(getViewOriginalText() == null);
       assert(getViewExpandedText() == null);
@@ -970,6 +967,7 @@ public class Table implements Serializable {
   public static boolean shouldStoreFieldsInMetastore(
       HiveConf conf, String serdeLib, Map<String, String> tableParams) {
     if (hasMetastoreBasedSchema(conf, serdeLib))  return true;
+    if (HiveConf.getBoolVar(conf, ConfVars.HIVE_LEGACY_SCHEMA_FOR_ALL_SERDES)) return true;
     // Table may or may not be using metastore. Only the SerDe can tell us.
     AbstractSerDe deserializer = null;
     try {

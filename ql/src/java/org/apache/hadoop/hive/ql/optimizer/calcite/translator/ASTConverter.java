@@ -462,7 +462,7 @@ public class ASTConverter {
     private final Schema schema;
     private final boolean useTypeQualInLiteral;
     private final RexBuilder rexBuilder;
-    //private Set<RexLiteral> nullLiteralSet;
+    // this is to keep track of null literal which already has been visited
     private Map<RexLiteral, Boolean> nullLiteralMap ;
 
 

@@ -8230,8 +8230,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     desc.setFilterMap(join.getFilterMap());
     // Add filters that apply to more than one input
     if (join.getPostJoinFilters().size() != 0 &&
-            (!join.getNoOuterJoin() ||
-                    HiveConf.getBoolVar(conf, HiveConf.ConfVars.HIVE_PUSH_RESIDUAL_INNER))) {
+            (!join.getNoOuterJoin() || !join.getNoSemiJoin()
+                    || HiveConf.getBoolVar(conf, HiveConf.ConfVars.HIVE_PUSH_RESIDUAL_INNER))) {
       LOG.debug("Generate JOIN with post-filtering conditions");
       List<ExprNodeDesc> residualFilterExprs = new ArrayList<ExprNodeDesc>();
       for (ASTNode cond : join.getPostJoinFilters()) {

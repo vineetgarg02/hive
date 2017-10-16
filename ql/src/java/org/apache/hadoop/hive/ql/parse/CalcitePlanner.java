@@ -2119,17 +2119,17 @@ public class CalcitePlanner extends SemanticAnalyzer {
         RexNode nonEquiConds = RelOptUtil.splitJoinCondition(sysFieldList, leftRel, rightRel,
             calciteJoinCond, leftJoinKeys, rightJoinKeys, null, null);
 
-        if (!nonEquiConds.isAlwaysTrue()) {
+        /*if (!nonEquiConds.isAlwaysTrue()) {
           throw new SemanticException("Non equality condition not supported in Semi-Join"
               + nonEquiConds);
-        }
+        } */
 
         RelNode[] inputRels = new RelNode[] { leftRel, rightRel };
         final List<Integer> leftKeys = new ArrayList<Integer>();
         final List<Integer> rightKeys = new ArrayList<Integer>();
-        calciteJoinCond = HiveCalciteUtil.projectNonColumnEquiConditions(
+        /*calciteJoinCond = HiveCalciteUtil.projectNonColumnEquiConditions(
             HiveRelFactories.HIVE_PROJECT_FACTORY, inputRels, leftJoinKeys, rightJoinKeys, 0,
-            leftKeys, rightKeys);
+            leftKeys, rightKeys); */
         topRel = HiveSemiJoin.getSemiJoin(cluster, cluster.traitSetOf(HiveRelNode.CONVENTION),
             inputRels[0], inputRels[1], calciteJoinCond, ImmutableIntList.copyOf(leftKeys),
             ImmutableIntList.copyOf(rightKeys));

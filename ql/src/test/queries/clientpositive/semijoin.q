@@ -77,3 +77,17 @@ select a.key from t3 a left semi join t2 b on a.key = b.key left outer join t1 c
 
 explain select a.key from t3 a left semi join t2 b on a.value = b.value where a.key > 100;
 select a.key from t3 a left semi join t2 b on a.value = b.value where a.key > 100;
+
+
+-- non equi semi join
+create table t1(i int, j int);
+insert into t1 values(4,1);
+
+create table t2(i int, j int);
+insert into t2 values(4,2),(4,3),(4,5);
+
+explain select * from t1 left semi join t2 on t1.i = t2.i and t2.j <> t1.j;
+select * from t1 left semi join t2 on t1.i = t2.i and t2.j <> t1.j;
+
+drop table t1;
+drop table t2;

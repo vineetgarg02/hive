@@ -47,7 +47,7 @@ select * from t1 a left semi join t2 b on a.key = 2*b.key sort by a.key, a.value
 
 explain select * from t1 a join t2 b on a.key = b.key left semi join t3 c on b.key = c.key sort by a.key, a.value;
 select * from t1 a join t2 b on a.key = b.key left semi join t3 c on b.key = c.key sort by a.key, a.value;
- 
+
 explain select * from t3 a left semi join t1 b on a.key = b.key and a.value=b.value sort by a.key, a.value;
 select * from t3 a left semi join t1 b on a.key = b.key and a.value=b.value sort by a.key, a.value;
 
@@ -80,6 +80,8 @@ select a.key from t3 a left semi join t2 b on a.value = b.value where a.key > 10
 
 
 -- non equi semi join
+drop table t1;
+drop table t2;
 create table t1(i int, j int);
 insert into t1 values(4,1);
 

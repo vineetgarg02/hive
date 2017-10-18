@@ -8165,7 +8165,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       Byte tag = (byte) rsDesc.getTag();
 
       // check whether this input operator produces output
-      if (omitOpts != null && omitOpts.contains(pos)) {
+      if (omitOpts != null && omitOpts.contains(pos)
+          && (join.getNoSemiJoin() != false)) {
         exprMap.put(tag, valueDesc);
         filterMap.put(tag, filterDesc);
         rightOps[pos] = input;
@@ -8414,12 +8415,13 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
           omitOpts.add(pos);
 
           // generate a selection operator for group-by keys only
-          srcOp = insertSelectForSemijoin(fields, srcOp);
+          //srcOp = insertSelectForSemijoin(fields, srcOp);
 
           // generate a groupby operator (HASH mode) for a map-side partial
           // aggregation for semijoin
-          srcOps[pos++] = genMapGroupByForSemijoin(qb, fields, srcOp,
-              GroupByDesc.Mode.HASH);
+          //srcOps[pos++] = genMapGroupByForSemijoin(qb, fields, srcOp,
+           //   GroupByDesc.Mode.HASH);
+          srcOps[pos++] = srcOp;
         } else {
           srcOps[pos++] = srcOp;
         }
@@ -8486,10 +8488,13 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     for (int i = 0; i < fields.size(); ++i) {
       ASTNode field = fields.get(i);
       ExprNodeDesc exprNode = genExprNodeDesc(field, inputRR);
-      String colName = getColumnInternalName(i);
+      assert(exprNode instanceof ExprNodeColumnDesc);
+      String colName = ((ExprNodeColumnDesc)exprNode).getColumn();
+      String tabAlias = ((ExprNodeColumnDesc)exprNode).getTabAlias();
       outputColumnNames.add(colName);
-      ColumnInfo colInfo = new ColumnInfo(colName, exprNode.getTypeInfo(), "", false);
-      outputRR.putExpression(field, colInfo);
+      ColumnInfo colInfo = new ColumnInfo(colName, exprNode.getTypeInfo(), tabAlias, false);
+      //outputRR.putExpression(field, colInfo);
+      outputRR.put(tabAlias, colName, colInfo);
       colList.add(exprNode);
       colExprMap.put(colName, exprNode);
     }
@@ -8530,15 +8535,20 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       // get the group by keys to ColumnInfo
       ASTNode colName = fields.get(i);
       ExprNodeDesc grpByExprNode = genExprNodeDesc(colName,
-          groupByInputRowResolver);
+          groupByInputRowResolver, false);
       groupByKeys.add(grpByExprNode);
 
+      assert(grpByExprNode instanceof ExprNodeColumnDesc);
+      String field= ((ExprNodeColumnDesc)grpByExprNode).getName();
+      String tabAlias = ((ExprNodeColumnDesc)grpByExprNode).getTabAlias();
+
       // generate output column names
-      String field = getColumnInternalName(i);
       outputColumnNames.add(field);
       ColumnInfo colInfo2 = new ColumnInfo(field, grpByExprNode.getTypeInfo(),
-          "", false);
+          tabAlias,false);
       groupByOutputRowResolver.putExpression(colName, colInfo2);
+      //groupByInputRowResolver.put(aliasInfo[0], field, colInfo2);
+
 
       // establish mapping from the output column to the input column
       colExprMap.put(field, grpByExprNode);

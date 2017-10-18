@@ -137,6 +137,7 @@ import org.apache.hadoop.hive.ql.io.ReworkMapredInputFormat;
 import org.apache.hadoop.hive.ql.io.SelfDescribingInputFormatInterface;
 import org.apache.hadoop.hive.ql.io.merge.MergeFileMapper;
 import org.apache.hadoop.hive.ql.io.merge.MergeFileWork;
+import org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat;
 import org.apache.hadoop.hive.ql.io.rcfile.truncate.ColumnTruncateMapper;
 import org.apache.hadoop.hive.ql.io.rcfile.truncate.ColumnTruncateWork;
 import org.apache.hadoop.hive.ql.log.PerfLogger;
@@ -1180,6 +1181,11 @@ public final class Utilities {
     for (FileStatus file : files) {
       if (filesToMove.contains(file.getPath())) {
         Utilities.moveFile(fs, file, dst);
+      } else if (file.isDir()) {
+        // Traverse directory contents.
+        // Directory nesting for dst needs to match src.
+        Path nestedDstPath = new Path(dst, file.getPath().getName());
+        Utilities.moveSpecifiedFiles(fs, file.getPath(), nestedDstPath, filesToMove);
       }
     }
   }
@@ -3908,6 +3914,22 @@ public final class Utilities {
   public static boolean isInputFileFormatVectorized(PartitionDesc pd) {
     Class<?> inputFormatClass = pd.getInputFileFormatClass();
     return VectorizedInputFormatInterface.class.isAssignableFrom(inputFormatClass);
+  }
+
+  public static Collection<Class<?>> getClassNamesFromConfig(HiveConf hiveConf, ConfVars confVar) {
+    String[] classNames = org.apache.hadoop.util.StringUtils.getStrings(HiveConf.getVar(hiveConf,
+        confVar));
+    if (classNames == null) return new ArrayList<>(0);
+    Collection<Class<?>> classList = new ArrayList<Class<?>>(classNames.length);
+    for (String className : classNames) {
+      if (className == null || className.isEmpty()) continue;
+      try {
+        classList.add(Class.forName(className));
+      } catch (Exception ex) {
+        LOG.warn("Cannot create class " + className + " for " + confVar.varname + " checks");
+      }
+    }
+    return classList;
   }
 
   public static void addSchemaEvolutionToTableScanOperator(Table table,

@@ -190,17 +190,6 @@ public class HiveMetaStore extends ThriftHiveMetastore {
   @VisibleForTesting
   static long TEST_TIMEOUT_VALUE = -1;
 
-  /** A fixed date format to be used for hive partition column values. */
-  public static final ThreadLocal<DateFormat> PARTITION_DATE_FORMAT =
-       new ThreadLocal<DateFormat>() {
-    @Override
-    protected DateFormat initialValue() {
-      DateFormat val = new SimpleDateFormat("yyyy-MM-dd");
-      val.setLenient(false); // Without this, 2020-20-20 becomes 2021-08-20.
-      return val;
-    };
-  };
-
   public static final String ADMIN = "admin";
   public static final String PUBLIC = "public";
   /** MM write states. */
@@ -7687,8 +7676,7 @@ public class HiveMetaStore extends ThriftHiveMetastore {
             conf.getVar(HiveConf.ConfVars.METASTORE_CLIENT_KERBEROS_PRINCIPAL));
         // Start delegation token manager
         delegationTokenManager = new MetastoreDelegationTokenManager();
-        delegationTokenManager.startDelegationTokenSecretManager(conf, baseHandler,
-            HadoopThriftAuthBridge.Server.ServerMode.METASTORE);
+        delegationTokenManager.startDelegationTokenSecretManager(conf, baseHandler, HadoopThriftAuthBridge.Server.ServerMode.METASTORE);
         saslServer.setSecretManager(delegationTokenManager.getSecretManager());
         transFactory = saslServer.createTransportFactory(
                 MetaStoreUtils.getMetaStoreSaslProperties(conf, useSSL));

@@ -19,6 +19,7 @@
 package org.apache.hadoop.hive.conf;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -2852,6 +2853,9 @@ public class HiveConf extends Configuration {
     HIVE_VECTORIZATION_USE_VECTORIZED_INPUT_FILE_FORMAT("hive.vectorized.use.vectorized.input.format", true,
         "This flag should be set to true to enable vectorizing with vectorized input file format capable SerDe.\n" +
         "The default value is true."),
+    HIVE_VECTORIZATION_VECTORIZED_INPUT_FILE_FORMAT_EXCLUDES("hive.vectorized.input.format.excludes","",
+        "This configuration should be set to fully described input format class names for which \n"
+            + " vectorized input format should not be used for vectorized execution."),
     HIVE_VECTORIZATION_USE_VECTOR_DESERIALIZE("hive.vectorized.use.vector.serde.deserialize", true,
         "This flag should be set to true to enable vectorizing rows using vector deserialize.\n" +
         "The default value is true."),
@@ -2868,9 +2872,17 @@ public class HiveConf extends Configuration {
         "1. chosen : use VectorUDFAdaptor for a small set of UDFs that were choosen for good performance\n" +
         "2. all    : use VectorUDFAdaptor for all UDFs"
     ),
-    HIVE_VECTORIZATION_PTF_ENABLED("hive.vectorized.execution.ptf.enabled", false,
+    HIVE_VECTORIZATION_PTF_ENABLED("hive.vectorized.execution.ptf.enabled", true,
         "This flag should be set to true to enable vectorized mode of the PTF of query execution.\n" +
-        "The default value is false."),
+        "The default value is true."),
+
+    HIVE_VECTORIZATION_PTF_MAX_MEMORY_BUFFERING_BATCH_COUNT("hive.vectorized.ptf.max.memory.buffering.batch.count", 25,
+        "Maximum number of vectorized row batches to buffer in memory for PTF\n" +
+        "The default value is 25"),
+    HIVE_VECTORIZATION_TESTING_REDUCER_BATCH_SIZE("hive.vectorized.testing.reducer.batch.size", -1,
+        "internal use only, used for creating small group key vectorized row batches to exercise more logic\n" +
+        "The default value is -1 which means don't restrict for testing",
+        true),
 
     HIVE_VECTORIZATION_COMPLEX_TYPES_ENABLED("hive.vectorized.complex.types.enabled", true,
         "This flag should be set to true to enable vectorization\n" +
@@ -3404,6 +3416,12 @@ public class HiveConf extends Configuration {
             Constants.LLAP_LOGGER_NAME_RFA,
             Constants.LLAP_LOGGER_NAME_CONSOLE),
         "logger used for llap-daemons."),
+
+    HIVE_TRIGGER_VALIDATION_INTERVAL_MS("hive.trigger.validation.interval.ms", "500ms",
+      new TimeValidator(TimeUnit.MILLISECONDS),
+      "Interval for validating triggers during execution of a query. Triggers defined in resource plan will get\n" +
+        "validated for all SQL operations after every defined interval (default: 500ms) and corresponding action\n" +
+        "defined in the trigger will be taken"),
 
     SPARK_USE_OP_STATS("hive.spark.use.op.stats", true,
         "Whether to use operator stats to determine reducer parallelism for Hive on Spark.\n" +
@@ -3954,6 +3972,18 @@ public class HiveConf extends Configuration {
     return new String[] {value.substring(0, i), value.substring(i)};
   }
 
+  private static Set<String> daysSet = ImmutableSet.of("d", "D", "day", "DAY", "days", "DAYS");
+  private static Set<String> hoursSet = ImmutableSet.of("h", "H", "hour", "HOUR", "hours", "HOURS");
+  private static Set<String> minutesSet = ImmutableSet.of("m", "M", "min", "MIN", "mins", "MINS",
+    "minute", "MINUTE", "minutes", "MINUTES");
+  private static Set<String> secondsSet = ImmutableSet.of("s", "S", "sec", "SEC", "secs", "SECS",
+    "second", "SECOND", "seconds", "SECONDS");
+  private static Set<String> millisSet = ImmutableSet.of("ms", "MS", "msec", "MSEC", "msecs", "MSECS",
+    "millisecond", "MILLISECOND", "milliseconds", "MILLISECONDS");
+  private static Set<String> microsSet = ImmutableSet.of("us", "US", "usec", "USEC", "usecs", "USECS",
+    "microsecond", "MICROSECOND", "microseconds", "MICROSECONDS");
+  private static Set<String> nanosSet = ImmutableSet.of("ns", "NS", "nsec", "NSEC", "nsecs", "NSECS",
+    "nanosecond", "NANOSECOND", "nanoseconds", "NANOSECONDS");
   public static TimeUnit unitFor(String unit, TimeUnit defaultUnit) {
     unit = unit.trim().toLowerCase();
     if (unit.isEmpty() || unit.equals("l")) {
@@ -3961,19 +3991,19 @@ public class HiveConf extends Configuration {
         throw new IllegalArgumentException("Time unit is not specified");
       }
       return defaultUnit;
-    } else if (unit.equals("d") || unit.startsWith("day")) {
+    } else if (daysSet.contains(unit)) {
       return TimeUnit.DAYS;
-    } else if (unit.equals("h") || unit.startsWith("hour")) {
+    } else if (hoursSet.contains(unit)) {
       return TimeUnit.HOURS;
-    } else if (unit.equals("m") || unit.startsWith("min")) {
+    } else if (minutesSet.contains(unit)) {
       return TimeUnit.MINUTES;
-    } else if (unit.equals("s") || unit.startsWith("sec")) {
+    } else if (secondsSet.contains(unit)) {
       return TimeUnit.SECONDS;
-    } else if (unit.equals("ms") || unit.startsWith("msec")) {
+    } else if (millisSet.contains(unit)) {
       return TimeUnit.MILLISECONDS;
-    } else if (unit.equals("us") || unit.startsWith("usec")) {
+    } else if (microsSet.contains(unit)) {
       return TimeUnit.MICROSECONDS;
-    } else if (unit.equals("ns") || unit.startsWith("nsec")) {
+    } else if (nanosSet.contains(unit)) {
       return TimeUnit.NANOSECONDS;
     }
     throw new IllegalArgumentException("Invalid time unit " + unit);

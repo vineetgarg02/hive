@@ -294,6 +294,8 @@ public class Vectorizer implements PhysicalPlanResolver {
   private boolean isVectorizationGroupByComplexTypesEnabled;
   private boolean isVectorizedRowIdentifierEnabled;
   private Collection<Class<?>> rowDeserializeInputFormatExcludes;
+  private int vectorizedPTFMaxMemoryBufferingBatchCount;
+  private int vectorizedTestingReducerBatchSize;
 
   private boolean isSchemaEvolution;
 
@@ -301,6 +303,7 @@ public class Vectorizer implements PhysicalPlanResolver {
 
   private BaseWork currentBaseWork;
   private Operator<? extends OperatorDesc> currentOperator;
+  private Collection<Class<?>> vectorizedInputFormatExcludes;
 
   public void testSetCurrentBaseWork(BaseWork testBaseWork) {
     currentBaseWork = testBaseWork;
@@ -826,13 +829,14 @@ public class Vectorizer implements PhysicalPlanResolver {
 
       if (useVectorizedInputFileFormat) {
 
-        if (isInputFileFormatVectorized) {
+        if (isInputFileFormatVectorized && !isInputFormatExcluded(inputFileFormatClassName,
+            vectorizedInputFormatExcludes)) {
+          pd.setVectorPartitionDesc(VectorPartitionDesc
+              .createVectorizedInputFileFormat(inputFileFormatClassName,
+                  Utilities.isInputFileFormatSelfDescribing(pd)));
 
-          pd.setVectorPartitionDesc(
-              VectorPartitionDesc.createVectorizedInputFileFormat(
-                  inputFileFormatClassName, Utilities.isInputFileFormatSelfDescribing(pd)));
-
-          enabledConditionsMetSet.add(HiveConf.ConfVars.HIVE_VECTORIZATION_USE_VECTORIZED_INPUT_FILE_FORMAT.varname);
+          enabledConditionsMetSet
+              .add(HiveConf.ConfVars.HIVE_VECTORIZATION_USE_VECTORIZED_INPUT_FILE_FORMAT.varname);
           return true;
         }
         // Fall through and look for other options...
@@ -881,7 +885,8 @@ public class Vectorizer implements PhysicalPlanResolver {
           if (lastColumnTakesRest) {
 
             // If row mode will not catch this input file format, then not enabled.
-            if (useRowDeserialize && canUseRowDeserializeFor(inputFileFormatClassName)) {
+            if (useRowDeserialize && !isInputFormatExcluded(inputFileFormatClassName,
+                rowDeserializeInputFormatExcludes)) {
               enabledConditionsNotMetList.add(
                   inputFileFormatClassName + " " +
                   serdeConstants.SERIALIZATION_LAST_COLUMN_TAKES_REST + " must be disabled ");
@@ -911,7 +916,7 @@ public class Vectorizer implements PhysicalPlanResolver {
       // inspect-able Object[] row to a VectorizedRowBatch in the VectorMapOperator.
 
       if (useRowDeserialize) {
-        if (canUseRowDeserializeFor(inputFileFormatClassName)) {
+        if (!isInputFormatExcluded(inputFileFormatClassName, rowDeserializeInputFormatExcludes)) {
           pd.setVectorPartitionDesc(
               VectorPartitionDesc.createRowDeserialize(
                   inputFileFormatClassName,
@@ -927,8 +932,15 @@ public class Vectorizer implements PhysicalPlanResolver {
         }
       }
       if (isInputFileFormatVectorized) {
-        Preconditions.checkState(!useVectorizedInputFileFormat);
-        enabledConditionsNotMetList.add(HiveConf.ConfVars.HIVE_VECTORIZATION_USE_VECTORIZED_INPUT_FILE_FORMAT.varname);
+        if(useVectorizedInputFileFormat) {
+          enabledConditionsNotMetList.add(
+              ConfVars.HIVE_VECTORIZATION_USE_VECTORIZED_INPUT_FILE_FORMAT.varname + " IS true AND "
+                  + ConfVars.HIVE_VECTORIZATION_VECTORIZED_INPUT_FILE_FORMAT_EXCLUDES.varname
+                  + " NOT CONTAINS " + inputFileFormatClassName);
+        } else {
+          enabledConditionsNotMetList
+              .add(HiveConf.ConfVars.HIVE_VECTORIZATION_USE_VECTORIZED_INPUT_FILE_FORMAT.varname);
+        }
       } else {
         // Only offer these when the input file format is not the fast vectorized formats.
         if (isVectorDeserializeEligable) {
@@ -943,19 +955,21 @@ public class Vectorizer implements PhysicalPlanResolver {
       return false;
     }
 
-    private boolean canUseRowDeserializeFor(String inputFileFormatClassName) {
+    private boolean isInputFormatExcluded(String inputFileFormatClassName, Collection<Class<?>> excludes) {
       Class<?> ifClass = null;
       try {
         ifClass = Class.forName(inputFileFormatClassName);
       } catch (ClassNotFoundException e) {
-        LOG.warn("Cannot verify class for " + inputFileFormatClassName
-            + ", not using row deserialize", e);
+        LOG.warn("Cannot verify class for " + inputFileFormatClassName, e);
+        return true;
+      }
+      if(excludes == null || excludes.isEmpty()) {
         return false;
       }
-      for (Class<?> badClass : rowDeserializeInputFormatExcludes) {
-        if (badClass.isAssignableFrom(ifClass)) return false;
+      for (Class<?> badClass : excludes) {
+        if (badClass.isAssignableFrom(ifClass)) return true;
       }
-      return true;
+      return false;
     }
 
     private ImmutablePair<Boolean, Boolean> validateInputFormatAndSchemaEvolution(MapWork mapWork, String alias,
@@ -1266,6 +1280,7 @@ public class Vectorizer implements PhysicalPlanResolver {
       vectorTaskColumnInfo.assume();
 
       reduceWork.setVectorizedVertexNum(++vectorizedVertexNum);
+      reduceWork.setVectorizedTestingReducerBatchSize(vectorizedTestingReducerBatchSize);
 
       boolean ret;
       try {
@@ -1380,7 +1395,8 @@ public class Vectorizer implements PhysicalPlanResolver {
       }
       // Now check the reduce operator tree.
       Map<Rule, NodeProcessor> opRules = new LinkedHashMap<Rule, NodeProcessor>();
-      ReduceWorkValidationNodeProcessor vnp = new ReduceWorkValidationNodeProcessor();
+      ReduceWorkValidationNodeProcessor vnp =
+          new ReduceWorkValidationNodeProcessor(vectorTaskColumnInfo);
       addReduceWorkRules(opRules, vnp);
       Dispatcher disp = new DefaultRuleDispatcher(vnp, opRules, null);
       GraphWalker ogw = new DefaultGraphWalker(disp);
@@ -1530,6 +1546,14 @@ public class Vectorizer implements PhysicalPlanResolver {
 
   class ReduceWorkValidationNodeProcessor implements NodeProcessor {
 
+    private final VectorTaskColumnInfo vectorTaskColumnInfo;
+    private final TypeInfo[] reducerBatchTypeInfos;
+
+    public ReduceWorkValidationNodeProcessor(VectorTaskColumnInfo vectorTaskColumnInfo) {
+      this.vectorTaskColumnInfo = vectorTaskColumnInfo;
+      reducerBatchTypeInfos =  vectorTaskColumnInfo.allTypeInfos.toArray(new TypeInfo[0]);
+    }
+
     // Children of Vectorized GROUPBY that outputs rows instead of vectorized row batchs.
     protected final Set<Operator<? extends OperatorDesc>> nonVectorizedOps =
         new HashSet<Operator<? extends OperatorDesc>>();
@@ -1551,7 +1575,7 @@ public class Vectorizer implements PhysicalPlanResolver {
           return new Boolean(true);
         }
         currentOperator = op;
-        boolean ret = validateReduceWorkOperator(op);
+        boolean ret = validateReduceWorkOperator(op, reducerBatchTypeInfos);
         if (!ret) {
           return new Boolean(false);
         }
@@ -1818,6 +1842,9 @@ public class Vectorizer implements PhysicalPlanResolver {
     useVectorizedInputFileFormat =
         HiveConf.getBoolVar(hiveConf,
             HiveConf.ConfVars.HIVE_VECTORIZATION_USE_VECTORIZED_INPUT_FILE_FORMAT);
+    if(useVectorizedInputFileFormat) {
+      initVectorizedInputFormatExcludeClasses();
+    }
     useVectorDeserialize =
         HiveConf.getBoolVar(hiveConf,
             HiveConf.ConfVars.HIVE_VECTORIZATION_USE_VECTOR_DESERIALIZE);
@@ -1850,6 +1877,13 @@ public class Vectorizer implements PhysicalPlanResolver {
         HiveConf.getBoolVar(hiveConf,
             HiveConf.ConfVars.HIVE_VECTORIZATION_ROW_IDENTIFIER_ENABLED);
 
+    vectorizedPTFMaxMemoryBufferingBatchCount =
+        HiveConf.getIntVar(hiveConf,
+            HiveConf.ConfVars.HIVE_VECTORIZATION_PTF_MAX_MEMORY_BUFFERING_BATCH_COUNT);
+    vectorizedTestingReducerBatchSize =
+        HiveConf.getIntVar(hiveConf,
+            HiveConf.ConfVars.HIVE_VECTORIZATION_TESTING_REDUCER_BATCH_SIZE);
+
     isSchemaEvolution =
         HiveConf.getBoolVar(hiveConf,
             HiveConf.ConfVars.HIVE_SCHEMA_EVOLUTION);
@@ -1869,19 +1903,14 @@ public class Vectorizer implements PhysicalPlanResolver {
     return physicalContext;
   }
 
+  private void initVectorizedInputFormatExcludeClasses() {
+    vectorizedInputFormatExcludes = Utilities.getClassNamesFromConfig(hiveConf,
+        ConfVars.HIVE_VECTORIZATION_VECTORIZED_INPUT_FILE_FORMAT_EXCLUDES);
+  }
+
   private void initRowDeserializeExcludeClasses() {
-    rowDeserializeInputFormatExcludes = new ArrayList<>();
-    String[] classNames = StringUtils.getStrings(HiveConf.getVar(hiveConf,
-        ConfVars.HIVE_VECTORIZATION_ROW_DESERIALIZE_INPUTFORMAT_EXCLUDES));
-    if (classNames == null) return;
-    for (String className : classNames) {
-      if (className == null || className.isEmpty()) continue;
-      try {
-        rowDeserializeInputFormatExcludes.add(Class.forName(className));
-      } catch (Exception ex) {
-        LOG.warn("Cannot create class " + className + " for row.deserialize checks");
-      }
-    }
+    rowDeserializeInputFormatExcludes = Utilities.getClassNamesFromConfig(hiveConf,
+        ConfVars.HIVE_VECTORIZATION_ROW_DESERIALIZE_INPUTFORMAT_EXCLUDES);
   }
 
   private void setOperatorNotSupported(Operator<? extends OperatorDesc> op) {
@@ -1941,7 +1970,8 @@ public class Vectorizer implements PhysicalPlanResolver {
     return ret;
   }
 
-  boolean validateReduceWorkOperator(Operator<? extends OperatorDesc> op) {
+  boolean validateReduceWorkOperator(Operator<? extends OperatorDesc> op,
+      TypeInfo[] reducerBatchTypeInfos) {
     boolean ret;
     switch (op.getType()) {
       case MAPJOIN:
@@ -1986,7 +2016,8 @@ public class Vectorizer implements PhysicalPlanResolver {
             validateSparkHashTableSinkOperator((SparkHashTableSinkOperator) op);
         break;
       case PTF:
-        ret = validatePTFOperator((PTFOperator) op);
+        // PTF needs the TypeInfo of the reducer batch.
+        ret = validatePTFOperator((PTFOperator) op, reducerBatchTypeInfos);
         break;
       default:
         setOperatorNotSupported(op);
@@ -2277,7 +2308,7 @@ public class Vectorizer implements PhysicalPlanResolver {
     return false;
   }
 
-  private boolean validatePTFOperator(PTFOperator op) {
+  private boolean validatePTFOperator(PTFOperator op, TypeInfo[] reducerBatchTypeInfos) {
 
     if (!isPtfVectorizationEnabled) {
       setNodeIssue("Vectorization of PTF is not enabled (" +
@@ -2313,7 +2344,8 @@ public class Vectorizer implements PhysicalPlanResolver {
 
     VectorPTFDesc vectorPTFDesc = null;
     try {
-      vectorPTFDesc = createVectorPTFDesc(op, ptfDesc);
+      vectorPTFDesc = createVectorPTFDesc(
+          op, ptfDesc, reducerBatchTypeInfos, vectorizedPTFMaxMemoryBufferingBatchCount);
     } catch (HiveException e) {
       setOperatorIssue("exception: " + VectorizationContext.getStackTraceAsSingleLine(e));
       return false;
@@ -3825,7 +3857,8 @@ public class Vectorizer implements PhysicalPlanResolver {
    * VectorizationContext to lookup column names, etc.
    */
   private static VectorPTFDesc createVectorPTFDesc(Operator<? extends OperatorDesc> ptfOp,
-      PTFDesc ptfDesc) throws HiveException {
+      PTFDesc ptfDesc, TypeInfo[] reducerBatchTypeInfos,
+      int vectorizedPTFMaxMemoryBufferingBatchCount) throws HiveException {
 
     PartitionedTableFunctionDef funcDef = ptfDesc.getFuncDef();
 
@@ -3839,6 +3872,8 @@ public class Vectorizer implements PhysicalPlanResolver {
     /*
      * Output columns.
      */
+
+    // Evaluator results are first.
     String[] outputColumnNames = new String[outputSize];
     TypeInfo[] outputTypeInfos = new TypeInfo[outputSize];
     for (int i = 0; i < functionCount; i++) {
@@ -3847,6 +3882,8 @@ public class Vectorizer implements PhysicalPlanResolver {
       outputColumnNames[i] = colInfo.getInternalName();
       outputTypeInfos[i] = typeInfo;
     }
+
+    // Followed by key and non-key input columns (some may be missing).
     for (int i = functionCount; i < outputSize; i++) {
       ColumnInfo colInfo = outputSignature.get(i);
       outputColumnNames[i] = colInfo.getInternalName();
@@ -3894,6 +3931,8 @@ public class Vectorizer implements PhysicalPlanResolver {
 
     VectorPTFDesc vectorPTFDesc = new VectorPTFDesc();
 
+    vectorPTFDesc.setReducerBatchTypeInfos(reducerBatchTypeInfos);
+
     vectorPTFDesc.setIsPartitionOrderBy(isPartitionOrderBy);
 
     vectorPTFDesc.setOrderExprNodeDescs(orderExprNodeDescs);
@@ -3906,19 +3945,22 @@ public class Vectorizer implements PhysicalPlanResolver {
     vectorPTFDesc.setOutputColumnNames(outputColumnNames);
     vectorPTFDesc.setOutputTypeInfos(outputTypeInfos);
 
+    vectorPTFDesc.setVectorizedPTFMaxMemoryBufferingBatchCount(
+        vectorizedPTFMaxMemoryBufferingBatchCount);
+
     return vectorPTFDesc;
   }
 
-  private static void determineKeyAndNonKeyInputColumnMap(int[] outputColumnMap,
+  private static void determineKeyAndNonKeyInputColumnMap(int[] outputColumnProjectionMap,
       boolean isPartitionOrderBy, int[] orderColumnMap, int[] partitionColumnMap,
       int evaluatorCount, ArrayList<Integer> keyInputColumns,
       ArrayList<Integer> nonKeyInputColumns) {
 
-    final int outputSize = outputColumnMap.length;
+    final int outputSize = outputColumnProjectionMap.length;
     final int orderKeyCount = orderColumnMap.length;
     final int partitionKeyCount = (isPartitionOrderBy ? partitionColumnMap.length : 0);
     for (int i = evaluatorCount; i < outputSize; i++) {
-      final int nonEvalColumnNum = outputColumnMap[i];
+      final int nonEvalColumnNum = outputColumnProjectionMap[i];
       boolean isKey = false;
       for (int o = 0; o < orderKeyCount; o++) {
         if (nonEvalColumnNum == orderColumnMap[o]) {
@@ -3947,7 +3989,8 @@ public class Vectorizer implements PhysicalPlanResolver {
    * execution.
    */
   private static VectorPTFInfo createVectorPTFInfo(Operator<? extends OperatorDesc> ptfOp,
-      PTFDesc ptfDesc, VectorizationContext vContext) throws HiveException {
+      PTFDesc ptfDesc, VectorizationContext vContext)
+          throws HiveException {
 
     PartitionedTableFunctionDef funcDef = ptfDesc.getFuncDef();
 
@@ -3968,17 +4011,21 @@ public class Vectorizer implements PhysicalPlanResolver {
     /*
      * Output columns.
      */
-    int[] outputColumnMap = new int[outputSize];
+    int[] outputColumnProjectionMap = new int[outputSize];
+
+    // Evaluator results are first.
     for (int i = 0; i < evaluatorCount; i++) {
       ColumnInfo colInfo = outputSignature.get(i);
       TypeInfo typeInfo = colInfo.getType();
       final int outputColumnNum;
         outputColumnNum = vContext.allocateScratchColumn(typeInfo);
-      outputColumnMap[i] = outputColumnNum;
+      outputColumnProjectionMap[i] = outputColumnNum;
     }
+
+    // Followed by key and non-key input columns (some may be missing).
     for (int i = evaluatorCount; i < outputSize; i++) {
       ColumnInfo colInfo = outputSignature.get(i);
-      outputColumnMap[i] = vContext.getInputColumnIndex(colInfo.getInternalName());
+      outputColumnProjectionMap[i] = vContext.getInputColumnIndex(colInfo.getInternalName());
     }
 
     /*
@@ -4028,7 +4075,7 @@ public class Vectorizer implements PhysicalPlanResolver {
 
     ArrayList<Integer> keyInputColumns = new ArrayList<Integer>();
     ArrayList<Integer> nonKeyInputColumns = new ArrayList<Integer>();
-    determineKeyAndNonKeyInputColumnMap(outputColumnMap, isPartitionOrderBy, orderColumnMap,
+    determineKeyAndNonKeyInputColumnMap(outputColumnProjectionMap, isPartitionOrderBy, orderColumnMap,
         partitionColumnMap, evaluatorCount, keyInputColumns, nonKeyInputColumns);
     int[] keyInputColumnMap = ArrayUtils.toPrimitive(keyInputColumns.toArray(new Integer[0]));
     int[] nonKeyInputColumnMap = ArrayUtils.toPrimitive(nonKeyInputColumns.toArray(new Integer[0]));
@@ -4065,7 +4112,7 @@ public class Vectorizer implements PhysicalPlanResolver {
 
     VectorPTFInfo vectorPTFInfo = new VectorPTFInfo();
 
-    vectorPTFInfo.setOutputColumnMap(outputColumnMap);
+    vectorPTFInfo.setOutputColumnMap(outputColumnProjectionMap);
 
     vectorPTFInfo.setPartitionColumnMap(partitionColumnMap);
     vectorPTFInfo.setPartitionColumnVectorTypes(partitionColumnVectorTypes);

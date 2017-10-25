@@ -1798,7 +1798,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       for(Node col : tabColName.getChildren()) {
         assert ((ASTNode)col).getType() == HiveParser.Identifier :
           "expected token " + HiveParser.Identifier + " found " + ((ASTNode)col).getType();
-        targetColNames.add(((ASTNode)col).getText());
+        targetColNames.add(((ASTNode)col).getText().toLowerCase());
       }
       String fullTableName = getUnescapedName((ASTNode) ast.getChild(0).getChild(0),
         SessionState.get().getCurrentDatabase());
@@ -2033,7 +2033,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
         if (qb.getParseInfo().isAnalyzeCommand()) {
           throw new SemanticException(ErrorMsg.ANALYZE_VIEW.getMsg());
         }
-        String fullViewName = tab.getDbName() + "." + tab.getTableName();
+        String fullViewName = tab.getFullyQualifiedName();
         // Prevent view cycles
         if (viewsExpanded.contains(fullViewName)) {
           throw new SemanticException("Recursive view " + fullViewName +

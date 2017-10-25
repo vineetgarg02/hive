@@ -53,9 +53,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
-
 import javax.jdo.JDODataStoreException;
 
 import org.apache.calcite.plan.RelOptMaterialization;
@@ -64,7 +61,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileChecksum;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.hive.common.FileUtils;
@@ -122,6 +118,7 @@ import org.apache.hadoop.hive.metastore.api.PrimaryKeysRequest;
 import org.apache.hadoop.hive.metastore.api.PrincipalPrivilegeSet;
 import org.apache.hadoop.hive.metastore.api.PrincipalType;
 import org.apache.hadoop.hive.metastore.api.PrivilegeBag;
+import org.apache.hadoop.hive.metastore.api.WMResourcePlan;
 import org.apache.hadoop.hive.metastore.api.Role;
 import org.apache.hadoop.hive.metastore.api.RolePrincipalGrant;
 import org.apache.hadoop.hive.metastore.api.SQLForeignKey;
@@ -607,10 +604,15 @@ public class Hive {
     createTable(tbl);
   }
 
+  public void alterTable(Table newTbl, EnvironmentContext environmentContext)
+      throws InvalidOperationException, HiveException {
+    alterTable(newTbl.getDbName(), newTbl.getTableName(), newTbl, false, environmentContext);
+  }
+
   /**
    * Updates the existing table metadata with the new metadata.
    *
-   * @param tblName
+   * @param fullyQlfdTblName
    *          name of the existing table
    * @param newTbl
    *          new name of the table. could be the old name
@@ -618,14 +620,21 @@ public class Hive {
    *           if the changes in metadata is not acceptable
    * @throws TException
    */
-  public void alterTable(String tblName, Table newTbl, EnvironmentContext environmentContext)
+  public void alterTable(String fullyQlfdTblName, Table newTbl, EnvironmentContext environmentContext)
       throws InvalidOperationException, HiveException {
-    alterTable(tblName, newTbl, false, environmentContext);
+    alterTable(fullyQlfdTblName, newTbl, false, environmentContext);
   }
 
-  public void alterTable(String tblName, Table newTbl, boolean cascade, EnvironmentContext environmentContext)
+  public void alterTable(String fullyQlfdTblName, Table newTbl, boolean cascade, EnvironmentContext environmentContext)
       throws InvalidOperationException, HiveException {
-    String[] names = Utilities.getDbTableName(tblName);
+    String[] names = Utilities.getDbTableName(fullyQlfdTblName);
+    alterTable(names[0], names[1], newTbl, cascade, environmentContext);
+  }
+
+  public void alterTable(String dbName, String tblName, Table newTbl, boolean cascade,
+      EnvironmentContext environmentContext)
+      throws InvalidOperationException, HiveException {
+
     try {
       // Remove the DDL_TIME so it gets refreshed
       if (newTbl.getParameters() != null) {
@@ -638,7 +647,7 @@ public class Hive {
       if (cascade) {
         environmentContext.putToProperties(StatsSetupConst.CASCADE, StatsSetupConst.TRUE);
       }
-      getMSC().alter_table_with_environmentContext(names[0], names[1], newTbl.getTTable(), environmentContext);
+      getMSC().alter_table_with_environmentContext(dbName, tblName, newTbl.getTTable(), environmentContext);
     } catch (MetaException e) {
       throw new HiveException("Unable to alter table. " + e.getMessage(), e);
     } catch (TException e) {
@@ -2306,7 +2315,7 @@ private void constructOneLBLocationMap(FileStatus fSta,
       environmentContext.putToProperties(StatsSetupConst.DO_NOT_UPDATE_STATS, StatsSetupConst.TRUE);
     }
     try {
-      alterTable(tableName, tbl, environmentContext);
+      alterTable(tbl, environmentContext);
     } catch (InvalidOperationException e) {
       throw new HiveException(e);
     }
@@ -2558,7 +2567,7 @@ private void constructOneLBLocationMap(FileStatus fSta,
     alterPartitionSpecInMemory(tbl, partSpec, tpart, inheritTableSpecs, partPath);
     String fullName = tbl.getTableName();
     if (!org.apache.commons.lang.StringUtils.isEmpty(tbl.getDbName())) {
-      fullName = tbl.getDbName() + "." + tbl.getTableName();
+      fullName = tbl.getFullyQualifiedName();
     }
     alterPartition(fullName, new Partition(tbl, tpart), null);
   }
@@ -3210,7 +3219,7 @@ private void constructOneLBLocationMap(FileStatus fSta,
       for (Future<ObjectPair<Path, Path>> future : futures) {
         try {
           ObjectPair<Path, Path> pair = future.get();
-          LOG.debug("Moved src: {}", pair.getFirst().toString(), ", to dest: {}", pair.getSecond().toString());
+          LOG.debug("Moved src: {}, to dest: {}", pair.getFirst().toString(), pair.getSecond().toString());
         } catch (Exception e) {
           throw handlePoolException(pool, e);
         }
@@ -3529,13 +3538,13 @@ private void constructOneLBLocationMap(FileStatus fSta,
       he = (HiveException) e;
       if (he.getCanonicalErrorMsg() != ErrorMsg.GENERIC_ERROR) {
         if (he.getCanonicalErrorMsg() == ErrorMsg.UNRESOLVED_RT_EXCEPTION) {
-          LOG.error(String.format("Failed to move: {}", he.getMessage()));
+          LOG.error("Failed to move: {}", he.getMessage());
         } else {
-          LOG.info(String.format("Failed to move: {}", he.getRemoteErrorMsg()));
+          LOG.error("Failed to move: {}", he.getRemoteErrorMsg());
         }
       }
     } else {
-      LOG.error(String.format("Failed to move: {}", e.getMessage()));
+      LOG.error("Failed to move: {}", e.getMessage());
       he = new HiveException(e.getCause());
     }
     pool.shutdownNow();
@@ -4682,6 +4691,56 @@ private void constructOneLBLocationMap(FileStatus fSta,
     throws HiveException, NoSuchObjectException {
     try {
       getMSC().addNotNullConstraint(notNullConstraintCols);
+    } catch (Exception e) {
+      throw new HiveException(e);
+    }
+  }
+
+  public void createResourcePlan(WMResourcePlan resourcePlan) throws HiveException {
+    try {
+      getMSC().createResourcePlan(resourcePlan);
+    } catch (Exception e) {
+      throw new HiveException(e);
+    }
+  }
+
+  public WMResourcePlan getResourcePlan(String rpName) throws HiveException {
+    try {
+      return getMSC().getResourcePlan(rpName);
+    } catch (NoSuchObjectException e) {
+      return null;
+    } catch (Exception e) {
+      throw new HiveException(e);
+    }
+  }
+
+  public List<WMResourcePlan> geAllResourcePlans() throws HiveException {
+    try {
+      return getMSC().getAllResourcePlans();
+    } catch (Exception e) {
+      throw new HiveException(e);
+    }
+  }
+
+  public void dropResourcePlan(String rpName) throws HiveException {
+    try {
+      getMSC().dropResourcePlan(rpName);
+    } catch (Exception e) {
+      throw new HiveException(e);
+    }
+  }
+
+  public void alterResourcePlan(String rpName, WMResourcePlan resourcePlan) throws HiveException {
+    try {
+      getMSC().alterResourcePlan(rpName, resourcePlan);
+    } catch (Exception e) {
+      throw new HiveException(e);
+    }
+  }
+
+  public boolean validateResourcePlan(String rpName) throws HiveException {
+    try {
+      return getMSC().validateResourcePlan(rpName);
     } catch (Exception e) {
       throw new HiveException(e);
     }

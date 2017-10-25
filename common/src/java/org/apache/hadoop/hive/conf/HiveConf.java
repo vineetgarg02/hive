@@ -299,7 +299,8 @@ public class HiveConf extends Configuration {
       HiveConf.ConfVars.METASTORE_TRY_DIRECT_SQL_DDL,
       HiveConf.ConfVars.METASTORE_CLIENT_SOCKET_TIMEOUT,
       HiveConf.ConfVars.METASTORE_PARTITION_NAME_WHITELIST_PATTERN,
-      HiveConf.ConfVars.METASTORE_CAPABILITY_CHECK
+      HiveConf.ConfVars.METASTORE_CAPABILITY_CHECK,
+      HiveConf.ConfVars.METASTORE_DISALLOW_INCOMPATIBLE_COL_TYPE_CHANGES
   };
 
   static {
@@ -1510,7 +1511,8 @@ public class HiveConf extends Configuration {
         "Whether to grant access to the hs2/hive user for queries"),
     HIVEQUERYNAME ("hive.query.name", null,
         "This named is used by Tez to set the dag name. This name in turn will appear on \n" +
-        "the Tez UI representing the work that was done."),
+        "the Tez UI representing the work that was done. Used by Spark to set the query name, will show up in the\n" +
+        "Spark UI."),
 
     HIVEOPTIMIZEBUCKETINGSORTING("hive.optimize.bucketingsorting", true,
         "Don't create a reducer for enforcing \n" +
@@ -2893,10 +2895,8 @@ public class HiveConf extends Configuration {
         "of aggregations that use complex types.\n",
         "For example, AVG uses a complex type (STRUCT) for partial aggregation results" +
         "The default value is true."),
-    HIVE_VECTORIZATION_ROW_IDENTIFIER_ENABLED("hive.vectorized.row.identifier.enabled", false,
-        "This flag should be set to true to enable vectorization\n" +
-        "of ROW__ID.\n" +
-        "The default value is false."),
+    HIVE_VECTORIZATION_ROW_IDENTIFIER_ENABLED("hive.vectorized.row.identifier.enabled", true,
+        "This flag should be set to true to enable vectorization of ROW__ID."),
 
     HIVE_TYPE_CHECK_ON_INSERT("hive.typecheck.on.insert", true, "This property has been extended to control "
         + "whether to check, convert, and normalize partition value to conform to its column type in "
@@ -3027,6 +3027,8 @@ public class HiveConf extends Configuration {
         0.5f, "The maximum fraction of JVM memory which Tez will reserve for the processor"),
     TEZ_TASK_SCALE_MEMORY_RESERVE_FRACTION("hive.tez.task.scale.memory.reserve.fraction",
         -1f, "The customized fraction of JVM memory which Tez will reserve for the processor"),
+    TEZ_CARTESIAN_PRODUCT_EDGE_ENABLED("hive.tez.cartesian-product.enabled",
+        false, "Use Tez cartesian product edge to speed up cross product"),
     // The default is different on the client and server, so it's null here.
     LLAP_IO_ENABLED("hive.llap.io.enabled", null, "Whether the LLAP IO layer is enabled."),
     LLAP_IO_TRACE_SIZE("hive.llap.io.trace.size", "2Mb",
@@ -3432,6 +3434,9 @@ public class HiveConf extends Configuration {
         "If this is set to true, mapjoin optimization in Hive/Spark will use statistics from\n" +
         "TableScan operators at the root of operator tree, instead of parent ReduceSink\n" +
         "operators of the Join operator."),
+    SPARK_OPTIMIZE_SHUFFLE_SERDE("hive.spark.optimize.shuffle.serde", false,
+        "If this is set to true, Hive on Spark will register custom serializers for data types\n" +
+        "in shuffle. This should result in less shuffled data."),
     SPARK_CLIENT_FUTURE_TIMEOUT("hive.spark.client.future.timeout",
       "60s", new TimeValidator(TimeUnit.SECONDS),
       "Timeout for requests from Hive client to remote Spark driver."),

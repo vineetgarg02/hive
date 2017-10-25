@@ -63,20 +63,21 @@ public class HiveSparkClientFactory {
   @VisibleForTesting
   public static final String SPARK_CLONE_CONFIGURATION = "spark.hadoop.cloneConf";
 
-  public static HiveSparkClient createHiveSparkClient(HiveConf hiveconf) throws Exception {
-    Map<String, String> sparkConf = initiateSparkConf(hiveconf);
+  public static HiveSparkClient createHiveSparkClient(HiveConf hiveconf, String sessionId) throws Exception {
+    Map<String, String> sparkConf = initiateSparkConf(hiveconf, sessionId);
+
     // Submit spark job through local spark context while spark master is local mode, otherwise submit
     // spark job through remote spark context.
     String master = sparkConf.get("spark.master");
     if (master.equals("local") || master.startsWith("local[")) {
       // With local spark context, all user sessions share the same spark context.
-      return LocalHiveSparkClient.getInstance(generateSparkConf(sparkConf));
+      return LocalHiveSparkClient.getInstance(generateSparkConf(sparkConf), hiveconf);
     } else {
       return new RemoteHiveSparkClient(hiveconf, sparkConf);
     }
   }
 
-  public static Map<String, String> initiateSparkConf(HiveConf hiveConf) {
+  public static Map<String, String> initiateSparkConf(HiveConf hiveConf, String sessionId) {
     Map<String, String> sparkConf = new HashMap<String, String>();
     HBaseConfiguration.addHbaseResources(hiveConf);
 
@@ -84,8 +85,15 @@ public class HiveSparkClientFactory {
     sparkConf.put("spark.master", SPARK_DEFAULT_MASTER);
     final String appNameKey = "spark.app.name";
     String appName = hiveConf.get(appNameKey);
+    final String sessionIdString = " (sessionId = " + sessionId + ")";
     if (appName == null) {
-      appName = SPARK_DEFAULT_APP_NAME;
+      if (sessionId == null) {
+        appName = SPARK_DEFAULT_APP_NAME;
+      } else {
+        appName = SPARK_DEFAULT_APP_NAME + sessionIdString;
+      }
+    } else {
+      appName = appName + sessionIdString;
     }
     sparkConf.put(appNameKey, appName);
     sparkConf.put("spark.serializer", SPARK_DEFAULT_SERIALIZER);
@@ -200,13 +208,20 @@ public class HiveSparkClientFactory {
       }
     }
 
+    final boolean optShuffleSerDe = hiveConf.getBoolVar(
+        HiveConf.ConfVars.SPARK_OPTIMIZE_SHUFFLE_SERDE);
+
     Set<String> classes = Sets.newHashSet(
-      Splitter.on(",").trimResults().omitEmptyStrings().split(
-        Strings.nullToEmpty(sparkConf.get("spark.kryo.classesToRegister"))));
+        Splitter.on(",").trimResults().omitEmptyStrings().split(
+            Strings.nullToEmpty(sparkConf.get("spark.kryo.classesToRegister"))));
     classes.add(Writable.class.getName());
     classes.add(VectorizedRowBatch.class.getName());
-    classes.add(BytesWritable.class.getName());
-    classes.add(HiveKey.class.getName());
+    if (!optShuffleSerDe) {
+      classes.add(HiveKey.class.getName());
+      classes.add(BytesWritable.class.getName());
+    } else {
+      sparkConf.put("spark.kryo.registrator", SparkClientUtilities.HIVE_KRYO_REG_NAME);
+    }
     sparkConf.put("spark.kryo.classesToRegister", Joiner.on(",").join(classes));
 
     // set yarn queue name

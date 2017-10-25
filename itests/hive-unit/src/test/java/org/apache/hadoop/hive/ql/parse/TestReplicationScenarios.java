@@ -53,6 +53,7 @@ import org.apache.hadoop.hive.ql.Driver;
 import org.apache.hadoop.hive.ql.exec.repl.ReplDumpWork;
 import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
 import org.apache.hadoop.hive.ql.session.SessionState;
+import org.apache.hadoop.hive.ql.stats.StatsUtils;
 import org.apache.hadoop.hive.shims.Utils;
 import org.apache.hadoop.security.authorize.ProxyUsers;
 import org.apache.hive.hcatalog.api.repl.ReplicationV1CompatRule;
@@ -287,8 +288,8 @@ public class TestReplicationScenarios {
     verifyRun("SELECT * from " + replicatedDbName + ".unptned", unptn_data, driverMirror);
     verifyRun("SELECT a from " + replicatedDbName + ".ptned WHERE b=1", ptn_data_1, driverMirror);
     verifyRun("SELECT a from " + replicatedDbName + ".ptned WHERE b=2", ptn_data_2, driverMirror);
-    verifyRun("SELECT a from " + dbName + ".ptned_empty", empty, driverMirror);
-    verifyRun("SELECT * from " + dbName + ".unptned_empty", empty, driverMirror);
+    verifyRun("SELECT a from " + replicatedDbName + ".ptned_empty", empty, driverMirror);
+    verifyRun("SELECT * from " + replicatedDbName + ".unptned_empty", empty, driverMirror);
   }
 
   @Test
@@ -1889,6 +1890,31 @@ public class TestReplicationScenarios {
   }
 
   @Test
+  public void testDropPartitionEventWithPartitionOnTimestampColumn() throws IOException {
+    String testName = "dropPartitionEventWithPartitionOnTimestampColumn";
+    String dbName = createDB(testName, driver);
+    run("CREATE TABLE " + dbName + ".ptned(a string) PARTITIONED BY (b timestamp)", driver);
+
+    // Bootstrap dump/load
+    String replDbName = dbName + "_dupe";
+    Tuple bootstrapDump = bootstrapLoadAndVerify(dbName, replDbName);
+
+    String[] ptn_data = new String[] { "fifteen" };
+    String ptnVal = "2017-10-24 00:00:00.0";
+    run("INSERT INTO TABLE " + dbName + ".ptned PARTITION(b=\"" + ptnVal +"\") values('" + ptn_data[0] + "')", driver);
+
+    // Replicate insert event and verify
+    Tuple incrDump = incrementalLoadAndVerify(dbName, bootstrapDump.lastReplId, replDbName);
+    verifyRun("SELECT a from " + replDbName + ".ptned where (b=\"" + ptnVal + "\") ORDER BY a", ptn_data, driverMirror);
+
+    run("ALTER TABLE " + dbName + ".ptned DROP PARTITION(b=\"" + ptnVal + "\")", driver);
+
+    // Replicate drop partition event and verify
+    incrementalLoadAndVerify(dbName, incrDump.lastReplId, replDbName);
+    verifyIfPartitionNotExist(replDbName, "ptned", new ArrayList<>(Arrays.asList(ptnVal)), metaStoreClientMirror);
+  }
+
+  @Test
   public void testRenameTableWithCM() throws IOException {
     String testName = "renameTableWithCM";
     LOG.info("Testing " + testName);
@@ -2933,9 +2959,9 @@ public class TestReplicationScenarios {
 
     run("CREATE DATABASE " + dbName, driver);
 
-    run("CREATE TABLE " + dbName + ".tbl1(a string, b string, primary key (a) disable novalidate rely, unique (b) disable)", driver);
+    run("CREATE TABLE " + dbName + ".tbl1(a string, b string, primary key (a, b) disable novalidate rely)", driver);
     run("CREATE TABLE " + dbName + ".tbl2(a string, b string, foreign key (a, b) references " + dbName + ".tbl1(a, b) disable novalidate)", driver);
-    run("CREATE TABLE " + dbName + ".tbl3(a string, b string not null disable)", driver);
+    run("CREATE TABLE " + dbName + ".tbl3(a string, b string not null disable, unique (a) disable)", driver);
 
     advanceDumpDir();
     run("REPL DUMP " + dbName, driver);
@@ -2946,20 +2972,20 @@ public class TestReplicationScenarios {
 
     try {
       List<SQLPrimaryKey> pks = metaStoreClientMirror.getPrimaryKeys(new PrimaryKeysRequest(dbName+ "_dupe" , "tbl1"));
-      assertEquals(pks.size(), 1);
-      List<SQLUniqueConstraint> uks = metaStoreClientMirror.getUniqueConstraints(new UniqueConstraintsRequest(dbName+ "_dupe" , "tbl1"));
+      assertEquals(pks.size(), 2);
+      List<SQLUniqueConstraint> uks = metaStoreClientMirror.getUniqueConstraints(new UniqueConstraintsRequest(dbName+ "_dupe" , "tbl3"));
       assertEquals(uks.size(), 1);
       List<SQLForeignKey> fks = metaStoreClientMirror.getForeignKeys(new ForeignKeysRequest(null, null, dbName+ "_dupe" , "tbl2"));
-      assertEquals(fks.size(), 1);
+      assertEquals(fks.size(), 2);
       List<SQLNotNullConstraint> nns = metaStoreClientMirror.getNotNullConstraints(new NotNullConstraintsRequest(dbName+ "_dupe" , "tbl3"));
       assertEquals(nns.size(), 1);
     } catch (TException te) {
       assertNull(te);
     }
 
-    run("CREATE TABLE " + dbName + ".tbl4(a string, b string, primary key (a) disable novalidate rely, unique (b) disable)", driver);
+    run("CREATE TABLE " + dbName + ".tbl4(a string, b string, primary key (a, b) disable novalidate rely)", driver);
     run("CREATE TABLE " + dbName + ".tbl5(a string, b string, foreign key (a, b) references " + dbName + ".tbl4(a, b) disable novalidate)", driver);
-    run("CREATE TABLE " + dbName + ".tbl6(a string, b string not null disable)", driver);
+    run("CREATE TABLE " + dbName + ".tbl6(a string, b string not null disable, unique (a) disable)", driver);
 
     advanceDumpDir();
     run("REPL DUMP " + dbName + " FROM " + replDumpId, driver);
@@ -2974,13 +3000,13 @@ public class TestReplicationScenarios {
     String nnName = null;
     try {
       List<SQLPrimaryKey> pks = metaStoreClientMirror.getPrimaryKeys(new PrimaryKeysRequest(dbName+ "_dupe" , "tbl4"));
-      assertEquals(pks.size(), 1);
+      assertEquals(pks.size(), 2);
       pkName = pks.get(0).getPk_name();
-      List<SQLUniqueConstraint> uks = metaStoreClientMirror.getUniqueConstraints(new UniqueConstraintsRequest(dbName+ "_dupe" , "tbl4"));
+      List<SQLUniqueConstraint> uks = metaStoreClientMirror.getUniqueConstraints(new UniqueConstraintsRequest(dbName+ "_dupe" , "tbl6"));
       assertEquals(uks.size(), 1);
       ukName = uks.get(0).getUk_name();
       List<SQLForeignKey> fks = metaStoreClientMirror.getForeignKeys(new ForeignKeysRequest(null, null, dbName+ "_dupe" , "tbl5"));
-      assertEquals(fks.size(), 1);
+      assertEquals(fks.size(), 2);
       fkName = fks.get(0).getFk_name();
       List<SQLNotNullConstraint> nns = metaStoreClientMirror.getNotNullConstraints(new NotNullConstraintsRequest(dbName+ "_dupe" , "tbl6"));
       assertEquals(nns.size(), 1);
@@ -3157,7 +3183,8 @@ public class TestReplicationScenarios {
 	String testName = "deleteStagingDir";
 	String dbName = createDB(testName, driver);
 	String tableName = "unptned";
-    run("CREATE TABLE " + dbName + "." + tableName + "(a string) STORED AS TEXTFILE", driver);
+    run("CREATE TABLE " + StatsUtils.getFullyQualifiedTableName(dbName, tableName) + "(a string) STORED AS TEXTFILE",
+        driver);
 
     String[] unptn_data = new String[] {"one", "two"};
     String unptn_locn = new Path(TEST_PATH , testName + "_unptn").toUri().getPath();

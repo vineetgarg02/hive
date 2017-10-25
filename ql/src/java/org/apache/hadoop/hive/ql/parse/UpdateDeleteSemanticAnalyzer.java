@@ -17,6 +17,8 @@
  */
 package org.apache.hadoop.hive.ql.parse;
 
+import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -69,7 +71,6 @@ public class UpdateDeleteSemanticAnalyzer extends SemanticAnalyzer {
     if (useSuper) {
       super.analyzeInternal(tree);
     } else {
-
       if (!getTxnMgr().supportsAcid()) {
         throw new SemanticException(ErrorMsg.ACID_OP_ON_NONACID_TXNMGR.getMsg());
       }

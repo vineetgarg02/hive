@@ -28,12 +28,14 @@ import java.net.URI;
 import java.nio.ByteBuffer;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -91,6 +93,7 @@ import org.apache.hadoop.hive.metastore.api.HiveObjectType;
 import org.apache.hadoop.hive.metastore.api.Index;
 import org.apache.hadoop.hive.metastore.api.InvalidInputException;
 import org.apache.hadoop.hive.metastore.api.InvalidObjectException;
+import org.apache.hadoop.hive.metastore.api.InvalidOperationException;
 import org.apache.hadoop.hive.metastore.api.InvalidPartitionException;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.metastore.api.NoSuchObjectException;
@@ -108,6 +111,8 @@ import org.apache.hadoop.hive.metastore.api.PrincipalPrivilegeSet;
 import org.apache.hadoop.hive.metastore.api.PrincipalType;
 import org.apache.hadoop.hive.metastore.api.PrivilegeBag;
 import org.apache.hadoop.hive.metastore.api.PrivilegeGrantInfo;
+import org.apache.hadoop.hive.metastore.api.WMResourcePlan;
+import org.apache.hadoop.hive.metastore.api.WMResourcePlanStatus;
 import org.apache.hadoop.hive.metastore.api.ResourceType;
 import org.apache.hadoop.hive.metastore.api.ResourceUri;
 import org.apache.hadoop.hive.metastore.api.Role;
@@ -149,6 +154,8 @@ import org.apache.hadoop.hive.metastore.model.MPartitionColumnPrivilege;
 import org.apache.hadoop.hive.metastore.model.MPartitionColumnStatistics;
 import org.apache.hadoop.hive.metastore.model.MPartitionEvent;
 import org.apache.hadoop.hive.metastore.model.MPartitionPrivilege;
+import org.apache.hadoop.hive.metastore.model.MWMResourcePlan;
+import org.apache.hadoop.hive.metastore.model.MWMResourcePlan.Status;
 import org.apache.hadoop.hive.metastore.model.MResourceUri;
 import org.apache.hadoop.hive.metastore.model.MRole;
 import org.apache.hadoop.hive.metastore.model.MRoleMap;
@@ -185,8 +192,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.SortedSetMultimap;
+import com.google.common.collect.TreeMultimap;
 
 
 /**
@@ -531,9 +544,9 @@ public class ObjectStore implements RawStore, Configurable {
     // has to be a separate first step because we don't set the default values in the config object.
     for (ConfVars var : MetastoreConf.dataNucleusAndJdoConfs) {
       String confVal = MetastoreConf.getAsString(conf, var);
-      Object prevVal = prop.setProperty(var.varname, confVal);
-      if (LOG.isDebugEnabled() && MetastoreConf.isPrintable(var.varname)) {
-        LOG.debug("Overriding " + var.varname + " value " + prevVal
+      Object prevVal = prop.setProperty(var.getVarname(), confVal);
+      if (LOG.isDebugEnabled() && MetastoreConf.isPrintable(var.getVarname())) {
+        LOG.debug("Overriding " + var.getVarname() + " value " + prevVal
             + " from  jpox.properties with " + confVal);
       }
     }
@@ -561,7 +574,7 @@ public class ObjectStore implements RawStore, Configurable {
       String passwd = MetastoreConf.getPassword(conf, MetastoreConf.ConfVars.PWD);
       if (passwd != null && !passwd.isEmpty()) {
         // We can get away with the use of varname here because varname == hiveName for PWD
-        prop.setProperty(ConfVars.PWD.varname, passwd);
+        prop.setProperty(ConfVars.PWD.getVarname(), passwd);
       }
     } catch (IOException err) {
       throw new RuntimeException("Error getting metastore password: " + err.getMessage(), err);
@@ -728,6 +741,7 @@ public class ObjectStore implements RawStore, Configurable {
    * @return true if there is an active transaction. If the current transaction
    *         is either committed or rolled back it returns false
    */
+  @Override
   public boolean isActiveTransaction() {
     if (currentTransaction == null) {
       return false;
@@ -1083,8 +1097,8 @@ public class ObjectStore implements RawStore, Configurable {
       // Add constraints.
       // We need not do a deep retrieval of the Table Column Descriptor while persisting the
       // constraints since this transaction involving create table is not yet committed.
-      List<String> constraintNames = addPrimaryKeys(primaryKeys, false);
-      constraintNames.addAll(addForeignKeys(foreignKeys, false));
+      List<String> constraintNames = addForeignKeys(foreignKeys, false, primaryKeys, uniqueConstraints);
+      constraintNames.addAll(addPrimaryKeys(primaryKeys, false));
       constraintNames.addAll(addUniqueConstraints(uniqueConstraints, false));
       constraintNames.addAll(addNotNullConstraints(notNullConstraints, false));
       success = commitTransaction();
@@ -3254,13 +3268,14 @@ public class ObjectStore implements RawStore, Configurable {
         ? PartFilterExprUtil.getFilterParser(filter).tree : ExpressionTree.EMPTY_TREE;
 
     return new GetHelper<Integer>(dbName, tblName, true, true) {
-      private SqlFilterForPushdown filter = new SqlFilterForPushdown();
+      private final SqlFilterForPushdown filter = new SqlFilterForPushdown();
 
       @Override
       protected String describeResult() {
         return "Partition count";
       }
 
+      @Override
       protected boolean canUseDirectSql(GetHelper<Integer> ctx) throws MetaException {
         return directSql.generateSqlFilterForPushdown(ctx.getTable(), exprTree, filter);
       }
@@ -3285,13 +3300,14 @@ public class ObjectStore implements RawStore, Configurable {
 
 
     return new GetHelper<Integer>(dbName, tblName, true, true) {
-      private SqlFilterForPushdown filter = new SqlFilterForPushdown();
+      private final SqlFilterForPushdown filter = new SqlFilterForPushdown();
 
       @Override
       protected String describeResult() {
         return "Partition count";
       }
 
+      @Override
       protected boolean canUseDirectSql(GetHelper<Integer> ctx) throws MetaException {
         return directSql.generateSqlFilterForPushdown(ctx.getTable(), exprTree, filter);
       };
@@ -3331,7 +3347,7 @@ public class ObjectStore implements RawStore, Configurable {
     final ExpressionTree tree = (filter != null && !filter.isEmpty())
         ? PartFilterExprUtil.getFilterParser(filter).tree : ExpressionTree.EMPTY_TREE;
     return new GetListHelper<Partition>(dbName, tblName, allowSql, allowJdo) {
-      private SqlFilterForPushdown filter = new SqlFilterForPushdown();
+      private final SqlFilterForPushdown filter = new SqlFilterForPushdown();
 
       @Override
       protected boolean canUseDirectSql(GetHelper<List<Partition>> ctx) throws MetaException {
@@ -3805,7 +3821,20 @@ public class ObjectStore implements RawStore, Configurable {
     return sds;
   }
 
-  private int getColumnIndexFromTableColumns(List<MFieldSchema> cols, String col) {
+  private static MFieldSchema getColumnFromTableColumns(List<MFieldSchema> cols, String col) {
+    if (cols == null) {
+      return null;
+    }
+    for (int i = 0; i < cols.size(); i++) {
+      MFieldSchema mfs = cols.get(i);
+      if (mfs.getName().equalsIgnoreCase(col)) {
+        return mfs;
+      }
+    }
+    return null;
+  }
+
+  private static int getColumnIndexFromTableColumns(List<MFieldSchema> cols, String col) {
     if (cols == null) {
       return -1;
     }
@@ -3854,7 +3883,7 @@ public class ObjectStore implements RawStore, Configurable {
   @Override
   public List<String> addForeignKeys(
     List<SQLForeignKey> fks) throws InvalidObjectException, MetaException {
-   return addForeignKeys(fks, true);
+   return addForeignKeys(fks, true, null, null);
   }
 
   @Override
@@ -3928,87 +3957,204 @@ public class ObjectStore implements RawStore, Configurable {
     return null;
   }
 
-  private List<String> addForeignKeys(
-    List<SQLForeignKey> fks, boolean retrieveCD) throws InvalidObjectException,
-    MetaException {
+  private List<String> addForeignKeys(List<SQLForeignKey> foreignKeys, boolean retrieveCD,
+      List<SQLPrimaryKey> primaryKeys, List<SQLUniqueConstraint> uniqueConstraints)
+          throws InvalidObjectException, MetaException {
     List<String> fkNames = new ArrayList<>();
-    List<MConstraint> mpkfks = new ArrayList<>();
-    String currentConstraintName = null;
 
-    for (int i = 0; i < fks.size(); i++) {
-      final String pkTableDB = normalizeIdentifier(fks.get(i).getPktable_db());
-      final String pkTableName = normalizeIdentifier(fks.get(i).getPktable_name());
-      final String pkColumnName =normalizeIdentifier(fks.get(i).getPkcolumn_name());
-      final String fkTableDB = normalizeIdentifier(fks.get(i).getFktable_db());
-      final String fkTableName = normalizeIdentifier(fks.get(i).getFktable_name());
-      final String fkColumnName = normalizeIdentifier(fks.get(i).getFkcolumn_name());
-
-      // If retrieveCD is false, we do not need to do a deep retrieval of the Table Column Descriptor.
-      // For instance, this is the case when we are creating the table.
-      AttachedMTableInfo nParentTable = getMTable(pkTableDB, pkTableName, retrieveCD);
-      MTable parentTable = nParentTable.mtbl;
-      if (parentTable == null) {
-        throw new InvalidObjectException("Parent table not found: " + pkTableName);
-      }
-
-      AttachedMTableInfo nChildTable = getMTable(fkTableDB, fkTableName, retrieveCD);
-      MTable childTable = nChildTable.mtbl;
-      if (childTable == null) {
-        throw new InvalidObjectException("Child table not found: " + fkTableName);
-      }
-
-      MColumnDescriptor parentCD = retrieveCD ? nParentTable.mcd : parentTable.getSd().getCD();
-      List<MFieldSchema> parentCols = parentCD == null ? null : parentCD.getCols();
-      int parentIntegerIndex = getColumnIndexFromTableColumns(parentCols, pkColumnName);
-      if (parentIntegerIndex == -1) {
-        throw new InvalidObjectException("Parent column not found: " + pkColumnName);
-      }
-
-      MColumnDescriptor childCD = retrieveCD ? nChildTable.mcd : childTable.getSd().getCD();
-      List<MFieldSchema> childCols = childCD.getCols();
-      int childIntegerIndex = getColumnIndexFromTableColumns(childCols, fkColumnName);
-      if (childIntegerIndex == -1) {
-        throw new InvalidObjectException("Child column not found: " + fkColumnName);
-      }
-
-      if (fks.get(i).getFk_name() == null) {
-        // When there is no explicit foreign key name associated with the constraint and the key is composite,
-        // we expect the foreign keys to be send in order in the input list.
-        // Otherwise, the below code will break.
-        // If this is the first column of the FK constraint, generate the foreign key name
-        // NB: The below code can result in race condition where duplicate names can be generated (in theory).
-        // However, this scenario can be ignored for practical purposes because of
-        // the uniqueness of the generated constraint name.
-        if (fks.get(i).getKey_seq() == 1) {
-          currentConstraintName = generateConstraintName(
-            fkTableDB, fkTableName, pkTableDB, pkTableName, pkColumnName, fkColumnName, "fk");
+    if (foreignKeys.size() > 0) {
+      List<MConstraint> mpkfks = new ArrayList<>();
+      String currentConstraintName = null;
+      // We start iterating through the foreign keys. This list might contain more than a single
+      // foreign key, and each foreign key might contain multiple columns. The outer loop retrieves
+      // the information that is common for a single key (table information) while the inner loop
+      // checks / adds information about each column.
+      for (int i = 0; i < foreignKeys.size(); i++) {
+        final String fkTableDB = normalizeIdentifier(foreignKeys.get(i).getFktable_db());
+        final String fkTableName = normalizeIdentifier(foreignKeys.get(i).getFktable_name());
+        // If retrieveCD is false, we do not need to do a deep retrieval of the Table Column Descriptor.
+        // For instance, this is the case when we are creating the table.
+        final AttachedMTableInfo nChildTable = getMTable(fkTableDB, fkTableName, retrieveCD);
+        final MTable childTable = nChildTable.mtbl;
+        if (childTable == null) {
+          throw new InvalidObjectException("Child table not found: " + fkTableName);
         }
-      } else {
-        currentConstraintName = normalizeIdentifier(fks.get(i).getFk_name());
+        final MColumnDescriptor childCD = retrieveCD ? nChildTable.mcd : childTable.getSd().getCD();
+        final List<MFieldSchema> childCols = childCD.getCols();
+
+        final String pkTableDB = normalizeIdentifier(foreignKeys.get(i).getPktable_db());
+        final String pkTableName = normalizeIdentifier(foreignKeys.get(i).getPktable_name());
+        // For primary keys, we retrieve the column descriptors if retrieveCD is true (which means
+        // it is an alter table statement) or if it is a create table statement but we are
+        // referencing another table instead of self for the primary key.
+        final AttachedMTableInfo nParentTable;
+        final MTable parentTable;
+        final MColumnDescriptor parentCD;
+        final List<MFieldSchema> parentCols;
+        final List<SQLPrimaryKey> existingTablePrimaryKeys;
+        final List<SQLUniqueConstraint> existingTableUniqueConstraints;
+        final boolean sameTable = fkTableDB.equals(pkTableDB) && fkTableName.equals(pkTableName);
+        if (sameTable) {
+          nParentTable = nChildTable;
+          parentTable = childTable;
+          parentCD = childCD;
+          parentCols = childCols;
+          existingTablePrimaryKeys = primaryKeys;
+          existingTableUniqueConstraints = uniqueConstraints;
+        } else {
+          nParentTable = getMTable(pkTableDB, pkTableName, true);
+          parentTable = nParentTable.mtbl;
+          if (parentTable == null) {
+            throw new InvalidObjectException("Parent table not found: " + pkTableName);
+          }
+          parentCD = nParentTable.mcd;
+          parentCols = parentCD == null ? null : parentCD.getCols();
+          existingTablePrimaryKeys = getPrimaryKeys(pkTableDB, pkTableName);
+          existingTableUniqueConstraints = getUniqueConstraints(pkTableDB, pkTableName);
+        }
+
+        // Here we build an aux structure that is used to verify that the foreign key that is declared
+        // is actually referencing a valid primary key or unique key. We also check that the types of
+        // the columns correspond.
+        if (existingTablePrimaryKeys.isEmpty() && existingTableUniqueConstraints.isEmpty()) {
+          throw new MetaException(
+              "Trying to define foreign key but there are no primary keys or unique keys for referenced table");
+        }
+        final Set<String> validPKsOrUnique = generateValidPKsOrUniqueSignatures(parentCols,
+            existingTablePrimaryKeys, existingTableUniqueConstraints);
+
+        StringBuilder fkSignature = new StringBuilder();
+        StringBuilder referencedKSignature = new StringBuilder();
+        for (; i < foreignKeys.size(); i++) {
+          final SQLForeignKey foreignKey = foreignKeys.get(i);
+          final String fkColumnName = normalizeIdentifier(foreignKey.getFkcolumn_name());
+          int childIntegerIndex = getColumnIndexFromTableColumns(childCols, fkColumnName);
+          if (childIntegerIndex == -1) {
+            throw new InvalidObjectException("Child column not found: " + fkColumnName);
+          }
+
+          final String pkColumnName = normalizeIdentifier(foreignKey.getPkcolumn_name());
+          int parentIntegerIndex = getColumnIndexFromTableColumns(parentCols, pkColumnName);
+          if (parentIntegerIndex == -1) {
+            throw new InvalidObjectException("Parent column not found: " + pkColumnName);
+          }
+
+          if (foreignKey.getFk_name() == null) {
+            // When there is no explicit foreign key name associated with the constraint and the key is composite,
+            // we expect the foreign keys to be send in order in the input list.
+            // Otherwise, the below code will break.
+            // If this is the first column of the FK constraint, generate the foreign key name
+            // NB: The below code can result in race condition where duplicate names can be generated (in theory).
+            // However, this scenario can be ignored for practical purposes because of
+            // the uniqueness of the generated constraint name.
+            if (foreignKey.getKey_seq() == 1) {
+              currentConstraintName = generateConstraintName(
+                fkTableDB, fkTableName, pkTableDB, pkTableName, pkColumnName, fkColumnName, "fk");
+            }
+          } else {
+            currentConstraintName = normalizeIdentifier(foreignKey.getFk_name());
+          }
+          fkNames.add(currentConstraintName);
+          Integer updateRule = foreignKey.getUpdate_rule();
+          Integer deleteRule = foreignKey.getDelete_rule();
+          int enableValidateRely = (foreignKey.isEnable_cstr() ? 4 : 0) +
+                  (foreignKey.isValidate_cstr() ? 2 : 0) + (foreignKey.isRely_cstr() ? 1 : 0);
+          MConstraint mpkfk = new MConstraint(
+            currentConstraintName,
+            MConstraint.FOREIGN_KEY_CONSTRAINT,
+            foreignKey.getKey_seq(),
+            deleteRule,
+            updateRule,
+            enableValidateRely,
+            parentTable,
+            childTable,
+            parentCD,
+            childCD,
+            childIntegerIndex,
+            parentIntegerIndex
+          );
+          mpkfks.add(mpkfk);
+
+          final String fkColType = getColumnFromTableColumns(childCols, fkColumnName).getType();
+          fkSignature.append(
+              generateColNameTypeSignature(fkColumnName, fkColType));
+          referencedKSignature.append(
+              generateColNameTypeSignature(pkColumnName, fkColType));
+
+          if (i + 1 < foreignKeys.size() && foreignKeys.get(i + 1).getKey_seq() == 1) {
+            // Next one is a new key, we bail out from the inner loop
+            break;
+          }
+        }
+        String referenced = referencedKSignature.toString();
+        if (!validPKsOrUnique.contains(referenced)) {
+          throw new MetaException(
+              "Foreign key references " + referenced + " but no corresponding "
+              + "primary key or unique key exists. Possible keys: " + validPKsOrUnique);
+        }
+        if (sameTable && fkSignature.toString().equals(referenced)) {
+          throw new MetaException(
+              "Cannot be both foreign key and primary/unique key on same table: " + referenced);
+        }
+        fkSignature = new StringBuilder();
+        referencedKSignature = new StringBuilder();
       }
-      fkNames.add(currentConstraintName);
-      Integer updateRule = fks.get(i).getUpdate_rule();
-      Integer deleteRule = fks.get(i).getDelete_rule();
-      int enableValidateRely = (fks.get(i).isEnable_cstr() ? 4 : 0) +
-      (fks.get(i).isValidate_cstr() ? 2 : 0) + (fks.get(i).isRely_cstr() ? 1 : 0);
-      MConstraint mpkfk = new MConstraint(
-        currentConstraintName,
-        MConstraint.FOREIGN_KEY_CONSTRAINT,
-        fks.get(i).getKey_seq(),
-        deleteRule,
-        updateRule,
-        enableValidateRely,
-        parentTable,
-        childTable,
-        parentCD,
-        childCD,
-        childIntegerIndex,
-        parentIntegerIndex
-      );
-      mpkfks.add(mpkfk);
+      pm.makePersistentAll(mpkfks);
     }
-    pm.makePersistentAll(mpkfks);
     return fkNames;
+  }
+
+  private static Set<String> generateValidPKsOrUniqueSignatures(List<MFieldSchema> tableCols,
+      List<SQLPrimaryKey> refTablePrimaryKeys, List<SQLUniqueConstraint> refTableUniqueConstraints) {
+    final Set<String> validPKsOrUnique = new HashSet<>();
+    if (!refTablePrimaryKeys.isEmpty()) {
+      Collections.sort(refTablePrimaryKeys, new Comparator<SQLPrimaryKey>() {
+        @Override
+        public int compare(SQLPrimaryKey o1, SQLPrimaryKey o2) {
+          int keyNameComp = o1.getPk_name().compareTo(o2.getPk_name());
+          if (keyNameComp == 0) { return Integer.compare(o1.getKey_seq(), o2.getKey_seq()); }
+          return keyNameComp;
+        }
+      });
+      StringBuilder pkSignature = new StringBuilder();
+      for (SQLPrimaryKey pk : refTablePrimaryKeys) {
+        pkSignature.append(
+            generateColNameTypeSignature(
+                pk.getColumn_name(), getColumnFromTableColumns(tableCols, pk.getColumn_name()).getType()));
+      }
+      validPKsOrUnique.add(pkSignature.toString());
+    }
+    if (!refTableUniqueConstraints.isEmpty()) {
+      Collections.sort(refTableUniqueConstraints, new Comparator<SQLUniqueConstraint>() {
+        @Override
+        public int compare(SQLUniqueConstraint o1, SQLUniqueConstraint o2) {
+          int keyNameComp = o1.getUk_name().compareTo(o2.getUk_name());
+          if (keyNameComp == 0) { return Integer.compare(o1.getKey_seq(), o2.getKey_seq()); }
+          return keyNameComp;
+        }
+      });
+      StringBuilder ukSignature = new StringBuilder();
+      for (int j = 0; j < refTableUniqueConstraints.size(); j++) {
+        SQLUniqueConstraint uk = refTableUniqueConstraints.get(j);
+        ukSignature.append(
+            generateColNameTypeSignature(
+                uk.getColumn_name(), getColumnFromTableColumns(tableCols, uk.getColumn_name()).getType()));
+        if (j + 1 < refTableUniqueConstraints.size()) {
+          if (!refTableUniqueConstraints.get(j + 1).getUk_name().equals(
+                  refTableUniqueConstraints.get(j).getUk_name())) {
+            validPKsOrUnique.add(ukSignature.toString());
+            ukSignature = new StringBuilder();
+          }
+        } else {
+          validPKsOrUnique.add(ukSignature.toString());
+        }
+      }
+    }
+    return validPKsOrUnique;
+  }
+
+  private static String generateColNameTypeSignature(String colName, String colType) {
+    return colName + ":" + colType + ";";
   }
 
   @Override
@@ -7280,6 +7426,11 @@ public class ObjectStore implements RawStore, Configurable {
       if (oldStats != null) {
         StatObjectConverter.setFieldsIntoOldStats(mStatsObj, oldStats);
       } else {
+        if (sqlGenerator.getDbProduct().equals(DatabaseProduct.POSTGRES) && mStatsObj.getBitVector() == null) {
+          // workaround for DN bug in persisting nulls in pg bytea column
+          // instead set empty bit vector with header.
+          mStatsObj.setBitVector(new byte[] {'H','L'});
+        }
         pm.makePersistent(mStatsObj);
       }
     } finally {
@@ -7316,6 +7467,11 @@ public class ObjectStore implements RawStore, Configurable {
       if (oldStats != null) {
         StatObjectConverter.setFieldsIntoOldStats(mStatsObj, oldStats);
       } else {
+        if (sqlGenerator.getDbProduct().equals(DatabaseProduct.POSTGRES) && mStatsObj.getBitVector() == null) {
+          // workaround for DN bug in persisting nulls in pg bytea column
+          // instead set empty bit vector with header.
+          mStatsObj.setBitVector(new byte[] {'H','L'});
+        }
         pm.makePersistent(mStatsObj);
       }
     } finally {
@@ -8562,7 +8718,7 @@ public class ObjectStore implements RawStore, Configurable {
   }
 
   private void lockForUpdate() throws MetaException {
-    String selectQuery = "select \"NEXT_EVENT_ID\" from \"NOTIFICATION_SEQUENCE\"";
+    String selectQuery = "select \"NEXT_EVENT_ID\" from NOTIFICATION_SEQUENCE";
     String selectForUpdateQuery = sqlGenerator.addForUpdateClause(selectQuery);
     new RetryingExecutor(conf, () -> {
       Query query = pm.newQuery("javax.jdo.query.SQL", selectForUpdateQuery);
@@ -8801,7 +8957,7 @@ public class ObjectStore implements RawStore, Configurable {
       pmCache.setAccessible(true);
       Set<JDOPersistenceManager> pmSet = (Set<JDOPersistenceManager>)pmCache.get(pmf);
       for (JDOPersistenceManager pm : pmSet) {
-        org.datanucleus.ExecutionContext ec = (org.datanucleus.ExecutionContext)pm.getExecutionContext();
+        org.datanucleus.ExecutionContext ec = pm.getExecutionContext();
         if (ec instanceof org.datanucleus.ExecutionContextThreadedImpl) {
           ClassLoaderResolver clr = ((org.datanucleus.ExecutionContextThreadedImpl)ec).getClassLoaderResolver();
           clearClr(clr);
@@ -9309,5 +9465,225 @@ public class ObjectStore implements RawStore, Configurable {
   @VisibleForTesting
   Properties getProp() {
     return prop;
+  }
+
+  @Override
+  public void createResourcePlan(WMResourcePlan resourcePlan) throws MetaException {
+    boolean commited = false;
+    String rpName = normalizeIdentifier(resourcePlan.getName());
+    Integer queryParallelism = resourcePlan.isSetQueryParallelism() ?
+        resourcePlan.getQueryParallelism() : null;
+    MWMResourcePlan rp = new MWMResourcePlan(rpName, queryParallelism, MWMResourcePlan.Status.DISABLED);
+    try {
+      openTransaction();
+      pm.makePersistent(rp);
+      commited = commitTransaction();
+    } finally {
+      if (!commited) {
+        rollbackTransaction();
+      }
+    }
+  }
+
+  private WMResourcePlan fromMResourcePlan(MWMResourcePlan mplan) {
+    if (mplan == null) {
+      return null;
+    }
+    WMResourcePlan rp = new WMResourcePlan();
+    rp.setName(mplan.getName());
+    rp.setStatus(WMResourcePlanStatus.valueOf(mplan.getStatus().name()));
+    if (mplan.getQueryParallelism() != null) {
+      rp.setQueryParallelism(mplan.getQueryParallelism());
+    }
+    return rp;
+  }
+
+  @Override
+  public WMResourcePlan getResourcePlan(String name) throws NoSuchObjectException {
+    WMResourcePlan resourcePlan = null;
+    boolean commited = false;
+    Query query = null;
+    try {
+      openTransaction();
+      name = normalizeIdentifier(name);
+      query = pm.newQuery(MWMResourcePlan.class, "name == rpname");
+      query.declareParameters("java.lang.String rpname");
+      query.setUnique(true);
+      MWMResourcePlan mResourcePlan = (MWMResourcePlan) query.execute(name);
+      pm.retrieve(mResourcePlan);
+      resourcePlan = fromMResourcePlan(mResourcePlan);
+      commited = commitTransaction();
+    } finally {
+      rollbackAndCleanup(commited, query);
+    }
+    if (resourcePlan == null) {
+      throw new NoSuchObjectException("There is no resource plan named " + name);
+    }
+    return resourcePlan;
+  }
+
+  @Override
+  public List<WMResourcePlan> getAllResourcePlans() throws MetaException {
+    List<WMResourcePlan> resourcePlans = new ArrayList();
+    boolean commited = false;
+    Query query = null;
+    try {
+      openTransaction();
+      query = pm.newQuery(MWMResourcePlan.class);
+      List<MWMResourcePlan> mplans = (List<MWMResourcePlan>) query.execute();
+      pm.retrieveAll(mplans);
+      commited = commitTransaction();
+      if (mplans != null) {
+        for (MWMResourcePlan mplan : mplans) {
+          resourcePlans.add(fromMResourcePlan(mplan));
+        }
+      }
+    } finally {
+      rollbackAndCleanup(commited, query);
+    }
+    return resourcePlans;
+  }
+
+  @Override
+  public void alterResourcePlan(String name, WMResourcePlan resourcePlan)
+      throws NoSuchObjectException, InvalidOperationException, MetaException {
+    name = normalizeIdentifier(name);
+    boolean commited = false;
+    Query query = null;
+    try {
+      openTransaction();
+      query = pm.newQuery(MWMResourcePlan.class, "name == rpName");
+      query.declareParameters("java.lang.String rpName");
+      query.setUnique(true);
+      MWMResourcePlan mResourcePlan = (MWMResourcePlan) query.execute(name);
+      if (mResourcePlan == null) {
+        throw new NoSuchObjectException("Cannot find resource plan: " + name);
+      }
+      if (!resourcePlan.getName().equals(name)) {
+        mResourcePlan.setName(resourcePlan.getName());
+      }
+      if (resourcePlan.isSetQueryParallelism()) {
+        mResourcePlan.setQueryParallelism(resourcePlan.getQueryParallelism());
+      }
+      if (resourcePlan.isSetStatus()) {
+        switchStatus(name, mResourcePlan, resourcePlan.getStatus().name());
+      }
+      try {
+        commited = commitTransaction();
+      } catch (Exception e) {
+        Throwable ex = e;
+        while (ex != null) {
+          if (ex instanceof SQLIntegrityConstraintViolationException) {
+            throw new InvalidOperationException("Resource plan should be unique");
+          }
+          ex = ex.getCause();
+        }
+        throw e;
+      }
+    } finally {
+      rollbackAndCleanup(commited, query);
+    }
+  }
+
+  private void switchStatus(String name, MWMResourcePlan mResourcePlan, String status)
+      throws InvalidOperationException {
+    Status currentStatus = mResourcePlan.getStatus();
+    Status newStatus = null;
+    try {
+      newStatus = Status.valueOf(status);
+    } catch (IllegalArgumentException e) {
+      throw new InvalidOperationException("Invalid status: " + status);
+    }
+
+    if (newStatus == currentStatus) {
+      return;
+    }
+
+    // No status change for active resource plan, first activate another plan.
+    if (currentStatus == Status.ACTIVE) {
+      throw new InvalidOperationException(
+          "Resource plan " + name + " is active, activate another plan first.");
+    }
+
+    if ((currentStatus == Status.ENABLED && newStatus == Status.DISABLED) ||
+        (currentStatus == Status.DISABLED && newStatus == Status.ENABLED)) {
+      // enabled plan can be disabled and disabled plan enabled.
+      mResourcePlan.setStatus(newStatus);
+    } else if (currentStatus == Status.ENABLED && newStatus == Status.ACTIVE) {
+      // We can activate an enabled resource plan.
+      if (!isResourcePlanValid(mResourcePlan)) {
+        throw new InvalidOperationException("ResourcePlan: " + name + " is invalid.");
+      }
+      // Deactivate currently active resource plan.
+      deactivateActiveResourcePlan();
+      mResourcePlan.setStatus(newStatus);
+    } else if (currentStatus == Status.DISABLED && newStatus == Status.ACTIVE) {
+      throw new InvalidOperationException(
+          "Cannot activate resource plan: " + name + " first enable it");
+    } else {
+      // This should not happen just there in case we add more status.
+      throw new InvalidOperationException("Cannot move resource plan: " + name +
+          " from " + currentStatus + " to " + newStatus);
+    }
+  }
+
+  private void deactivateActiveResourcePlan() {
+    boolean commited = false;
+    Query query = null;
+    try {
+      openTransaction();
+      query = pm.newQuery(MWMResourcePlan.class, "status == \"ACTIVE\"");
+      query.setUnique(true);
+      MWMResourcePlan mResourcePlan = (MWMResourcePlan) query.execute();
+      // We may not have an active resource plan in the start.
+      if (mResourcePlan != null) {
+        mResourcePlan.setStatus(Status.ENABLED);
+      }
+      commited = commitTransaction();
+    } finally {
+      rollbackAndCleanup(commited, query);
+    }
+  }
+
+  private boolean isResourcePlanValid(MWMResourcePlan mResourcePlan) {
+    return true;
+  }
+
+  @Override
+  public boolean validateResourcePlan(String name)
+      throws NoSuchObjectException, InvalidObjectException, MetaException {
+    name = normalizeIdentifier(name);
+    Query query = null;
+    try {
+      query = pm.newQuery(MWMResourcePlan.class, "name == rpName");
+      query.declareParameters("java.lang.String rpName");
+      query.setUnique(true);
+      MWMResourcePlan mResourcePlan = (MWMResourcePlan) query.execute(name);
+      if (mResourcePlan == null) {
+        throw new NoSuchObjectException("Cannot find resourcePlan: " + name);
+      }
+      // Validate resource plan.
+      return isResourcePlanValid(mResourcePlan);
+    } finally {
+      rollbackAndCleanup(true, query);
+    }
+  }
+
+  @Override
+  public void dropResourcePlan(String name) throws NoSuchObjectException, MetaException {
+    name = normalizeIdentifier(name);
+    boolean commited = false;
+    Query query = null;
+    try {
+      openTransaction();
+      query = pm.newQuery(MWMResourcePlan.class, "name == resourcePlanName && status != \"ACTIVE\"");
+      query.declareParameters("java.lang.String resourcePlanName");
+      if (query.deletePersistentAll(name) == 0) {
+        throw new NoSuchObjectException("Cannot find resourcePlan: " + name + " or its active");
+      }
+      commited = commitTransaction();
+    } finally {
+      rollbackAndCleanup(commited, query);
+    }
   }
 }

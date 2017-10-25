@@ -103,14 +103,14 @@ public class StatsNoJobTask extends Task<StatsNoJobWork> implements Serializable
       tableName = work.getTableSpecs().tableName;
       table = db.getTable(tableName);
       int numThreads = HiveConf.getIntVar(conf, ConfVars.HIVE_STATS_GATHER_NUM_THREADS);
-      tableFullName = table.getDbName() + "." + table.getTableName();
+      tableFullName = table.getFullyQualifiedName();
       threadPool = Executors.newFixedThreadPool(numThreads,
           new ThreadFactoryBuilder().setDaemon(true).setNameFormat("StatsNoJobTask-Thread-%d")
               .build());
       partUpdates = new MapMaker().concurrencyLevel(numThreads).makeMap();
-      LOG.info("Initialized threadpool for stats computation with " + numThreads + " threads");
+      LOG.info("Initialized threadpool for stats computation with {} threads", numThreads);
     } catch (HiveException e) {
-      LOG.error("Cannot get table " + tableName, e);
+      LOG.error("Cannot get table {}", tableName, e);
       console.printError("Cannot get table " + tableName, e.toString());
     }
 
@@ -185,12 +185,12 @@ public class StatsNoJobTask extends Task<StatsNoJobWork> implements Serializable
           String threadName = Thread.currentThread().getName();
           String msg = "Partition " + tableFullName + partn.getSpec() + " stats: ["
               + toString(parameters) + ']';
-          LOG.debug(threadName + ": " + msg);
+          LOG.debug("{}: {}", threadName, msg);
           console.printInfo(msg);
         } else {
           String threadName = Thread.currentThread().getName();
           String msg = "Partition " + tableFullName + partn.getSpec() + " does not provide stats.";
-          LOG.debug(threadName + ": " + msg);
+          LOG.debug("{}: {}", threadName, msg);
         }
       } catch (Exception e) {
         console.printInfo("[Warning] could not update stats for " + tableFullName + partn.getSpec()
@@ -283,13 +283,14 @@ public class StatsNoJobTask extends Task<StatsNoJobWork> implements Serializable
             EnvironmentContext environmentContext = new EnvironmentContext();
             environmentContext.putToProperties(StatsSetupConst.STATS_GENERATED, StatsSetupConst.TASK);
 
-            db.alterTable(tableFullName, new Table(tTable), environmentContext);
+            db.alterTable(table, environmentContext);
 
             String msg = "Table " + tableFullName + " stats: [" + toString(parameters) + ']';
             if (Utilities.FILE_OP_LOGGER.isTraceEnabled()) {
               Utilities.FILE_OP_LOGGER.trace(msg);
             }
             console.printInfo(msg);
+            LOG.debug("Table {} does not provide stats.", tableFullName);
           }
         } catch (Exception e) {
           console.printInfo("[Warning] could not update stats for " + tableFullName + ".",
@@ -333,7 +334,7 @@ public class StatsNoJobTask extends Task<StatsNoJobWork> implements Serializable
         environmentContext.putToProperties(StatsSetupConst.STATS_GENERATED, StatsSetupConst.TASK);
         db.alterPartitions(tableFullName, Lists.newArrayList(partUpdates.values()),
             environmentContext);
-        LOG.debug("Bulk updated " + partUpdates.values().size() + " partitions.");
+        LOG.debug("Bulk updated {} partitions.", partUpdates.values().size());
       }
     }
     return 0;

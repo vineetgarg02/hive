@@ -84,6 +84,7 @@ import org.apache.calcite.rex.RexShuttle;
 import org.apache.calcite.rex.RexSubQuery;
 import org.apache.calcite.rex.RexUtil;
 import org.apache.calcite.rex.RexVisitorImpl;
+import org.apache.calcite.sql.SemiJoinType;
 import org.apache.calcite.sql.SqlFunction;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
@@ -92,25 +93,11 @@ import org.apache.calcite.sql.fun.SqlSingleValueAggFunction;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.validate.SqlValidatorUtil;
 import org.apache.calcite.tools.RelBuilder;
-import org.apache.calcite.util.Bug;
-import org.apache.calcite.util.Holder;
-import org.apache.calcite.util.ImmutableBitSet;
-import org.apache.calcite.util.Litmus;
-import org.apache.calcite.util.Pair;
-import org.apache.calcite.util.ReflectUtil;
-import org.apache.calcite.util.ReflectiveVisitor;
-import org.apache.calcite.util.Stacks;
-import org.apache.calcite.util.Util;
+import org.apache.calcite.util.*;
 import org.apache.calcite.util.mapping.Mappings;
+import org.apache.hadoop.hive.ql.optimizer.calcite.*;
 import org.apache.hadoop.hive.ql.optimizer.calcite.HiveRelShuttleImpl;
-import org.apache.hadoop.hive.ql.optimizer.calcite.HiveRelShuttleImpl;
-import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveUnion;
-import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveAggregate;
-import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveFilter;
-import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveIntersect;
-import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveJoin;
-import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveProject;
-import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveSortLimit;
+import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.*;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -144,7 +131,6 @@ import java.util.Stack;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import javax.annotation.Nonnull;
->>>>>>> parent of 9375cf3c09... HIVE-17726: Using exists may lead to incorrect results (Vineet Garg, reviewed by Ashutosh Chauhan)
 
 /**
  * NOTE: this whole logic is replicated from Calcite's RelDecorrelator
@@ -905,7 +891,10 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
       // LogicalProject projects the original expressions
       final Map<Integer, Integer> mapOldToNewOutputs =  new HashMap<>();
       int newPos;
-      for (newPos = 0; newPos < oldProjects.size(); newPos++) {
+      // since logical correlate could be rewritten into semi join which would discard all the columns/project from
+      // right side we should only go until either we hit old project size or new decorrelated input field size
+      for (newPos = 0; newPos < oldProjects.size() && newPos < frame.r.getRowType().getFieldList().size();
+           newPos++) {
         projects.add(
                 newPos,
                 Pair.of(
@@ -1279,6 +1268,21 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
         // this means correated value generator wasn't generated
         valueGenerator = false;
       }
+
+      if(frame.r instanceof HiveSemiJoin && !cm.mapRefRelToCorRef.containsKey(rel)) {
+        // this conditions need to be pushed into semi-join since this condition
+        // corresponds to IN
+        HiveSemiJoin join = ((HiveSemiJoin)frame.r);
+        final List<RexNode> conditions = new ArrayList<>();
+        RexNode joinCond = join.getCondition();
+        conditions.add(joinCond);
+        conditions.add(rel.getCondition());
+        final RexNode condition =
+            RexUtil.composeConjunction(rexBuilder, conditions, false);
+        RelNode newRel = HiveSemiJoin.getSemiJoin(frame.r.getCluster(), frame.r.getTraitSet(), join.getLeft(), join.getRight(),
+            condition,join.getLeftKeys(), join.getRightKeys());
+        return register(rel, newRel, frame.oldToNewOutputs, frame.corDefOutputs);
+      }
         // Replace the filter expression to reference output of the join
         // Map filter to the new filter over join
         relBuilder.push(frame.r).filter(
@@ -1452,18 +1456,41 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
     // Left input positions are not changed.
     mapOldToNewOutputs.putAll(leftFrame.oldToNewOutputs);
 
-    // Right input positions are shifted by newLeftFieldCount.
-    for (int i = 0; i < oldRightFieldCount; i++) {
-      mapOldToNewOutputs.put(
-              i + oldLeftFieldCount,
-              rightFrame.oldToNewOutputs.get(i) + newLeftFieldCount);
-    }
 
     final RexNode condition =
             RexUtil.composeConjunction(rexBuilder, conditions, false);
-    RelNode newJoin =
-            LogicalJoin.create(leftFrame.r, rightFrame.r, condition,
-                    ImmutableSet.<CorrelationId>of(), rel.getJoinType().toJoinType());
+    RelNode newJoin = null;
+
+    // this indicates original query was either correlated EXISTS or IN
+    if(rel.getJoinType() == SemiJoinType.INNER) {
+      final List<Integer> leftKeys = new ArrayList<Integer>();
+      final List<Integer> rightKeys = new ArrayList<Integer>();
+      //newJoin = HiveSemiJoin.getSemiJoin(rel.getCluster(), rel.getTraitSet(), leftFrame.r, rightFrame.r,
+          //condition, ImmutableIntList.of(), ImmutableIntList.of());
+
+      RelNode[] inputRels = new RelNode[] { leftFrame.r, rightFrame.r};
+      //List<RexNode> leftJoinKeys = new ArrayList<RexNode>();
+      //List<RexNode> rightJoinKeys = new ArrayList<RexNode>();
+      //RexNode updatedJoinCond = HiveCalciteUtil.projectNonColumnEquiConditions(
+       //   HiveRelFactories.HIVE_PROJECT_FACTORY, inputRels, leftJoinKeys, rightJoinKeys, 0,
+        //  leftKeys, rightKeys);
+      newJoin = HiveSemiJoin.getSemiJoin(rel.getCluster(), rel.getCluster().traitSetOf(HiveRelNode.CONVENTION),
+          leftFrame.r, rightFrame.r, condition, ImmutableIntList.copyOf(leftKeys),
+          ImmutableIntList.copyOf(rightKeys));
+
+    }
+    else {
+      // Right input positions are shifted by newLeftFieldCount.
+      for (int i = 0; i < oldRightFieldCount; i++) {
+        mapOldToNewOutputs.put(
+            i + oldLeftFieldCount,
+            rightFrame.oldToNewOutputs.get(i) + newLeftFieldCount);
+      }
+
+      newJoin = LogicalJoin.create(leftFrame.r, rightFrame.r, condition,
+             ImmutableSet.<CorrelationId>of(), rel.getJoinType().toJoinType());
+
+    }
 
     valueGen.pop();
 
@@ -1615,7 +1642,7 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
     int newLocalOrdinal = oldLocalOrdinal;
 
     if (!frame.oldToNewOutputs.isEmpty()) {
-      newLocalOrdinal = frame.oldToNewOutputs.get(oldLocalOrdinal);
+     newLocalOrdinal = frame.oldToNewOutputs.get(oldLocalOrdinal);
     }
 
     newOrdinal += newLocalOrdinal;

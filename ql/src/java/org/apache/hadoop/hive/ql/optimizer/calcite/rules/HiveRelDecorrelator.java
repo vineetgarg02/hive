@@ -891,10 +891,7 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
       // LogicalProject projects the original expressions
       final Map<Integer, Integer> mapOldToNewOutputs =  new HashMap<>();
       int newPos;
-      // since logical correlate could be rewritten into semi join which would discard all the columns/project from
-      // right side we should only go until either we hit old project size or new decorrelated input field size
-      for (newPos = 0; newPos < oldProjects.size() && newPos < frame.r.getRowType().getFieldList().size();
-           newPos++) {
+      for (newPos = 0; newPos < oldProjects.size(); newPos++) {
         projects.add(
                 newPos,
                 Pair.of(
@@ -1338,6 +1335,21 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
       valueGenerator = false;
     }
 
+    if(frame.r instanceof HiveSemiJoin && !cm.mapRefRelToCorRef.containsKey(rel)) {
+      // this conditions need to be pushed into semi-join since this condition
+      // corresponds to IN
+      HiveSemiJoin join = ((HiveSemiJoin)frame.r);
+      final List<RexNode> conditions = new ArrayList<>();
+      RexNode joinCond = join.getCondition();
+      conditions.add(joinCond);
+      conditions.add(rel.getCondition());
+      final RexNode condition =
+          RexUtil.composeConjunction(rexBuilder, conditions, false);
+      RelNode newRel = HiveSemiJoin.getSemiJoin(frame.r.getCluster(), frame.r.getTraitSet(), join.getLeft(), join.getRight(),
+          condition,join.getLeftKeys(), join.getRightKeys());
+      return register(rel, newRel, frame.oldToNewOutputs, frame.corDefOutputs);
+    }
+
     // Replace the filter expression to reference output of the join
     // Map filter to the new filter over join
     relBuilder.push(frame.r).filter(decorrelateExpr(rel.getCondition(), valueGenerator));
@@ -1450,8 +1462,10 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
     int oldLeftFieldCount = oldLeft.getRowType().getFieldCount();
 
     int oldRightFieldCount = oldRight.getRowType().getFieldCount();
-    assert rel.getRowType().getFieldCount()
-            == oldLeftFieldCount + oldRightFieldCount;
+
+    // This assertion doesn't hold anymore since rel could be semi-join
+    //assert rel.getRowType().getFieldCount()
+     //       == oldLeftFieldCount + oldRightFieldCount;
 
     // Left input positions are not changed.
     mapOldToNewOutputs.putAll(leftFrame.oldToNewOutputs);
@@ -1462,7 +1476,7 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
     RelNode newJoin = null;
 
     // this indicates original query was either correlated EXISTS or IN
-    if(rel.getJoinType() == SemiJoinType.INNER) {
+    if(rel.getJoinType() == SemiJoinType.SEMI) {
       final List<Integer> leftKeys = new ArrayList<Integer>();
       final List<Integer> rightKeys = new ArrayList<Integer>();
       //newJoin = HiveSemiJoin.getSemiJoin(rel.getCluster(), rel.getTraitSet(), leftFrame.r, rightFrame.r,

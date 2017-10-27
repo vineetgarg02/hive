@@ -1138,8 +1138,15 @@ public class HiveSubQRemoveRelBuilder {
         default:
           postCondition = condition;
       }
-      join = correlateFactory.createCorrelate(left.rel, right.rel, id,
-              requiredColumns, SemiJoinType.of(joinType));
+      if(joinType == JoinRelType.INNER) {
+        join = correlateFactory.createCorrelate(left.rel, right.rel, id,
+            requiredColumns, SemiJoinType.SEMI);
+      }
+      else {
+        join = correlateFactory.createCorrelate(left.rel, right.rel, id,
+            requiredColumns, SemiJoinType.of(joinType));
+
+      }
     } else {
       join = joinFactory.createJoin(left.rel, right.rel, condition,
               variablesSet, joinType, false);

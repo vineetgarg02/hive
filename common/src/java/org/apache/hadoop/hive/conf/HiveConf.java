@@ -2183,17 +2183,18 @@ public class HiveConf extends Configuration {
     // whose constructor would not have been called
     HIVE_AUTHORIZATION_SQL_STD_AUTH_CONFIG_WHITELIST(
         "hive.security.authorization.sqlstd.confwhitelist", "",
-        "List of comma separated Java regexes. Configurations parameters that match these\n" +
-        "regexes can be modified by user when SQL standard authorization is enabled.\n" +
+        "A Java regex. Configurations parameters that match this\n" +
+        "regex can be modified by user when SQL standard authorization is enabled.\n" +
         "To get the default value, use the 'set <param>' command.\n" +
         "Note that the hive.conf.restricted.list checks are still enforced after the white list\n" +
         "check"),
 
     HIVE_AUTHORIZATION_SQL_STD_AUTH_CONFIG_WHITELIST_APPEND(
         "hive.security.authorization.sqlstd.confwhitelist.append", "",
-        "List of comma separated Java regexes, to be appended to list set in\n" +
-        "hive.security.authorization.sqlstd.confwhitelist. Using this list instead\n" +
-        "of updating the original list means that you can append to the defaults\n" +
+        "2nd Java regex that it would match in addition to\n" +
+        "hive.security.authorization.sqlstd.confwhitelist.\n" +
+        "Do not include a starting \"|\" in the value. Using this regex instead\n" +
+        "of updating the original regex means that you can append to the default\n" +
         "set by SQL standard authorization instead of replacing it entirely."),
 
     HIVE_CLI_PRINT_HEADER("hive.cli.print.header", false, "Whether to print the names of the columns in query output."),
@@ -2898,6 +2899,19 @@ public class HiveConf extends Configuration {
     HIVE_VECTORIZATION_ROW_IDENTIFIER_ENABLED("hive.vectorized.row.identifier.enabled", true,
         "This flag should be set to true to enable vectorization of ROW__ID."),
 
+    HIVE_VECTORIZED_INPUT_FORMAT_SUPPORTS_ENABLED(
+        "hive.vectorized.input.format.supports.enabled",
+        "decimal_64",
+        "Which vectorized input format support features are enabled for vectorization.\n" +
+        "That is, if a VectorizedInputFormat input format does support \"decimal_64\" for example\n" +
+        "this variable must enable that to be used in vectorization"),
+
+    HIVE_TEST_VECTORIZATION_ENABLED_OVERRIDE("hive.test.vectorized.execution.enabled.override",
+        "none", new StringSet("none", "enable", "disable"),
+        "internal use only, used to override the hive.vectorized.execution.enabled setting and\n" +
+        "turn off vectorization.  The default is false, or course",
+        true),
+
     HIVE_TYPE_CHECK_ON_INSERT("hive.typecheck.on.insert", true, "This property has been extended to control "
         + "whether to check, convert, and normalize partition value to conform to its column type in "
         + "partition operations including but not limited to insert, such as alter, describe etc."),
@@ -2934,6 +2948,9 @@ public class HiveConf extends Configuration {
         + "When it is set to false, only [a-zA-Z_0-9]+ are supported.\n"
         + "The only supported special character right now is '/'. This flag applies only to quoted table names.\n"
         + "The default value is true."),
+    HIVE_CREATE_TABLES_AS_INSERT_ONLY("hive.create.as.insert.only", false,
+        "Whether the eligible tables should be created as ACID insert-only by default. Does \n" +
+        "not apply to external tables, the ones using storage handlers, etc."),
     // role names are case-insensitive
     USERS_IN_ADMIN_ROLE("hive.users.in.admin.role", "", false,
         "Comma separated list of users who are in admin role for bootstrapping.\n" +
@@ -3638,6 +3655,10 @@ public class HiveConf extends Configuration {
 
     ConfVars(String varname, Object defaultVal, Validator validator, String description) {
       this(varname, defaultVal, validator, description, true, false, null);
+    }
+
+    ConfVars(String varname, Object defaultVal, Validator validator, String description, boolean excluded) {
+      this(varname, defaultVal, validator, description, true, excluded, null);
     }
 
     ConfVars(String varname, Object defaultVal, Validator validator, String description,

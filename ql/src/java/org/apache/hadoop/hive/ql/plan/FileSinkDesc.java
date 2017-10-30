@@ -119,7 +119,7 @@ public class FileSinkDesc extends AbstractOperatorDesc {
       final boolean compressed, final int destTableId, final boolean multiFileSpray,
       final boolean canBeMerged, final int numFiles, final int totalFiles,
       final ArrayList<ExprNodeDesc> partitionCols, final DynamicPartitionCtx dpCtx, Path destPath,
-      Long mmWriteId, boolean isMmCtas) {
+      Long mmWriteId, boolean isMmCtas, boolean isInsertOverwrite) {
 
     this.dirName = dirName;
     this.tableInfo = tableInfo;
@@ -135,6 +135,7 @@ public class FileSinkDesc extends AbstractOperatorDesc {
     this.destPath = destPath;
     this.mmWriteId = mmWriteId;
     this.isMmCtas = isMmCtas;
+    this.isInsertOverwrite = isInsertOverwrite;
   }
 
   public FileSinkDesc(final Path dirName, final TableDesc tableInfo,
@@ -156,7 +157,7 @@ public class FileSinkDesc extends AbstractOperatorDesc {
   public Object clone() throws CloneNotSupportedException {
     FileSinkDesc ret = new FileSinkDesc(dirName, tableInfo, compressed,
         destTableId, multiFileSpray, canBeMerged, numFiles, totalFiles,
-        partitionCols, dpCtx, destPath, mmWriteId, isMmCtas);
+        partitionCols, dpCtx, destPath, mmWriteId, isMmCtas, isInsertOverwrite);
     ret.setCompressCodec(compressCodec);
     ret.setCompressType(compressType);
     ret.setGatherStats(gatherStats);
@@ -168,6 +169,7 @@ public class FileSinkDesc extends AbstractOperatorDesc {
     ret.setDpSortState(dpSortState);
     ret.setWriteType(writeType);
     ret.setTransactionId(txnId);
+    ret.setStatementId(statementId);
     ret.setStatsTmpDir(statsTmpDir);
     ret.setIsMerge(isMerge);
     return ret;
@@ -206,7 +208,7 @@ public class FileSinkDesc extends AbstractOperatorDesc {
   public Path getMergeInputDirName() {
     Path root = getFinalDirName();
     if (isMmTable()) {
-      return new Path(root, AcidUtils.deltaSubdir(txnId, txnId, 0));
+      return new Path(root, AcidUtils.deltaSubdir(txnId, txnId, statementId));
     } else {
       return root;
     }
@@ -535,18 +537,19 @@ public class FileSinkDesc extends AbstractOperatorDesc {
 
   public class FileSinkOperatorExplainVectorization extends OperatorExplainVectorization {
 
-    public FileSinkOperatorExplainVectorization(VectorDesc vectorDesc) {
+    public FileSinkOperatorExplainVectorization(VectorFileSinkDesc vectorFileSinkDesc) {
       // Native vectorization not supported.
-      super(vectorDesc, false);
+      super(vectorFileSinkDesc, false);
     }
   }
 
   @Explain(vectorization = Vectorization.OPERATOR, displayName = "File Sink Vectorization", explainLevels = { Level.DEFAULT, Level.EXTENDED })
   public FileSinkOperatorExplainVectorization getFileSinkVectorization() {
-    if (vectorDesc == null) {
+    VectorFileSinkDesc vectorFileSinkDesc = (VectorFileSinkDesc) getVectorDesc();
+    if (vectorFileSinkDesc == null) {
       return null;
     }
-    return new FileSinkOperatorExplainVectorization(vectorDesc);
+    return new FileSinkOperatorExplainVectorization(vectorFileSinkDesc);
   }
 
   public void setInsertOverwrite(boolean isInsertOverwrite) {

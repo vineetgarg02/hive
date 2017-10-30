@@ -84,6 +84,7 @@ import org.apache.calcite.rex.RexShuttle;
 import org.apache.calcite.rex.RexSubQuery;
 import org.apache.calcite.rex.RexUtil;
 import org.apache.calcite.rex.RexVisitorImpl;
+import org.apache.calcite.sql.SemiJoinType;
 import org.apache.calcite.sql.SqlFunction;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
@@ -95,6 +96,7 @@ import org.apache.calcite.tools.RelBuilder;
 import org.apache.calcite.util.Bug;
 import org.apache.calcite.util.Holder;
 import org.apache.calcite.util.ImmutableBitSet;
+import org.apache.calcite.util.ImmutableIntList;
 import org.apache.calcite.util.Litmus;
 import org.apache.calcite.util.Pair;
 import org.apache.calcite.util.ReflectUtil;
@@ -108,6 +110,8 @@ import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveFilter;
 import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveIntersect;
 import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveJoin;
 import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveProject;
+import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveRelNode;
+import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveSemiJoin;
 import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveSortLimit;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveUnion;
@@ -1262,7 +1266,25 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
         // this means correated value generator wasn't generated
         valueGenerator = false;
       }
-        // Replace the filter expression to reference output of the join
+
+
+      if(oldInput instanceof LogicalCorrelate && ((LogicalCorrelate) oldInput).getJoinType() == SemiJoinType.SEMI
+          &&  !cm.mapRefRelToCorRef.containsKey(rel)) {
+        // this conditions need to be pushed into semi-join since this condition
+        // corresponds to IN
+        HiveSemiJoin join = ((HiveSemiJoin)frame.r);
+        final List<RexNode> conditions = new ArrayList<>();
+        RexNode joinCond = join.getCondition();
+        conditions.add(joinCond);
+        conditions.add(rel.getCondition());
+        final RexNode condition =
+            RexUtil.composeConjunction(rexBuilder, conditions, false);
+        RelNode newRel = HiveSemiJoin.getSemiJoin(frame.r.getCluster(), frame.r.getTraitSet(), join.getLeft(), join.getRight(),
+            condition,join.getLeftKeys(), join.getRightKeys());
+        return register(rel, newRel, frame.oldToNewOutputs, frame.corDefOutputs);
+      }
+
+      // Replace the filter expression to reference output of the join
         // Map filter to the new filter over join
         relBuilder.push(frame.r).filter(
             (decorrelateExpr(rel.getCondition(), valueGenerator)));
@@ -1315,6 +1337,22 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
     if(frame.r == oldInput) {
       // this means correated value generator wasn't generated
       valueGenerator = false;
+    }
+
+    if(oldInput instanceof LogicalCorrelate && ((LogicalCorrelate) oldInput).getJoinType() == SemiJoinType.SEMI
+        &&  !cm.mapRefRelToCorRef.containsKey(rel)) {
+      // this conditions need to be pushed into semi-join since this condition
+      // corresponds to IN
+      HiveSemiJoin join = ((HiveSemiJoin)frame.r);
+      final List<RexNode> conditions = new ArrayList<>();
+      RexNode joinCond = join.getCondition();
+      conditions.add(joinCond);
+      conditions.add(rel.getCondition());
+      final RexNode condition =
+          RexUtil.composeConjunction(rexBuilder, conditions, false);
+      RelNode newRel = HiveSemiJoin.getSemiJoin(frame.r.getCluster(), frame.r.getTraitSet(), join.getLeft(), join.getRight(),
+          condition,join.getLeftKeys(), join.getRightKeys());
+      return register(rel, newRel, frame.oldToNewOutputs, frame.corDefOutputs);
     }
 
     // Replace the filter expression to reference output of the join
@@ -1429,8 +1467,6 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
     int oldLeftFieldCount = oldLeft.getRowType().getFieldCount();
 
     int oldRightFieldCount = oldRight.getRowType().getFieldCount();
-    assert rel.getRowType().getFieldCount()
-            == oldLeftFieldCount + oldRightFieldCount;
 
     // Left input positions are not changed.
     mapOldToNewOutputs.putAll(leftFrame.oldToNewOutputs);
@@ -1443,10 +1479,39 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
     }
 
     final RexNode condition =
-            RexUtil.composeConjunction(rexBuilder, conditions, false);
-    RelNode newJoin =
-            LogicalJoin.create(leftFrame.r, rightFrame.r, condition,
-                    ImmutableSet.<CorrelationId>of(), rel.getJoinType().toJoinType());
+        RexUtil.composeConjunction(rexBuilder, conditions, false);
+    RelNode newJoin = null;
+
+    // this indicates original query was either correlated EXISTS or IN
+    if(rel.getJoinType() == SemiJoinType.SEMI) {
+      final List<Integer> leftKeys = new ArrayList<Integer>();
+      final List<Integer> rightKeys = new ArrayList<Integer>();
+      //newJoin = HiveSemiJoin.getSemiJoin(rel.getCluster(), rel.getTraitSet(), leftFrame.r, rightFrame.r,
+      //condition, ImmutableIntList.of(), ImmutableIntList.of());
+
+      RelNode[] inputRels = new RelNode[] { leftFrame.r, rightFrame.r};
+      //List<RexNode> leftJoinKeys = new ArrayList<RexNode>();
+      //List<RexNode> rightJoinKeys = new ArrayList<RexNode>();
+      //RexNode updatedJoinCond = HiveCalciteUtil.projectNonColumnEquiConditions(
+      //   HiveRelFactories.HIVE_PROJECT_FACTORY, inputRels, leftJoinKeys, rightJoinKeys, 0,
+      //  leftKeys, rightKeys);
+      newJoin = HiveSemiJoin.getSemiJoin(rel.getCluster(), rel.getCluster().traitSetOf(HiveRelNode.CONVENTION),
+          leftFrame.r, rightFrame.r, condition, ImmutableIntList.copyOf(leftKeys),
+          ImmutableIntList.copyOf(rightKeys));
+
+    }
+    else {
+      // Right input positions are shifted by newLeftFieldCount.
+      for (int i = 0; i < oldRightFieldCount; i++) {
+        mapOldToNewOutputs.put(
+            i + oldLeftFieldCount,
+            rightFrame.oldToNewOutputs.get(i) + newLeftFieldCount);
+      }
+
+      newJoin = LogicalJoin.create(leftFrame.r, rightFrame.r, condition,
+          ImmutableSet.<CorrelationId>of(), rel.getJoinType().toJoinType());
+
+    }
 
     valueGen.pop();
 

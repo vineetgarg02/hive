@@ -113,8 +113,8 @@ import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveProject;
 import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveRelNode;
 import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveSemiJoin;
 import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveSortLimit;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveUnion;
+import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -1267,7 +1267,6 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
         valueGenerator = false;
       }
 
-
       if(oldInput instanceof LogicalCorrelate && ((LogicalCorrelate) oldInput).getJoinType() == SemiJoinType.SEMI
           &&  !cm.mapRefRelToCorRef.containsKey(rel)) {
         // this conditions need to be pushed into semi-join since this condition
@@ -1283,7 +1282,6 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
             condition,join.getLeftKeys(), join.getRightKeys());
         return register(rel, newRel, frame.oldToNewOutputs, frame.corDefOutputs);
       }
-
       // Replace the filter expression to reference output of the join
         // Map filter to the new filter over join
         relBuilder.push(frame.r).filter(
@@ -1471,12 +1469,6 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
     // Left input positions are not changed.
     mapOldToNewOutputs.putAll(leftFrame.oldToNewOutputs);
 
-    // Right input positions are shifted by newLeftFieldCount.
-    for (int i = 0; i < oldRightFieldCount; i++) {
-      mapOldToNewOutputs.put(
-              i + oldLeftFieldCount,
-              rightFrame.oldToNewOutputs.get(i) + newLeftFieldCount);
-    }
 
     final RexNode condition =
         RexUtil.composeConjunction(rexBuilder, conditions, false);

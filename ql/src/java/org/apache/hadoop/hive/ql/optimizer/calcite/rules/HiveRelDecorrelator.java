@@ -104,6 +104,7 @@ import org.apache.calcite.util.ReflectiveVisitor;
 import org.apache.calcite.util.Stacks;
 import org.apache.calcite.util.Util;
 import org.apache.calcite.util.mapping.Mappings;
+import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.optimizer.calcite.HiveRelShuttleImpl;
 import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveAggregate;
 import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveFilter;
@@ -1275,7 +1276,7 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
         final List<RexNode> conditions = new ArrayList<>();
         RexNode joinCond = join.getCondition();
         conditions.add(joinCond);
-        conditions.add(rel.getCondition());
+        conditions.add(decorrelateExpr(rel.getCondition(), valueGenerator));
         final RexNode condition =
             RexUtil.composeConjunction(rexBuilder, conditions, false);
         RelNode newRel = HiveSemiJoin.getSemiJoin(frame.r.getCluster(), frame.r.getTraitSet(), join.getLeft(), join.getRight(),
@@ -1345,7 +1346,7 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
       final List<RexNode> conditions = new ArrayList<>();
       RexNode joinCond = join.getCondition();
       conditions.add(joinCond);
-      conditions.add(rel.getCondition());
+      conditions.add(decorrelateExpr(rel.getCondition(), valueGenerator));
       final RexNode condition =
           RexUtil.composeConjunction(rexBuilder, conditions, false);
       RelNode newRel = HiveSemiJoin.getSemiJoin(frame.r.getCluster(), frame.r.getTraitSet(), join.getLeft(), join.getRight(),
@@ -1625,6 +1626,7 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
     assert currentRel != null;
 
     int oldOrdinal = oldInputRef.getIndex();
+    int oldOrdinalNo = oldOrdinal;
     int newOrdinal = 0;
 
     // determine which input rel oldOrdinal references, and adjust
@@ -1641,6 +1643,17 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
       RelNode newInput = map.get(oldInput0).r;
       newOrdinal += newInput.getRowType().getFieldCount();
       oldOrdinal -= n;
+    }
+
+    if(oldInput == null) {
+      if(currentRel.getInputs().size() == 1 && currentRel.getInput(0) instanceof LogicalCorrelate) {
+        final Frame newFrame = map.get(currentRel.getInput(0));
+        if(newFrame.r instanceof HiveSemiJoin) {
+          int oldFieldSize = currentRel.getInput(0).getRowType().getFieldCount();
+          int newOrd = newFrame.r.getRowType().getFieldCount() + oldOrdinalNo - oldFieldSize;
+          return new RexInputRef(newOrd, oldInputRef.getType());
+        }
+      }
     }
 
     assert oldInput != null;

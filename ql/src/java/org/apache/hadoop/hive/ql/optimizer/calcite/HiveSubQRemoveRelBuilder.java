@@ -1109,10 +1109,8 @@ public class HiveSubQRemoveRelBuilder {
     return getRexBuilder().makeFieldAccess(e, name, false);
   }
 
-  /** Creates a {@link org.apache.calcite.rel.core.Join} with correlating
-   * variables. */
   public HiveSubQRemoveRelBuilder join(JoinRelType joinType, RexNode condition,
-                         Set<CorrelationId> variablesSet) {
+                                       Set<CorrelationId> variablesSet, boolean createSemiJoin) {
     Frame right = stack.pop();
     final Frame left = stack.pop();
     final RelNode join;
@@ -1121,10 +1119,10 @@ public class HiveSubQRemoveRelBuilder {
     if (correlate) {
       final CorrelationId id = Iterables.getOnlyElement(variablesSet);
       final ImmutableBitSet requiredColumns =
-              RelOptUtil.correlationColumns(id, right.rel);
+          RelOptUtil.correlationColumns(id, right.rel);
       if (!RelOptUtil.notContainsCorrelation(left.rel, id, Litmus.IGNORE)) {
         throw new IllegalArgumentException("variable " + id
-                + " must not be used by left input to correlation");
+            + " must not be used by left input to correlation");
       }
       switch (joinType) {
         case LEFT:
@@ -1138,7 +1136,7 @@ public class HiveSubQRemoveRelBuilder {
         default:
           postCondition = condition;
       }
-      if(joinType == JoinRelType.INNER) {
+      if(createSemiJoin) {
         join = correlateFactory.createCorrelate(left.rel, right.rel, id,
             requiredColumns, SemiJoinType.SEMI);
       }
@@ -1149,7 +1147,7 @@ public class HiveSubQRemoveRelBuilder {
       }
     } else {
       join = joinFactory.createJoin(left.rel, right.rel, condition,
-              variablesSet, joinType, false);
+          variablesSet, joinType, false);
     }
     final List<Pair<String, RelDataType>> pairs = new ArrayList<>();
     pairs.addAll(left.right);
@@ -1157,6 +1155,13 @@ public class HiveSubQRemoveRelBuilder {
     stack.push(new Frame(join, ImmutableList.copyOf(pairs)));
     filter(postCondition);
     return this;
+  }
+
+  /** Creates a {@link org.apache.calcite.rel.core.Join} with correlating
+   * variables. */
+  public HiveSubQRemoveRelBuilder join(JoinRelType joinType, RexNode condition,
+                         Set<CorrelationId> variablesSet) {
+    return join(joinType, condition, variablesSet, false) ;
   }
 
   /** Creates a {@link org.apache.calcite.rel.core.Join} using USING syntax.

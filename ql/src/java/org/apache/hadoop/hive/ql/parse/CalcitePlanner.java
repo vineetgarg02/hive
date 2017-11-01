@@ -2127,6 +2127,11 @@ public class CalcitePlanner extends SemanticAnalyzer {
         final List<Integer> rightKeys = new ArrayList<Integer>();
         RexNode remainingEquiCond = HiveCalciteUtil.projectNonColumnEquiConditions(HiveRelFactories.HIVE_PROJECT_FACTORY,
             inputRels, leftJoinKeys, rightJoinKeys, 0, leftKeys, rightKeys);
+        // Adjust right input fields in nonEquiConds if previous call modified the input
+        if (inputRels[0] != leftRel) {
+          nonEquiConds = RexUtil.shift(nonEquiConds, leftRel.getRowType().getFieldCount(),
+              inputRels[0].getRowType().getFieldCount() - leftRel.getRowType().getFieldCount());
+        }
         calciteJoinCond = remainingEquiCond != null ?
             RexUtil.composeConjunction(cluster.getRexBuilder(),
                 ImmutableList.of(remainingEquiCond, nonEquiConds), false) :

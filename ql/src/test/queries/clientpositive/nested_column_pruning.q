@@ -131,6 +131,20 @@ SELECT t1.s1.f3.f5
 FROM nested_tbl_1 t1 LEFT SEMI JOIN nested_tbl_1 t2
 ON t1.s1.f3.f4 = t2.s1.f6 AND t2.s2.f8.f9 == TRUE;
 
+EXPLAIN SELECT t1.s1.f3.f5
+FROM nested_tbl_1 t1 LEFT SEMI JOIN nested_tbl_1 t2
+ON t1.s1.f1 <> t2.s2.f8.f9;
+SELECT t1.s1.f3.f5
+FROM nested_tbl_1 t1 LEFT SEMI JOIN nested_tbl_1 t2
+ON t1.s1.f1 <> t2.s2.f8.f9;
+
+EXPLAIN SELECT t1.s1.f3.f5
+FROM nested_tbl_1 t1 LEFT SEMI JOIN nested_tbl_1 t2
+ON t1.s1.f3.f4 = t2.s1.f6 AND t1.s1.f1 <> t2.s2.f8.f9;
+SELECT t1.s1.f3.f5
+FROM nested_tbl_1 t1 LEFT SEMI JOIN nested_tbl_1 t2
+ON t1.s1.f3.f4 = t2.s1.f6 AND t1.s1.f1 <> t2.s2.f8.f9;
+
 -- Testing insert with aliases
 
 DROP TABLE IF EXISTS nested_tbl_3;

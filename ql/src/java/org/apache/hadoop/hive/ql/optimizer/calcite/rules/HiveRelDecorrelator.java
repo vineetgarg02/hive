@@ -1479,15 +1479,8 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
     if(rel.getJoinType() == SemiJoinType.SEMI) {
       final List<Integer> leftKeys = new ArrayList<Integer>();
       final List<Integer> rightKeys = new ArrayList<Integer>();
-      //newJoin = HiveSemiJoin.getSemiJoin(rel.getCluster(), rel.getTraitSet(), leftFrame.r, rightFrame.r,
-      //condition, ImmutableIntList.of(), ImmutableIntList.of());
 
       RelNode[] inputRels = new RelNode[] { leftFrame.r, rightFrame.r};
-      //List<RexNode> leftJoinKeys = new ArrayList<RexNode>();
-      //List<RexNode> rightJoinKeys = new ArrayList<RexNode>();
-      //RexNode updatedJoinCond = HiveCalciteUtil.projectNonColumnEquiConditions(
-      //   HiveRelFactories.HIVE_PROJECT_FACTORY, inputRels, leftJoinKeys, rightJoinKeys, 0,
-      //  leftKeys, rightKeys);
       newJoin = HiveSemiJoin.getSemiJoin(rel.getCluster(), rel.getCluster().traitSetOf(HiveRelNode.CONVENTION),
           leftFrame.r, rightFrame.r, condition, ImmutableIntList.copyOf(leftKeys),
           ImmutableIntList.copyOf(rightKeys));

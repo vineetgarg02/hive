@@ -1787,13 +1787,6 @@ public class CalcitePlanner extends SemanticAnalyzer {
           "Calcite: Prejoin ordering transformation, Push down limit through outer join");
       }
 
-      // 5. Push Down Semi Joins
-      //perfLogger.PerfLogBegin(this.getClass().getName(), PerfLogger.OPTIMIZER);
-      //basePlan = hepPlan(basePlan, true, mdProvider, executorProvider, SemiJoinJoinTransposeRule.INSTANCE,
-       //   SemiJoinFilterTransposeRule.INSTANCE, SemiJoinProjectTransposeRule.INSTANCE);
-      //perfLogger.PerfLogEnd(this.getClass().getName(), PerfLogger.OPTIMIZER,
-       // "Calcite: Prejoin ordering transformation, Push Down Semi Joins");
-
       // 6. Apply Partition Pruning
       perfLogger.PerfLogBegin(this.getClass().getName(), PerfLogger.OPTIMIZER);
       basePlan = hepPlan(basePlan, false, mdProvider, executorProvider, new HivePartitionPruneRule(conf));

@@ -342,7 +342,7 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
   }
   protected RexNode decorrelateExpr(RexNode exp) {
     DecorrelateRexShuttle shuttle = new DecorrelateRexShuttle();
-    shuttle.setValueGenerator(false);
+    shuttle.setValueGenerator(true);
     return exp.accept(shuttle);
   }
 
@@ -1172,6 +1172,7 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
           throws Util.FoundOne {
     switch (e.getKind()) {
     // for now only EQUAL and NOT EQUAL corr predicates are optimized
+      //TODO: optimize rest of the predicates
     case NOT_EQUALS:
       if((boolean)valueGen.peek()) {
         // we will need value generator

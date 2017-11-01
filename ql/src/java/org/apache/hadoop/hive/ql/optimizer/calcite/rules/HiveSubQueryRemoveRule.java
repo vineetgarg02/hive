@@ -358,7 +358,7 @@ public class HiveSubQueryRemoveRule extends RelOptRule{
                     builder.join(JoinRelType.LEFT, builder.literal(true), variablesSet);
                 }
                 else
-                    builder.join(JoinRelType.INNER, builder.literal(true), variablesSet, true);
+                    builder.join(JoinRelType.INNER, builder.literal(true), variablesSet);
 
                 offset += 2;
                 builder.push(e.rel);

@@ -16,16 +16,26 @@
 
 package org.apache.hive.jdbc;
 
+import org.slf4j.Logger;
+
+import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Lists;
 import java.io.File;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
+import org.apache.hadoop.hive.metastore.api.WMFullResourcePlan;
+import org.apache.hadoop.hive.metastore.api.WMMapping;
+import org.apache.hadoop.hive.metastore.api.WMPool;
+import org.apache.hadoop.hive.metastore.api.WMPoolTrigger;
+import org.apache.hadoop.hive.metastore.api.WMResourcePlan;
+import org.apache.hadoop.hive.metastore.api.WMTrigger;
 import org.apache.hadoop.hive.ql.exec.tez.WorkloadManager;
 import org.apache.hadoop.hive.ql.wm.Trigger;
 import org.apache.hive.jdbc.miniHS2.MiniHS2;
@@ -33,6 +43,7 @@ import org.apache.hive.jdbc.miniHS2.MiniHS2.MiniClusterType;
 import org.junit.BeforeClass;
 
 public class TestTriggersWorkloadManager extends TestTriggersTezSessionPoolManager {
+  private final static Logger LOG = LoggerFactory.getLogger(TestTriggersWorkloadManager.class);
 
   @BeforeClass
   public static void beforeTest() throws Exception {
@@ -70,6 +81,26 @@ public class TestTriggersWorkloadManager extends TestTriggersTezSessionPoolManag
   @Override
   protected void setupTriggers(final List<Trigger> triggers) throws Exception {
     WorkloadManager wm = WorkloadManager.getInstance();
-    wm.getPools().get("llap").setTriggers(triggers);
+    WMPool pool = new WMPool("rp", "llap");
+    pool.setAllocFraction(1.0f);
+    pool.setQueryParallelism(1);
+    WMMapping mapping = new WMMapping("rp", "DEFAULT", "");
+    mapping.setPoolName("llap");
+    WMFullResourcePlan rp = new WMFullResourcePlan(
+        new WMResourcePlan("rp"), Lists.newArrayList(pool));
+    rp.addToMappings(mapping);
+    for (Trigger trigger : triggers) {
+      rp.addToTriggers(wmTriggerFromTrigger(trigger));
+      rp.addToPoolTriggers(new WMPoolTrigger("llap", trigger.getName()));
+    }
+    wm.updateResourcePlanAsync(rp).get(10, TimeUnit.SECONDS);
+  }
+
+  private WMTrigger wmTriggerFromTrigger(Trigger trigger) {
+    WMTrigger result = new WMTrigger("rp", trigger.getName());
+    result.setTriggerExpression(trigger.getExpression().toString()); // TODO: hmm
+    result.setActionExpression(trigger.getAction().toString()); // TODO: hmm
+    LOG.debug("Produced " + result + " from " + trigger);
+    return result;
   }
 }

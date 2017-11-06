@@ -1457,11 +1457,6 @@ public class HiveConf extends Configuration {
     HIVELIMITPUSHDOWNMEMORYUSAGE("hive.limit.pushdown.memory.usage", 0.1f, new RatioValidator(),
         "The fraction of available memory to be used for buffering rows in Reducesink operator for limit pushdown optimization."),
 
-    @Deprecated
-    HIVELIMITTABLESCANPARTITION("hive.limit.query.max.table.partition", -1,
-        "This controls how many partitions can be scanned for each partitioned table.\n" +
-        "The default value \"-1\" means no limit. (DEPRECATED: Please use " + ConfVars.METASTORE_LIMIT_PARTITION_REQUEST + " in the metastore instead.)"),
-
     HIVECONVERTJOINMAXENTRIESHASHTABLE("hive.auto.convert.join.hashtable.max.entries", 21000000L,
         "If hive.auto.convert.join.noconditionaltask is off, this parameter does not take affect. \n" +
         "However, if it is on, and the predicted number of entries in hashtable for a given join \n" +
@@ -1780,15 +1775,6 @@ public class HiveConf extends Configuration {
         "Average row size is computed from average column size of all columns in the row. In the absence\n" +
         "of column statistics and for variable length complex columns like map, the average number of\n" +
         "entries/values can be specified using this config."),
-    // statistics annotation fetches stats for each partition, which can be expensive. turning
-    // this off will result in basic sizes being fetched from namenode instead
-    HIVE_STATS_FETCH_PARTITION_STATS("hive.stats.fetch.partition.stats", true,
-        "Annotation of operator tree with statistics information requires partition level basic\n" +
-        "statistics like number of rows, data size and file size. Partition statistics are fetched from\n" +
-        "metastore. Fetching partition statistics for each needed partition can be expensive when the\n" +
-        "number of partitions is high. This flag can be used to disable fetching of partition statistics\n" +
-        "from metastore. When this flag is disabled, Hive will make calls to filesystem to get file sizes\n" +
-        "and will estimate the number of rows from row schema."),
     // statistics annotation fetches column statistics for all required columns which can
     // be very expensive sometimes
     HIVE_STATS_FETCH_COLUMN_STATS("hive.stats.fetch.column.stats", false,
@@ -1895,15 +1881,10 @@ public class HiveConf extends Configuration {
         "hive.lock.numretries and hive.lock.sleep.between.retries."),
 
     HIVE_TXN_OPERATIONAL_PROPERTIES("hive.txn.operational.properties", 1,
-        "Sets the operational properties that control the appropriate behavior for various\n"
-        + "versions of the Hive ACID subsystem. Mostly it is intended to be used as an internal property\n"
-        + "for future versions of ACID. (See HIVE-14035 for details.)\n"
-        + "0: Turn on the legacy mode for ACID\n"
-        + "1: Enable split-update feature found in the newer version of Hive ACID subsystem\n"
-        + "2: Hash-based merge, which combines delta files using GRACE hash join based approach (not implemented)\n"
-        + "3: Make the table 'quarter-acid' as it only supports insert. But it doesn't require ORC or bucketing.\n"
-        + "This is intended to be used as an internal property for future versions of ACID. (See\n" +
-          "HIVE-14035 for details.)"),
+      "1: Enable split-update feature found in the newer version of Hive ACID subsystem\n" +
+      "4: Make the table 'quarter-acid' as it only supports insert. But it doesn't require ORC or bucketing.\n" +
+      "This is intended to be used as an internal property for future versions of ACID. (See\n" +
+        "HIVE-14035 for details.)"),
 
     HIVE_MAX_OPEN_TXNS("hive.max.open.txns", 100000, "Maximum number of open transactions. If \n" +
         "current open transactions reach this limit, future open transaction requests will be \n" +
@@ -2419,6 +2400,9 @@ public class HiveConf extends Configuration {
     HIVE_SERVER2_TEZ_INTERACTIVE_QUEUE("hive.server2.tez.interactive.queue", "",
         "A single YARN queues to use for Hive Interactive sessions. When this is specified,\n" +
         "workload management is enabled and used for these sessions."),
+    HIVE_SERVER2_TEZ_WM_WORKER_THREADS("hive.server2.tez.wm.worker.threads", 4,
+        "Number of worker threads to use to perform the synchronous operations with Tez\n" +
+        "sessions for workload management (e.g. opening, closing, etc.)"),
     HIVE_SERVER2_TEZ_WM_AM_REGISTRY_TIMEOUT("hive.server2.tez.wm.am.registry.timeout", "30s",
         new TimeValidator(TimeUnit.SECONDS),
         "The timeout for AM registry registration, after which (on attempting to use the\n" +
@@ -3017,6 +3001,10 @@ public class HiveConf extends Configuration {
             "Only perform semijoin optimization if the estimated benefit at or above this fraction of the target table"),
     TEZ_DYNAMIC_SEMIJOIN_REDUCTION_FOR_MAPJOIN("hive.tez.dynamic.semijoin.reduction.for.mapjoin", false,
             "Use a semi-join branch for map-joins. This may not make it faster, but is helpful in certain join patterns."),
+    TEZ_DYNAMIC_SEMIJOIN_REDUCTION_FOR_DPP_FACTOR("hive.tez.dynamic.semijoin.reduction.for.dpp.factor",
+            (float) 1.0,
+            "The factor to decide if semijoin branch feeds into a TableScan\n" +
+            "which has an outgoing Dynamic Partition Pruning (DPP) branch based on number of distinct values."),
     TEZ_SMB_NUMBER_WAVES(
         "hive.tez.smb.number.waves",
         (float) 0.5,

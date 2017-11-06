@@ -17,13 +17,17 @@
  */
 package org.apache.hadoop.hive.ql.exec.tez;
 
+import org.apache.hadoop.hive.metastore.api.WMMapping;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import org.apache.hadoop.hive.ql.exec.tez.WorkloadManager.TmpUserMapping;
 
 class UserPoolMapping {
+  public static enum MappingType {
+    USER, DEFAULT
+  }
+
   private final static class Mapping {
     public Mapping(String poolName, int priority) {
       this.fullPoolName = poolName;
@@ -39,24 +43,23 @@ class UserPoolMapping {
 
   private final Map<String, Mapping> userMappings = new HashMap<>();
   private final String defaultPoolName;
-  // TODO: add other types as needed
 
-  public UserPoolMapping(List<TmpUserMapping> mappings, Set<String> poolNames) {
+  public UserPoolMapping(List<WMMapping> mappings) {
     String defaultPoolName = null;
-    for (TmpUserMapping mapping : mappings) {
-      switch (mapping.getType()) {
+    for (WMMapping mapping : mappings) {
+      MappingType type = MappingType.valueOf(mapping.getEntityType().toUpperCase());
+      switch (type) {
       case USER: {
-          String poolName = getValidPoolName(poolNames, mapping);
-          Mapping val = new Mapping(poolName, mapping.getPriority());
-          Mapping oldValue = userMappings.put(mapping.getName(), val);
+          Mapping val = new Mapping(mapping.getPoolName(), mapping.getOrdering());
+          Mapping oldValue = userMappings.put(mapping.getEntityName(), val);
           if (oldValue != null) {
-            throw new AssertionError("Duplicate mapping for user " + mapping.getName() + "; "
-                + oldValue + " and " + val);
+            throw new AssertionError("Duplicate mapping for user " + mapping.getEntityName()
+                + "; " + oldValue + " and " + val);
           }
         break;
       }
       case DEFAULT: {
-        String poolName = getValidPoolName(poolNames, mapping);
+        String poolName = mapping.getPoolName();
         if (defaultPoolName != null) {
           throw new AssertionError("Duplicate default mapping; "
               + defaultPoolName + " and " + poolName);
@@ -64,7 +67,7 @@ class UserPoolMapping {
         defaultPoolName = poolName;
         break;
       }
-      default: throw new AssertionError("Unknown type " + mapping.getType());
+      default: throw new AssertionError("Unknown type " + mapping.getEntityType());
       }
     }
     this.defaultPoolName = defaultPoolName;
@@ -79,14 +82,5 @@ class UserPoolMapping {
     Mapping userMapping = userMappings.get(userName);
     if (userMapping != null) return userMapping.fullPoolName;
     return defaultPoolName;
-  }
-
-  private static String getValidPoolName(Set<String> poolNames, TmpUserMapping mapping) {
-    String poolName = mapping.getPoolName();
-    // Should we really be validating here? The plan should be validated before applying.
-    if (!poolNames.contains(mapping.getPoolName())) {
-      throw new AssertionError("Invalid pool in the mapping " + poolName);
-    }
-    return poolName;
   }
 }

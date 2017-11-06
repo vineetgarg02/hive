@@ -1171,8 +1171,8 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
   private void findCorrelationEquivalent(CorRef correlation, RexNode e)
           throws Util.FoundOne {
     switch (e.getKind()) {
-    // for now only EQUAL and NOT EQUAL corr predicates are optimized
-      //TODO: optimize rest of the predicates
+    // TODO: for now only EQUAL and NOT EQUAL corr predicates are optimized
+      //optimize rest of the predicates
     case NOT_EQUALS:
       if((boolean)valueGen.peek()) {
         // we will need value generator

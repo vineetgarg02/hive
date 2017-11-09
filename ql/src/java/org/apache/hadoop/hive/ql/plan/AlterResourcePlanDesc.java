@@ -1,3 +1,21 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.apache.hadoop.hive.ql.plan;
 
 import java.io.Serializable;
@@ -14,35 +32,32 @@ public class AlterResourcePlanDesc extends DDLDesc implements Serializable {
   private Integer queryParallelism;
   private WMResourcePlanStatus status;
   private boolean validate;
+  private String defaultPoolPath;
   private boolean isEnableActivate;
 
   public AlterResourcePlanDesc() {}
 
   private AlterResourcePlanDesc(String rpName, String newName, Integer queryParallelism,
-      WMResourcePlanStatus status, boolean validate) {
+      WMResourcePlanStatus status, boolean validate, String defaultPoolPath) {
     this.rpName = rpName;
     this.newName = newName;
     this.queryParallelism = queryParallelism;
     this.status = status;
     this.validate = validate;
+    this.defaultPoolPath = defaultPoolPath;
   }
 
-  public static AlterResourcePlanDesc createChangeParallelism(String rpName,
-      int queryParallelism) {
-    return new AlterResourcePlanDesc(rpName, null, queryParallelism, null, false);
+  public static AlterResourcePlanDesc createSet(String rpName) {
+    return new AlterResourcePlanDesc(rpName, null, null, null, false, null);
   }
 
   public static AlterResourcePlanDesc createChangeStatus(
       String rpName, WMResourcePlanStatus status) {
-    return new AlterResourcePlanDesc(rpName, null, null, status, false);
+    return new AlterResourcePlanDesc(rpName, null, null, status, false, null);
   }
 
   public static AlterResourcePlanDesc createValidatePlan(String rpName) {
-    return new AlterResourcePlanDesc(rpName, null, null, null, true);
-  }
-
-  public static AlterResourcePlanDesc createRenamePlan(String rpName, String newName) {
-    return new AlterResourcePlanDesc(rpName, newName, null, null, false);
+    return new AlterResourcePlanDesc(rpName, null, null, null, true, null);
   }
 
   @Explain(displayName="resourcePlanName", explainLevels = { Level.USER, Level.DEFAULT, Level.EXTENDED })
@@ -61,6 +76,15 @@ public class AlterResourcePlanDesc extends DDLDesc implements Serializable {
 
   public void setNewName(String newName) {
     this.newName = newName;
+  }
+
+  @Explain(displayName="Default pool", explainLevels = { Level.USER, Level.DEFAULT, Level.EXTENDED })
+  public String getDefaultPoolPath() {
+    return defaultPoolPath;
+  }
+
+  public void setDefaultPoolPath(String defaultPoolPath) {
+    this.defaultPoolPath = defaultPoolPath;
   }
 
   @Explain(displayName="queryParallelism", explainLevels = { Level.USER, Level.DEFAULT, Level.EXTENDED })

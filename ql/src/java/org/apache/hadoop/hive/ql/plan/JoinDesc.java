@@ -379,7 +379,7 @@ public class JoinDesc extends AbstractOperatorDesc {
   }
 
   @Override
-  @Explain(displayName = "columnExprMap")
+  @Explain(displayName = "columnExprMap", jsonOnly = true)
   public Map<String, ExprNodeDesc> getColumnExprMapForExplain() {
     if(this.reversedExprs == null) {
       return this.colExprMap;

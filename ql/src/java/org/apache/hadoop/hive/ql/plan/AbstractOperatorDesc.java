@@ -141,7 +141,7 @@ public class AbstractOperatorDesc implements OperatorDesc {
     return equals(other);
   }
 
-  @Explain(displayName = "columnExprMap")
+  @Explain(displayName = "columnExprMap", jsonOnly = true)
   public Map<String, ExprNodeDesc> getColumnExprMapForExplain() {
     return this.colExprMap;
   }

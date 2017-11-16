@@ -81,6 +81,11 @@ public abstract class ExprNodeDesc implements Serializable, Node {
     return null;
   }
 
+  @Explain
+  public String getExprStringForExplain() {
+    return toString();
+  }
+
   public String getExprString(boolean sortChildren) {
     return getExprString();
   }

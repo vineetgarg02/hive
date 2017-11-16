@@ -239,7 +239,8 @@ STAGE PLANS:
               name: default.dest1
 
   Stage: Stage-3
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 
   Stage: Stage-1
     Move Operator
@@ -252,7 +253,8 @@ STAGE PLANS:
               name: default.dest2
 
   Stage: Stage-4
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 
 PREHOOK: query: SELECT dest1.* FROM dest1
 PREHOOK: type: QUERY
@@ -453,7 +455,8 @@ STAGE PLANS:
               name: default.tmptable
 
   Stage: Stage-2
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 
 PREHOOK: query: SELECT * FROM tmptable x SORT BY x.key
 PREHOOK: type: QUERY
@@ -746,7 +749,7 @@ STAGE PLANS:
                   alias: inventory
                   Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
                   Filter Operator
-                    predicate: (inv_item_sk is not null and inv_warehouse_sk is not null and inv_date_sk is not null) (type: boolean)
+                    predicate: (inv_date_sk is not null and inv_item_sk is not null and inv_warehouse_sk is not null) (type: boolean)
                     Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
                     Select Operator
                       expressions: inv_date_sk (type: int), inv_item_sk (type: int), inv_quantity_on_hand (type: int), inv_warehouse_sk (type: int)
@@ -764,7 +767,7 @@ STAGE PLANS:
                   alias: date_dim
                   Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
                   Filter Operator
-                    predicate: ((d_year = 1999) and (d_moy = 3) and d_date_sk is not null) (type: boolean)
+                    predicate: ((d_moy = 3) and (d_year = 1999) and d_date_sk is not null) (type: boolean)
                     Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
                     Select Operator
                       expressions: d_date_sk (type: int)
@@ -781,7 +784,7 @@ STAGE PLANS:
                   alias: inventory
                   Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
                   Filter Operator
-                    predicate: (inv_item_sk is not null and inv_warehouse_sk is not null and inv_date_sk is not null) (type: boolean)
+                    predicate: (inv_date_sk is not null and inv_item_sk is not null and inv_warehouse_sk is not null) (type: boolean)
                     Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
                     Select Operator
                       expressions: inv_date_sk (type: int), inv_item_sk (type: int), inv_quantity_on_hand (type: int), inv_warehouse_sk (type: int)
@@ -834,7 +837,7 @@ STAGE PLANS:
                   alias: date_dim
                   Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
                   Filter Operator
-                    predicate: ((d_year = 1999) and (d_moy = 4) and d_date_sk is not null) (type: boolean)
+                    predicate: ((d_moy = 4) and (d_year = 1999) and d_date_sk is not null) (type: boolean)
                     Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
                     Select Operator
                       expressions: d_date_sk (type: int)

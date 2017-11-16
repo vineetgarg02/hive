@@ -150,7 +150,8 @@ STAGE PLANS:
               name: default.list_bucketing_mul_col
 
   Stage: Stage-2
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 #### A masked pattern was here ####
 
 PREHOOK: query: insert overwrite table list_bucketing_mul_col partition (ds = '2008-04-08', hr = '2013-01-23+18:00:99')
@@ -182,7 +183,6 @@ POSTHOOK: query: desc formatted list_bucketing_mul_col partition (ds='2008-04-08
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@list_bucketing_mul_col
 # col_name            	data_type           	comment             
-	 	 
 col1                	string              	                    
 col2                	string              	                    
 col3                	string              	                    
@@ -191,7 +191,6 @@ col5                	string
 	 	 
 # Partition Information	 	 
 # col_name            	data_type           	comment             
-	 	 
 ds                  	string              	                    
 hr                  	string              	                    
 	 	 

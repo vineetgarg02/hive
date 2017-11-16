@@ -18,6 +18,25 @@
 
 package org.apache.hadoop.hive.ql.exec;
 
+import org.apache.hadoop.hive.common.metrics.common.Metrics;
+import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.ql.CompilationOpContext;
+import org.apache.hadoop.hive.ql.DriverContext;
+import org.apache.hadoop.hive.ql.QueryDisplay;
+import org.apache.hadoop.hive.ql.QueryPlan;
+import org.apache.hadoop.hive.ql.QueryState;
+import org.apache.hadoop.hive.ql.history.HiveHistory;
+import org.apache.hadoop.hive.ql.lib.Node;
+import org.apache.hadoop.hive.ql.metadata.Hive;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
+import org.apache.hadoop.hive.ql.plan.MapWork;
+import org.apache.hadoop.hive.ql.plan.OperatorDesc;
+import org.apache.hadoop.hive.ql.plan.api.StageType;
+import org.apache.hadoop.hive.ql.session.SessionState.LogHelper;
+import org.apache.hadoop.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -26,26 +45,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-
-import org.apache.hadoop.hive.common.metrics.common.Metrics;
-import org.apache.hadoop.hive.common.metrics.common.MetricsConstant;
-import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.ql.CompilationOpContext;
-import org.apache.hadoop.hive.ql.DriverContext;
-import org.apache.hadoop.hive.ql.QueryDisplay;
-import org.apache.hadoop.hive.ql.QueryPlan;
-import org.apache.hadoop.hive.ql.QueryState;
-import org.apache.hadoop.hive.ql.lib.Node;
-import org.apache.hadoop.hive.ql.metadata.Hive;
-import org.apache.hadoop.hive.ql.metadata.HiveException;
-import org.apache.hadoop.hive.ql.plan.MapWork;
-import org.apache.hadoop.hive.ql.plan.OperatorDesc;
-import org.apache.hadoop.hive.ql.plan.api.StageType;
-import org.apache.hadoop.hive.ql.session.SessionState;
-import org.apache.hadoop.hive.ql.session.SessionState.LogHelper;
-import org.apache.hadoop.util.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Task implementation.
@@ -113,7 +112,17 @@ public abstract class Task<T extends Serializable> implements Serializable, Node
   public enum FeedType {
     DYNAMIC_PARTITIONS, // list of dynamic partitions
   }
+
+  /**
+   * Order of the States here is important as the ordinal values are used
+   * determine the progression of taskState over its lifeCycle which is then
+   * used to make some decisions in Driver.execute
+   */
   public enum TaskState {
+    // Task state is unkown
+    UNKNOWN,
+    // Task is just created
+    CREATED,
     // Task data structures have been initialized
     INITIALIZED,
     // Task has been queued for execution by the driver
@@ -121,11 +130,7 @@ public abstract class Task<T extends Serializable> implements Serializable, Node
     // Task is currently running
     RUNNING,
     // Task has completed
-    FINISHED,
-    // Task is just created
-    CREATED,
-    // Task state is unkown
-    UNKNOWN
+    FINISHED
   }
 
   // Bean methods
@@ -155,7 +160,9 @@ public abstract class Task<T extends Serializable> implements Serializable, Node
     this.queryPlan = queryPlan;
     setInitialized();
     this.queryState = queryState;
-    this.conf = queryState.getConf();
+    if (null == this.conf) {
+      this.conf = queryState.getConf();
+    }
     this.driverContext = driverContext;
     console = new LogHelper(LOG);
   }
@@ -189,17 +196,16 @@ public abstract class Task<T extends Serializable> implements Serializable, Node
    *
    * @return return value of execute()
    */
-  public int executeTask() {
+  public int executeTask(HiveHistory hiveHistory) {
     try {
-      SessionState ss = SessionState.get();
       this.setStarted();
-      if (ss != null) {
-        ss.getHiveHistory().logPlanProgress(queryPlan);
+      if (hiveHistory != null) {
+        hiveHistory.logPlanProgress(queryPlan);
       }
       int retval = execute(driverContext);
       this.setDone();
-      if (ss != null) {
-        ss.getHiveHistory().logPlanProgress(queryPlan);
+      if (hiveHistory != null) {
+        hiveHistory.logPlanProgress(queryPlan);
       }
       return retval;
     } catch (IOException e) {
@@ -342,6 +348,7 @@ public abstract class Task<T extends Serializable> implements Serializable, Node
     final List<Task<? extends Serializable>> leafTasks = new ArrayList<Task<?>>();
 
     NodeUtils.iterateTask(rootTasks, Task.class, new NodeUtils.Function<Task>() {
+      @Override
       public void apply(Task task) {
         List dependents = task.getDependentTasks();
         if (dependents == null || dependents.isEmpty()) {
@@ -366,37 +373,43 @@ public abstract class Task<T extends Serializable> implements Serializable, Node
       }
     }
   }
-  public void setStarted() {
+
+  public synchronized void setStarted() {
     setState(TaskState.RUNNING);
   }
 
-  public boolean started() {
+  public synchronized boolean started() {
     return taskState == TaskState.RUNNING;
   }
 
-  public boolean done() {
+  public synchronized boolean done() {
     return taskState == TaskState.FINISHED;
   }
 
-  public void setDone() {
+  public synchronized void setDone() {
     setState(TaskState.FINISHED);
   }
 
-  public void setQueued() {
+  public synchronized void setQueued() {
     setState(TaskState.QUEUED);
   }
 
-  public boolean getQueued() {
+  public synchronized boolean getQueued() {
     return taskState == TaskState.QUEUED;
   }
 
-  public void setInitialized() {
+  public synchronized void setInitialized() {
     setState(TaskState.INITIALIZED);
   }
 
-  public boolean getInitialized() {
+  public synchronized boolean getInitialized() {
     return taskState == TaskState.INITIALIZED;
   }
+
+  public synchronized boolean isNotInitialized() {
+    return taskState.ordinal() < TaskState.INITIALIZED.ordinal();
+  }
+
 
   public boolean isRunnable() {
     boolean isrunnable = true;
@@ -411,7 +424,9 @@ public abstract class Task<T extends Serializable> implements Serializable, Node
     return isrunnable;
   }
 
-
+  public void setConf(HiveConf conf) {
+    this.conf = conf;
+  }
 
   public void setWork(T work) {
     this.work = work;
@@ -630,5 +645,8 @@ public abstract class Task<T extends Serializable> implements Serializable, Node
     return toString().equals(String.valueOf(obj));
   }
 
+  public boolean canExecuteInParallel(){
+    return true;
+  }
 
 }

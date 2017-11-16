@@ -57,14 +57,18 @@ import org.apache.hadoop.hive.llap.tezplugins.LlapContainerLauncher;
 import org.apache.hadoop.hive.llap.tezplugins.LlapTaskCommunicator;
 import org.apache.hadoop.hive.llap.tezplugins.LlapTaskSchedulerService;
 import org.apache.hadoop.hive.ql.exec.Utilities;
+import org.apache.hadoop.hive.ql.session.KillQuery;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.hive.ql.session.SessionState.LogHelper;
+import org.apache.hadoop.hive.ql.wm.TriggerContext;
 import org.apache.hadoop.hive.shims.Utils;
+import org.apache.hadoop.mapred.JobContext;
 import org.apache.hadoop.security.Credentials;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.yarn.api.records.LocalResource;
 import org.apache.hadoop.yarn.api.records.LocalResourceType;
+import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.tez.client.TezClient;
 import org.apache.tez.common.TezUtils;
 import org.apache.tez.dag.api.PreWarmVertex;
@@ -72,7 +76,9 @@ import org.apache.tez.dag.api.SessionNotRunning;
 import org.apache.tez.dag.api.TezConfiguration;
 import org.apache.tez.dag.api.TezException;
 import org.apache.tez.dag.api.UserPayload;
+import org.apache.tez.mapreduce.hadoop.DeprecatedKeys;
 import org.apache.tez.mapreduce.hadoop.MRHelpers;
+import org.apache.tez.mapreduce.hadoop.MRJobConfig;
 import org.apache.tez.serviceplugins.api.ContainerLauncherDescriptor;
 import org.apache.tez.serviceplugins.api.ServicePluginsDescriptor;
 import org.apache.tez.serviceplugins.api.TaskCommunicatorDescriptor;
@@ -86,14 +92,14 @@ import org.apache.hadoop.hive.ql.exec.tez.monitoring.TezJobMonitor;
  */
 public class TezSessionState {
 
-  private static final Logger LOG = LoggerFactory.getLogger(TezSessionState.class.getName());
+  protected static final Logger LOG = LoggerFactory.getLogger(TezSessionState.class.getName());
   private static final String TEZ_DIR = "_tez_session_dir";
   public static final String LLAP_SERVICE = "LLAP";
   private static final String LLAP_SCHEDULER = LlapTaskSchedulerService.class.getName();
   private static final String LLAP_LAUNCHER = LlapContainerLauncher.class.getName();
   private static final String LLAP_TASK_COMMUNICATOR = LlapTaskCommunicator.class.getName();
 
-  private HiveConf conf;
+  private final HiveConf conf;
   private Path tezScratchDir;
   private LocalResource appJarLr;
   private TezClient session;
@@ -111,13 +117,17 @@ public class TezSessionState {
   private final Set<String> additionalFilesNotFromConf = new HashSet<String>();
   private final Set<LocalResource> localizedResources = new HashSet<LocalResource>();
   private boolean doAsEnabled;
+  private boolean isLegacyLlapMode;
+  private TriggerContext triggerContext;
+  private KillQuery killQuery;
 
   /**
    * Constructor. We do not automatically connect, because we only want to
    * load tez classes when the user has tez installed.
    */
-  public TezSessionState(DagUtils utils) {
+  public TezSessionState(DagUtils utils, HiveConf conf) {
     this.utils = utils;
+    this.conf = conf;
   }
 
   public String toString() {
@@ -129,8 +139,8 @@ public class TezSessionState {
    * Constructor. We do not automatically connect, because we only want to
    * load tez classes when the user has tez installed.
    */
-  public TezSessionState(String sessionId) {
-    this(DagUtils.getInstance());
+  public TezSessionState(String sessionId, HiveConf conf) {
+    this(DagUtils.getInstance(), conf);
     this.sessionId = sessionId;
   }
 
@@ -176,10 +186,9 @@ public class TezSessionState {
     return UUID.randomUUID().toString();
   }
 
-  public void open(HiveConf conf)
-      throws IOException, LoginException, URISyntaxException, TezException {
+  public void open() throws IOException, LoginException, URISyntaxException, TezException {
     Set<String> noFiles = null;
-    open(conf, noFiles, null);
+    open(noFiles, null);
   }
 
   /**
@@ -191,9 +200,9 @@ public class TezSessionState {
    * @throws TezException
    * @throws InterruptedException
    */
-  public void open(HiveConf conf, String[] additionalFiles)
-    throws IOException, LoginException, IllegalArgumentException, URISyntaxException, TezException {
-    openInternal(conf, setFromArray(additionalFiles), false, null, null);
+  public void open(String[] additionalFiles)
+      throws IOException, LoginException, URISyntaxException, TezException {
+    openInternal(setFromArray(additionalFiles), false, null, null);
   }
 
   private static Set<String> setFromArray(String[] additionalFiles) {
@@ -205,20 +214,19 @@ public class TezSessionState {
     return files;
   }
 
-  public void beginOpen(HiveConf conf, String[] additionalFiles, LogHelper console)
-    throws IOException, LoginException, IllegalArgumentException, URISyntaxException, TezException {
-    openInternal(conf, setFromArray(additionalFiles), true, console, null);
+  public void beginOpen(String[] additionalFiles, LogHelper console)
+      throws IOException, LoginException, URISyntaxException, TezException {
+    openInternal(setFromArray(additionalFiles), true, console, null);
   }
 
-  public void open(HiveConf conf, Collection<String> additionalFiles, Path scratchDir)
+  public void open(Collection<String> additionalFiles, Path scratchDir)
       throws LoginException, IOException, URISyntaxException, TezException {
-    openInternal(conf, additionalFiles, false, null, scratchDir);
+    openInternal(additionalFiles, false, null, scratchDir);
   }
 
-  protected void openInternal(final HiveConf conf, Collection<String> additionalFiles,
-      boolean isAsync, LogHelper console, Path scratchDir) throws IOException, LoginException,
-        IllegalArgumentException, URISyntaxException, TezException {
-    this.conf = conf;
+  protected void openInternal(Collection<String> additionalFiles,
+      boolean isAsync, LogHelper console, Path scratchDir)
+          throws IOException, LoginException, URISyntaxException, TezException {
     // TODO Why is the queue name set again. It has already been setup via setQueueName. Do only one of the two.
     String confQueueName = conf.get(TezConfiguration.TEZ_QUEUE_NAME);
     if (queueName != null && !queueName.equals(confQueueName)) {
@@ -271,7 +279,10 @@ public class TezSessionState {
 
     // and finally we're ready to create and start the session
     // generate basic tez config
-    final TezConfiguration tezConfig = new TezConfiguration(conf);
+    final TezConfiguration tezConfig = new TezConfiguration(true);
+    tezConfig.addResource(conf);
+
+    setupTezParamsBasedOnMR(tezConfig);
 
     // set up the staging directory to use
     tezConfig.set(TezConfiguration.TEZ_AM_STAGING_DIR, tezScratchDir.toUri().toString());
@@ -436,6 +447,74 @@ public class TezSessionState {
     }
   }
 
+  /**
+   * This takes settings from MR and applies them to the appropriate Tez configuration. This is
+   * similar to what Pig on Tez does (refer MRToTezHelper.java).
+   *
+   * @param conf configuration with MR settings
+   */
+  private void setupTezParamsBasedOnMR(TezConfiguration conf) {
+
+    String env = conf.get(MRJobConfig.MR_AM_ADMIN_USER_ENV);
+    if (conf.get(MRJobConfig.MR_AM_ENV) != null) {
+      env = (env == null) ? conf.get(MRJobConfig.MR_AM_ENV) : env + "," + conf.get(MRJobConfig.MR_AM_ENV);
+    }
+    if (env != null) {
+      conf.setIfUnset(TezConfiguration.TEZ_AM_LAUNCH_ENV, env);
+    }
+
+    conf.setIfUnset(TezConfiguration.TEZ_AM_LAUNCH_CMD_OPTS,
+        org.apache.tez.mapreduce.hadoop.MRHelpers.getJavaOptsForMRAM(conf));
+
+    String queueName = conf.get(JobContext.QUEUE_NAME, YarnConfiguration.DEFAULT_QUEUE_NAME);
+    conf.setIfUnset(TezConfiguration.TEZ_QUEUE_NAME, queueName);
+
+    int amMemMB = conf.getInt(MRJobConfig.MR_AM_VMEM_MB, MRJobConfig.DEFAULT_MR_AM_VMEM_MB);
+    conf.setIfUnset(TezConfiguration.TEZ_AM_RESOURCE_MEMORY_MB, "" + amMemMB);
+
+    int amCores = conf.getInt(MRJobConfig.MR_AM_CPU_VCORES, MRJobConfig.DEFAULT_MR_AM_CPU_VCORES);
+    conf.setIfUnset(TezConfiguration.TEZ_AM_RESOURCE_CPU_VCORES, "" + amCores);
+
+    conf.setIfUnset(TezConfiguration.TEZ_AM_MAX_APP_ATTEMPTS, ""
+        + conf.getInt(MRJobConfig.MR_AM_MAX_ATTEMPTS, MRJobConfig.DEFAULT_MR_AM_MAX_ATTEMPTS));
+
+    conf.setIfUnset(TezConfiguration.TEZ_AM_VIEW_ACLS,
+        conf.get(MRJobConfig.JOB_ACL_VIEW_JOB, MRJobConfig.DEFAULT_JOB_ACL_VIEW_JOB));
+
+    conf.setIfUnset(TezConfiguration.TEZ_AM_MODIFY_ACLS,
+        conf.get(MRJobConfig.JOB_ACL_MODIFY_JOB, MRJobConfig.DEFAULT_JOB_ACL_MODIFY_JOB));
+
+
+    // Refer to org.apache.tez.mapreduce.hadoop.MRHelpers.processDirectConversion.
+    ArrayList<Map<String, String>> maps = new ArrayList<Map<String, String>>(2);
+    maps.add(DeprecatedKeys.getMRToTezRuntimeParamMap());
+    maps.add(DeprecatedKeys.getMRToDAGParamMap());
+
+    boolean preferTez = true; // Can make this configurable.
+
+    for (Map<String, String> map : maps) {
+      for (Map.Entry<String, String> dep : map.entrySet()) {
+        if (conf.get(dep.getKey()) != null) {
+          // TODO Deprecation reason does not seem to reflect in the config ?
+          // The ordering is important in case of keys which are also deprecated.
+          // Unset will unset the deprecated keys and all its variants.
+          final String mrValue = conf.get(dep.getKey());
+          final String tezValue = conf.get(dep.getValue());
+          conf.unset(dep.getKey());
+          if (tezValue == null) {
+            conf.set(dep.getValue(), mrValue, "TRANSLATED_TO_TEZ");
+          } else if (!preferTez) {
+            conf.set(dep.getValue(), mrValue, "TRANSLATED_TO_TEZ_AND_MR_OVERRIDE");
+          }
+          LOG.info("Config: mr(unset):" + dep.getKey() + ", mr initial value="
+              + mrValue
+              + ", tez(original):" + dep.getValue() + "=" + tezValue
+              + ", tez(final):" + dep.getValue() + "=" + conf.get(dep.getValue()));
+        }
+      }
+    }
+  }
+
   private void setupSessionAcls(Configuration tezConf, HiveConf hiveConf) throws
       IOException {
 
@@ -464,7 +543,7 @@ public class TezSessionState {
   }
 
   public void refreshLocalResourcesFromConf(HiveConf conf)
-    throws IOException, LoginException, IllegalArgumentException, URISyntaxException, TezException {
+      throws IOException, LoginException, URISyntaxException, TezException {
 
     String dir = tezScratchDir.toString();
 
@@ -497,13 +576,14 @@ public class TezSessionState {
 
   /**
    * Close a tez session. Will cleanup any tez/am related resources. After closing a session no
-   * further DAGs can be executed against it.
+   * further DAGs can be executed against it. Only called by session management classes; some
+   * sessions should not simply be closed by users - e.g. pool sessions need to be restarted.
    *
    * @param keepTmpDir
    *          whether or not to remove the scratch dir at the same time.
    * @throws Exception
    */
-  public void close(boolean keepTmpDir) throws Exception {
+  void close(boolean keepTmpDir) throws Exception {
     if (session != null) {
       LOG.info("Closing Tez Session");
       closeClient(session);
@@ -531,7 +611,6 @@ public class TezSessionState {
     sessionFuture = null;
     console = null;
     tezScratchDir = null;
-    conf = null;
     appJarLr = null;
     additionalFilesNotFromConf.clear();
     localizedResources.clear();
@@ -550,7 +629,7 @@ public class TezSessionState {
     }
   }
 
-  public void cleanupScratchDir () throws IOException {
+  protected final void cleanupScratchDir () throws IOException {
     FileSystem fs = tezScratchDir.getFileSystem(conf);
     fs.delete(tezScratchDir, true);
     tezScratchDir = null;
@@ -728,4 +807,43 @@ public class TezSessionState {
     } while (!ownerThread.compareAndSet(null, newName));
   }
 
+  void setLegacyLlapMode(boolean value) {
+    this.isLegacyLlapMode = value;
+  }
+
+  boolean getLegacyLlapMode() {
+    return this.isLegacyLlapMode;
+  }
+
+  public void returnToSessionManager() throws Exception {
+    // By default, TezSessionPoolManager handles this for both pool and non-pool session.
+    TezSessionPoolManager.getInstance().returnSession(this);
+  }
+
+  public TezSessionState reopen(
+      Configuration conf, String[] inputOutputJars) throws Exception {
+    // By default, TezSessionPoolManager handles this for both pool and non-pool session.
+    return TezSessionPoolManager.getInstance().reopen(this, conf, inputOutputJars);
+  }
+
+  public void destroy() throws Exception {
+    // By default, TezSessionPoolManager handles this for both pool and non-pool session.
+    TezSessionPoolManager.getInstance().destroy(this);
+  }
+
+  public TriggerContext getTriggerContext() {
+    return triggerContext;
+  }
+
+  public void setTriggerContext(final TriggerContext triggerContext) {
+    this.triggerContext = triggerContext;
+  }
+
+  public void setKillQuery(final KillQuery killQuery) {
+    this.killQuery = killQuery;
+  }
+
+  public KillQuery getKillQuery() {
+    return killQuery;
+  }
 }

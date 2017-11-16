@@ -92,12 +92,12 @@ STAGE PLANS:
                 keys: 4000.0 (type: double), country (type: string)
                 mode: hash
                 outputColumnNames: _col0, _col1, _col2, _col3
-                Statistics: Num rows: 1 Data size: 64 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 1 Data size: 64 Basic stats: PARTIAL Column stats: NONE
                 Reduce Output Operator
                   key expressions: 4000.0 (type: double), _col1 (type: string)
                   sort order: ++
                   Map-reduce partition columns: 4000.0 (type: double), _col1 (type: string)
-                  Statistics: Num rows: 1 Data size: 64 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 1 Data size: 64 Basic stats: PARTIAL Column stats: NONE
                   value expressions: _col2 (type: struct<columntype:string,maxlength:bigint,sumlength:bigint,count:bigint,countnulls:bigint,bitvector:binary>), _col3 (type: struct<columntype:string,min:bigint,max:bigint,countnulls:bigint,bitvector:binary>)
       Reduce Operator Tree:
         Group By Operator
@@ -105,21 +105,22 @@ STAGE PLANS:
           keys: 4000.0 (type: double), KEY._col1 (type: string)
           mode: mergepartial
           outputColumnNames: _col0, _col1, _col2, _col3
-          Statistics: Num rows: 1 Data size: 64 Basic stats: COMPLETE Column stats: NONE
+          Statistics: Num rows: 1 Data size: 64 Basic stats: PARTIAL Column stats: NONE
           Select Operator
             expressions: _col2 (type: struct<columntype:string,maxlength:bigint,avglength:double,countnulls:bigint,numdistinctvalues:bigint,ndvbitvector:binary>), _col3 (type: struct<columntype:string,min:bigint,max:bigint,countnulls:bigint,numdistinctvalues:bigint,ndvbitvector:binary>), 4000.0 (type: double), _col1 (type: string)
             outputColumnNames: _col0, _col1, _col2, _col3
-            Statistics: Num rows: 1 Data size: 64 Basic stats: COMPLETE Column stats: NONE
+            Statistics: Num rows: 1 Data size: 64 Basic stats: PARTIAL Column stats: NONE
             File Output Operator
               compressed: false
-              Statistics: Num rows: 1 Data size: 64 Basic stats: COMPLETE Column stats: NONE
+              Statistics: Num rows: 1 Data size: 64 Basic stats: PARTIAL Column stats: NONE
               table:
                   input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                   output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
                   serde: org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe
 
   Stage: Stage-1
-    Column Stats Work
+    Stats Work
+      Basic Stats Work:
       Column Stats Desc:
           Columns: employeeName, employeeID
           Column Types: string, int
@@ -129,21 +130,73 @@ PREHOOK: query: analyze table Employee_Part partition (employeeSalary='4000.0', 
 PREHOOK: type: QUERY
 PREHOOK: Input: default@employee_part
 PREHOOK: Input: default@employee_part@employeesalary=4000.0/country=USA
+PREHOOK: Output: default@employee_part
+PREHOOK: Output: default@employee_part@employeesalary=4000.0/country=USA
 #### A masked pattern was here ####
 POSTHOOK: query: analyze table Employee_Part partition (employeeSalary='4000.0', country) compute statistics for columns employeeName, employeeID
 POSTHOOK: type: QUERY
 POSTHOOK: Input: default@employee_part
 POSTHOOK: Input: default@employee_part@employeesalary=4000.0/country=USA
+POSTHOOK: Output: default@employee_part
+POSTHOOK: Output: default@employee_part@employeesalary=4000.0/country=USA
 #### A masked pattern was here ####
+PREHOOK: query: describe formatted Employee_Part partition (employeeSalary='4000.0', country='USA')
+PREHOOK: type: DESCTABLE
+PREHOOK: Input: default@employee_part
+POSTHOOK: query: describe formatted Employee_Part partition (employeeSalary='4000.0', country='USA')
+POSTHOOK: type: DESCTABLE
+POSTHOOK: Input: default@employee_part
+# col_name            	data_type           	comment             
+employeeid          	int                 	                    
+employeename        	string              	                    
+	 	 
+# Partition Information	 	 
+# col_name            	data_type           	comment             
+employeesalary      	double              	                    
+country             	string              	                    
+	 	 
+# Detailed Partition Information	 	 
+Partition Value:    	[4000.0, USA]       	 
+Database:           	default             	 
+Table:              	employee_part       	 
+#### A masked pattern was here ####
+Partition Parameters:	 	 
+	COLUMN_STATS_ACCURATE	{\"BASIC_STATS\":\"true\",\"COLUMN_STATS\":{\"employeeid\":\"true\",\"employeename\":\"true\"}}
+	numFiles            	1                   
+	numRows             	7                   
+	rawDataSize         	57                  
+	totalSize           	64                  
+#### A masked pattern was here ####
+	 	 
+# Storage Information	 	 
+SerDe Library:      	org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe	 
+InputFormat:        	org.apache.hadoop.mapred.TextInputFormat	 
+OutputFormat:       	org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat	 
+Compressed:         	No                  	 
+Num Buckets:        	-1                  	 
+Bucket Columns:     	[]                  	 
+Sort Columns:       	[]                  	 
+Storage Desc Params:	 	 
+	field.delim         	|                   
+	serialization.format	|                   
 PREHOOK: query: describe formatted Employee_Part partition (employeeSalary='4000.0', country='USA') employeeName
 PREHOOK: type: DESCTABLE
 PREHOOK: Input: default@employee_part
 POSTHOOK: query: describe formatted Employee_Part partition (employeeSalary='4000.0', country='USA') employeeName
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@employee_part
-# col_name            	data_type           	min                 	max                 	num_nulls           	distinct_count      	avg_col_len         	max_col_len         	num_trues           	num_falses          	comment             	bitVector           
-	 	 	 	 	 	 	 	 	 	 	 
-employeeName        	string              	                    	                    	0                   	7                   	5.142857142857143   	6                   	                    	                    	HL                  	from deserializer   
+col_name            	employeeName        	 	 	 	 	 	 	 	 	 	 
+data_type           	string              	 	 	 	 	 	 	 	 	 	 
+min                 	                    	 	 	 	 	 	 	 	 	 	 
+max                 	                    	 	 	 	 	 	 	 	 	 	 
+num_nulls           	0                   	 	 	 	 	 	 	 	 	 	 
+distinct_count      	7                   	 	 	 	 	 	 	 	 	 	 
+avg_col_len         	5.142857142857143   	 	 	 	 	 	 	 	 	 	 
+max_col_len         	6                   	 	 	 	 	 	 	 	 	 	 
+num_trues           	                    	 	 	 	 	 	 	 	 	 	 
+num_falses          	                    	 	 	 	 	 	 	 	 	 	 
+bitVector           	HL                  	 	 	 	 	 	 	 	 	 	 
+comment             	from deserializer   	 	 	 	 	 	 	 	 	 	 
 PREHOOK: query: explain	
 analyze table Employee_Part partition (employeeSalary='2000.0') compute statistics for columns employeeID
 PREHOOK: type: QUERY
@@ -197,7 +250,8 @@ STAGE PLANS:
                   serde: org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe
 
   Stage: Stage-1
-    Column Stats Work
+    Stats Work
+      Basic Stats Work:
       Column Stats Desc:
           Columns: employeeID
           Column Types: int
@@ -208,12 +262,18 @@ PREHOOK: type: QUERY
 PREHOOK: Input: default@employee_part
 PREHOOK: Input: default@employee_part@employeesalary=2000.0/country=UK
 PREHOOK: Input: default@employee_part@employeesalary=2000.0/country=USA
+PREHOOK: Output: default@employee_part
+PREHOOK: Output: default@employee_part@employeesalary=2000.0/country=UK
+PREHOOK: Output: default@employee_part@employeesalary=2000.0/country=USA
 #### A masked pattern was here ####
 POSTHOOK: query: analyze table Employee_Part partition (employeeSalary='2000.0') compute statistics for columns employeeID
 POSTHOOK: type: QUERY
 POSTHOOK: Input: default@employee_part
 POSTHOOK: Input: default@employee_part@employeesalary=2000.0/country=UK
 POSTHOOK: Input: default@employee_part@employeesalary=2000.0/country=USA
+POSTHOOK: Output: default@employee_part
+POSTHOOK: Output: default@employee_part@employeesalary=2000.0/country=UK
+POSTHOOK: Output: default@employee_part@employeesalary=2000.0/country=USA
 #### A masked pattern was here ####
 PREHOOK: query: describe formatted Employee_Part partition (employeeSalary='2000.0', country='USA') employeeID
 PREHOOK: type: DESCTABLE
@@ -221,18 +281,36 @@ PREHOOK: Input: default@employee_part
 POSTHOOK: query: describe formatted Employee_Part partition (employeeSalary='2000.0', country='USA') employeeID
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@employee_part
-# col_name            	data_type           	min                 	max                 	num_nulls           	distinct_count      	avg_col_len         	max_col_len         	num_trues           	num_falses          	comment             	bitVector           
-	 	 	 	 	 	 	 	 	 	 	 
-employeeID          	int                 	16                  	34                  	1                   	12                  	                    	                    	                    	                    	HL                  	from deserializer   
+col_name            	employeeID          	 	 	 	 	 	 	 	 	 	 
+data_type           	int                 	 	 	 	 	 	 	 	 	 	 
+min                 	16                  	 	 	 	 	 	 	 	 	 	 
+max                 	34                  	 	 	 	 	 	 	 	 	 	 
+num_nulls           	1                   	 	 	 	 	 	 	 	 	 	 
+distinct_count      	12                  	 	 	 	 	 	 	 	 	 	 
+avg_col_len         	                    	 	 	 	 	 	 	 	 	 	 
+max_col_len         	                    	 	 	 	 	 	 	 	 	 	 
+num_trues           	                    	 	 	 	 	 	 	 	 	 	 
+num_falses          	                    	 	 	 	 	 	 	 	 	 	 
+bitVector           	HL                  	 	 	 	 	 	 	 	 	 	 
+comment             	from deserializer   	 	 	 	 	 	 	 	 	 	 
 PREHOOK: query: describe formatted Employee_Part partition (employeeSalary='2000.0', country='UK') employeeID
 PREHOOK: type: DESCTABLE
 PREHOOK: Input: default@employee_part
 POSTHOOK: query: describe formatted Employee_Part partition (employeeSalary='2000.0', country='UK') employeeID
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@employee_part
-# col_name            	data_type           	min                 	max                 	num_nulls           	distinct_count      	avg_col_len         	max_col_len         	num_trues           	num_falses          	comment             	bitVector           
-	 	 	 	 	 	 	 	 	 	 	 
-employeeID          	int                 	16                  	31                  	0                   	7                   	                    	                    	                    	                    	HL                  	from deserializer   
+col_name            	employeeID          	 	 	 	 	 	 	 	 	 	 
+data_type           	int                 	 	 	 	 	 	 	 	 	 	 
+min                 	16                  	 	 	 	 	 	 	 	 	 	 
+max                 	31                  	 	 	 	 	 	 	 	 	 	 
+num_nulls           	0                   	 	 	 	 	 	 	 	 	 	 
+distinct_count      	7                   	 	 	 	 	 	 	 	 	 	 
+avg_col_len         	                    	 	 	 	 	 	 	 	 	 	 
+max_col_len         	                    	 	 	 	 	 	 	 	 	 	 
+num_trues           	                    	 	 	 	 	 	 	 	 	 	 
+num_falses          	                    	 	 	 	 	 	 	 	 	 	 
+bitVector           	HL                  	 	 	 	 	 	 	 	 	 	 
+comment             	from deserializer   	 	 	 	 	 	 	 	 	 	 
 PREHOOK: query: explain	
 analyze table Employee_Part partition (employeeSalary) compute statistics for columns employeeID
 PREHOOK: type: QUERY
@@ -249,22 +327,22 @@ STAGE PLANS:
       Map Operator Tree:
           TableScan
             alias: employee_part
-            Statistics: Num rows: 116 Data size: 466 Basic stats: COMPLETE Column stats: NONE
+            Statistics: Num rows: 27 Data size: 206 Basic stats: PARTIAL Column stats: NONE
             Select Operator
               expressions: employeeid (type: int), employeesalary (type: double), country (type: string)
               outputColumnNames: employeeid, employeesalary, country
-              Statistics: Num rows: 116 Data size: 466 Basic stats: COMPLETE Column stats: NONE
+              Statistics: Num rows: 27 Data size: 206 Basic stats: PARTIAL Column stats: NONE
               Group By Operator
                 aggregations: compute_stats(employeeid, 'hll')
                 keys: employeesalary (type: double), country (type: string)
                 mode: hash
                 outputColumnNames: _col0, _col1, _col2
-                Statistics: Num rows: 116 Data size: 466 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 27 Data size: 206 Basic stats: PARTIAL Column stats: NONE
                 Reduce Output Operator
                   key expressions: _col0 (type: double), _col1 (type: string)
                   sort order: ++
                   Map-reduce partition columns: _col0 (type: double), _col1 (type: string)
-                  Statistics: Num rows: 116 Data size: 466 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 27 Data size: 206 Basic stats: PARTIAL Column stats: NONE
                   value expressions: _col2 (type: struct<columntype:string,min:bigint,max:bigint,countnulls:bigint,bitvector:binary>)
       Reduce Operator Tree:
         Group By Operator
@@ -272,21 +350,22 @@ STAGE PLANS:
           keys: KEY._col0 (type: double), KEY._col1 (type: string)
           mode: mergepartial
           outputColumnNames: _col0, _col1, _col2
-          Statistics: Num rows: 58 Data size: 233 Basic stats: COMPLETE Column stats: NONE
+          Statistics: Num rows: 13 Data size: 99 Basic stats: PARTIAL Column stats: NONE
           Select Operator
             expressions: _col2 (type: struct<columntype:string,min:bigint,max:bigint,countnulls:bigint,numdistinctvalues:bigint,ndvbitvector:binary>), _col0 (type: double), _col1 (type: string)
             outputColumnNames: _col0, _col1, _col2
-            Statistics: Num rows: 58 Data size: 233 Basic stats: COMPLETE Column stats: NONE
+            Statistics: Num rows: 13 Data size: 99 Basic stats: PARTIAL Column stats: NONE
             File Output Operator
               compressed: false
-              Statistics: Num rows: 58 Data size: 233 Basic stats: COMPLETE Column stats: NONE
+              Statistics: Num rows: 13 Data size: 99 Basic stats: PARTIAL Column stats: NONE
               table:
                   input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                   output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
                   serde: org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe
 
   Stage: Stage-1
-    Column Stats Work
+    Stats Work
+      Basic Stats Work:
       Column Stats Desc:
           Columns: employeeID
           Column Types: int
@@ -301,6 +380,13 @@ PREHOOK: Input: default@employee_part@employeesalary=3000.0/country=UK
 PREHOOK: Input: default@employee_part@employeesalary=3000.0/country=USA
 PREHOOK: Input: default@employee_part@employeesalary=3500.0/country=UK
 PREHOOK: Input: default@employee_part@employeesalary=4000.0/country=USA
+PREHOOK: Output: default@employee_part
+PREHOOK: Output: default@employee_part@employeesalary=2000.0/country=UK
+PREHOOK: Output: default@employee_part@employeesalary=2000.0/country=USA
+PREHOOK: Output: default@employee_part@employeesalary=3000.0/country=UK
+PREHOOK: Output: default@employee_part@employeesalary=3000.0/country=USA
+PREHOOK: Output: default@employee_part@employeesalary=3500.0/country=UK
+PREHOOK: Output: default@employee_part@employeesalary=4000.0/country=USA
 #### A masked pattern was here ####
 POSTHOOK: query: analyze table Employee_Part partition (employeeSalary) compute statistics for columns employeeID
 POSTHOOK: type: QUERY
@@ -311,6 +397,13 @@ POSTHOOK: Input: default@employee_part@employeesalary=3000.0/country=UK
 POSTHOOK: Input: default@employee_part@employeesalary=3000.0/country=USA
 POSTHOOK: Input: default@employee_part@employeesalary=3500.0/country=UK
 POSTHOOK: Input: default@employee_part@employeesalary=4000.0/country=USA
+POSTHOOK: Output: default@employee_part
+POSTHOOK: Output: default@employee_part@employeesalary=2000.0/country=UK
+POSTHOOK: Output: default@employee_part@employeesalary=2000.0/country=USA
+POSTHOOK: Output: default@employee_part@employeesalary=3000.0/country=UK
+POSTHOOK: Output: default@employee_part@employeesalary=3000.0/country=USA
+POSTHOOK: Output: default@employee_part@employeesalary=3500.0/country=UK
+POSTHOOK: Output: default@employee_part@employeesalary=4000.0/country=USA
 #### A masked pattern was here ####
 PREHOOK: query: describe formatted Employee_Part partition (employeeSalary='3000.0', country='UK') employeeID
 PREHOOK: type: DESCTABLE
@@ -318,9 +411,18 @@ PREHOOK: Input: default@employee_part
 POSTHOOK: query: describe formatted Employee_Part partition (employeeSalary='3000.0', country='UK') employeeID
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@employee_part
-# col_name            	data_type           	min                 	max                 	num_nulls           	distinct_count      	avg_col_len         	max_col_len         	num_trues           	num_falses          	comment             	bitVector           
-	 	 	 	 	 	 	 	 	 	 	 
-employeeID          	int                 	16                  	34                  	1                   	12                  	                    	                    	                    	                    	HL                  	from deserializer   
+col_name            	employeeID          	 	 	 	 	 	 	 	 	 	 
+data_type           	int                 	 	 	 	 	 	 	 	 	 	 
+min                 	16                  	 	 	 	 	 	 	 	 	 	 
+max                 	34                  	 	 	 	 	 	 	 	 	 	 
+num_nulls           	1                   	 	 	 	 	 	 	 	 	 	 
+distinct_count      	12                  	 	 	 	 	 	 	 	 	 	 
+avg_col_len         	                    	 	 	 	 	 	 	 	 	 	 
+max_col_len         	                    	 	 	 	 	 	 	 	 	 	 
+num_trues           	                    	 	 	 	 	 	 	 	 	 	 
+num_falses          	                    	 	 	 	 	 	 	 	 	 	 
+bitVector           	HL                  	 	 	 	 	 	 	 	 	 	 
+comment             	from deserializer   	 	 	 	 	 	 	 	 	 	 
 PREHOOK: query: explain	
 analyze table Employee_Part partition (employeeSalary,country) compute statistics for columns
 PREHOOK: type: QUERY
@@ -337,22 +439,22 @@ STAGE PLANS:
       Map Operator Tree:
           TableScan
             alias: employee_part
-            Statistics: Num rows: 2 Data size: 466 Basic stats: PARTIAL Column stats: NONE
+            Statistics: Num rows: 54 Data size: 412 Basic stats: COMPLETE Column stats: NONE
             Select Operator
               expressions: employeeid (type: int), employeename (type: string), employeesalary (type: double), country (type: string)
               outputColumnNames: employeeid, employeename, employeesalary, country
-              Statistics: Num rows: 2 Data size: 466 Basic stats: PARTIAL Column stats: NONE
+              Statistics: Num rows: 54 Data size: 412 Basic stats: COMPLETE Column stats: NONE
               Group By Operator
                 aggregations: compute_stats(employeeid, 'hll'), compute_stats(employeename, 'hll')
                 keys: employeesalary (type: double), country (type: string)
                 mode: hash
                 outputColumnNames: _col0, _col1, _col2, _col3
-                Statistics: Num rows: 2 Data size: 466 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 54 Data size: 412 Basic stats: COMPLETE Column stats: NONE
                 Reduce Output Operator
                   key expressions: _col0 (type: double), _col1 (type: string)
                   sort order: ++
                   Map-reduce partition columns: _col0 (type: double), _col1 (type: string)
-                  Statistics: Num rows: 2 Data size: 466 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 54 Data size: 412 Basic stats: COMPLETE Column stats: NONE
                   value expressions: _col2 (type: struct<columntype:string,min:bigint,max:bigint,countnulls:bigint,bitvector:binary>), _col3 (type: struct<columntype:string,maxlength:bigint,sumlength:bigint,count:bigint,countnulls:bigint,bitvector:binary>)
       Reduce Operator Tree:
         Group By Operator
@@ -360,21 +462,22 @@ STAGE PLANS:
           keys: KEY._col0 (type: double), KEY._col1 (type: string)
           mode: mergepartial
           outputColumnNames: _col0, _col1, _col2, _col3
-          Statistics: Num rows: 1 Data size: 233 Basic stats: COMPLETE Column stats: NONE
+          Statistics: Num rows: 27 Data size: 206 Basic stats: COMPLETE Column stats: NONE
           Select Operator
             expressions: _col2 (type: struct<columntype:string,min:bigint,max:bigint,countnulls:bigint,numdistinctvalues:bigint,ndvbitvector:binary>), _col3 (type: struct<columntype:string,maxlength:bigint,avglength:double,countnulls:bigint,numdistinctvalues:bigint,ndvbitvector:binary>), _col0 (type: double), _col1 (type: string)
             outputColumnNames: _col0, _col1, _col2, _col3
-            Statistics: Num rows: 1 Data size: 233 Basic stats: COMPLETE Column stats: NONE
+            Statistics: Num rows: 27 Data size: 206 Basic stats: COMPLETE Column stats: NONE
             File Output Operator
               compressed: false
-              Statistics: Num rows: 1 Data size: 233 Basic stats: COMPLETE Column stats: NONE
+              Statistics: Num rows: 27 Data size: 206 Basic stats: COMPLETE Column stats: NONE
               table:
                   input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                   output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
                   serde: org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe
 
   Stage: Stage-1
-    Column Stats Work
+    Stats Work
+      Basic Stats Work:
       Column Stats Desc:
           Columns: employeeid, employeename
           Column Types: int, string
@@ -389,6 +492,13 @@ PREHOOK: Input: default@employee_part@employeesalary=3000.0/country=UK
 PREHOOK: Input: default@employee_part@employeesalary=3000.0/country=USA
 PREHOOK: Input: default@employee_part@employeesalary=3500.0/country=UK
 PREHOOK: Input: default@employee_part@employeesalary=4000.0/country=USA
+PREHOOK: Output: default@employee_part
+PREHOOK: Output: default@employee_part@employeesalary=2000.0/country=UK
+PREHOOK: Output: default@employee_part@employeesalary=2000.0/country=USA
+PREHOOK: Output: default@employee_part@employeesalary=3000.0/country=UK
+PREHOOK: Output: default@employee_part@employeesalary=3000.0/country=USA
+PREHOOK: Output: default@employee_part@employeesalary=3500.0/country=UK
+PREHOOK: Output: default@employee_part@employeesalary=4000.0/country=USA
 #### A masked pattern was here ####
 POSTHOOK: query: analyze table Employee_Part partition (employeeSalary,country) compute statistics for columns
 POSTHOOK: type: QUERY
@@ -399,6 +509,13 @@ POSTHOOK: Input: default@employee_part@employeesalary=3000.0/country=UK
 POSTHOOK: Input: default@employee_part@employeesalary=3000.0/country=USA
 POSTHOOK: Input: default@employee_part@employeesalary=3500.0/country=UK
 POSTHOOK: Input: default@employee_part@employeesalary=4000.0/country=USA
+POSTHOOK: Output: default@employee_part
+POSTHOOK: Output: default@employee_part@employeesalary=2000.0/country=UK
+POSTHOOK: Output: default@employee_part@employeesalary=2000.0/country=USA
+POSTHOOK: Output: default@employee_part@employeesalary=3000.0/country=UK
+POSTHOOK: Output: default@employee_part@employeesalary=3000.0/country=USA
+POSTHOOK: Output: default@employee_part@employeesalary=3500.0/country=UK
+POSTHOOK: Output: default@employee_part@employeesalary=4000.0/country=USA
 #### A masked pattern was here ####
 PREHOOK: query: describe formatted Employee_Part partition (employeeSalary='3500.0', country='UK') employeeName
 PREHOOK: type: DESCTABLE
@@ -406,9 +523,18 @@ PREHOOK: Input: default@employee_part
 POSTHOOK: query: describe formatted Employee_Part partition (employeeSalary='3500.0', country='UK') employeeName
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@employee_part
-# col_name            	data_type           	min                 	max                 	num_nulls           	distinct_count      	avg_col_len         	max_col_len         	num_trues           	num_falses          	comment             	bitVector           
-	 	 	 	 	 	 	 	 	 	 	 
-employeeName        	string              	                    	                    	0                   	12                  	5.142857142857143   	6                   	                    	                    	HL                  	from deserializer   
+col_name            	employeeName        	 	 	 	 	 	 	 	 	 	 
+data_type           	string              	 	 	 	 	 	 	 	 	 	 
+min                 	                    	 	 	 	 	 	 	 	 	 	 
+max                 	                    	 	 	 	 	 	 	 	 	 	 
+num_nulls           	0                   	 	 	 	 	 	 	 	 	 	 
+distinct_count      	12                  	 	 	 	 	 	 	 	 	 	 
+avg_col_len         	5.142857142857143   	 	 	 	 	 	 	 	 	 	 
+max_col_len         	6                   	 	 	 	 	 	 	 	 	 	 
+num_trues           	                    	 	 	 	 	 	 	 	 	 	 
+num_falses          	                    	 	 	 	 	 	 	 	 	 	 
+bitVector           	HL                  	 	 	 	 	 	 	 	 	 	 
+comment             	from deserializer   	 	 	 	 	 	 	 	 	 	 
 PREHOOK: query: drop table Employee
 PREHOOK: type: DROPTABLE
 POSTHOOK: query: drop table Employee
@@ -466,6 +592,11 @@ PREHOOK: Input: default@employee@employeesalary=2000.0/country=UK
 PREHOOK: Input: default@employee@employeesalary=2000.0/country=USA
 PREHOOK: Input: default@employee@employeesalary=3000.0/country=UK
 PREHOOK: Input: default@employee@employeesalary=3500.0/country=UK
+PREHOOK: Output: default@employee
+PREHOOK: Output: default@employee@employeesalary=2000.0/country=UK
+PREHOOK: Output: default@employee@employeesalary=2000.0/country=USA
+PREHOOK: Output: default@employee@employeesalary=3000.0/country=UK
+PREHOOK: Output: default@employee@employeesalary=3500.0/country=UK
 #### A masked pattern was here ####
 POSTHOOK: query: analyze table Employee partition (employeeSalary,country) compute statistics for columns
 POSTHOOK: type: QUERY
@@ -474,6 +605,11 @@ POSTHOOK: Input: default@employee@employeesalary=2000.0/country=UK
 POSTHOOK: Input: default@employee@employeesalary=2000.0/country=USA
 POSTHOOK: Input: default@employee@employeesalary=3000.0/country=UK
 POSTHOOK: Input: default@employee@employeesalary=3500.0/country=UK
+POSTHOOK: Output: default@employee
+POSTHOOK: Output: default@employee@employeesalary=2000.0/country=UK
+POSTHOOK: Output: default@employee@employeesalary=2000.0/country=USA
+POSTHOOK: Output: default@employee@employeesalary=3000.0/country=UK
+POSTHOOK: Output: default@employee@employeesalary=3500.0/country=UK
 #### A masked pattern was here ####
 PREHOOK: query: describe formatted Employee partition (employeeSalary='3500.0', country='UK') employeeName
 PREHOOK: type: DESCTABLE
@@ -481,9 +617,18 @@ PREHOOK: Input: default@employee
 POSTHOOK: query: describe formatted Employee partition (employeeSalary='3500.0', country='UK') employeeName
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@employee
-# col_name            	data_type           	min                 	max                 	num_nulls           	distinct_count      	avg_col_len         	max_col_len         	num_trues           	num_falses          	comment             	bitVector           
-	 	 	 	 	 	 	 	 	 	 	 
-employeeName        	string              	                    	                    	0                   	12                  	5.142857142857143   	6                   	                    	                    	HL                  	from deserializer   
+col_name            	employeeName        	 	 	 	 	 	 	 	 	 	 
+data_type           	string              	 	 	 	 	 	 	 	 	 	 
+min                 	                    	 	 	 	 	 	 	 	 	 	 
+max                 	                    	 	 	 	 	 	 	 	 	 	 
+num_nulls           	0                   	 	 	 	 	 	 	 	 	 	 
+distinct_count      	12                  	 	 	 	 	 	 	 	 	 	 
+avg_col_len         	5.142857142857143   	 	 	 	 	 	 	 	 	 	 
+max_col_len         	6                   	 	 	 	 	 	 	 	 	 	 
+num_trues           	                    	 	 	 	 	 	 	 	 	 	 
+num_falses          	                    	 	 	 	 	 	 	 	 	 	 
+bitVector           	HL                  	 	 	 	 	 	 	 	 	 	 
+comment             	from deserializer   	 	 	 	 	 	 	 	 	 	 
 PREHOOK: query: LOAD DATA LOCAL INPATH "../../data/files/employee2.dat" INTO TABLE Employee partition(employeeSalary='3000.0', country='USA')
 PREHOOK: type: LOAD
 #### A masked pattern was here ####
@@ -511,6 +656,13 @@ PREHOOK: Input: default@employee@employeesalary=3000.0/country=UK
 PREHOOK: Input: default@employee@employeesalary=3000.0/country=USA
 PREHOOK: Input: default@employee@employeesalary=3500.0/country=UK
 PREHOOK: Input: default@employee@employeesalary=4000.0/country=USA
+PREHOOK: Output: default@employee
+PREHOOK: Output: default@employee@employeesalary=2000.0/country=UK
+PREHOOK: Output: default@employee@employeesalary=2000.0/country=USA
+PREHOOK: Output: default@employee@employeesalary=3000.0/country=UK
+PREHOOK: Output: default@employee@employeesalary=3000.0/country=USA
+PREHOOK: Output: default@employee@employeesalary=3500.0/country=UK
+PREHOOK: Output: default@employee@employeesalary=4000.0/country=USA
 #### A masked pattern was here ####
 POSTHOOK: query: analyze table Employee partition (employeeSalary) compute statistics for columns
 POSTHOOK: type: QUERY
@@ -521,6 +673,13 @@ POSTHOOK: Input: default@employee@employeesalary=3000.0/country=UK
 POSTHOOK: Input: default@employee@employeesalary=3000.0/country=USA
 POSTHOOK: Input: default@employee@employeesalary=3500.0/country=UK
 POSTHOOK: Input: default@employee@employeesalary=4000.0/country=USA
+POSTHOOK: Output: default@employee
+POSTHOOK: Output: default@employee@employeesalary=2000.0/country=UK
+POSTHOOK: Output: default@employee@employeesalary=2000.0/country=USA
+POSTHOOK: Output: default@employee@employeesalary=3000.0/country=UK
+POSTHOOK: Output: default@employee@employeesalary=3000.0/country=USA
+POSTHOOK: Output: default@employee@employeesalary=3500.0/country=UK
+POSTHOOK: Output: default@employee@employeesalary=4000.0/country=USA
 #### A masked pattern was here ####
 PREHOOK: query: describe formatted Employee partition (employeeSalary='3000.0', country='USA') employeeName
 PREHOOK: type: DESCTABLE
@@ -528,9 +687,18 @@ PREHOOK: Input: default@employee
 POSTHOOK: query: describe formatted Employee partition (employeeSalary='3000.0', country='USA') employeeName
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@employee
-# col_name            	data_type           	min                 	max                 	num_nulls           	distinct_count      	avg_col_len         	max_col_len         	num_trues           	num_falses          	comment             	bitVector           
-	 	 	 	 	 	 	 	 	 	 	 
-employeeName        	string              	                    	                    	0                   	12                  	5.142857142857143   	6                   	                    	                    	HL                  	from deserializer   
+col_name            	employeeName        	 	 	 	 	 	 	 	 	 	 
+data_type           	string              	 	 	 	 	 	 	 	 	 	 
+min                 	                    	 	 	 	 	 	 	 	 	 	 
+max                 	                    	 	 	 	 	 	 	 	 	 	 
+num_nulls           	0                   	 	 	 	 	 	 	 	 	 	 
+distinct_count      	12                  	 	 	 	 	 	 	 	 	 	 
+avg_col_len         	5.142857142857143   	 	 	 	 	 	 	 	 	 	 
+max_col_len         	6                   	 	 	 	 	 	 	 	 	 	 
+num_trues           	                    	 	 	 	 	 	 	 	 	 	 
+num_falses          	                    	 	 	 	 	 	 	 	 	 	 
+bitVector           	HL                  	 	 	 	 	 	 	 	 	 	 
+comment             	from deserializer   	 	 	 	 	 	 	 	 	 	 
 PREHOOK: query: alter table Employee add columns (c int ,d string)
 PREHOOK: type: ALTERTABLE_ADDCOLS
 PREHOOK: Input: default@employee
@@ -552,11 +720,15 @@ PREHOOK: query: analyze table Employee partition (employeeSalary='6000.0',countr
 PREHOOK: type: QUERY
 PREHOOK: Input: default@employee
 PREHOOK: Input: default@employee@employeesalary=6000.0/country=UK
+PREHOOK: Output: default@employee
+PREHOOK: Output: default@employee@employeesalary=6000.0/country=UK
 #### A masked pattern was here ####
 POSTHOOK: query: analyze table Employee partition (employeeSalary='6000.0',country='UK') compute statistics for columns
 POSTHOOK: type: QUERY
 POSTHOOK: Input: default@employee
 POSTHOOK: Input: default@employee@employeesalary=6000.0/country=UK
+POSTHOOK: Output: default@employee
+POSTHOOK: Output: default@employee@employeesalary=6000.0/country=UK
 #### A masked pattern was here ####
 PREHOOK: query: describe formatted Employee partition (employeeSalary='6000.0', country='UK') employeeName
 PREHOOK: type: DESCTABLE
@@ -564,24 +736,51 @@ PREHOOK: Input: default@employee
 POSTHOOK: query: describe formatted Employee partition (employeeSalary='6000.0', country='UK') employeeName
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@employee
-# col_name            	data_type           	min                 	max                 	num_nulls           	distinct_count      	avg_col_len         	max_col_len         	num_trues           	num_falses          	comment             	bitVector           
-	 	 	 	 	 	 	 	 	 	 	 
-employeeName        	string              	                    	                    	0                   	9                   	4.777777777777778   	6                   	                    	                    	HL                  	from deserializer   
+col_name            	employeeName        	 	 	 	 	 	 	 	 	 	 
+data_type           	string              	 	 	 	 	 	 	 	 	 	 
+min                 	                    	 	 	 	 	 	 	 	 	 	 
+max                 	                    	 	 	 	 	 	 	 	 	 	 
+num_nulls           	0                   	 	 	 	 	 	 	 	 	 	 
+distinct_count      	9                   	 	 	 	 	 	 	 	 	 	 
+avg_col_len         	4.777777777777778   	 	 	 	 	 	 	 	 	 	 
+max_col_len         	6                   	 	 	 	 	 	 	 	 	 	 
+num_trues           	                    	 	 	 	 	 	 	 	 	 	 
+num_falses          	                    	 	 	 	 	 	 	 	 	 	 
+bitVector           	HL                  	 	 	 	 	 	 	 	 	 	 
+comment             	from deserializer   	 	 	 	 	 	 	 	 	 	 
 PREHOOK: query: describe formatted Employee partition (employeeSalary='6000.0', country='UK') c
 PREHOOK: type: DESCTABLE
 PREHOOK: Input: default@employee
 POSTHOOK: query: describe formatted Employee partition (employeeSalary='6000.0', country='UK') c
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@employee
-# col_name            	data_type           	min                 	max                 	num_nulls           	distinct_count      	avg_col_len         	max_col_len         	num_trues           	num_falses          	comment             	bitVector           
-	 	 	 	 	 	 	 	 	 	 	 
-c                   	int                 	2000                	4000                	0                   	3                   	                    	                    	                    	                    	HL                  	from deserializer   
+col_name            	c                   	 	 	 	 	 	 	 	 	 	 
+data_type           	int                 	 	 	 	 	 	 	 	 	 	 
+min                 	2000                	 	 	 	 	 	 	 	 	 	 
+max                 	4000                	 	 	 	 	 	 	 	 	 	 
+num_nulls           	0                   	 	 	 	 	 	 	 	 	 	 
+distinct_count      	3                   	 	 	 	 	 	 	 	 	 	 
+avg_col_len         	                    	 	 	 	 	 	 	 	 	 	 
+max_col_len         	                    	 	 	 	 	 	 	 	 	 	 
+num_trues           	                    	 	 	 	 	 	 	 	 	 	 
+num_falses          	                    	 	 	 	 	 	 	 	 	 	 
+bitVector           	HL                  	 	 	 	 	 	 	 	 	 	 
+comment             	from deserializer   	 	 	 	 	 	 	 	 	 	 
 PREHOOK: query: describe formatted Employee partition (employeeSalary='6000.0', country='UK') d
 PREHOOK: type: DESCTABLE
 PREHOOK: Input: default@employee
 POSTHOOK: query: describe formatted Employee partition (employeeSalary='6000.0', country='UK') d
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@employee
-# col_name            	data_type           	min                 	max                 	num_nulls           	distinct_count      	avg_col_len         	max_col_len         	num_trues           	num_falses          	comment             	bitVector           
-	 	 	 	 	 	 	 	 	 	 	 
-d                   	string              	                    	                    	0                   	2                   	2.4444444444444446  	3                   	                    	                    	HL                  	from deserializer   
+col_name            	d                   	 	 	 	 	 	 	 	 	 	 
+data_type           	string              	 	 	 	 	 	 	 	 	 	 
+min                 	                    	 	 	 	 	 	 	 	 	 	 
+max                 	                    	 	 	 	 	 	 	 	 	 	 
+num_nulls           	0                   	 	 	 	 	 	 	 	 	 	 
+distinct_count      	2                   	 	 	 	 	 	 	 	 	 	 
+avg_col_len         	2.4444444444444446  	 	 	 	 	 	 	 	 	 	 
+max_col_len         	3                   	 	 	 	 	 	 	 	 	 	 
+num_trues           	                    	 	 	 	 	 	 	 	 	 	 
+num_falses          	                    	 	 	 	 	 	 	 	 	 	 
+bitVector           	HL                  	 	 	 	 	 	 	 	 	 	 
+comment             	from deserializer   	 	 	 	 	 	 	 	 	 	 

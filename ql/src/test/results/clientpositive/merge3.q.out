@@ -178,7 +178,8 @@ STAGE PLANS:
           name: default.merge_src2
 
   Stage: Stage-2
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 #### A masked pattern was here ####
 
   Stage: Stage-3
@@ -2324,7 +2325,6 @@ POSTHOOK: query: describe formatted merge_src2
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@merge_src2
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	                    
 value               	string              	                    
 	 	 
@@ -2559,7 +2559,8 @@ STAGE PLANS:
               name: default.merge_src_part2
 
   Stage: Stage-2
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 #### A masked pattern was here ####
 
   Stage: Stage-3
@@ -4994,7 +4995,8 @@ STAGE PLANS:
               name: default.merge_src_part2
 
   Stage: Stage-2
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 #### A masked pattern was here ####
 
   Stage: Stage-3

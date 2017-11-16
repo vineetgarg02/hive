@@ -17,12 +17,12 @@
  */
 package org.apache.hadoop.hive.ql.parse;
 
-import io.netty.util.internal.StringUtil;
 import org.antlr.runtime.tree.Tree;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.QueryState;
@@ -46,6 +46,8 @@ import org.apache.hadoop.hive.ql.plan.AlterTableDesc;
 import org.apache.hadoop.hive.ql.plan.DDLWork;
 import org.apache.hadoop.hive.ql.plan.DependencyCollectionWork;
 import org.apache.hadoop.hive.ql.plan.PlanUtils;
+import org.apache.hadoop.hive.ql.session.SessionState;
+import org.apache.hadoop.hive.ql.stats.StatsUtils;
 
 import java.io.FileNotFoundException;
 import java.io.Serializable;
@@ -56,11 +58,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_DBNAME;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_FROM;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_LIMIT;
+import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_REPL_CONFIG;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_REPL_DUMP;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_REPL_LOAD;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_REPL_STATUS;
+import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TABNAME;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TO;
 
 public class ReplicationSemanticAnalyzer extends BaseSemanticAnalyzer {
@@ -73,14 +78,19 @@ public class ReplicationSemanticAnalyzer extends BaseSemanticAnalyzer {
   private Integer maxEventLimit;
   // Base path for REPL LOAD
   private String path;
+  // Added conf member to set the REPL command specific config entries without affecting the configs
+  // of any other queries running in the session
+  private HiveConf conf;
 
   private static String testInjectDumpDir = null; // unit tests can overwrite this to affect default dump behaviour
   private static final String dumpSchema = "dump_dir,last_repl_id#string,string";
 
   public static final String FUNCTIONS_ROOT_DIR_NAME = "_functions";
+  public static final String CONSTRAINTS_ROOT_DIR_NAME = "_constraints";
 
   ReplicationSemanticAnalyzer(QueryState queryState) throws SemanticException {
     super(queryState);
+    this.conf = new HiveConf(super.conf);
   }
 
   @Override
@@ -188,14 +198,30 @@ public class ReplicationSemanticAnalyzer extends BaseSemanticAnalyzer {
   }
 
   // REPL LOAD
-  private void initReplLoad(ASTNode ast) {
-    int numChildren = ast.getChildCount();
+  private void initReplLoad(ASTNode ast) throws SemanticException {
     path = PlanUtils.stripQuotes(ast.getChild(0).getText());
-    if (numChildren > 1) {
-      dbNameOrPattern = PlanUtils.stripQuotes(ast.getChild(1).getText());
-    }
-    if (numChildren > 2) {
-      tblNameOrPattern = PlanUtils.stripQuotes(ast.getChild(2).getText());
+    int numChildren = ast.getChildCount();
+    for (int i = 1; i < numChildren; i++) {
+      ASTNode childNode = (ASTNode) ast.getChild(i);
+      switch (childNode.getToken().getType()) {
+        case TOK_DBNAME:
+          dbNameOrPattern = PlanUtils.stripQuotes(childNode.getChild(0).getText());
+          break;
+        case TOK_TABNAME:
+          tblNameOrPattern = PlanUtils.stripQuotes(childNode.getChild(0).getText());
+          break;
+        case TOK_REPL_CONFIG:
+          Map<String, String> replConfigs
+                  = DDLSemanticAnalyzer.getProps((ASTNode) childNode.getChild(0));
+          if (null != replConfigs) {
+            for (Map.Entry<String, String> config : replConfigs.entrySet()) {
+              conf.set(config.getKey(), config.getValue());
+            }
+          }
+          break;
+        default:
+          throw new SemanticException("Unrecognized token in REPL LOAD statement");
+      }
     }
   }
 
@@ -286,8 +312,9 @@ public class ReplicationSemanticAnalyzer extends BaseSemanticAnalyzer {
 
       if ((!evDump) && (tblNameOrPattern != null) && !(tblNameOrPattern.isEmpty())) {
         ReplLoadWork replLoadWork =
-            new ReplLoadWork(conf, loadPath.toString(), dbNameOrPattern, tblNameOrPattern);
-        rootTasks.add(TaskFactory.get(replLoadWork, conf));
+            new ReplLoadWork(conf, loadPath.toString(), dbNameOrPattern, tblNameOrPattern,
+                SessionState.get().getLineageState(), SessionState.get().getTxnMgr().getCurrentTxnId());
+        rootTasks.add(TaskFactory.get(replLoadWork, conf, true));
         return;
       }
 
@@ -316,8 +343,9 @@ public class ReplicationSemanticAnalyzer extends BaseSemanticAnalyzer {
                   + " does not correspond to REPL LOAD expecting to load to a singular destination point.");
         }
 
-        ReplLoadWork replLoadWork = new ReplLoadWork(conf, loadPath.toString(), dbNameOrPattern);
-        rootTasks.add(TaskFactory.get(replLoadWork, conf));
+        ReplLoadWork replLoadWork = new ReplLoadWork(conf, loadPath.toString(), dbNameOrPattern,
+            SessionState.get().getLineageState(), SessionState.get().getTxnMgr().getCurrentTxnId());
+        rootTasks.add(TaskFactory.get(replLoadWork, conf, true));
         //
         //        for (FileStatus dir : dirsInLoadPath) {
         //          analyzeDatabaseLoad(dbNameOrPattern, fs, dir);
@@ -372,7 +400,7 @@ public class ReplicationSemanticAnalyzer extends BaseSemanticAnalyzer {
               LOG.debug("Added {}:{} as a precursor of barrier task {}:{}",
                   t.getClass(), t.getId(), barrierTask.getClass(), barrierTask.getId());
             }
-            LOG.debug("Updated taskChainTail from {}{} to {}{}",
+            LOG.debug("Updated taskChainTail from {}:{} to {}:{}",
                 taskChainTail.getClass(), taskChainTail.getId(), barrierTask.getClass(), barrierTask.getId());
             taskChainTail = barrierTask;
           }
@@ -432,7 +460,7 @@ public class ReplicationSemanticAnalyzer extends BaseSemanticAnalyzer {
     AlterTableDesc alterTblDesc =  new AlterTableDesc(
             AlterTableDesc.AlterTableTypes.ADDPROPS, new ReplicationSpec(replState, replState));
     alterTblDesc.setProps(mapProp);
-    alterTblDesc.setOldName(dbName + "." + tableName);
+    alterTblDesc.setOldName(StatsUtils.getFullyQualifiedTableName(dbName, tableName));
     alterTblDesc.setPartSpec((HashMap<String, String>)partSpec);
 
     Task<? extends Serializable> updateReplIdTask = TaskFactory.get(

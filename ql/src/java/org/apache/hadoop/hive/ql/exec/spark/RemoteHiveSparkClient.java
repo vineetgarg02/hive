@@ -44,6 +44,7 @@ import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.conf.HiveConfUtil;
 import org.apache.hadoop.hive.ql.Context;
 import org.apache.hadoop.hive.ql.DriverContext;
+import org.apache.hadoop.hive.ql.exec.DagUtils;
 import org.apache.hadoop.hive.ql.exec.Utilities;
 import org.apache.hadoop.hive.ql.exec.spark.status.SparkJobRef;
 import org.apache.hadoop.hive.ql.exec.spark.status.impl.RemoteSparkJobRef;
@@ -350,6 +351,8 @@ public class RemoteHiveSparkClient implements HiveSparkClient {
         new SparkPlanGenerator(jc.sc(), null, localJobConf, localScratchDir, sparkReporter);
       SparkPlan plan = gen.generate(localSparkWork);
 
+      jc.sc().setJobGroup("queryId = " + localSparkWork.getQueryId(), DagUtils.getQueryName(localJobConf));
+
       // Execute generated plan.
       JavaPairRDD<HiveKey, BytesWritable> finalRDD = plan.generateGraph();
       // We use Spark RDD async action to submit job as it's the only way to get jobId now.
@@ -359,12 +362,12 @@ public class RemoteHiveSparkClient implements HiveSparkClient {
     }
 
     private void logConfigurations(JobConf localJobConf) {
-      if (LOG.isInfoEnabled()) {
-        LOG.info("Logging job configuration: ");
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("Logging job configuration: ");
         StringBuilder outWriter = new StringBuilder();
         // redact sensitive information before logging
         HiveConfUtil.dumpConfig(localJobConf, outWriter);
-        LOG.info(outWriter.toString());
+        LOG.debug(outWriter.toString());
       }
     }
   }

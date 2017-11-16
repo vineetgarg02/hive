@@ -133,6 +133,8 @@ public class ParseContext {
           new HashMap<>();
 
   private Map<String, List<SemiJoinHint>> semiJoinHints;
+  private boolean disableMapJoin;
+
   public ParseContext() {
   }
 
@@ -338,14 +340,6 @@ public class ParseContext {
    */
   public List<LoadTableDesc> getLoadTableWork() {
     return loadTableWork;
-  }
-
-  /**
-   * @param loadTableWork
-   *          the loadTableWork to set
-   */
-  public void setLoadTableWork(List<LoadTableDesc> loadTableWork) {
-    this.loadTableWork = loadTableWork;
   }
 
   /**
@@ -704,5 +698,13 @@ public class ParseContext {
 
   public Map<String, List<SemiJoinHint>> getSemiJoinHints() {
     return semiJoinHints;
+  }
+
+  public void setDisableMapJoin(boolean disableMapJoin) {
+    this.disableMapJoin = disableMapJoin;
+  }
+
+  public boolean getDisableMapJoin() {
+    return disableMapJoin;
   }
 }

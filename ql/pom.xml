@@ -54,13 +54,6 @@
     </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
-      <artifactId>hive-common</artifactId>
-      <version>${project.version}</version>
-      <scope>test</scope>
-      <type>test-jar</type>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hive</groupId>
       <artifactId>hive-metastore</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -372,6 +365,10 @@
           in hive's use of datanucleus.
         -->
         <exclusion>
+          <groupId>net.hydromatic</groupId>
+          <artifactId>aggdesigner-algorithm</artifactId>
+        </exclusion>
+        <exclusion>
           <groupId>org.hsqldb</groupId>
           <artifactId>hsqldb</artifactId>
         </exclusion>
@@ -409,6 +406,10 @@
       <artifactId>avatica</artifactId>
       <version>${avatica.version}</version>
       <exclusions>
+        <exclusion>
+          <groupId>org.apache.calcite.avatica</groupId>
+          <artifactId>avatica-core</artifactId>
+        </exclusion>
         <!-- hsqldb interferes with the use of derby as the default db
           in hive's use of datanucleus.
         -->
@@ -460,6 +461,20 @@
       <version>${opencsv.version}</version>
     </dependency>
     <!-- test intra-project -->
+    <dependency>
+      <groupId>org.apache.hive</groupId>
+      <artifactId>hive-common</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+      <type>test-jar</type>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hive</groupId>
+      <artifactId>hive-metastore</artifactId>
+      <version>${project.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
     <!-- test inter-project -->
     <dependency>
       <groupId>org.apache.parquet</groupId>

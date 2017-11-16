@@ -19,7 +19,6 @@ value               	string
 	 	 
 # Partition Information	 	 
 # col_name            	data_type           	comment             
-	 	 
 value               	string              	                    
 	 	 
 #### A masked pattern was here ####
@@ -136,7 +135,8 @@ STAGE PLANS:
               name: default.nzhang_part14
 
   Stage: Stage-2
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 
 PREHOOK: query: insert overwrite table nzhang_part14 partition(value) 
 select key, value from (

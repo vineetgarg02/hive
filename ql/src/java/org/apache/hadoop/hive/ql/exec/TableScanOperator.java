@@ -31,13 +31,14 @@ import org.apache.hadoop.hive.common.StatsSetupConst;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.CompilationOpContext;
 import org.apache.hadoop.hive.ql.ErrorMsg;
+import org.apache.hadoop.hive.ql.exec.vector.VectorizationContext;
+import org.apache.hadoop.hive.ql.exec.vector.VectorizationContextRegion;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.VirtualColumn;
 import org.apache.hadoop.hive.ql.plan.OperatorDesc;
 import org.apache.hadoop.hive.ql.plan.TableDesc;
 import org.apache.hadoop.hive.ql.plan.TableScanDesc;
-import org.apache.hadoop.hive.ql.plan.VectorTableScanDesc;
 import org.apache.hadoop.hive.ql.plan.api.OperatorType;
 import org.apache.hadoop.hive.ql.stats.StatsCollectionContext;
 import org.apache.hadoop.hive.ql.stats.StatsPublisher;
@@ -55,8 +56,10 @@ import org.apache.hadoop.mapred.JobConf;
  * read as part of map-reduce framework
  **/
 public class TableScanOperator extends Operator<TableScanDesc> implements
-    Serializable {
+    Serializable, VectorizationContextRegion {
   private static final long serialVersionUID = 1L;
+
+  private VectorizationContext taskVectorizationContext;
 
   protected transient JobConf jc;
   private transient boolean inputFileChanged = false;
@@ -81,11 +84,11 @@ public class TableScanOperator extends Operator<TableScanDesc> implements
   private String schemaEvolutionColumns;
   private String schemaEvolutionColumnsTypes;
 
-  public TableDesc getTableDesc() {
+  public TableDesc getTableDescSkewJoin() {
     return tableDesc;
   }
 
-  public void setTableDesc(TableDesc tableDesc) {
+  public void setTableDescSkewJoin(TableDesc tableDesc) {
     this.tableDesc = tableDesc;
   }
 
@@ -251,9 +254,6 @@ public class TableScanOperator extends Operator<TableScanDesc> implements
     }
 
     rowLimit = conf.getRowLimit();
-    if (!conf.isGatherStats()) {
-      return;
-    }
 
     if (hconf instanceof JobConf) {
       jc = (JobConf) hconf;
@@ -401,6 +401,15 @@ public class TableScanOperator extends Operator<TableScanDesc> implements
 
   public void setInsideView(boolean insiderView) {
     this.insideView = insiderView;
+  }
+
+  public void setTaskVectorizationContext(VectorizationContext taskVectorizationContext) {
+    this.taskVectorizationContext = taskVectorizationContext;
+  }
+
+  @Override
+  public VectorizationContext getOutputVectorizationContext() {
+    return taskVectorizationContext;
   }
 
 }

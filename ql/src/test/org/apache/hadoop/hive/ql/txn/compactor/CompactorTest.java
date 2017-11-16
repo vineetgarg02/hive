@@ -95,7 +95,7 @@ public abstract class CompactorTest {
   protected CompactorTest() throws Exception {
     conf = new HiveConf();
     TxnDbUtil.setConfValues(conf);
-    TxnDbUtil.cleanDb();
+    TxnDbUtil.cleanDb(conf);
     ms = new HiveMetaStoreClient(conf);
     txnHandler = TxnUtils.getTxnStore(conf);
     tmpdir = new File (Files.createTempDirectory("compactor_test_table_").toString());
@@ -280,7 +280,7 @@ public abstract class CompactorTest {
       default: throw new RuntimeException("Huh? Unknown thread type.");
     }
     t.setThreadId((int) t.getId());
-    t.setHiveConf(conf);
+    t.setConf(conf);
     stop.set(stopAfterOne);
     t.init(stop, looped);
     if (stopAfterOne) t.run();

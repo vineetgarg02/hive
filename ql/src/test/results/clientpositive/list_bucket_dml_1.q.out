@@ -197,7 +197,8 @@ STAGE PLANS:
               name: default.list_bucketing_dynamic_part
 
   Stage: Stage-2
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 #### A masked pattern was here ####
 
 PREHOOK: query: insert overwrite table list_bucketing_dynamic_part partition (ds='2008-04-08', hr) select key, value, hr from srcpart where ds='2008-04-08'
@@ -224,13 +225,11 @@ POSTHOOK: query: desc formatted list_bucketing_dynamic_part partition (ds='2008-
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@list_bucketing_dynamic_part
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	                    
 value               	string              	                    
 	 	 
 # Partition Information	 	 
 # col_name            	data_type           	comment             
-	 	 
 ds                  	string              	                    
 hr                  	string              	                    
 	 	 
@@ -269,13 +268,11 @@ POSTHOOK: query: desc formatted list_bucketing_dynamic_part partition (ds='2008-
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@list_bucketing_dynamic_part
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	                    
 value               	string              	                    
 	 	 
 # Partition Information	 	 
 # col_name            	data_type           	comment             
-	 	 
 ds                  	string              	                    
 hr                  	string              	                    
 	 	 

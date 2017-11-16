@@ -32,6 +32,8 @@ import org.apache.hadoop.hive.ql.exec.Task;
 import org.apache.hadoop.hive.ql.hooks.ReadEntity;
 import org.apache.hadoop.hive.ql.hooks.WriteEntity;
 import org.apache.hadoop.hive.ql.metadata.Hive;
+import org.apache.hadoop.hive.ql.metadata.Table;
+import org.apache.hadoop.hive.ql.parse.repl.dump.Utils;
 import org.apache.hadoop.hive.ql.parse.repl.dump.io.DBSerializer;
 import org.apache.hadoop.hive.ql.parse.repl.dump.io.JsonWriter;
 import org.apache.hadoop.hive.ql.parse.repl.dump.io.ReplicationSpecSerializer;
@@ -49,6 +51,7 @@ import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -142,7 +145,8 @@ public class EximUtil {
    */
   public static URI getValidatedURI(HiveConf conf, String dcPath) throws SemanticException {
     try {
-      boolean testMode = conf.getBoolVar(HiveConf.ConfVars.HIVETESTMODE);
+      boolean testMode = conf.getBoolVar(HiveConf.ConfVars.HIVETESTMODE)
+          || conf.getBoolVar(HiveConf.ConfVars.HIVEEXIMTESTMODE);
       URI uri = new Path(dcPath).toUri();
       FileSystem fs = FileSystem.get(uri, conf);
       // Get scheme from FileSystem
@@ -198,7 +202,8 @@ public class EximUtil {
   public static String relativeToAbsolutePath(HiveConf conf, String location)
       throws SemanticException {
     try {
-      boolean testMode = conf.getBoolVar(HiveConf.ConfVars.HIVETESTMODE);
+      boolean testMode = conf.getBoolVar(HiveConf.ConfVars.HIVETESTMODE)
+        || conf.getBoolVar(HiveConf.ConfVars.HIVEEXIMTESTMODE);;
       if (testMode) {
         URI uri = new Path(location).toUri();
         FileSystem fs = FileSystem.get(uri, conf);
@@ -207,6 +212,9 @@ public class EximUtil {
         String path = uri.getPath();
         if (!path.startsWith("/")) {
           path = (new Path(System.getProperty("test.tmp.dir"), path)).toUri().getPath();
+        }
+        if (StringUtils.isEmpty(scheme)) {
+          scheme = "pfile";
         }
         try {
           uri = new URI(scheme, authority, path, null, null);
@@ -236,8 +244,20 @@ public class EximUtil {
     // If we later make this work for non-repl cases, analysis of this logic might become necessary. Also, this is using
     // Replv2 semantics, i.e. with listFiles laziness (no copy at export time)
 
+    // Remove all the entries from the parameters which are added for bootstrap dump progress
+    Map<String, String> parameters = dbObj.getParameters();
+    Map<String, String> tmpParameters = new HashMap<>();
+    if (parameters != null) {
+      tmpParameters.putAll(parameters);
+      tmpParameters.entrySet()
+                .removeIf(e -> e.getKey().startsWith(Utils.BOOTSTRAP_DUMP_STATE_KEY_PREFIX));
+      dbObj.setParameters(tmpParameters);
+    }
     try (JsonWriter jsonWriter = new JsonWriter(fs, metadataPath)) {
       new DBSerializer(dbObj).writeTo(jsonWriter, replicationSpec);
+    }
+    if (parameters != null) {
+      dbObj.setParameters(parameters);
     }
   }
 
@@ -272,7 +292,7 @@ public class EximUtil {
     }
   }
 
-  private static String readAsString(final FileSystem fs, final Path fromMetadataPath)
+  public static String readAsString(final FileSystem fs, final Path fromMetadataPath)
       throws IOException {
     try (FSDataInputStream stream = fs.open(fromMetadataPath)) {
       byte[] buffer = new byte[1024];
@@ -385,4 +405,49 @@ public class EximUtil {
     };
   }
 
+  /**
+   * Verify if a table should be exported or not
+   */
+  public static Boolean shouldExportTable(ReplicationSpec replicationSpec, Table tableHandle) throws SemanticException {
+    if (replicationSpec == null)
+    {
+      replicationSpec = new ReplicationSpec();
+    }
+
+    if (replicationSpec.isNoop())
+    {
+      return false;
+    }
+
+    if (tableHandle == null)
+    {
+      return false;
+    }
+
+    if (replicationSpec.isInReplicationScope()) {
+      return !(tableHandle == null || tableHandle.isTemporary() || tableHandle.isNonNative() ||
+          (tableHandle.getParameters() != null && StringUtils.equals(tableHandle.getParameters().get("transactional"), "true")));
+    }
+
+    if (tableHandle.isNonNative()) {
+      throw new SemanticException(ErrorMsg.EXIM_FOR_NON_NATIVE.getMsg());
+    }
+
+    return true;
+  }
+
+  /**
+   * Verify if a table should be exported or not by talking to metastore to fetch table info.
+   * Return true when running into errors with metastore call. 
+   */
+  public static Boolean tryValidateShouldExportTable(Hive db, String dbName, String tableName, ReplicationSpec replicationSpec) {
+    try {
+      Table table = db.getTable(dbName, tableName);
+      return EximUtil.shouldExportTable(replicationSpec, table);
+    } catch (Exception e) {
+      // Swallow the exception
+      LOG.error("Failed to validate if the table should be exported or not", e);
+    }
+    return true;
+  }
 }

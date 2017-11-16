@@ -37,6 +37,7 @@ import org.apache.hadoop.hive.common.type.HiveChar;
 import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.common.type.HiveIntervalDayTime;
 import org.apache.hadoop.hive.common.type.HiveIntervalYearMonth;
+import org.apache.hadoop.hive.common.type.TimestampTZUtil;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.exec.ColumnInfo;
@@ -47,6 +48,7 @@ import org.apache.hadoop.hive.ql.exec.UDFArgumentLengthException;
 import org.apache.hadoop.hive.ql.exec.UDFArgumentTypeException;
 import org.apache.hadoop.hive.ql.lib.DefaultRuleDispatcher;
 import org.apache.hadoop.hive.ql.lib.Dispatcher;
+import org.apache.hadoop.hive.ql.lib.ExpressionWalker;
 import org.apache.hadoop.hive.ql.lib.GraphWalker;
 import org.apache.hadoop.hive.ql.lib.Node;
 import org.apache.hadoop.hive.ql.lib.NodeProcessor;
@@ -55,7 +57,6 @@ import org.apache.hadoop.hive.ql.lib.Rule;
 import org.apache.hadoop.hive.ql.lib.RuleRegExp;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
-import org.apache.hadoop.hive.ql.lib.ExpressionWalker;
 import org.apache.hadoop.hive.ql.optimizer.ConstantPropagateProcFactory;
 import org.apache.hadoop.hive.ql.optimizer.calcite.CalciteSubquerySemanticException;
 import org.apache.hadoop.hive.ql.optimizer.calcite.translator.TypeConverter;
@@ -207,7 +208,8 @@ public class TypeCheckProcFactory {
     opRules.put(new RuleRegExp("R4", HiveParser.KW_TRUE + "%|"
         + HiveParser.KW_FALSE + "%"), tf.getBoolExprProcessor());
     opRules.put(new RuleRegExp("R5", HiveParser.TOK_DATELITERAL + "%|"
-        + HiveParser.TOK_TIMESTAMPLITERAL + "%"), tf.getDateTimeExprProcessor());
+        + HiveParser.TOK_TIMESTAMPLITERAL + "%|"
+        + HiveParser.TOK_TIMESTAMPLOCALTZLITERAL + "%"), tf.getDateTimeExprProcessor());
     opRules.put(new RuleRegExp("R6", HiveParser.TOK_INTERVAL_YEAR_MONTH_LITERAL + "%|"
         + HiveParser.TOK_INTERVAL_DAY_TIME_LITERAL + "%|"
         + HiveParser.TOK_INTERVAL_YEAR_LITERAL + "%|"
@@ -510,6 +512,16 @@ public class TypeCheckProcFactory {
           return new ExprNodeConstantDesc(TypeInfoFactory.timestampTypeInfo,
               Timestamp.valueOf(timeString));
         }
+        if (expr.getType() == HiveParser.TOK_TIMESTAMPLOCALTZLITERAL) {
+          HiveConf conf;
+          try {
+            conf = Hive.get().getConf();
+          } catch (HiveException e) {
+            throw new SemanticException(e);
+          }
+          return new ExprNodeConstantDesc(TypeInfoFactory.getTimestampTZTypeInfo(conf.getLocalTimeZone()),
+              TimestampTZUtil.parse(timeString));
+        }
         throw new IllegalArgumentException("Invalid time literal type " + expr.getType());
       } catch (Exception err) {
         throw new SemanticException(
@@ -695,7 +707,9 @@ public class TypeCheckProcFactory {
         inspector instanceof PrimitiveObjectInspector) {
       PrimitiveObjectInspector poi = (PrimitiveObjectInspector) inspector;
       Object constant = ((ConstantObjectInspector) inspector).getWritableConstantValue();
-      return new ExprNodeConstantDesc(colInfo.getType(), poi.getPrimitiveJavaObject(constant));
+      ExprNodeConstantDesc constantExpr = new ExprNodeConstantDesc(colInfo.getType(), poi.getPrimitiveJavaObject(constant));
+      constantExpr.setFoldedFromCol(colInfo.getInternalName());
+      return constantExpr;
     }
     // non-constant or non-primitive constants
     ExprNodeColumnDesc column = new ExprNodeColumnDesc(colInfo);

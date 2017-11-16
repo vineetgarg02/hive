@@ -327,19 +327,8 @@ public enum ErrorMsg {
   OPERATOR_NOT_ALLOWED_WITH_MAPJOIN(10227,
     "Not all clauses are supported with mapjoin hint. Please remove mapjoin hint."),
 
-  ANALYZE_TABLE_NOSCAN_NON_NATIVE(10228, "ANALYZE TABLE NOSCAN cannot be used for "
-      + "a non-native table"),
+  ANALYZE_TABLE_NOSCAN_NON_NATIVE(10228, "ANALYZE TABLE NOSCAN cannot be used for " + "a non-native table"),
 
-  ANALYZE_TABLE_PARTIALSCAN_NON_NATIVE(10229, "ANALYZE TABLE PARTIALSCAN cannot be used for "
-      + "a non-native table"),
-  ANALYZE_TABLE_PARTIALSCAN_NON_RCFILE(10230, "ANALYZE TABLE PARTIALSCAN doesn't "
-      + "support non-RCfile. "),
-  ANALYZE_TABLE_PARTIALSCAN_EXTERNAL_TABLE(10231, "ANALYZE TABLE PARTIALSCAN "
-      + "doesn't support external table: "),
-  ANALYZE_TABLE_PARTIALSCAN_AGGKEY(10232, "Analyze partialscan command "
-            + "fails to construct aggregation for the partition "),
-  ANALYZE_TABLE_PARTIALSCAN_AUTOGATHER(10233, "Analyze partialscan is not allowed " +
-            "if hive.stats.autogather is set to false"),
   PARTITION_VALUE_NOT_CONTINUOUS(10234, "Partition values specified are not continuous." +
             " A subpartition value is specified without specifying the parent partition's value"),
   TABLES_INCOMPATIBLE_SCHEMAS(10235, "Tables have incompatible schemas and their partitions " +
@@ -487,8 +476,6 @@ public enum ErrorMsg {
   DYNAMIC_PARTITIONS_TOO_MANY_PER_NODE_ERROR(20004, "Fatal error occurred when node " +
       "tried to create too many dynamic partitions. The maximum number of dynamic partitions " +
       "is controlled by hive.exec.max.dynamic.partitions and hive.exec.max.dynamic.partitions.pernode. "),
-  PARTITION_SCAN_LIMIT_EXCEEDED(20005, "Number of partitions scanned (={0}) on table {1} exceeds limit" +
-      " (={2}). This is controlled by hive.limit.query.max.table.partition.", true),
   /**
    * {1} is the transaction id;
    * use {@link org.apache.hadoop.hive.common.JavaUtils#txnIdToString(long)} to format
@@ -562,7 +549,14 @@ public enum ErrorMsg {
           "are set.  Table schema information is required to read ACID tables"),
   ACID_TABLES_MUST_BE_READ_WITH_ACID_READER(30021, "An ORC ACID reader required to read ACID tables"),
   ACID_TABLES_MUST_BE_READ_WITH_HIVEINPUTFORMAT(30022, "Must use HiveInputFormat to read ACID tables " +
-          "(set hive.input.format=org.apache.hadoop.hive.ql.io.HiveInputFormat)")
+          "(set hive.input.format=org.apache.hadoop.hive.ql.io.HiveInputFormat)"),
+
+  CONCATENATE_UNSUPPORTED_FILE_FORMAT(30030, "Concatenate/Merge only supported for RCFile and ORCFile formats"),
+  CONCATENATE_UNSUPPORTED_TABLE_BUCKETED(30031, "Concatenate/Merge can not be performed on bucketed tables"),
+  CONCATENATE_UNSUPPORTED_PARTITION_ARCHIVED(30032, "Concatenate/Merge can not be performed on archived partitions"),
+  CONCATENATE_UNSUPPORTED_TABLE_NON_NATIVE(30033, "Concatenate/Merge can not be performed on non-native tables"),
+  CONCATENATE_UNSUPPORTED_TABLE_NOT_MANAGED(30034, "Concatenate/Merge can only be performed on managed tables"),
+  CONCATENATE_UNSUPPORTED_TABLE_TRANSACTIONAL(30035, "Concatenate/Merge can not be performed on transactional tables")
   ;
 
   private int errorCode;
@@ -599,11 +593,21 @@ public enum ErrorMsg {
    * @return ErrorMsg
    */
   public static ErrorMsg getErrorMsg(Exception e) {
-    if (e instanceof AccessControlException) return ACCESS_DENIED;
-    if (e instanceof NSQuotaExceededException) return QUOTA_EXCEEDED;
-    if (e instanceof DSQuotaExceededException) return QUOTA_EXCEEDED;
-    if (e instanceof UnresolvedPathException) return UNRESOLVED_PATH;
-    if (e instanceof FileNotFoundException) return FILE_NOT_FOUND;
+    if (e instanceof AccessControlException) {
+      return ACCESS_DENIED;
+    }
+    if (e instanceof NSQuotaExceededException) {
+      return QUOTA_EXCEEDED;
+    }
+    if (e instanceof DSQuotaExceededException) {
+      return QUOTA_EXCEEDED;
+    }
+    if (e instanceof UnresolvedPathException) {
+      return UNRESOLVED_PATH;
+    }
+    if (e instanceof FileNotFoundException) {
+      return FILE_NOT_FOUND;
+    }
     return UNRESOLVED_RT_EXCEPTION;
   }
 

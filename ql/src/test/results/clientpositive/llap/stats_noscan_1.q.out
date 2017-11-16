@@ -44,7 +44,8 @@ STAGE DEPENDENCIES:
 
 STAGE PLANS:
   Stage: Stage-2
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 
 PREHOOK: query: analyze table analyze_srcpart PARTITION(ds='2008-04-08',hr=11) compute statistics noscan
 PREHOOK: type: QUERY
@@ -77,13 +78,11 @@ POSTHOOK: query: describe formatted analyze_srcpart PARTITION(ds='2008-04-08',hr
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@analyze_srcpart
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	default             
 value               	string              	default             
 	 	 
 # Partition Information	 	 
 # col_name            	data_type           	comment             
-	 	 
 ds                  	string              	                    
 hr                  	string              	                    
 	 	 
@@ -115,13 +114,11 @@ POSTHOOK: query: describe formatted analyze_srcpart PARTITION(ds='2008-04-08',hr
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@analyze_srcpart
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	default             
 value               	string              	default             
 	 	 
 # Partition Information	 	 
 # col_name            	data_type           	comment             
-	 	 
 ds                  	string              	                    
 hr                  	string              	                    
 	 	 
@@ -153,13 +150,11 @@ POSTHOOK: query: describe formatted analyze_srcpart PARTITION(ds='2008-04-09',hr
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@analyze_srcpart
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	default             
 value               	string              	default             
 	 	 
 # Partition Information	 	 
 # col_name            	data_type           	comment             
-	 	 
 ds                  	string              	                    
 hr                  	string              	                    
 	 	 
@@ -190,13 +185,11 @@ POSTHOOK: query: describe formatted analyze_srcpart PARTITION(ds='2008-04-09',hr
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@analyze_srcpart
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	default             
 value               	string              	default             
 	 	 
 # Partition Information	 	 
 # col_name            	data_type           	comment             
-	 	 
 ds                  	string              	                    
 hr                  	string              	                    
 	 	 
@@ -227,13 +220,11 @@ POSTHOOK: query: describe formatted analyze_srcpart
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@analyze_srcpart
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	default             
 value               	string              	default             
 	 	 
 # Partition Information	 	 
 # col_name            	data_type           	comment             
-	 	 
 ds                  	string              	                    
 hr                  	string              	                    
 	 	 
@@ -315,7 +306,8 @@ STAGE DEPENDENCIES:
 
 STAGE PLANS:
   Stage: Stage-2
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 
 PREHOOK: query: analyze table analyze_srcpart_partial PARTITION(ds='2008-04-08') compute statistics noscan
 PREHOOK: type: QUERY
@@ -340,13 +332,11 @@ POSTHOOK: query: describe formatted analyze_srcpart_partial PARTITION(ds='2008-0
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@analyze_srcpart_partial
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	default             
 value               	string              	default             
 	 	 
 # Partition Information	 	 
 # col_name            	data_type           	comment             
-	 	 
 ds                  	string              	                    
 hr                  	string              	                    
 	 	 
@@ -378,13 +368,11 @@ POSTHOOK: query: describe formatted analyze_srcpart_partial PARTITION(ds='2008-0
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@analyze_srcpart_partial
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	default             
 value               	string              	default             
 	 	 
 # Partition Information	 	 
 # col_name            	data_type           	comment             
-	 	 
 ds                  	string              	                    
 hr                  	string              	                    
 	 	 
@@ -416,13 +404,11 @@ POSTHOOK: query: describe formatted analyze_srcpart_partial PARTITION(ds='2008-0
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@analyze_srcpart_partial
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	default             
 value               	string              	default             
 	 	 
 # Partition Information	 	 
 # col_name            	data_type           	comment             
-	 	 
 ds                  	string              	                    
 hr                  	string              	                    
 	 	 
@@ -453,13 +439,11 @@ POSTHOOK: query: describe formatted analyze_srcpart_partial PARTITION(ds='2008-0
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@analyze_srcpart_partial
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	default             
 value               	string              	default             
 	 	 
 # Partition Information	 	 
 # col_name            	data_type           	comment             
-	 	 
 ds                  	string              	                    
 hr                  	string              	                    
 	 	 

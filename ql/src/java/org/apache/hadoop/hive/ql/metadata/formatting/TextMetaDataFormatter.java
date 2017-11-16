@@ -40,6 +40,7 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.api.ColumnStatisticsObj;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
+import org.apache.hadoop.hive.metastore.api.WMResourcePlan;
 import org.apache.hadoop.hive.ql.exec.Utilities;
 import org.apache.hadoop.hive.ql.metadata.ForeignKeyInfo;
 import org.apache.hadoop.hive.ql.metadata.Hive;
@@ -123,21 +124,45 @@ class TextMetaDataFormatter implements MetaDataFormatter {
   @Override
   public void describeTable(DataOutputStream outStream,  String colPath,
       String tableName, Table tbl, Partition part, List<FieldSchema> cols,
-      boolean isFormatted, boolean isExt, boolean isPretty,
+      boolean isFormatted, boolean isExt,
       boolean isOutputPadded, List<ColumnStatisticsObj> colStats,
       PrimaryKeyInfo pkInfo, ForeignKeyInfo fkInfo,
       UniqueConstraint ukInfo, NotNullConstraint nnInfo) throws HiveException {
     try {
-      String output;
+      List<FieldSchema> partCols = tbl.isPartitioned() ? tbl.getPartCols() : null;
+      String output = "";
+
+      boolean isColStatsAvailable = colStats != null;
+
+      TextMetaDataTable mdt = new TextMetaDataTable();
+      if (isFormatted && !isColStatsAvailable) {
+        output = "# ";
+      }
+      if (isFormatted) {
+        mdt.addRow(MetaDataFormatUtils.getColumnsHeader(colStats));
+      }
+      for (FieldSchema col : cols) {
+        mdt.addRow(MetaDataFormatUtils.extractColumnValues(col, isColStatsAvailable,
+            MetaDataFormatUtils.getColumnStatisticsObject(col.getName(), col.getType(), colStats)));
+      }
+      if (isColStatsAvailable) {
+        mdt.transpose();
+      }
+      output += mdt.renderTable(isOutputPadded);
+
       if (colPath.equals(tableName)) {
-        List<FieldSchema> partCols = tbl.isPartitioned() ? tbl.getPartCols() : null;
-        output = isPretty ?
-            MetaDataPrettyFormatUtils.getAllColumnsInformation(
-                cols, partCols, prettyOutputNumCols)
-                :
-                  MetaDataFormatUtils.getAllColumnsInformation(cols, partCols, isFormatted, isOutputPadded, showPartColsSeparately);
+        if ((partCols != null) && !partCols.isEmpty() && showPartColsSeparately) {
+
+          mdt = new TextMetaDataTable();
+          output += MetaDataFormatUtils.LINE_DELIM + "# Partition Information" + MetaDataFormatUtils.LINE_DELIM + "# ";
+          mdt.addRow(MetaDataFormatUtils.getColumnsHeader(null));
+          for (FieldSchema col : partCols) {
+            mdt.addRow(MetaDataFormatUtils.extractColumnValues(col));
+          }
+          output += mdt.renderTable(isOutputPadded);
+        }
       } else {
-        output = MetaDataFormatUtils.getAllColumnsInformation(cols, isFormatted, isOutputPadded, colStats);
+
         String statsState;
         if (tbl.getParameters() != null && (statsState = tbl.getParameters().get(StatsSetupConst.COLUMN_STATS_ACCURATE)) != null) {
           StringBuilder str = new StringBuilder();
@@ -306,28 +331,31 @@ class TextMetaDataFormatter implements MetaDataFormatter {
     } catch (IOException e) {
       throw new HiveException(e);
     }
-          }
+  }
 
+  private static class FileData {
+    public long totalFileSize = 0;
+    public long maxFileSize = 0;
+    public long minFileSize = Long.MAX_VALUE;
+    public long lastAccessTime = 0;
+    public long lastUpdateTime = 0;
+    public int numOfFiles = 0;
+  }
+
+  // TODO: why is this in text formatter?!!
+  //       This computes stats and should be in stats (de-duplicated too).
   private void writeFileSystemStats(DataOutputStream outStream,
       HiveConf conf,
       List<Path> locations,
-      Path tblPath, boolean partSpecified, int indent)
-          throws IOException
-          {
-    long totalFileSize = 0;
-    long maxFileSize = 0;
-    long minFileSize = Long.MAX_VALUE;
-    long lastAccessTime = 0;
-    long lastUpdateTime = 0;
-    int numOfFiles = 0;
-
+      Path tblPath, boolean partSpecified, int indent) throws IOException {
+    FileData fd = new FileData();
     boolean unknown = false;
     FileSystem fs = tblPath.getFileSystem(conf);
     // in case all files in locations do not exist
     try {
       FileStatus tmpStatus = fs.getFileStatus(tblPath);
-      lastAccessTime = tmpStatus.getAccessTime();
-      lastUpdateTime = tmpStatus.getModificationTime();
+      fd.lastAccessTime = tmpStatus.getAccessTime();
+      fd.lastUpdateTime = tmpStatus.getModificationTime();
       if (partSpecified) {
         // check whether the part exists or not in fs
         tmpStatus = fs.getFileStatus(locations.get(0));
@@ -341,43 +369,13 @@ class TextMetaDataFormatter implements MetaDataFormatter {
     if (!unknown) {
       for (Path loc : locations) {
         try {
-          FileStatus status = fs.getFileStatus(tblPath);
-          FileStatus[] files = fs.listStatus(loc);
-          long accessTime = status.getAccessTime();
-          long updateTime = status.getModificationTime();
+          FileStatus status = fs.getFileStatus(loc);
           // no matter loc is the table location or part location, it must be a
           // directory.
-          if (!status.isDir()) {
+          if (!status.isDirectory()) {
             continue;
           }
-          if (accessTime > lastAccessTime) {
-            lastAccessTime = accessTime;
-          }
-          if (updateTime > lastUpdateTime) {
-            lastUpdateTime = updateTime;
-          }
-          for (FileStatus currentStatus : files) {
-            if (currentStatus.isDir()) {
-              continue;
-            }
-            numOfFiles++;
-            long fileLen = currentStatus.getLen();
-            totalFileSize += fileLen;
-            if (fileLen > maxFileSize) {
-              maxFileSize = fileLen;
-            }
-            if (fileLen < minFileSize) {
-              minFileSize = fileLen;
-            }
-            accessTime = currentStatus.getAccessTime();
-            updateTime = currentStatus.getModificationTime();
-            if (accessTime > lastAccessTime) {
-              lastAccessTime = accessTime;
-            }
-            if (updateTime > lastUpdateTime) {
-              lastUpdateTime = updateTime;
-            }
-          }
+          processDir(status, fs, fd);
         } catch (IOException e) {
           // ignore
         }
@@ -389,29 +387,29 @@ class TextMetaDataFormatter implements MetaDataFormatter {
       outStream.write(Utilities.INDENT.getBytes("UTF-8"));
     }
     outStream.write("totalNumberFiles:".getBytes("UTF-8"));
-    outStream.write((unknown ? unknownString : "" + numOfFiles).getBytes("UTF-8"));
+    outStream.write((unknown ? unknownString : "" + fd.numOfFiles).getBytes("UTF-8"));
     outStream.write(terminator);
 
     for (int k = 0; k < indent; k++) {
       outStream.write(Utilities.INDENT.getBytes("UTF-8"));
     }
     outStream.write("totalFileSize:".getBytes("UTF-8"));
-    outStream.write((unknown ? unknownString : "" + totalFileSize).getBytes("UTF-8"));
+    outStream.write((unknown ? unknownString : "" + fd.totalFileSize).getBytes("UTF-8"));
     outStream.write(terminator);
 
     for (int k = 0; k < indent; k++) {
       outStream.write(Utilities.INDENT.getBytes("UTF-8"));
     }
     outStream.write("maxFileSize:".getBytes("UTF-8"));
-    outStream.write((unknown ? unknownString : "" + maxFileSize).getBytes("UTF-8"));
+    outStream.write((unknown ? unknownString : "" + fd.maxFileSize).getBytes("UTF-8"));
     outStream.write(terminator);
 
     for (int k = 0; k < indent; k++) {
       outStream.write(Utilities.INDENT.getBytes("UTF-8"));
     }
     outStream.write("minFileSize:".getBytes("UTF-8"));
-    if (numOfFiles > 0) {
-      outStream.write((unknown ? unknownString : "" + minFileSize).getBytes("UTF-8"));
+    if (fd.numOfFiles > 0) {
+      outStream.write((unknown ? unknownString : "" + fd.minFileSize).getBytes("UTF-8"));
     } else {
       outStream.write((unknown ? unknownString : "" + 0).getBytes("UTF-8"));
     }
@@ -421,17 +419,52 @@ class TextMetaDataFormatter implements MetaDataFormatter {
       outStream.write(Utilities.INDENT.getBytes("UTF-8"));
     }
     outStream.write("lastAccessTime:".getBytes("UTF-8"));
-    outStream.writeBytes((unknown || lastAccessTime < 0) ? unknownString : ""
-        + lastAccessTime);
+    outStream.writeBytes((unknown || fd.lastAccessTime < 0) ? unknownString : ""
+        + fd.lastAccessTime);
     outStream.write(terminator);
 
     for (int k = 0; k < indent; k++) {
       outStream.write(Utilities.INDENT.getBytes("UTF-8"));
     }
     outStream.write("lastUpdateTime:".getBytes("UTF-8"));
-    outStream.write((unknown ? unknownString : "" + lastUpdateTime).getBytes("UTF-8"));
+    outStream.write((unknown ? unknownString : "" + fd.lastUpdateTime).getBytes("UTF-8"));
     outStream.write(terminator);
-          }
+  }
+
+  private void processDir(FileStatus status, FileSystem fs, FileData fd) throws IOException {
+    long accessTime = status.getAccessTime();
+    long updateTime = status.getModificationTime();
+    if (accessTime > fd.lastAccessTime) {
+      fd.lastAccessTime = accessTime;
+    }
+    if (updateTime > fd.lastUpdateTime) {
+      fd.lastUpdateTime = updateTime;
+    }
+    FileStatus[] files = fs.listStatus(status.getPath());
+    for (FileStatus currentStatus : files) {
+      if (currentStatus.isDirectory()) {
+        processDir(currentStatus, fs, fd);
+        continue;
+      }
+      fd.numOfFiles++;
+      long fileLen = currentStatus.getLen();
+      fd.totalFileSize += fileLen;
+      if (fileLen > fd.maxFileSize) {
+        fd.maxFileSize = fileLen;
+      }
+      if (fileLen < fd.minFileSize) {
+        fd.minFileSize = fileLen;
+      }
+      accessTime = currentStatus.getAccessTime();
+      updateTime = currentStatus.getModificationTime();
+      if (accessTime > fd.lastAccessTime) {
+        fd.lastAccessTime = accessTime;
+      }
+      if (updateTime > fd.lastUpdateTime) {
+        fd.lastUpdateTime = updateTime;
+      }
+    }
+  }
 
   /**
    * Show the table partitions.
@@ -510,4 +543,31 @@ class TextMetaDataFormatter implements MetaDataFormatter {
       throw new HiveException(e);
     }
   }
+
+  public void showResourcePlans(DataOutputStream out, List<WMResourcePlan> resourcePlans)
+      throws HiveException {
+    try {
+      for (WMResourcePlan plan : resourcePlans) {
+        out.write(plan.getName().getBytes("UTF-8"));
+        out.write(separator);
+        out.write(plan.getStatus().name().getBytes("UTF-8"));
+        out.write(separator);
+        if (plan.isSetQueryParallelism()) {
+          out.writeBytes(Integer.toString(plan.getQueryParallelism()));
+        } else {
+          out.writeBytes("null");
+        }
+        out.write(separator);
+        if (plan.isSetDefaultPoolPath()) {
+          out.write(plan.getDefaultPoolPath().getBytes("UTF-8"));
+        } else {
+          out.writeBytes("null");
+        }
+        out.write(terminator);
+      }
+    } catch (IOException e) {
+      throw new HiveException(e);
+    }
+  }
+
 }

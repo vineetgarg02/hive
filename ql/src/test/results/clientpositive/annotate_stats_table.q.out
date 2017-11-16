@@ -42,11 +42,11 @@ STAGE PLANS:
       Processor Tree:
         TableScan
           alias: emp_orc
-          Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
+          Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
           Select Operator
             expressions: lastname (type: string), deptid (type: int)
             outputColumnNames: _col0, _col1
-            Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
+            Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
             ListSink
 
 PREHOOK: query: LOAD DATA LOCAL INPATH '../../data/files/emp.txt' OVERWRITE INTO TABLE emp_staging
@@ -81,11 +81,11 @@ STAGE PLANS:
       Processor Tree:
         TableScan
           alias: emp_orc
-          Statistics: Num rows: 3 Data size: 394 Basic stats: COMPLETE Column stats: NONE
+          Statistics: Num rows: 3 Data size: 564 Basic stats: COMPLETE Column stats: NONE
           Select Operator
             expressions: lastname (type: string), deptid (type: int)
             outputColumnNames: _col0, _col1
-            Statistics: Num rows: 3 Data size: 394 Basic stats: COMPLETE Column stats: NONE
+            Statistics: Num rows: 3 Data size: 564 Basic stats: COMPLETE Column stats: NONE
             ListSink
 
 PREHOOK: query: analyze table emp_orc compute statistics
@@ -110,20 +110,22 @@ STAGE PLANS:
       Processor Tree:
         TableScan
           alias: emp_orc
-          Statistics: Num rows: 48 Data size: 4512 Basic stats: COMPLETE Column stats: NONE
+          Statistics: Num rows: 48 Data size: 8836 Basic stats: COMPLETE Column stats: NONE
           Select Operator
             expressions: lastname (type: string), deptid (type: int)
             outputColumnNames: _col0, _col1
-            Statistics: Num rows: 48 Data size: 4512 Basic stats: COMPLETE Column stats: NONE
+            Statistics: Num rows: 48 Data size: 8836 Basic stats: COMPLETE Column stats: NONE
             ListSink
 
 PREHOOK: query: analyze table emp_orc compute statistics for columns deptid
 PREHOOK: type: QUERY
 PREHOOK: Input: default@emp_orc
+PREHOOK: Output: default@emp_orc
 #### A masked pattern was here ####
 POSTHOOK: query: analyze table emp_orc compute statistics for columns deptid
 POSTHOOK: type: QUERY
 POSTHOOK: Input: default@emp_orc
+POSTHOOK: Output: default@emp_orc
 #### A masked pattern was here ####
 PREHOOK: query: explain select * from emp_orc
 PREHOOK: type: QUERY
@@ -139,11 +141,11 @@ STAGE PLANS:
       Processor Tree:
         TableScan
           alias: emp_orc
-          Statistics: Num rows: 48 Data size: 192 Basic stats: COMPLETE Column stats: PARTIAL
+          Statistics: Num rows: 48 Data size: 8840 Basic stats: COMPLETE Column stats: PARTIAL
           Select Operator
             expressions: lastname (type: string), deptid (type: int)
             outputColumnNames: _col0, _col1
-            Statistics: Num rows: 48 Data size: 192 Basic stats: COMPLETE Column stats: PARTIAL
+            Statistics: Num rows: 48 Data size: 8840 Basic stats: COMPLETE Column stats: PARTIAL
             ListSink
 
 PREHOOK: query: explain select deptid from emp_orc
@@ -170,10 +172,12 @@ STAGE PLANS:
 PREHOOK: query: analyze table emp_orc compute statistics for columns lastname,deptid
 PREHOOK: type: QUERY
 PREHOOK: Input: default@emp_orc
+PREHOOK: Output: default@emp_orc
 #### A masked pattern was here ####
 POSTHOOK: query: analyze table emp_orc compute statistics for columns lastname,deptid
 POSTHOOK: type: QUERY
 POSTHOOK: Input: default@emp_orc
+POSTHOOK: Output: default@emp_orc
 #### A masked pattern was here ####
 PREHOOK: query: explain select * from emp_orc
 PREHOOK: type: QUERY

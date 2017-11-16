@@ -20,6 +20,7 @@ package org.apache.hadoop.hive.ql.exec.spark.session;
 import java.io.IOException;
 import java.util.UUID;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -60,7 +61,7 @@ public class SparkSessionImpl implements SparkSession {
     this.conf = conf;
     isOpen = true;
     try {
-      hiveSparkClient = HiveSparkClientFactory.createHiveSparkClient(conf);
+      hiveSparkClient = HiveSparkClientFactory.createHiveSparkClient(conf, sessionId);
     } catch (Throwable e) {
       // It's possible that user session is closed while creating Spark client.
       String msg = isOpen ? "Failed to create Spark client for Spark session " + sessionId :
@@ -173,5 +174,10 @@ public class SparkSessionImpl implements SparkSession {
 
   public static String makeSessionId() {
     return UUID.randomUUID().toString();
+  }
+
+  @VisibleForTesting
+  HiveSparkClient getHiveSparkClient() {
+    return hiveSparkClient;
   }
 }

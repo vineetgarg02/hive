@@ -198,7 +198,8 @@ STAGE PLANS:
               name: default.dest_j1
 
   Stage: Stage-2
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 
 PREHOOK: query: FROM src src1 JOIN src src2 ON (src1.key = src2.key)
 INSERT OVERWRITE TABLE dest_j1 SELECT src1.key, src2.value
@@ -756,7 +757,7 @@ STAGE PLANS:
             alias: src
             Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
-              predicate: (key is not null and UDFToDouble(substring(value, 5)) is not null) (type: boolean)
+              predicate: (UDFToDouble(substring(value, 5)) is not null and key is not null) (type: boolean)
               Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
               Select Operator
                 expressions: key (type: string), value (type: string)
@@ -771,7 +772,7 @@ STAGE PLANS:
             alias: src
             Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
-              predicate: (key is not null and (substring(value, 5) + 1) is not null) (type: boolean)
+              predicate: ((substring(value, 5) + 1) is not null and key is not null) (type: boolean)
               Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
               Select Operator
                 expressions: key (type: string), value (type: string)
@@ -934,7 +935,7 @@ STAGE PLANS:
             alias: src
             Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
-              predicate: ((key < 80) and (key < 100)) (type: boolean)
+              predicate: ((key < 100) and (key < 80)) (type: boolean)
               Statistics: Num rows: 55 Data size: 584 Basic stats: COMPLETE Column stats: NONE
               Select Operator
                 expressions: key (type: string)

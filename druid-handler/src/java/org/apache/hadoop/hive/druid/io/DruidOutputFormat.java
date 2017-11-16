@@ -41,7 +41,6 @@ import io.druid.segment.indexing.granularity.GranularitySpec;
 import io.druid.segment.indexing.granularity.UniformGranularitySpec;
 import io.druid.segment.realtime.plumber.CustomVersioningPolicy;
 
-import org.apache.calcite.adapter.druid.DruidTable;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -52,6 +51,7 @@ import org.apache.hadoop.hive.druid.serde.DruidWritable;
 import org.apache.hadoop.hive.ql.exec.FileSinkOperator;
 import org.apache.hadoop.hive.ql.io.HiveOutputFormat;
 import org.apache.hadoop.hive.serde.serdeConstants;
+import org.apache.hadoop.hive.serde2.objectinspector.PrimitiveObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.PrimitiveObjectInspectorUtils;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.PrimitiveObjectInspectorUtils.PrimitiveGrouping;
 import org.apache.hadoop.hive.serde2.typeinfo.PrimitiveTypeInfo;
@@ -92,7 +92,12 @@ public class DruidOutputFormat<K, V> implements HiveOutputFormat<K, DruidWritabl
             tableProperties.getProperty(Constants.DRUID_SEGMENT_GRANULARITY) != null ?
                     tableProperties.getProperty(Constants.DRUID_SEGMENT_GRANULARITY) :
                     HiveConf.getVar(jc, HiveConf.ConfVars.HIVE_DRUID_INDEXING_GRANULARITY);
-    final String dataSource = tableProperties.getProperty(Constants.DRUID_DATA_SOURCE);
+    // If datasource is in the table properties, it is an INSERT/INSERT OVERWRITE as the datasource
+    // name was already persisted. Otherwise, it is a CT/CTAS and we need to get the name from the
+    // job properties that are set by configureOutputJobProperties in the DruidStorageHandler
+    final String dataSource = tableProperties.getProperty(Constants.DRUID_DATA_SOURCE) == null
+        ? jc.get(Constants.DRUID_DATA_SOURCE)
+        : tableProperties.getProperty(Constants.DRUID_DATA_SOURCE);
     final String segmentDirectory = jc.get(Constants.DRUID_SEGMENT_INTERMEDIATE_DIRECTORY);
 
     final GranularitySpec granularitySpec = new UniformGranularitySpec(
@@ -117,8 +122,8 @@ public class DruidOutputFormat<K, V> implements HiveOutputFormat<K, DruidWritabl
     for (String name : columnNameProperty.split(",")) {
       columnNames.add(name);
     }
-    if (!columnNames.contains(DruidTable.DEFAULT_TIMESTAMP_COLUMN)) {
-      throw new IllegalStateException("Timestamp column (' " + DruidTable.DEFAULT_TIMESTAMP_COLUMN +
+    if (!columnNames.contains(DruidStorageHandlerUtils.DEFAULT_TIMESTAMP_COLUMN)) {
+      throw new IllegalStateException("Timestamp column (' " + DruidStorageHandlerUtils.DEFAULT_TIMESTAMP_COLUMN +
               "') not specified in create table; list of columns is : " +
               tableProperties.getProperty(serdeConstants.LIST_COLUMNS));
     }
@@ -128,9 +133,10 @@ public class DruidOutputFormat<K, V> implements HiveOutputFormat<K, DruidWritabl
     final List<DimensionSchema> dimensions = new ArrayList<>();
     ImmutableList.Builder<AggregatorFactory> aggregatorFactoryBuilder = ImmutableList.builder();
     for (int i = 0; i < columnTypes.size(); i++) {
-      PrimitiveTypeInfo f = (PrimitiveTypeInfo) columnTypes.get(i);
+      final PrimitiveObjectInspector.PrimitiveCategory primitiveCategory = ((PrimitiveTypeInfo) columnTypes
+              .get(i)).getPrimitiveCategory();
       AggregatorFactory af;
-      switch (f.getPrimitiveCategory()) {
+      switch (primitiveCategory) {
         case BYTE:
         case SHORT:
         case INT:
@@ -143,20 +149,29 @@ public class DruidOutputFormat<K, V> implements HiveOutputFormat<K, DruidWritabl
           af = new DoubleSumAggregatorFactory(columnNames.get(i), columnNames.get(i));
           break;
         case TIMESTAMP:
+          // Granularity column
           String tColumnName = columnNames.get(i);
-          if (!tColumnName.equals(DruidTable.DEFAULT_TIMESTAMP_COLUMN) && !tColumnName
-                  .equals(Constants.DRUID_TIMESTAMP_GRANULARITY_COL_NAME)) {
+          if (!tColumnName.equals(Constants.DRUID_TIMESTAMP_GRANULARITY_COL_NAME)) {
             throw new IOException("Dimension " + tColumnName + " does not have STRING type: " +
-                    f.getPrimitiveCategory());
+                    primitiveCategory);
+          }
+          continue;
+        case TIMESTAMPLOCALTZ:
+          // Druid timestamp column
+          String tLocalTZColumnName = columnNames.get(i);
+          if (!tLocalTZColumnName.equals(DruidStorageHandlerUtils.DEFAULT_TIMESTAMP_COLUMN)) {
+            throw new IOException("Dimension " + tLocalTZColumnName + " does not have STRING type: " +
+                    primitiveCategory);
           }
           continue;
         default:
           // Dimension
           String dColumnName = columnNames.get(i);
-          if (PrimitiveObjectInspectorUtils.getPrimitiveGrouping(f.getPrimitiveCategory()) !=
-                  PrimitiveGrouping.STRING_GROUP) {
+          if (PrimitiveObjectInspectorUtils.getPrimitiveGrouping(primitiveCategory) !=
+                  PrimitiveGrouping.STRING_GROUP
+                  && primitiveCategory != PrimitiveObjectInspector.PrimitiveCategory.BOOLEAN) {
             throw new IOException("Dimension " + dColumnName + " does not have STRING type: " +
-                    f.getPrimitiveCategory());
+                    primitiveCategory);
           }
           dimensions.add(new StringDimensionSchema(dColumnName));
           continue;
@@ -165,7 +180,7 @@ public class DruidOutputFormat<K, V> implements HiveOutputFormat<K, DruidWritabl
     }
     List<AggregatorFactory> aggregatorFactories = aggregatorFactoryBuilder.build();
     final InputRowParser inputRowParser = new MapInputRowParser(new TimeAndDimsParseSpec(
-            new TimestampSpec(DruidTable.DEFAULT_TIMESTAMP_COLUMN, "auto", null),
+            new TimestampSpec(DruidStorageHandlerUtils.DEFAULT_TIMESTAMP_COLUMN, "auto", null),
             new DimensionsSpec(dimensions,
                     Lists.newArrayList(Constants.DRUID_TIMESTAMP_GRANULARITY_COL_NAME), null
             )

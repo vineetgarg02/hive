@@ -18,7 +18,9 @@
 
 package org.apache.hive.jdbc;
 
+import java.net.InetAddress;
 import java.net.URI;
+import java.net.UnknownHostException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -153,6 +155,21 @@ public class Utils {
     private final List<String> rejectedHostZnodePaths = new ArrayList<String>();
 
     public JdbcConnectionParams() {
+    }
+    
+    public JdbcConnectionParams(JdbcConnectionParams params) {
+      this.host = params.host;
+      this.port = params.port;
+      this.jdbcUriString = params.jdbcUriString;
+      this.dbName = params.dbName;
+      this.hiveConfs.putAll(params.hiveConfs);
+      this.hiveVars.putAll(params.hiveVars);
+      this.sessionVars.putAll(params.sessionVars);
+      this.isEmbeddedMode = params.isEmbeddedMode;
+      this.authorityList = params.authorityList;
+      this.zooKeeperEnsemble = params.zooKeeperEnsemble;
+      this.currentHostZnodePath = params.currentHostZnodePath;
+      this.rejectedHostZnodePaths.addAll(rejectedHostZnodePaths);
     }
 
     public String getHost() {
@@ -648,4 +665,21 @@ public class Utils {
     }
     return null;
   }
+
+  /**
+   * Method to get canonical-ized hostname, given a hostname (possibly a CNAME).
+   * This should allow for service-principals to use simplified CNAMEs.
+   * @param hostName The hostname to be canonical-ized.
+   * @return Given a CNAME, the canonical-ized hostname is returned. If not found, the original hostname is returned.
+   */
+  public static String getCanonicalHostName(String hostName) {
+    try {
+      return InetAddress.getByName(hostName).getCanonicalHostName();
+    }
+    catch(UnknownHostException exception) {
+      LOG.warn("Could not retrieve canonical hostname for " + hostName, exception);
+      return hostName;
+    }
+  }
+
 }

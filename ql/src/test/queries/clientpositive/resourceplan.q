@@ -1,0 +1,152 @@
+-- Continue on errors, we do check some error conditions below.
+set hive.cli.errors.ignore=true;
+
+-- Prevent NPE in calcite.
+set hive.cbo.enable=false;
+
+-- Force DN to create db_privs tables.
+show grant user hive_test_user;
+
+-- Initialize the hive schema.
+source ../../metastore/scripts/upgrade/hive/hive-schema-3.0.0.hive.sql;
+
+--
+-- Actual tests.
+--
+
+-- Empty resource plans.
+SHOW RESOURCE PLANS;
+SELECT * FROM SYS.WM_RESOURCEPLANS;
+
+-- Create and show plan_1.
+CREATE RESOURCE PLAN plan_1;
+SHOW RESOURCE PLANS;
+SHOW RESOURCE PLAN plan_1;
+SELECT * FROM SYS.WM_RESOURCEPLANS;
+
+-- Create and show plan_2.
+CREATE RESOURCE PLAN plan_2 WITH QUERY_PARALLELISM 10;
+SHOW RESOURCE PLANS;
+SHOW RESOURCE PLAN plan_2;
+SELECT * FROM SYS.WM_RESOURCEPLANS;
+
+--
+-- Rename resource plans.
+--
+
+-- Fail, duplicate name.
+ALTER RESOURCE PLAN plan_1 RENAME TO plan_2;
+SELECT * FROM SYS.WM_RESOURCEPLANS;
+
+-- Success.
+ALTER RESOURCE PLAN plan_1 RENAME TO plan_3;
+SELECT * FROM SYS.WM_RESOURCEPLANS;
+
+-- Change query parallelism, success.
+ALTER RESOURCE PLAN plan_3 SET QUERY_PARALLELISM = 20;
+SELECT * FROM SYS.WM_RESOURCEPLANS;
+
+-- Will fail for now; there are no pools.
+ALTER RESOURCE PLAN plan_3 SET QUERY_PARALLELISM = 30, DEFAULT POOL = 'default';
+SELECT * FROM SYS.WM_RESOURCEPLANS;
+
+--
+-- Activate, enable, disable.
+--
+
+-- DISABLED -> ACTIVE fail.
+ALTER RESOURCE PLAN plan_3 ACTIVATE;
+SELECT * FROM SYS.WM_RESOURCEPLANS;
+
+-- DISABLED -> DISABLED success.
+ALTER RESOURCE PLAN plan_3 DISABLE;
+SELECT * FROM SYS.WM_RESOURCEPLANS;
+
+-- DISABLED -> ENABLED success.
+ALTER RESOURCE PLAN plan_3 ENABLE;
+SELECT * FROM SYS.WM_RESOURCEPLANS;
+
+-- ENABLED -> ACTIVE success.
+ALTER RESOURCE PLAN plan_3 ACTIVATE;
+SELECT * FROM SYS.WM_RESOURCEPLANS;
+
+-- ACTIVE -> ACTIVE success.
+ALTER RESOURCE PLAN plan_3 ACTIVATE;
+SELECT * FROM SYS.WM_RESOURCEPLANS;
+
+-- ACTIVE -> ENABLED fail.
+ALTER RESOURCE PLAN plan_3 ENABLE;
+SELECT * FROM SYS.WM_RESOURCEPLANS;
+
+-- ACTIVE -> DISABLED fail.
+ALTER RESOURCE PLAN plan_3 DISABLE;
+SELECT * FROM SYS.WM_RESOURCEPLANS;
+
+-- DISABLED -> ENABLED success.
+ALTER RESOURCE PLAN plan_2 ENABLE;
+SELECT * FROM SYS.WM_RESOURCEPLANS;
+
+-- plan_2: ENABLED -> ACTIVE and plan_3: ACTIVE -> ENABLED, success.
+ALTER RESOURCE PLAN plan_2 ACTIVATE;
+SELECT * FROM SYS.WM_RESOURCEPLANS;
+
+-- ENABLED -> ENABLED success.
+ALTER RESOURCE PLAN plan_3 ENABLE;
+SELECT * FROM SYS.WM_RESOURCEPLANS;
+
+-- ENABLED -> DISABLED success.
+ALTER RESOURCE PLAN plan_3 DISABLE;
+SELECT * FROM SYS.WM_RESOURCEPLANS;
+
+--
+-- Drop resource plan.
+--
+
+-- Fail, active plan.
+DROP RESOURCE PLAN plan_2;
+
+-- Success.
+DROP RESOURCE PLAN plan_3;
+SELECT * FROM SYS.WM_RESOURCEPLANS;
+
+
+--
+-- Create trigger commands.
+--
+
+CREATE RESOURCE PLAN plan_1;
+
+CREATE TRIGGER plan_1.trigger_1 WHEN BYTES_READ > 10k AND BYTES_READ <= 1M OR ELAPSED_TIME > 30 SECOND AND ELAPSED_TIME < 1 MINUTE DO KILL;
+SELECT * FROM SYS.WM_TRIGGERS;
+
+-- Duplicate should fail.
+CREATE TRIGGER plan_1.trigger_1 WHEN BYTES_READ = 10G DO KILL;
+
+CREATE TRIGGER plan_1.trigger_2 WHEN BYTES_READ > 100 DO MOVE TO slow_pool;
+SELECT * FROM SYS.WM_TRIGGERS;
+
+ALTER TRIGGER plan_1.trigger_1 WHEN BYTES_READ = 1000 DO KILL;
+SELECT * FROM SYS.WM_TRIGGERS;
+
+DROP TRIGGER plan_1.trigger_1;
+SELECT * FROM SYS.WM_TRIGGERS;
+
+-- No edit on active resource plan.
+CREATE TRIGGER plan_2.trigger_1 WHEN BYTES_READ = 0m DO MOVE TO null_pool;
+
+-- Cannot drop/change trigger from enabled plan.
+ALTER RESOURCE PLAN plan_1 ENABLE;
+SELECT * FROM SYS.WM_RESOURCEPLANS;
+DROP TRIGGER plan_1.trigger_2;
+ALTER TRIGGER plan_1.trigger_2 WHEN BYTES_READ = 1000g DO KILL;
+
+-- Cannot drop/change trigger from active plan.
+ALTER RESOURCE PLAN plan_1 ACTIVATE;
+SELECT * FROM SYS.WM_RESOURCEPLANS;
+DROP TRIGGER plan_1.trigger_2;
+ALTER TRIGGER plan_1.trigger_2 WHEN BYTES_READ = 1000K DO KILL;
+
+-- Once disabled we should be able to change it.
+ALTER RESOURCE PLAN plan_2 DISABLE;
+CREATE TRIGGER plan_2.trigger_1 WHEN BYTES_READ = 0 DO MOVE TO null_pool;
+SELECT * FROM SYS.WM_TRIGGERS;

@@ -100,11 +100,11 @@ POSTHOOK: query: CREATE TABLE table12 (a STRING CONSTRAINT nn12_1 NOT NULL DISAB
 POSTHOOK: type: CREATETABLE
 POSTHOOK: Output: database:default
 POSTHOOK: Output: default@table12
-PREHOOK: query: CREATE TABLE table13 (a STRING NOT NULL DISABLE RELY, b STRING)
+PREHOOK: query: CREATE TABLE table13 (b STRING) PARTITIONED BY (a STRING NOT NULL DISABLE RELY)
 PREHOOK: type: CREATETABLE
 PREHOOK: Output: database:default
 PREHOOK: Output: default@table13
-POSTHOOK: query: CREATE TABLE table13 (a STRING NOT NULL DISABLE RELY, b STRING)
+POSTHOOK: query: CREATE TABLE table13 (b STRING) PARTITIONED BY (a STRING NOT NULL DISABLE RELY)
 POSTHOOK: type: CREATETABLE
 POSTHOOK: Output: database:default
 POSTHOOK: Output: default@table13
@@ -140,14 +140,46 @@ POSTHOOK: query: CREATE TABLE table17 (a STRING CONSTRAINT uk17_1 UNIQUE DISABLE
 POSTHOOK: type: CREATETABLE
 POSTHOOK: Output: database:default
 POSTHOOK: Output: default@table17
-PREHOOK: query: CREATE TABLE table18 (a STRING, b STRING, CONSTRAINT uk18_1 UNIQUE (b) DISABLE RELY)
+PREHOOK: query: CREATE TABLE table18 (a STRING, CONSTRAINT uk18_1 UNIQUE (b) DISABLE RELY) PARTITIONED BY (b STRING)
 PREHOOK: type: CREATETABLE
 PREHOOK: Output: database:default
 PREHOOK: Output: default@table18
-POSTHOOK: query: CREATE TABLE table18 (a STRING, b STRING, CONSTRAINT uk18_1 UNIQUE (b) DISABLE RELY)
+POSTHOOK: query: CREATE TABLE table18 (a STRING, CONSTRAINT uk18_1 UNIQUE (b) DISABLE RELY) PARTITIONED BY (b STRING)
 POSTHOOK: type: CREATETABLE
 POSTHOOK: Output: database:default
 POSTHOOK: Output: default@table18
+PREHOOK: query: CREATE TABLE table19 (a STRING, b STRING, CONSTRAINT pk19_1 PRIMARY KEY (b) DISABLE RELY, CONSTRAINT fk19_2 FOREIGN KEY (a) REFERENCES table19(b) DISABLE RELY)
+PREHOOK: type: CREATETABLE
+PREHOOK: Output: database:default
+PREHOOK: Output: default@table19
+POSTHOOK: query: CREATE TABLE table19 (a STRING, b STRING, CONSTRAINT pk19_1 PRIMARY KEY (b) DISABLE RELY, CONSTRAINT fk19_2 FOREIGN KEY (a) REFERENCES table19(b) DISABLE RELY)
+POSTHOOK: type: CREATETABLE
+POSTHOOK: Output: database:default
+POSTHOOK: Output: default@table19
+PREHOOK: query: CREATE TABLE table20 (a STRING, b STRING, CONSTRAINT uk20_1 UNIQUE (b) DISABLE RELY, CONSTRAINT fk20_2 FOREIGN KEY (a) REFERENCES table20(b) DISABLE RELY)
+PREHOOK: type: CREATETABLE
+PREHOOK: Output: database:default
+PREHOOK: Output: default@table20
+POSTHOOK: query: CREATE TABLE table20 (a STRING, b STRING, CONSTRAINT uk20_1 UNIQUE (b) DISABLE RELY, CONSTRAINT fk20_2 FOREIGN KEY (a) REFERENCES table20(b) DISABLE RELY)
+POSTHOOK: type: CREATETABLE
+POSTHOOK: Output: database:default
+POSTHOOK: Output: default@table20
+PREHOOK: query: CREATE TABLE table21 (a STRING, CONSTRAINT uk21_1 UNIQUE (a,b) DISABLE) PARTITIONED BY (b STRING)
+PREHOOK: type: CREATETABLE
+PREHOOK: Output: database:default
+PREHOOK: Output: default@table21
+POSTHOOK: query: CREATE TABLE table21 (a STRING, CONSTRAINT uk21_1 UNIQUE (a,b) DISABLE) PARTITIONED BY (b STRING)
+POSTHOOK: type: CREATETABLE
+POSTHOOK: Output: database:default
+POSTHOOK: Output: default@table21
+PREHOOK: query: CREATE TABLE table22 (a STRING, b STRING, CONSTRAINT fk22_1 FOREIGN KEY (a,b) REFERENCES table21(a,b) DISABLE)
+PREHOOK: type: CREATETABLE
+PREHOOK: Output: database:default
+PREHOOK: Output: default@table22
+POSTHOOK: query: CREATE TABLE table22 (a STRING, b STRING, CONSTRAINT fk22_1 FOREIGN KEY (a,b) REFERENCES table21(a,b) DISABLE)
+POSTHOOK: type: CREATETABLE
+POSTHOOK: Output: database:default
+POSTHOOK: Output: default@table22
 PREHOOK: query: DESCRIBE EXTENDED table1
 PREHOOK: type: DESCTABLE
 PREHOOK: Input: default@table1
@@ -293,8 +325,12 @@ PREHOOK: Input: default@table13
 POSTHOOK: query: DESCRIBE EXTENDED table13
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@table13
-a                   	string              	                    
 b                   	string              	                    
+a                   	string              	                    
+	 	 
+# Partition Information	 	 
+# col_name            	data_type           	comment             
+a                   	string              	                    
 	 	 
 #### A masked pattern was here ####
 Constraints	Not Null Constraints for default.table13:[ {Constraint Name: #### A masked pattern was here ####, Column Name: a}]	 
@@ -349,8 +385,60 @@ POSTHOOK: Input: default@table18
 a                   	string              	                    
 b                   	string              	                    
 	 	 
+# Partition Information	 	 
+# col_name            	data_type           	comment             
+b                   	string              	                    
+	 	 
 #### A masked pattern was here ####
 Constraints	Unique Constraints for default.table18:[ {Constraint Name: uk18_1, (Column Name: b, Key Sequence: 1)}]	 
+PREHOOK: query: DESCRIBE EXTENDED table19
+PREHOOK: type: DESCTABLE
+PREHOOK: Input: default@table19
+POSTHOOK: query: DESCRIBE EXTENDED table19
+POSTHOOK: type: DESCTABLE
+POSTHOOK: Input: default@table19
+a                   	string              	                    
+b                   	string              	                    
+	 	 
+#### A masked pattern was here ####
+Constraints	Primary Key for default.table19:[b], Constraint Name: pk19_1	 
+Foreign Keys for default.table19:[ {Constraint Name: fk19_2, (Parent Column Name: default.table19.b, Column Name: a, Key Sequence: 1)}]	 	 
+PREHOOK: query: DESCRIBE EXTENDED table20
+PREHOOK: type: DESCTABLE
+PREHOOK: Input: default@table20
+POSTHOOK: query: DESCRIBE EXTENDED table20
+POSTHOOK: type: DESCTABLE
+POSTHOOK: Input: default@table20
+a                   	string              	                    
+b                   	string              	                    
+	 	 
+#### A masked pattern was here ####
+Constraints	Unique Constraints for default.table20:[ {Constraint Name: uk20_1, (Column Name: b, Key Sequence: 1)}]	 
+PREHOOK: query: DESCRIBE EXTENDED table21
+PREHOOK: type: DESCTABLE
+PREHOOK: Input: default@table21
+POSTHOOK: query: DESCRIBE EXTENDED table21
+POSTHOOK: type: DESCTABLE
+POSTHOOK: Input: default@table21
+a                   	string              	                    
+b                   	string              	                    
+	 	 
+# Partition Information	 	 
+# col_name            	data_type           	comment             
+b                   	string              	                    
+	 	 
+#### A masked pattern was here ####
+Constraints	Unique Constraints for default.table21:[ {Constraint Name: uk21_1, (Column Name: a, Key Sequence: 1), (Column Name: b, Key Sequence: 2)}]	 
+PREHOOK: query: DESCRIBE EXTENDED table22
+PREHOOK: type: DESCTABLE
+PREHOOK: Input: default@table22
+POSTHOOK: query: DESCRIBE EXTENDED table22
+POSTHOOK: type: DESCTABLE
+POSTHOOK: Input: default@table22
+a                   	string              	                    
+b                   	string              	                    
+	 	 
+#### A masked pattern was here ####
 PREHOOK: query: DESCRIBE FORMATTED table1
 PREHOOK: type: DESCTABLE
 PREHOOK: Input: default@table1
@@ -358,7 +446,6 @@ POSTHOOK: query: DESCRIBE FORMATTED table1
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@table1
 # col_name            	data_type           	comment             
-	 	 
 a                   	string              	                    
 b                   	string              	                    
 	 	 
@@ -400,7 +487,6 @@ POSTHOOK: query: DESCRIBE FORMATTED table2
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@table2
 # col_name            	data_type           	comment             
-	 	 
 a                   	string              	                    
 b                   	string              	                    
 	 	 
@@ -442,7 +528,6 @@ POSTHOOK: query: DESCRIBE FORMATTED table3
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@table3
 # col_name            	data_type           	comment             
-	 	 
 x                   	string              	                    
 	 	 
 # Detailed Table Information	 	 
@@ -495,7 +580,6 @@ POSTHOOK: query: DESCRIBE FORMATTED table4
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@table4
 # col_name            	data_type           	comment             
-	 	 
 x                   	string              	                    
 y                   	string              	                    
 	 	 
@@ -556,7 +640,6 @@ POSTHOOK: query: DESCRIBE FORMATTED table5
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@table5
 # col_name            	data_type           	comment             
-	 	 
 x                   	string              	                    
 	 	 
 # Detailed Table Information	 	 
@@ -603,7 +686,6 @@ POSTHOOK: query: DESCRIBE FORMATTED table6
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@table6
 # col_name            	data_type           	comment             
-	 	 
 x                   	string              	                    
 y                   	string              	                    
 	 	 
@@ -654,7 +736,6 @@ POSTHOOK: query: DESCRIBE FORMATTED table7
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@table7
 # col_name            	data_type           	comment             
-	 	 
 a                   	string              	                    
 b                   	string              	                    
 	 	 
@@ -696,7 +777,6 @@ POSTHOOK: query: DESCRIBE FORMATTED table8
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@table8
 # col_name            	data_type           	comment             
-	 	 
 a                   	string              	                    
 b                   	string              	                    
 	 	 
@@ -738,7 +818,6 @@ POSTHOOK: query: DESCRIBE FORMATTED table9
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@table9
 # col_name            	data_type           	comment             
-	 	 
 a                   	string              	                    
 b                   	string              	                    
 	 	 
@@ -780,7 +859,6 @@ POSTHOOK: query: DESCRIBE FORMATTED table10
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@table10
 # col_name            	data_type           	comment             
-	 	 
 a                   	string              	                    
 b                   	string              	                    
 	 	 
@@ -829,7 +907,6 @@ POSTHOOK: query: DESCRIBE FORMATTED table11
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@table11
 # col_name            	data_type           	comment             
-	 	 
 a                   	string              	                    
 b                   	string              	                    
 c                   	string              	                    
@@ -879,7 +956,6 @@ POSTHOOK: query: DESCRIBE FORMATTED table12
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@table12
 # col_name            	data_type           	comment             
-	 	 
 a                   	string              	                    
 b                   	string              	                    
 	 	 
@@ -922,9 +998,11 @@ POSTHOOK: query: DESCRIBE FORMATTED table13
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@table13
 # col_name            	data_type           	comment             
-	 	 
-a                   	string              	                    
 b                   	string              	                    
+	 	 
+# Partition Information	 	 
+# col_name            	data_type           	comment             
+a                   	string              	                    
 	 	 
 # Detailed Table Information	 	 
 Database:           	default             	 
@@ -933,8 +1011,9 @@ Retention:          	0
 #### A masked pattern was here ####
 Table Type:         	MANAGED_TABLE       	 
 Table Parameters:	 	 
-	COLUMN_STATS_ACCURATE	{\"BASIC_STATS\":\"true\",\"COLUMN_STATS\":{\"a\":\"true\",\"b\":\"true\"}}
+	COLUMN_STATS_ACCURATE	{\"BASIC_STATS\":\"true\"}
 	numFiles            	0                   
+	numPartitions       	0                   
 	numRows             	0                   
 	rawDataSize         	0                   
 	totalSize           	0                   
@@ -965,7 +1044,6 @@ POSTHOOK: query: DESCRIBE FORMATTED table14
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@table14
 # col_name            	data_type           	comment             
-	 	 
 a                   	string              	                    
 b                   	string              	                    
 	 	 
@@ -1008,7 +1086,6 @@ POSTHOOK: query: DESCRIBE FORMATTED table15
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@table15
 # col_name            	data_type           	comment             
-	 	 
 a                   	string              	                    
 b                   	string              	                    
 	 	 
@@ -1043,7 +1120,6 @@ POSTHOOK: query: DESCRIBE FORMATTED table16
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@table16
 # col_name            	data_type           	comment             
-	 	 
 a                   	string              	                    
 b                   	string              	                    
 	 	 
@@ -1078,7 +1154,6 @@ POSTHOOK: query: DESCRIBE FORMATTED table17
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@table17
 # col_name            	data_type           	comment             
-	 	 
 a                   	string              	                    
 b                   	string              	                    
 	 	 
@@ -1121,7 +1196,99 @@ POSTHOOK: query: DESCRIBE FORMATTED table18
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@table18
 # col_name            	data_type           	comment             
+a                   	string              	                    
 	 	 
+# Partition Information	 	 
+# col_name            	data_type           	comment             
+b                   	string              	                    
+	 	 
+# Detailed Table Information	 	 
+Database:           	default             	 
+#### A masked pattern was here ####
+Retention:          	0                   	 
+#### A masked pattern was here ####
+Table Type:         	MANAGED_TABLE       	 
+Table Parameters:	 	 
+	COLUMN_STATS_ACCURATE	{\"BASIC_STATS\":\"true\"}
+	numFiles            	0                   
+	numPartitions       	0                   
+	numRows             	0                   
+	rawDataSize         	0                   
+	totalSize           	0                   
+#### A masked pattern was here ####
+	 	 
+# Storage Information	 	 
+SerDe Library:      	org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe	 
+InputFormat:        	org.apache.hadoop.mapred.TextInputFormat	 
+OutputFormat:       	org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat	 
+Compressed:         	No                  	 
+Num Buckets:        	-1                  	 
+Bucket Columns:     	[]                  	 
+Sort Columns:       	[]                  	 
+Storage Desc Params:	 	 
+	serialization.format	1                   
+	 	 
+# Constraints	 	 
+	 	 
+# Unique Constraints	 	 
+Table:              	default.table18     	 
+Constraint Name:    	uk18_1              	 
+Column Name:b       	Key Sequence:1      	 
+	 	 
+PREHOOK: query: DESCRIBE FORMATTED table19
+PREHOOK: type: DESCTABLE
+PREHOOK: Input: default@table19
+POSTHOOK: query: DESCRIBE FORMATTED table19
+POSTHOOK: type: DESCTABLE
+POSTHOOK: Input: default@table19
+# col_name            	data_type           	comment             
+a                   	string              	                    
+b                   	string              	                    
+	 	 
+# Detailed Table Information	 	 
+Database:           	default             	 
+#### A masked pattern was here ####
+Retention:          	0                   	 
+#### A masked pattern was here ####
+Table Type:         	MANAGED_TABLE       	 
+Table Parameters:	 	 
+	COLUMN_STATS_ACCURATE	{\"BASIC_STATS\":\"true\",\"COLUMN_STATS\":{\"a\":\"true\",\"b\":\"true\"}}
+	numFiles            	0                   
+	numRows             	0                   
+	rawDataSize         	0                   
+	totalSize           	0                   
+#### A masked pattern was here ####
+	 	 
+# Storage Information	 	 
+SerDe Library:      	org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe	 
+InputFormat:        	org.apache.hadoop.mapred.TextInputFormat	 
+OutputFormat:       	org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat	 
+Compressed:         	No                  	 
+Num Buckets:        	-1                  	 
+Bucket Columns:     	[]                  	 
+Sort Columns:       	[]                  	 
+Storage Desc Params:	 	 
+	serialization.format	1                   
+	 	 
+# Constraints	 	 
+	 	 
+# Primary Key	 	 
+Table:              	default.table19     	 
+Constraint Name:    	pk19_1              	 
+Column Names:       	b                   	 
+	 	 
+# Foreign Keys	 	 
+Table:              	default.table19     	 
+Constraint Name:    	fk19_2              	 
+Parent Column Name:default.table19.b	Column Name:a       	Key Sequence:1      
+	 	 
+PREHOOK: query: DESCRIBE FORMATTED table20
+PREHOOK: type: DESCTABLE
+PREHOOK: Input: default@table20
+POSTHOOK: query: DESCRIBE FORMATTED table20
+POSTHOOK: type: DESCTABLE
+POSTHOOK: Input: default@table20
+# col_name            	data_type           	comment             
 a                   	string              	                    
 b                   	string              	                    
 	 	 
@@ -1153,10 +1320,91 @@ Storage Desc Params:
 # Constraints	 	 
 	 	 
 # Unique Constraints	 	 
-Table:              	default.table18     	 
-Constraint Name:    	uk18_1              	 
+Table:              	default.table20     	 
+Constraint Name:    	uk20_1              	 
 Column Name:b       	Key Sequence:1      	 
 	 	 
+PREHOOK: query: DESCRIBE FORMATTED table21
+PREHOOK: type: DESCTABLE
+PREHOOK: Input: default@table21
+POSTHOOK: query: DESCRIBE FORMATTED table21
+POSTHOOK: type: DESCTABLE
+POSTHOOK: Input: default@table21
+# col_name            	data_type           	comment             
+a                   	string              	                    
+	 	 
+# Partition Information	 	 
+# col_name            	data_type           	comment             
+b                   	string              	                    
+	 	 
+# Detailed Table Information	 	 
+Database:           	default             	 
+#### A masked pattern was here ####
+Retention:          	0                   	 
+#### A masked pattern was here ####
+Table Type:         	MANAGED_TABLE       	 
+Table Parameters:	 	 
+	COLUMN_STATS_ACCURATE	{\"BASIC_STATS\":\"true\"}
+	numFiles            	0                   
+	numPartitions       	0                   
+	numRows             	0                   
+	rawDataSize         	0                   
+	totalSize           	0                   
+#### A masked pattern was here ####
+	 	 
+# Storage Information	 	 
+SerDe Library:      	org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe	 
+InputFormat:        	org.apache.hadoop.mapred.TextInputFormat	 
+OutputFormat:       	org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat	 
+Compressed:         	No                  	 
+Num Buckets:        	-1                  	 
+Bucket Columns:     	[]                  	 
+Sort Columns:       	[]                  	 
+Storage Desc Params:	 	 
+	serialization.format	1                   
+	 	 
+# Constraints	 	 
+	 	 
+# Unique Constraints	 	 
+Table:              	default.table21     	 
+Constraint Name:    	uk21_1              	 
+Column Name:a       	Key Sequence:1      	 
+Column Name:b       	Key Sequence:2      	 
+	 	 
+PREHOOK: query: DESCRIBE FORMATTED table22
+PREHOOK: type: DESCTABLE
+PREHOOK: Input: default@table22
+POSTHOOK: query: DESCRIBE FORMATTED table22
+POSTHOOK: type: DESCTABLE
+POSTHOOK: Input: default@table22
+# col_name            	data_type           	comment             
+a                   	string              	                    
+b                   	string              	                    
+	 	 
+# Detailed Table Information	 	 
+Database:           	default             	 
+#### A masked pattern was here ####
+Retention:          	0                   	 
+#### A masked pattern was here ####
+Table Type:         	MANAGED_TABLE       	 
+Table Parameters:	 	 
+	COLUMN_STATS_ACCURATE	{\"BASIC_STATS\":\"true\",\"COLUMN_STATS\":{\"a\":\"true\",\"b\":\"true\"}}
+	numFiles            	0                   
+	numRows             	0                   
+	rawDataSize         	0                   
+	totalSize           	0                   
+#### A masked pattern was here ####
+	 	 
+# Storage Information	 	 
+SerDe Library:      	org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe	 
+InputFormat:        	org.apache.hadoop.mapred.TextInputFormat	 
+OutputFormat:       	org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat	 
+Compressed:         	No                  	 
+Num Buckets:        	-1                  	 
+Bucket Columns:     	[]                  	 
+Sort Columns:       	[]                  	 
+Storage Desc Params:	 	 
+	serialization.format	1                   
 PREHOOK: query: ALTER TABLE table2 DROP CONSTRAINT pk1
 PREHOOK: type: ALTERTABLE_DROPCONSTRAINT
 POSTHOOK: query: ALTER TABLE table2 DROP CONSTRAINT pk1
@@ -1172,6 +1420,10 @@ POSTHOOK: type: ALTERTABLE_DROPCONSTRAINT
 PREHOOK: query: ALTER TABLE table6 DROP CONSTRAINT fk4
 PREHOOK: type: ALTERTABLE_DROPCONSTRAINT
 POSTHOOK: query: ALTER TABLE table6 DROP CONSTRAINT fk4
+POSTHOOK: type: ALTERTABLE_DROPCONSTRAINT
+PREHOOK: query: ALTER TABLE table8 DROP CONSTRAINT pk8
+PREHOOK: type: ALTERTABLE_DROPCONSTRAINT
+POSTHOOK: query: ALTER TABLE table8 DROP CONSTRAINT pk8
 POSTHOOK: type: ALTERTABLE_DROPCONSTRAINT
 PREHOOK: query: ALTER TABLE table16 DROP CONSTRAINT nn16_1
 PREHOOK: type: ALTERTABLE_DROPCONSTRAINT
@@ -1225,6 +1477,16 @@ y                   	string
 	 	 
 #### A masked pattern was here ####
 Constraints	Primary Key for default.table6:[x], Constraint Name: #### A masked pattern was here ####	 
+PREHOOK: query: DESCRIBE EXTENDED table8
+PREHOOK: type: DESCTABLE
+PREHOOK: Input: default@table8
+POSTHOOK: query: DESCRIBE EXTENDED table8
+POSTHOOK: type: DESCTABLE
+POSTHOOK: Input: default@table8
+a                   	string              	                    
+b                   	string              	                    
+	 	 
+#### A masked pattern was here ####
 PREHOOK: query: DESCRIBE EXTENDED table16
 PREHOOK: type: DESCTABLE
 PREHOOK: Input: default@table16
@@ -1244,6 +1506,10 @@ POSTHOOK: Input: default@table18
 a                   	string              	                    
 b                   	string              	                    
 	 	 
+# Partition Information	 	 
+# col_name            	data_type           	comment             
+b                   	string              	                    
+	 	 
 #### A masked pattern was here ####
 PREHOOK: query: DESCRIBE FORMATTED table2
 PREHOOK: type: DESCTABLE
@@ -1252,7 +1518,6 @@ POSTHOOK: query: DESCRIBE FORMATTED table2
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@table2
 # col_name            	data_type           	comment             
-	 	 
 a                   	string              	                    
 b                   	string              	                    
 	 	 
@@ -1287,7 +1552,6 @@ POSTHOOK: query: DESCRIBE FORMATTED table3
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@table3
 # col_name            	data_type           	comment             
-	 	 
 x                   	string              	                    
 	 	 
 # Detailed Table Information	 	 
@@ -1334,7 +1598,6 @@ POSTHOOK: query: DESCRIBE FORMATTED table4
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@table4
 # col_name            	data_type           	comment             
-	 	 
 x                   	string              	                    
 y                   	string              	                    
 	 	 
@@ -1383,7 +1646,6 @@ POSTHOOK: query: DESCRIBE FORMATTED table6
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@table6
 # col_name            	data_type           	comment             
-	 	 
 x                   	string              	                    
 y                   	string              	                    
 	 	 
@@ -1418,6 +1680,40 @@ Storage Desc Params:
 Table:              	default.table6      	 
 Constraint Name:    	#### A masked pattern was here ####	 
 Column Names:       	x                   	 
+PREHOOK: query: DESCRIBE FORMATTED table8
+PREHOOK: type: DESCTABLE
+PREHOOK: Input: default@table8
+POSTHOOK: query: DESCRIBE FORMATTED table8
+POSTHOOK: type: DESCTABLE
+POSTHOOK: Input: default@table8
+# col_name            	data_type           	comment             
+a                   	string              	                    
+b                   	string              	                    
+	 	 
+# Detailed Table Information	 	 
+Database:           	default             	 
+#### A masked pattern was here ####
+Retention:          	0                   	 
+#### A masked pattern was here ####
+Table Type:         	MANAGED_TABLE       	 
+Table Parameters:	 	 
+	COLUMN_STATS_ACCURATE	{\"BASIC_STATS\":\"true\",\"COLUMN_STATS\":{\"a\":\"true\",\"b\":\"true\"}}
+	numFiles            	0                   
+	numRows             	0                   
+	rawDataSize         	0                   
+	totalSize           	0                   
+#### A masked pattern was here ####
+	 	 
+# Storage Information	 	 
+SerDe Library:      	org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe	 
+InputFormat:        	org.apache.hadoop.mapred.TextInputFormat	 
+OutputFormat:       	org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat	 
+Compressed:         	No                  	 
+Num Buckets:        	-1                  	 
+Bucket Columns:     	[]                  	 
+Sort Columns:       	[]                  	 
+Storage Desc Params:	 	 
+	serialization.format	1                   
 PREHOOK: query: DESCRIBE FORMATTED table16
 PREHOOK: type: DESCTABLE
 PREHOOK: Input: default@table16
@@ -1425,7 +1721,6 @@ POSTHOOK: query: DESCRIBE FORMATTED table16
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@table16
 # col_name            	data_type           	comment             
-	 	 
 a                   	string              	                    
 b                   	string              	                    
 	 	 
@@ -1460,8 +1755,10 @@ POSTHOOK: query: DESCRIBE FORMATTED table18
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@table18
 # col_name            	data_type           	comment             
-	 	 
 a                   	string              	                    
+	 	 
+# Partition Information	 	 
+# col_name            	data_type           	comment             
 b                   	string              	                    
 	 	 
 # Detailed Table Information	 	 
@@ -1471,8 +1768,9 @@ Retention:          	0
 #### A masked pattern was here ####
 Table Type:         	MANAGED_TABLE       	 
 Table Parameters:	 	 
-	COLUMN_STATS_ACCURATE	{\"BASIC_STATS\":\"true\",\"COLUMN_STATS\":{\"a\":\"true\",\"b\":\"true\"}}
+	COLUMN_STATS_ACCURATE	{\"BASIC_STATS\":\"true\"}
 	numFiles            	0                   
+	numPartitions       	0                   
 	numRows             	0                   
 	rawDataSize         	0                   
 	totalSize           	0                   
@@ -1500,6 +1798,10 @@ PREHOOK: query: ALTER TABLE table6 ADD CONSTRAINT fk4 FOREIGN KEY (y) REFERENCES
 PREHOOK: type: ALTERTABLE_ADDCONSTRAINT
 POSTHOOK: query: ALTER TABLE table6 ADD CONSTRAINT fk4 FOREIGN KEY (y) REFERENCES table1(a) DISABLE NOVALIDATE
 POSTHOOK: type: ALTERTABLE_ADDCONSTRAINT
+PREHOOK: query: ALTER TABLE table8 ADD CONSTRAINT pk8_2 PRIMARY KEY (a, b) DISABLE NOVALIDATE RELY
+PREHOOK: type: ALTERTABLE_ADDCONSTRAINT
+POSTHOOK: query: ALTER TABLE table8 ADD CONSTRAINT pk8_2 PRIMARY KEY (a, b) DISABLE NOVALIDATE RELY
+POSTHOOK: type: ALTERTABLE_ADDCONSTRAINT
 PREHOOK: query: ALTER TABLE table16 CHANGE a a STRING REFERENCES table4(x) DISABLE NOVALIDATE
 PREHOOK: type: ALTERTABLE_RENAMECOL
 PREHOOK: Input: default@table16
@@ -1519,7 +1821,6 @@ POSTHOOK: query: DESCRIBE FORMATTED table2
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@table2
 # col_name            	data_type           	comment             
-	 	 
 a                   	string              	                    
 b                   	string              	                    
 	 	 
@@ -1561,7 +1862,6 @@ POSTHOOK: query: DESCRIBE FORMATTED table3
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@table3
 # col_name            	data_type           	comment             
-	 	 
 x                   	string              	                    
 	 	 
 # Detailed Table Information	 	 
@@ -1614,7 +1914,6 @@ POSTHOOK: query: DESCRIBE FORMATTED table6
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@table6
 # col_name            	data_type           	comment             
-	 	 
 x                   	string              	                    
 y                   	string              	                    
 	 	 
@@ -1658,6 +1957,47 @@ Parent Column Name:default.table1.a	Column Name:y       	Key Sequence:1
 Constraint Name:    	#### A masked pattern was here ####	 
 Parent Column Name:default.table2.a	Column Name:x       	Key Sequence:1      
 	 	 
+PREHOOK: query: DESCRIBE FORMATTED table8
+PREHOOK: type: DESCTABLE
+PREHOOK: Input: default@table8
+POSTHOOK: query: DESCRIBE FORMATTED table8
+POSTHOOK: type: DESCTABLE
+POSTHOOK: Input: default@table8
+# col_name            	data_type           	comment             
+a                   	string              	                    
+b                   	string              	                    
+	 	 
+# Detailed Table Information	 	 
+Database:           	default             	 
+#### A masked pattern was here ####
+Retention:          	0                   	 
+#### A masked pattern was here ####
+Table Type:         	MANAGED_TABLE       	 
+Table Parameters:	 	 
+	COLUMN_STATS_ACCURATE	{\"BASIC_STATS\":\"true\",\"COLUMN_STATS\":{\"a\":\"true\",\"b\":\"true\"}}
+	numFiles            	0                   
+	numRows             	0                   
+	rawDataSize         	0                   
+	totalSize           	0                   
+#### A masked pattern was here ####
+	 	 
+# Storage Information	 	 
+SerDe Library:      	org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe	 
+InputFormat:        	org.apache.hadoop.mapred.TextInputFormat	 
+OutputFormat:       	org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat	 
+Compressed:         	No                  	 
+Num Buckets:        	-1                  	 
+Bucket Columns:     	[]                  	 
+Sort Columns:       	[]                  	 
+Storage Desc Params:	 	 
+	serialization.format	1                   
+	 	 
+# Constraints	 	 
+	 	 
+# Primary Key	 	 
+Table:              	default.table8      	 
+Constraint Name:    	pk8_2               	 
+Column Names:       	a                   	b                   
 PREHOOK: query: DESCRIBE FORMATTED table16
 PREHOOK: type: DESCTABLE
 PREHOOK: Input: default@table16
@@ -1665,7 +2005,6 @@ POSTHOOK: query: DESCRIBE FORMATTED table16
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@table16
 # col_name            	data_type           	comment             
-	 	 
 a                   	string              	                    
 b                   	string              	                    
 	 	 
@@ -1701,8 +2040,10 @@ POSTHOOK: query: DESCRIBE FORMATTED table18
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@table18
 # col_name            	data_type           	comment             
-	 	 
 a                   	string              	                    
+	 	 
+# Partition Information	 	 
+# col_name            	data_type           	comment             
 b                   	string              	                    
 	 	 
 # Detailed Table Information	 	 
@@ -1712,8 +2053,9 @@ Retention:          	0
 #### A masked pattern was here ####
 Table Type:         	MANAGED_TABLE       	 
 Table Parameters:	 	 
-	COLUMN_STATS_ACCURATE	{\"BASIC_STATS\":\"true\",\"COLUMN_STATS\":{\"a\":\"true\",\"b\":\"true\"}}
+	COLUMN_STATS_ACCURATE	{\"BASIC_STATS\":\"true\"}
 	numFiles            	0                   
+	numPartitions       	0                   
 	numRows             	0                   
 	rawDataSize         	0                   
 	totalSize           	0                   
@@ -1761,7 +2103,6 @@ POSTHOOK: query: DESCRIBE FORMATTED table12
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@table12
 # col_name            	data_type           	comment             
-	 	 
 a                   	string              	                    
 b                   	string              	                    
 	 	 
@@ -1808,9 +2149,11 @@ POSTHOOK: query: DESCRIBE FORMATTED table13
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@table13
 # col_name            	data_type           	comment             
-	 	 
-a                   	string              	                    
 b                   	string              	                    
+	 	 
+# Partition Information	 	 
+# col_name            	data_type           	comment             
+a                   	string              	                    
 	 	 
 # Detailed Table Information	 	 
 Database:           	default             	 
@@ -1819,9 +2162,10 @@ Retention:          	0
 #### A masked pattern was here ####
 Table Type:         	MANAGED_TABLE       	 
 Table Parameters:	 	 
-	COLUMN_STATS_ACCURATE	{\"BASIC_STATS\":\"true\",\"COLUMN_STATS\":{\"a\":\"true\",\"b\":\"true\"}}
+	COLUMN_STATS_ACCURATE	{\"BASIC_STATS\":\"true\"}
 #### A masked pattern was here ####
 	numFiles            	0                   
+	numPartitions       	0                   
 	numRows             	0                   
 	rawDataSize         	0                   
 	totalSize           	0                   
@@ -1859,7 +2203,6 @@ POSTHOOK: query: DESCRIBE FORMATTED table12
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@table12
 # col_name            	data_type           	comment             
-	 	 
 a                   	string              	                    
 b                   	string              	                    
 	 	 
@@ -1941,7 +2284,6 @@ POSTHOOK: query: DESCRIBE FORMATTED DbConstraint.Table2
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: dbconstraint@table2
 # col_name            	data_type           	comment             
-	 	 
 a                   	string              	                    
 b                   	string              	                    
 	 	 
@@ -2004,7 +2346,6 @@ POSTHOOK: query: DESCRIBE FORMATTED DbConstraint.Table2
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: dbconstraint@table2
 # col_name            	data_type           	comment             
-	 	 
 a                   	string              	                    
 b                   	string              	                    
 	 	 
@@ -2051,7 +2392,6 @@ POSTHOOK: query: DESCRIBE FORMATTED DbConstraint.Table2
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: dbconstraint@table2
 # col_name            	data_type           	comment             
-	 	 
 a                   	string              	                    
 b                   	string              	                    
 	 	 
@@ -2103,7 +2443,6 @@ POSTHOOK: query: DESCRIBE FORMATTED DbConstraint.Table2
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: dbconstraint@table2
 # col_name            	data_type           	comment             
-	 	 
 a                   	string              	                    
 b                   	string              	                    
 	 	 
@@ -2150,3 +2489,64 @@ Table:              	dbconstraint.table2
 Constraint Name:    	#### A masked pattern was here ####	 
 Column Name:        	b                   	 
 	 	 
+PREHOOK: query: CREATE TABLE table23 (a STRING) PARTITIONED BY (b STRING)
+PREHOOK: type: CREATETABLE
+PREHOOK: Output: database:default
+PREHOOK: Output: default@table23
+POSTHOOK: query: CREATE TABLE table23 (a STRING) PARTITIONED BY (b STRING)
+POSTHOOK: type: CREATETABLE
+POSTHOOK: Output: database:default
+POSTHOOK: Output: default@table23
+PREHOOK: query: ALTER TABLE table23 ADD CONSTRAINT fk23_1 FOREIGN KEY (a,b) REFERENCES table21(a,b) DISABLE NOVALIDATE RELY
+PREHOOK: type: ALTERTABLE_ADDCONSTRAINT
+POSTHOOK: query: ALTER TABLE table23 ADD CONSTRAINT fk23_1 FOREIGN KEY (a,b) REFERENCES table21(a,b) DISABLE NOVALIDATE RELY
+POSTHOOK: type: ALTERTABLE_ADDCONSTRAINT
+PREHOOK: query: ALTER TABLE table23 ADD CONSTRAINT pk23_1 PRIMARY KEY (b) DISABLE RELY
+PREHOOK: type: ALTERTABLE_ADDCONSTRAINT
+POSTHOOK: query: ALTER TABLE table23 ADD CONSTRAINT pk23_1 PRIMARY KEY (b) DISABLE RELY
+POSTHOOK: type: ALTERTABLE_ADDCONSTRAINT
+PREHOOK: query: DESCRIBE FORMATTED table23
+PREHOOK: type: DESCTABLE
+PREHOOK: Input: default@table23
+POSTHOOK: query: DESCRIBE FORMATTED table23
+POSTHOOK: type: DESCTABLE
+POSTHOOK: Input: default@table23
+# col_name            	data_type           	comment             
+a                   	string              	                    
+	 	 
+# Partition Information	 	 
+# col_name            	data_type           	comment             
+b                   	string              	                    
+	 	 
+# Detailed Table Information	 	 
+Database:           	default             	 
+#### A masked pattern was here ####
+Retention:          	0                   	 
+#### A masked pattern was here ####
+Table Type:         	MANAGED_TABLE       	 
+Table Parameters:	 	 
+	COLUMN_STATS_ACCURATE	{\"BASIC_STATS\":\"true\"}
+	numFiles            	0                   
+	numPartitions       	0                   
+	numRows             	0                   
+	rawDataSize         	0                   
+	totalSize           	0                   
+#### A masked pattern was here ####
+	 	 
+# Storage Information	 	 
+SerDe Library:      	org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe	 
+InputFormat:        	org.apache.hadoop.mapred.TextInputFormat	 
+OutputFormat:       	org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat	 
+Compressed:         	No                  	 
+Num Buckets:        	-1                  	 
+Bucket Columns:     	[]                  	 
+Sort Columns:       	[]                  	 
+Storage Desc Params:	 	 
+	serialization.format	1                   
+	 	 
+# Constraints	 	 
+	 	 
+# Primary Key	 	 
+Table:              	default.table23     	 
+Constraint Name:    	pk23_1              	 
+Column Names:       	b                   	 

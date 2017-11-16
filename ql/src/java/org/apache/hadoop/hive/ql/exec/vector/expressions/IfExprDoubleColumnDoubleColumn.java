@@ -27,34 +27,29 @@ import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
  * The first is always a boolean (LongColumnVector).
  * The second and third are long columns or long expression results.
  */
-public class IfExprDoubleColumnDoubleColumn extends VectorExpression {
+public class IfExprDoubleColumnDoubleColumn extends IfExprConditionalFilter {
 
   private static final long serialVersionUID = 1L;
 
-  private int arg1Column, arg2Column, arg3Column;
-  private int outputColumn;
-
   public IfExprDoubleColumnDoubleColumn(int arg1Column, int arg2Column, int arg3Column, int outputColumn) {
-    this.arg1Column = arg1Column;
-    this.arg2Column = arg2Column;
-    this.arg3Column = arg3Column;
-    this.outputColumn = outputColumn;
+    super(arg1Column, arg2Column, arg3Column, outputColumn);
   }
 
   public IfExprDoubleColumnDoubleColumn() {
+    super();
   }
 
   @Override
   public void evaluate(VectorizedRowBatch batch) {
 
     if (childExpressions != null) {
-      super.evaluateChildren(batch);
+      super.evaluateIfConditionalExpr(batch, childExpressions);
     }
 
     LongColumnVector arg1ColVector = (LongColumnVector) batch.cols[arg1Column];
     DoubleColumnVector arg2ColVector = (DoubleColumnVector) batch.cols[arg2Column];
     DoubleColumnVector arg3ColVector = (DoubleColumnVector) batch.cols[arg3Column];
-    DoubleColumnVector outputColVector = (DoubleColumnVector) batch.cols[outputColumn];
+    DoubleColumnVector outputColVector = (DoubleColumnVector) batch.cols[outputColumnNum];
     int[] sel = batch.selected;
     boolean[] outputIsNull = outputColVector.isNull;
     outputColVector.noNulls = arg2ColVector.noNulls && arg3ColVector.noNulls;
@@ -129,46 +124,9 @@ public class IfExprDoubleColumnDoubleColumn extends VectorExpression {
   }
 
   @Override
-  public int getOutputColumn() {
-    return outputColumn;
-  }
-
-  @Override
-  public String getOutputType() {
-    return "double";
-  }
-
-  public int getArg1Column() {
-    return arg1Column;
-  }
-
-  public void setArg1Column(int colNum) {
-    this.arg1Column = colNum;
-  }
-
-  public int getArg2Column() {
-    return arg2Column;
-  }
-
-  public void setArg2Column(int colNum) {
-    this.arg2Column = colNum;
-  }
-
-  public int getArg3Column() {
-    return arg3Column;
-  }
-
-  public void setArg3Column(int colNum) {
-    this.arg3Column = colNum;
-  }
-
-  public void setOutputColumn(int outputColumn) {
-    this.outputColumn = outputColumn;
-  }
-
-  @Override
   public String vectorExpressionParameters() {
-    return "col " + arg1Column + ", col "+ arg2Column + ", col "+ arg3Column;
+    return getColumnParamString(0, arg1Column) + ", " + getColumnParamString(1, arg2Column) +
+        getColumnParamString(2, arg3Column);
   }
 
   @Override

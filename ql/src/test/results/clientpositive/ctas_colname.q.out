@@ -62,7 +62,8 @@ STAGE PLANS:
           name: default.summary
 
   Stage: Stage-2
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 
 PREHOOK: query: create table summary as select *, key + 1, concat(value, value) from src limit 20
 PREHOOK: type: CREATETABLE_AS_SELECT
@@ -85,7 +86,6 @@ POSTHOOK: query: describe formatted summary
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@summary
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	                    
 value               	string              	                    
 _c1                 	double              	                    
@@ -222,7 +222,8 @@ STAGE PLANS:
           name: default.x4
 
   Stage: Stage-2
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 
 PREHOOK: query: create table x4 as select *, rank() over(partition by key order by value) as rr from src1
 PREHOOK: type: CREATETABLE_AS_SELECT
@@ -244,7 +245,6 @@ POSTHOOK: query: describe formatted x4
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@x4
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	                    
 value               	string              	                    
 rr                  	int                 	                    
@@ -413,7 +413,8 @@ STAGE PLANS:
           name: default.x5
 
   Stage: Stage-3
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 
 PREHOOK: query: create table x5 as select *, lead(key,1) over(partition by key order by value) as lead1 from src limit 20
 PREHOOK: type: CREATETABLE_AS_SELECT
@@ -435,7 +436,6 @@ POSTHOOK: query: describe formatted x5
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@x5
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	                    
 value               	string              	                    
 lead1               	string              	                    
@@ -554,7 +554,8 @@ STAGE PLANS:
           name: default.x6
 
   Stage: Stage-2
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 
   Stage: Stage-3
     Map Reduce
@@ -606,7 +607,6 @@ POSTHOOK: query: describe formatted x6
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@x6
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	                    
 value               	string              	                    
 _c1                 	double              	                    
@@ -735,7 +735,8 @@ STAGE PLANS:
           name: default.x7
 
   Stage: Stage-2
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 
 PREHOOK: query: create table x7 as select * from (select *, count(value) from src group by key, value) a
 PREHOOK: type: CREATETABLE_AS_SELECT
@@ -757,7 +758,6 @@ POSTHOOK: query: describe formatted x7
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@x7
 # col_name            	data_type           	comment             
-	 	 
 _col0               	string              	                    
 _col1               	string              	                    
 _c1                 	bigint              	                    
@@ -1169,7 +1169,8 @@ STAGE PLANS:
           name: default.x8
 
   Stage: Stage-2
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 
 PREHOOK: query: create table x8 as select * from (select *, count(value) from src group by key, value having key < 9) a
 PREHOOK: type: CREATETABLE_AS_SELECT
@@ -1191,7 +1192,6 @@ POSTHOOK: query: describe formatted x8
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@x8
 # col_name            	data_type           	comment             
-	 	 
 _col0               	string              	                    
 _col1               	string              	                    
 _c1                 	bigint              	                    
@@ -1306,7 +1306,8 @@ STAGE PLANS:
           name: default.x9
 
   Stage: Stage-2
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 
 PREHOOK: query: create table x9 as select * from (select max(value),key from src group by key having key < 9 AND max(value) IS NOT NULL) a
 PREHOOK: type: CREATETABLE_AS_SELECT
@@ -1327,7 +1328,6 @@ POSTHOOK: query: describe formatted x9
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@x9
 # col_name            	data_type           	comment             
-	 	 
 _c0                 	string              	                    
 key                 	string              	                    
 	 	 

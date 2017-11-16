@@ -18,6 +18,7 @@
 package org.apache.hive.spark.client;
 
 import static org.apache.hadoop.fs.CommonConfigurationKeysPublic.HADOOP_SECURITY_AUTHENTICATION;
+import static org.apache.hive.spark.client.SparkClientUtilities.HIVE_KRYO_REG_NAME;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
@@ -32,13 +33,10 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.concurrent.GenericFutureListener;
 import io.netty.util.concurrent.Promise;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Serializable;
 import java.io.Writer;
@@ -53,9 +51,9 @@ import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.hive.common.log.LogRedirector;
 import org.apache.hadoop.hive.conf.Constants;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
@@ -75,7 +73,6 @@ class SparkClientImpl implements SparkClient {
   private static final Logger LOG = LoggerFactory.getLogger(SparkClientImpl.class);
 
   private static final long DEFAULT_SHUTDOWN_TIMEOUT = 10000; // In milliseconds
-  private static final long MAX_ERR_LOG_LINES_FOR_RPC = 1000;
 
   private static final String OSX_TEST_OPTS = "SPARK_OSX_TEST_OPTS";
   private static final String SPARK_HOME_ENV = "SPARK_HOME";
@@ -446,6 +443,12 @@ class SparkClientImpl implements SparkClient {
         }
       }
 
+      String regStr = conf.get("spark.kryo.registrator");
+      if (HIVE_KRYO_REG_NAME.equals(regStr)) {
+        argv.add("--jars");
+        argv.add(SparkClientUtilities.findKryoRegistratorJar(hiveConf));
+      }
+
       argv.add("--properties-file");
       argv.add(properties.getAbsolutePath());
       argv.add("--class");
@@ -490,8 +493,12 @@ class SparkClientImpl implements SparkClient {
       final Process child = pb.start();
       String threadName = Thread.currentThread().getName();
       final List<String> childErrorLog = Collections.synchronizedList(new ArrayList<String>());
-      redirect("RemoteDriver-stdout-redir-" + threadName, new Redirector(child.getInputStream()));
-      redirect("RemoteDriver-stderr-redir-" + threadName, new Redirector(child.getErrorStream(), childErrorLog));
+      final LogRedirector.LogSourceCallback callback = () -> {return isAlive;};
+
+      LogRedirector.redirect("RemoteDriver-stdout-redir-" + threadName,
+          new LogRedirector(child.getInputStream(), LOG, callback));
+      LogRedirector.redirect("RemoteDriver-stderr-redir-" + threadName,
+          new LogRedirector(child.getErrorStream(), LOG, childErrorLog, callback));
 
       runnable = new Runnable() {
         @Override
@@ -540,13 +547,6 @@ class SparkClientImpl implements SparkClient {
       return conf.get("spark.executorEnv.HADOOP_CREDSTORE_PASSWORD");
     }
     return null;
-  }
-
-  private void redirect(String name, Redirector redirector) {
-    Thread thread = new Thread(redirector);
-    thread.setName(name);
-    thread.setDaemon(true);
-    thread.start();
   }
 
   private class ClientProtocol extends BaseProtocol {
@@ -648,48 +648,6 @@ class SparkClientImpl implements SparkClient {
         handle.addSparkJobId(msg.sparkJobId);
       } else {
         LOG.warn("Received spark job ID: {} for unknown job {}", msg.sparkJobId, msg.clientJobId);
-      }
-    }
-
-  }
-
-  private class Redirector implements Runnable {
-
-    private final BufferedReader in;
-    private List<String> errLogs;
-    private int numErrLogLines = 0;
-
-    Redirector(InputStream in) {
-      this.in = new BufferedReader(new InputStreamReader(in));
-    }
-
-    Redirector(InputStream in, List<String> errLogs) {
-      this.in = new BufferedReader(new InputStreamReader(in));
-      this.errLogs = errLogs;
-    }
-
-    @Override
-    public void run() {
-      try {
-        String line = null;
-        while ((line = in.readLine()) != null) {
-          LOG.info(line);
-          if (errLogs != null) {
-            if (numErrLogLines++ < MAX_ERR_LOG_LINES_FOR_RPC) {
-              errLogs.add(line);
-            }
-          }
-        }
-      } catch (IOException e) {
-        if (isAlive) {
-          LOG.warn("I/O error in redirector thread.", e);
-        } else {
-          // When stopping the remote driver the process might be destroyed during reading from the stream.
-          // We should not log the related exceptions in a visible level as they might mislead the user.
-          LOG.debug("I/O error in redirector thread while stopping the remote driver", e);
-        }
-      } catch (Exception e) {
-        LOG.warn("Error in redirector thread.", e);
       }
     }
 

@@ -54,6 +54,7 @@ import org.apache.hadoop.hive.ql.Context;
 import org.apache.hadoop.hive.ql.QueryState;
 import org.apache.hadoop.hive.ql.exec.ColumnInfo;
 import org.apache.hadoop.hive.ql.optimizer.calcite.CalciteSemanticException;
+import org.apache.hadoop.hive.ql.optimizer.calcite.HiveTypeSystemImpl;
 import org.apache.hadoop.hive.ql.optimizer.calcite.RelOptHiveTable;
 import org.apache.hadoop.hive.ql.optimizer.calcite.cost.HiveVolcanoPlanner;
 import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveRelNode;
@@ -120,32 +121,28 @@ public final class HiveMaterializedViewsRegistry {
    * it does.
    */
   public void init(final Hive db) {
-    try {
-      List<Table> tables = new ArrayList<Table>();
-      for (String dbName : db.getAllDatabases()) {
-        // TODO: We should enhance metastore API such that it returns only
-        // materialized views instead of all tables
-        tables.addAll(db.getAllTableObjects(dbName));
-      }
-      pool.submit(new Loader(tables));
-    } catch (HiveException e) {
-      LOG.error("Problem connecting to the metastore when initializing the view registry");
-    }
+    pool.submit(new Loader(db));
   }
 
   private class Loader implements Runnable {
-    private final List<Table> tables;
+    private final Hive db;
 
-    private Loader(List<Table> tables) {
-      this.tables = tables;
+    private Loader(Hive db) {
+      this.db = db;
     }
 
     @Override
     public void run() {
-      for (Table table : tables) {
-        if (table.isMaterializedView()) {
-          addMaterializedView(table);
+      try {
+        List<Table> materializedViews = new ArrayList<Table>();
+        for (String dbName : db.getAllDatabases()) {
+          materializedViews.addAll(db.getAllMaterializedViewObjects(dbName));
         }
+        for (Table mv : materializedViews) {
+          addMaterializedView(mv);
+        }
+      } catch (HiveException e) {
+        LOG.error("Problem connecting to the metastore when initializing the view registry");
       }
     }
   }
@@ -174,7 +171,7 @@ public final class HiveMaterializedViewsRegistry {
       return null;
     }
     // Add to cache
-    final String viewQuery = materializedViewTable.getViewOriginalText();
+    final String viewQuery = materializedViewTable.getViewExpandedText();
     final RelNode tableRel = createTableScan(materializedViewTable);
     if (tableRel == null) {
       LOG.warn("Materialized view " + materializedViewTable.getCompleteName() +
@@ -187,7 +184,8 @@ public final class HiveMaterializedViewsRegistry {
               " ignored; error parsing original query");
       return null;
     }
-    RelOptMaterialization materialization = new RelOptMaterialization(tableRel, queryRel, null);
+    RelOptMaterialization materialization = new RelOptMaterialization(tableRel, queryRel,
+        null, tableRel.getTable().getQualifiedName());
     cq.put(vk, materialization);
     if (LOG.isDebugEnabled()) {
       LOG.debug("Cached materialized view for rewriting: " + tableRel.getTable().getQualifiedName());
@@ -226,7 +224,9 @@ public final class HiveMaterializedViewsRegistry {
   private static RelNode createTableScan(Table viewTable) {
     // 0. Recreate cluster
     final RelOptPlanner planner = HiveVolcanoPlanner.createPlanner(null);
-    final RexBuilder rexBuilder = new RexBuilder(new JavaTypeFactoryImpl());
+    final RexBuilder rexBuilder = new RexBuilder(
+            new JavaTypeFactoryImpl(
+                    new HiveTypeSystemImpl()));
     final RelOptCluster cluster = RelOptCluster.create(planner, rexBuilder);
 
     // 1. Create column schema
@@ -311,10 +311,13 @@ public final class HiveMaterializedViewsRegistry {
         }
         metrics.add(field.getName());
       }
+      // TODO: Default interval will be an Interval once Calcite 1.15.0 is released.
+      // We will need to update the type of this list.
       List<LocalInterval> intervals = Arrays.asList(DruidTable.DEFAULT_INTERVAL);
 
       DruidTable druidTable = new DruidTable(new DruidSchema(address, address, false),
-          dataSource, RelDataTypeImpl.proto(rowType), metrics, DruidTable.DEFAULT_TIMESTAMP_COLUMN, intervals);
+          dataSource, RelDataTypeImpl.proto(rowType), metrics, DruidTable.DEFAULT_TIMESTAMP_COLUMN,
+          intervals, null, null);
       final TableScan scan = new HiveTableScan(cluster, cluster.traitSetOf(HiveRelNode.CONVENTION),
           optTable, viewTable.getTableName(), null, false, false);
       tableRel = DruidQuery.create(cluster, cluster.traitSetOf(HiveRelNode.CONVENTION),
@@ -338,6 +341,7 @@ public final class HiveMaterializedViewsRegistry {
       return analyzer.genLogicalPlan(node);
     } catch (Exception e) {
       // We could not parse the view
+      LOG.error(e.getMessage());
       return null;
     }
   }

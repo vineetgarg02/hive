@@ -102,8 +102,18 @@ public class ConvertJoinMapJoin implements NodeProcessor {
     MemoryMonitorInfo memoryMonitorInfo = getMemoryMonitorInfo(maxSize, context.conf);
     joinOp.getConf().setMemoryMonitorInfo(memoryMonitorInfo);
 
+    // not use map join in case of cross product
+    boolean cartesianProductEdgeEnabled =
+      HiveConf.getBoolVar(context.conf, HiveConf.ConfVars.TEZ_CARTESIAN_PRODUCT_EDGE_ENABLED);
+    if (cartesianProductEdgeEnabled && !hasOuterJoin(joinOp) && isCrossProduct(joinOp)) {
+      fallbackToMergeJoin(joinOp, context);
+      return null;
+    }
+
     TezBucketJoinProcCtx tezBucketJoinProcCtx = new TezBucketJoinProcCtx(context.conf);
-    if (!context.conf.getBoolVar(HiveConf.ConfVars.HIVECONVERTJOIN)) {
+    boolean hiveConvertJoin = context.conf.getBoolVar(HiveConf.ConfVars.HIVECONVERTJOIN) &
+            !context.parseContext.getDisableMapJoin();
+    if (!hiveConvertJoin) {
       // we are just converting to a common merge join operator. The shuffle
       // join in map-reduce case.
       Object retval = checkAndConvertSMBJoin(context, joinOp, tezBucketJoinProcCtx, maxSize);
@@ -383,6 +393,32 @@ public class ConvertJoinMapJoin implements NodeProcessor {
       return false;
     }
 
+    // Incase the join has extra keys other than bucketed columns, partition keys need to be updated
+    // on small table(s).
+    ReduceSinkOperator bigTableRS = (ReduceSinkOperator)joinOp.getParentOperators().get(bigTablePosition);
+    OpTraits opTraits = bigTableRS.getOpTraits();
+    List<List<String>> listBucketCols = opTraits.getBucketColNames();
+    ArrayList<ExprNodeDesc> bigTablePartitionCols = bigTableRS.getConf().getPartitionCols();
+    boolean updatePartitionCols = false;
+    List<Integer> positions = new ArrayList<>();
+
+    if (listBucketCols.get(0).size() != bigTablePartitionCols.size()) {
+      updatePartitionCols = true;
+      // Prepare updated partition columns for small table(s).
+      // Get the positions of bucketed columns
+
+      int i = 0;
+      Map<String, ExprNodeDesc> colExprMap = bigTableRS.getColumnExprMap();
+      for (ExprNodeDesc bigTableExpr : bigTablePartitionCols) {
+        // It is guaranteed there is only 1 list within listBucketCols.
+        for (String colName : listBucketCols.get(0)) {
+          if (colExprMap.get(colName).isSame(bigTableExpr)) {
+            positions.add(i++);
+          }
+        }
+      }
+    }
+
     MapJoinOperator mapJoinOp = convertJoinMapJoin(joinOp, context, bigTablePosition, true);
     if (mapJoinOp == null) {
       LOG.debug("Conversion to bucket map join failed.");
@@ -392,7 +428,7 @@ public class ConvertJoinMapJoin implements NodeProcessor {
     joinDesc.setBucketMapJoin(true);
 
     // we can set the traits for this join operator
-    OpTraits opTraits = new OpTraits(joinOp.getOpTraits().getBucketColNames(),
+    opTraits = new OpTraits(joinOp.getOpTraits().getBucketColNames(),
         tezBucketJoinProcCtx.getNumBuckets(), null, joinOp.getOpTraits().getNumReduceSinks());
     mapJoinOp.setOpTraits(opTraits);
     mapJoinOp.setStatistics(joinOp.getStatistics());
@@ -403,6 +439,22 @@ public class ConvertJoinMapJoin implements NodeProcessor {
     bigTableBucketNumMapping.put(joinDesc.getBigTableAlias(), tezBucketJoinProcCtx.getNumBuckets());
     joinDesc.setBigTableBucketNumMapping(bigTableBucketNumMapping);
 
+    // Update the partition columns in small table to ensure correct routing of hash tables.
+    if (updatePartitionCols) {
+      // use the positions to only pick the partitionCols which are required
+      // on the small table side.
+      for (Operator<?> op : mapJoinOp.getParentOperators()) {
+        if (!(op instanceof ReduceSinkOperator)) continue;;
+
+        ReduceSinkOperator rsOp = (ReduceSinkOperator) op;
+        ArrayList<ExprNodeDesc> newPartitionCols = new ArrayList<>();
+        ArrayList<ExprNodeDesc> partitionCols = rsOp.getConf().getPartitionCols();
+        for (Integer position : positions) {
+          newPartitionCols.add(partitionCols.get(position));
+        }
+        rsOp.getConf().setPartitionCols(newPartitionCols);
+      }
+    }
     return true;
   }
 
@@ -570,6 +622,42 @@ public class ConvertJoinMapJoin implements NodeProcessor {
     return false;
   }
 
+  private boolean hasOuterJoin(JoinOperator joinOp) throws SemanticException {
+    boolean hasOuter = false;
+    for (JoinCondDesc joinCondDesc : joinOp.getConf().getConds()) {
+      switch (joinCondDesc.getType()) {
+        case JoinDesc.INNER_JOIN:
+        case JoinDesc.LEFT_SEMI_JOIN:
+        case JoinDesc.UNIQUE_JOIN:
+          hasOuter = false;
+          break;
+
+        case JoinDesc.FULL_OUTER_JOIN:
+        case JoinDesc.LEFT_OUTER_JOIN:
+        case JoinDesc.RIGHT_OUTER_JOIN:
+          hasOuter = true;
+          break;
+
+        default:
+          throw new SemanticException("Unknown join type " + joinCondDesc.getType());
+      }
+    }
+    return hasOuter;
+  }
+
+  private boolean isCrossProduct(JoinOperator joinOp) {
+    ExprNodeDesc[][] joinExprs = joinOp.getConf().getJoinKeys();
+    if (joinExprs != null) {
+      for (ExprNodeDesc[] expr : joinExprs) {
+        if (expr != null && expr.length != 0) {
+          return false;
+        }
+      }
+    }
+
+    return true;
+  }
+
   /**
    * Obtain big table position for join.
    *
@@ -595,26 +683,7 @@ public class ConvertJoinMapJoin implements NodeProcessor {
        * case this for now.
        */
       if (joinOp.getConf().getConds().length > 1) {
-        boolean hasOuter = false;
-        for (JoinCondDesc joinCondDesc : joinOp.getConf().getConds()) {
-          switch (joinCondDesc.getType()) {
-          case JoinDesc.INNER_JOIN:
-          case JoinDesc.LEFT_SEMI_JOIN:
-          case JoinDesc.UNIQUE_JOIN:
-            hasOuter = false;
-            break;
-
-          case JoinDesc.FULL_OUTER_JOIN:
-          case JoinDesc.LEFT_OUTER_JOIN:
-          case JoinDesc.RIGHT_OUTER_JOIN:
-            hasOuter = true;
-            break;
-
-          default:
-            throw new SemanticException("Unknown join type " + joinCondDesc.getType());
-          }
-        }
-        if (hasOuter) {
+        if (hasOuterJoin(joinOp)) {
           return -1;
         }
       }
@@ -1056,14 +1125,19 @@ public class ConvertJoinMapJoin implements NodeProcessor {
       }
     }
 
+    // we are just converting to a common merge join operator. The shuffle
+    // join in map-reduce case.
+    fallbackToMergeJoin(joinOp, context);
+  }
+
+  private void fallbackToMergeJoin(JoinOperator joinOp, OptimizeTezProcContext context)
+      throws SemanticException {
     int pos = getMapJoinConversionPos(joinOp, context, estimateNumBuckets(joinOp, false),
                   true, Long.MAX_VALUE, false);
     if (pos < 0) {
       LOG.info("Could not get a valid join position. Defaulting to position 0");
       pos = 0;
     }
-    // we are just converting to a common merge join operator. The shuffle
-    // join in map-reduce case.
     LOG.info("Fallback to common merge join operator");
     convertJoinSMBJoin(joinOp, context, pos, 0, false);
   }
@@ -1110,8 +1184,8 @@ public class ConvertJoinMapJoin implements NodeProcessor {
     long max = HiveConf.getLongVar(context.parseContext.getConf(),
             HiveConf.ConfVars.HIVECONVERTJOINMAXSHUFFLESIZE);
     if (max < 1) {
-      // Max is disabled, we can safely return true
-      return true;
+      // Max is disabled, we can safely return false
+      return false;
     }
     // Evaluate
     ReduceSinkOperator rsOp = (ReduceSinkOperator) joinOp.getParentOperators().get(position);

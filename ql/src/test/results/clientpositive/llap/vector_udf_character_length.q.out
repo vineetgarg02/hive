@@ -87,7 +87,8 @@ STAGE PLANS:
               name: default.dest1
 
   Stage: Stage-3
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 
 PREHOOK: query: FROM src1 INSERT OVERWRITE TABLE dest1 SELECT character_length(src1.value)
 PREHOOK: type: QUERY
@@ -190,14 +191,14 @@ STAGE PLANS:
             Map Operator Tree:
                 TableScan
                   alias: dest2
-                  Statistics: Num rows: 2 Data size: 90 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 2 Data size: 368 Basic stats: COMPLETE Column stats: NONE
                   Select Operator
                     expressions: character_length(name) (type: int)
                     outputColumnNames: _col0
-                    Statistics: Num rows: 2 Data size: 90 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 2 Data size: 368 Basic stats: COMPLETE Column stats: NONE
                     File Output Operator
                       compressed: false
-                      Statistics: Num rows: 2 Data size: 90 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 2 Data size: 368 Basic stats: COMPLETE Column stats: NONE
                       table:
                           input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                           output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
@@ -238,14 +239,14 @@ STAGE PLANS:
             Map Operator Tree:
                 TableScan
                   alias: dest2
-                  Statistics: Num rows: 2 Data size: 90 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 2 Data size: 368 Basic stats: COMPLETE Column stats: NONE
                   Select Operator
                     expressions: character_length(name) (type: int)
                     outputColumnNames: _col0
-                    Statistics: Num rows: 2 Data size: 90 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 2 Data size: 368 Basic stats: COMPLETE Column stats: NONE
                     File Output Operator
                       compressed: false
-                      Statistics: Num rows: 2 Data size: 90 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 2 Data size: 368 Basic stats: COMPLETE Column stats: NONE
                       table:
                           input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                           output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat

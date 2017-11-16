@@ -156,7 +156,8 @@ STAGE PLANS:
           name: default.t
 
   Stage: Stage-2
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 #### A masked pattern was here ####
 
   Stage: Stage-3
@@ -301,7 +302,6 @@ POSTHOOK: query: desc formatted t
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@t
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	                    
 value               	string              	                    
 	 	 
@@ -350,7 +350,6 @@ POSTHOOK: query: desc formatted tt
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@tt
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	                    
 value               	string              	                    
 	 	 
@@ -407,7 +406,6 @@ POSTHOOK: query: desc formatted tt
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@tt
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	                    
 value               	string              	                    
 	 	 
@@ -476,7 +474,6 @@ POSTHOOK: query: desc formatted t1
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@t1
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	default             
 value               	string              	default             
 	 	 
@@ -511,7 +508,6 @@ POSTHOOK: query: desc formatted t2
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@t2
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	default             
 value               	string              	default             
 	 	 

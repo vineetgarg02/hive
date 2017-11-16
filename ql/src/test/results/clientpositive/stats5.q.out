@@ -27,7 +27,8 @@ STAGE PLANS:
             Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: COMPLETE
 
   Stage: Stage-1
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 
 PREHOOK: query: analyze table analyze_src compute statistics
 PREHOOK: type: QUERY
@@ -44,7 +45,6 @@ POSTHOOK: query: describe formatted analyze_src
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@analyze_src
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	                    
 value               	string              	                    
 	 	 

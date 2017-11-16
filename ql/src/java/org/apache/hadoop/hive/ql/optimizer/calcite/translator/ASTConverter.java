@@ -19,9 +19,12 @@ package org.apache.hadoop.hive.ql.optimizer.calcite.translator;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
+
 
 import org.apache.calcite.adapter.druid.DruidQuery;
 import org.apache.calcite.rel.RelFieldCollation;
@@ -40,6 +43,7 @@ import org.apache.calcite.rel.core.TableFunctionScan;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.core.Union;
 import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexFieldAccess;
 import org.apache.calcite.rex.RexFieldCollation;
@@ -59,8 +63,6 @@ import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.metadata.VirtualColumn;
 import org.apache.hadoop.hive.ql.optimizer.calcite.CalciteSemanticException;
 import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveAggregate;
-import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveExtractDate;
-import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveFloorDate;
 import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveGroupingID;
 import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveSortLimit;
 import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveTableFunctionScan;
@@ -130,22 +132,23 @@ public class ASTConverter {
     if (groupBy != null) {
       ASTBuilder b;
       boolean groupingSetsExpression = false;
-      if (groupBy.indicator) {
-        Group aggregateType = Aggregate.Group.induce(groupBy.getGroupSet(),
-                groupBy.getGroupSets());
-        if (aggregateType == Group.ROLLUP) {
+      Group aggregateType = groupBy.getGroupType();
+      switch (aggregateType) {
+        case SIMPLE:
+          b = ASTBuilder.construct(HiveParser.TOK_GROUPBY, "TOK_GROUPBY");
+          break;
+        case ROLLUP:
           b = ASTBuilder.construct(HiveParser.TOK_ROLLUP_GROUPBY, "TOK_ROLLUP_GROUPBY");
-        }
-        else if (aggregateType == Group.CUBE) {
+          break;
+        case CUBE:
           b = ASTBuilder.construct(HiveParser.TOK_CUBE_GROUPBY, "TOK_CUBE_GROUPBY");
-        }
-        else {
+          break;
+        case OTHER:
           b = ASTBuilder.construct(HiveParser.TOK_GROUPING_SETS, "TOK_GROUPING_SETS");
           groupingSetsExpression = true;
-        }
-      }
-      else {
-        b = ASTBuilder.construct(HiveParser.TOK_GROUPBY, "TOK_GROUPBY");
+          break;
+        default:
+          throw new CalciteSemanticException("Group type not recognized");
       }
 
       HiveAggregate hiveAgg = (HiveAggregate) groupBy;
@@ -197,20 +200,17 @@ public class ASTConverter {
     ASTBuilder b = ASTBuilder.construct(HiveParser.TOK_SELECT, "TOK_SELECT");
 
     if (select instanceof Project) {
-      if (select.getChildExps().isEmpty()) {
+      List<RexNode> childExps = ((Project) select).getChildExps();
+      if (childExps.isEmpty()) {
         RexLiteral r = select.getCluster().getRexBuilder().makeExactLiteral(new BigDecimal(1));
         ASTNode selectExpr = ASTBuilder.selectExpr(ASTBuilder.literal(r), "1");
         b.add(selectExpr);
       } else {
         int i = 0;
 
-        for (RexNode r : select.getChildExps()) {
-          if (RexUtil.isNull(r) && r.getType().getSqlTypeName() != SqlTypeName.NULL) {
-            // It is NULL value with different type, we need to introduce a CAST
-            // to keep it
-            r = select.getCluster().getRexBuilder().makeAbstractCast(r.getType(), r);
-          }
-          ASTNode expr = r.accept(new RexVisitor(schema, r instanceof RexLiteral));
+        for (RexNode r : childExps) {
+          ASTNode expr = r.accept(new RexVisitor(schema, r instanceof RexLiteral,
+              select.getCluster().getRexBuilder()));
           String alias = select.getRowType().getFieldNames().get(i++);
           ASTNode selectExpr = ASTBuilder.selectExpr(expr, alias);
           b.add(selectExpr);
@@ -223,12 +223,8 @@ public class ASTConverter {
       List<ASTNode> children = new ArrayList<>();
       RexCall call = (RexCall) udtf.getCall();
       for (RexNode r : call.getOperands()) {
-        if (RexUtil.isNull(r) && r.getType().getSqlTypeName() != SqlTypeName.NULL) {
-          // It is NULL value with different type, we need to introduce a CAST
-          // to keep it
-          r = select.getCluster().getRexBuilder().makeAbstractCast(r.getType(), r);
-        }
-        ASTNode expr = r.accept(new RexVisitor(schema, r instanceof RexLiteral));
+        ASTNode expr = r.accept(new RexVisitor(schema, r instanceof RexLiteral,
+            select.getCluster().getRexBuilder()));
         children.add(expr);
       }
       ASTBuilder sel = ASTBuilder.construct(HiveParser.TOK_SELEXPR, "TOK_SELEXPR");
@@ -460,19 +456,41 @@ public class ASTConverter {
 
   }
 
+
   static class RexVisitor extends RexVisitorImpl<ASTNode> {
 
     private final Schema schema;
     private final boolean useTypeQualInLiteral;
+    private final RexBuilder rexBuilder;
+    // this is to keep track of null literal which already has been visited
+    private Map<RexLiteral, Boolean> nullLiteralMap ;
 
+
+    protected RexVisitor(Schema schema, boolean useTypeQualInLiteral) {
+      this(schema, useTypeQualInLiteral, null);
+
+    }
     protected RexVisitor(Schema schema) {
       this(schema, false);
     }
 
-    protected RexVisitor(Schema schema, boolean useTypeQualInLiteral) {
+    protected RexVisitor(Schema schema, boolean useTypeQualInLiteral, RexBuilder rexBuilder) {
       super(true);
       this.schema = schema;
       this.useTypeQualInLiteral = useTypeQualInLiteral;
+      this.rexBuilder = rexBuilder;
+
+      this.nullLiteralMap =
+          new TreeMap<>(new Comparator<RexLiteral>(){
+            // RexLiteral's equal only consider value and type which isn't sufficient
+            // so providing custom comparator which distinguishes b/w objects irrespective
+            // of value/type
+            @Override
+            public int compare(RexLiteral o1, RexLiteral o2) {
+              if(o1 == o2) return 0;
+              else return 1;
+            }
+          });
     }
 
     @Override
@@ -497,6 +515,19 @@ public class ASTConverter {
 
     @Override
     public ASTNode visitLiteral(RexLiteral literal) {
+
+      if (RexUtil.isNull(literal) && literal.getType().getSqlTypeName() != SqlTypeName.NULL
+          && rexBuilder != null) {
+        // It is NULL value with different type, we need to introduce a CAST
+        // to keep it
+        if(nullLiteralMap.containsKey(literal)) {
+          return ASTBuilder.literal(literal, useTypeQualInLiteral);
+        }
+        nullLiteralMap.put(literal, true);
+        RexNode r = rexBuilder.makeAbstractCast(literal.getType(), literal);
+
+        return r.accept(this);
+      }
       return ASTBuilder.literal(literal, useTypeQualInLiteral);
     }
 
@@ -738,15 +769,6 @@ public class ASTConverter {
       for (int i : gBy.getGroupSet()) {
         ColumnInfo cI = src.get(i);
         add(cI);
-      }
-      // If we are using grouping sets, we add the
-      // fields again, these correspond to the boolean
-      // grouping in Calcite. They are not used by Hive.
-      if(gBy.indicator) {
-        for (int i : gBy.getGroupSet()) {
-          ColumnInfo cI = src.get(i);
-          add(cI);
-        }
       }
       List<AggregateCall> aggs = gBy.getAggCallList();
       for (AggregateCall agg : aggs) {

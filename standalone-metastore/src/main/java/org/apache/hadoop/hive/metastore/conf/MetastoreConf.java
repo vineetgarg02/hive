@@ -38,9 +38,25 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * A set of definitions of config values used by the Metastore.  One of the key aims of this
+ * class is to provide backwards compatibility with existing Hive configuration keys while
+ * allowing the metastore to have its own, Hive independant keys.   For this reason access to the
+ * underlying Configuration object should always be done via the static methods provided here
+ * rather than directly via {@link Configuration#get(String)} and
+ * {@link Configuration#set(String, String)}.  All the methods of this class will handle checking
+ * both the MetastoreConf key and the Hive key.  The algorithm is, on reads, to check first the
+ * MetastoreConf key, then the Hive key, then return the default if neither are set.  On write
+ * the Metastore key only is set.
+ *
+ * This class does not extend Configuration.  Rather it provides static methods for operating on
+ * a Configuration object.  This allows it to work on HiveConf objects, which otherwise would not
+ * be the case.
+ */
 public class MetastoreConf {
 
   private static final Logger LOG = LoggerFactory.getLogger(MetastoreConf.class);
@@ -54,11 +70,8 @@ public class MetastoreConf {
   private static URL hiveSiteURL = null;
   private static URL hiveMetastoreSiteURL = null;
   private static URL metastoreSiteURL = null;
+  private static AtomicBoolean beenDumped = new AtomicBoolean();
 
-  /*
-  private static Map<String, String> metaToHiveKeys;
-  private static Map<String, String> hiveToMetaKeys;
-  */
   private static Map<String, ConfVars> keyToVars;
 
   @VisibleForTesting
@@ -153,6 +166,7 @@ public class MetastoreConf {
       ConfVars.AGGREGATE_STATS_CACHE_MAX_FULL,
       ConfVars.AGGREGATE_STATS_CACHE_CLEAN_UNTIL,
       ConfVars.DISALLOW_INCOMPATIBLE_COL_TYPE_CHANGES,
+      ConfVars.FILE_METADATA_THREADS
   };
 
   /**
@@ -163,7 +177,8 @@ public class MetastoreConf {
       ConfVars.TRY_DIRECT_SQL_DDL,
       ConfVars.CLIENT_SOCKET_TIMEOUT,
       ConfVars.PARTITION_NAME_WHITELIST_PATTERN,
-      ConfVars.CAPABILITY_CHECK
+      ConfVars.CAPABILITY_CHECK,
+      ConfVars.DISALLOW_INCOMPATIBLE_COL_TYPE_CHANGES
   };
 
   static {
@@ -406,6 +421,9 @@ public class MetastoreConf {
             "not blocked.\n" +
             "\n" +
             "See HIVE-4409 for more details."),
+    DUMP_CONFIG_ON_CREATION("metastore.dump.config.on.creation", NO_SUCH_KEY, true,
+        "If true, a printout of the config file (minus sensitive values) will be dumped to the " +
+            "log whenever newMetastoreConf() is called.  Can produce a lot of logs"),
     END_FUNCTION_LISTENERS("metastore.end.function.listeners",
         "hive.metastore.end.function.listeners", "",
         "List of comma separated listeners for the end of metastore functions."),
@@ -429,6 +447,9 @@ public class MetastoreConf {
     EXPRESSION_PROXY_CLASS("metastore.expression.proxy", "hive.metastore.expression.proxy",
         "org.apache.hadoop.hive.ql.optimizer.ppr.PartitionExpressionForMetastore",
         "Class to use to process expressions in partition pruning."),
+    FILE_METADATA_THREADS("metastore.file.metadata.threads",
+        "hive.metastore.hbase.file.metadata.threads", 1,
+        "Number of threads to use to read file metadata in background to cache it."),
     FILTER_HOOK("metastore.filter.hook", "hive.metastore.filter.hook",
         "org.apache.hadoop.hive.metastore.DefaultMetaStoreFilterHookImpl",
         "Metastore hook class for filtering the metadata read results. If hive.security.authorization.manager"
@@ -484,6 +505,18 @@ public class MetastoreConf {
         "javax.jdo.PersistenceManagerFactoryClass",
         "org.datanucleus.api.jdo.JDOPersistenceManagerFactory",
         "class implementing the jdo persistence"),
+    // Parameters for exporting metadata on table drop (requires the use of the)
+    // org.apache.hadoop.hive.ql.parse.MetaDataExportListener preevent listener
+    METADATA_EXPORT_LOCATION("metastore.metadata.export.location", "hive.metadata.export.location",
+        "",
+        "When used in conjunction with the org.apache.hadoop.hive.ql.parse.MetaDataExportListener pre event listener, \n" +
+            "it is the location to which the metadata will be exported. The default is an empty string, which results in the \n" +
+            "metadata being exported to the current user's home directory on HDFS."),
+    MOVE_EXPORTED_METADATA_TO_TRASH("metastore.metadata.move.exported.metadata.to.trash",
+        "hive.metadata.move.exported.metadata.to.trash", true,
+        "When used in conjunction with the org.apache.hadoop.hive.ql.parse.MetaDataExportListener pre event listener, \n" +
+            "this setting determines if the metadata that is exported will subsequently be moved to the user's trash directory \n" +
+            "alongside the dropped table data. This ensures that the metadata will be cleaned up along with the dropped table data."),
     METRICS_ENABLED("metastore.metrics.enabled", "hive.metastore.metrics.enabled", false,
         "Enable metrics on the metastore."),
     METRICS_JSON_FILE_INTERVAL("metastore.metrics.file.frequency",
@@ -498,12 +531,6 @@ public class MetastoreConf {
         "A comma separated list of metrics reporters to start"),
     MULTITHREADED("javax.jdo.option.Multithreaded", "javax.jdo.option.Multithreaded", true,
         "Set this to true if multiple threads access metastore through JDO concurrently."),
-    ORM_RETRIEVE_MAPNULLS_AS_EMPTY_STRINGS("metastore.orm.retrieveMapNullsAsEmptyStrings",
-        "hive.metastore.orm.retrieveMapNullsAsEmptyStrings",false,
-        "Thrift does not support nulls in maps, so any nulls present in maps retrieved from ORM must " +
-            "either be pruned or converted to empty strings. Some backing dbs such as Oracle persist empty strings " +
-            "as nulls, so we should set this parameter if we wish to reverse that behaviour. For others, " +
-            "pruning is the correct behaviour"),
     MAX_OPEN_TXNS("metastore.max.open.txns", "hive.max.open.txns", 100000,
         "Maximum number of open transactions. If \n" +
         "current open transactions reach this limit, future open transaction requests will be \n" +
@@ -511,6 +538,21 @@ public class MetastoreConf {
     NON_TRANSACTIONAL_READ("javax.jdo.option.NonTransactionalRead",
         "javax.jdo.option.NonTransactionalRead", true,
         "Reads outside of transactions"),
+    NOTIFICATION_SEQUENCE_LOCK_MAX_RETRIES("metastore.notification.sequence.lock.max.retries",
+        "hive.notification.sequence.lock.max.retries", 5,
+        "Number of retries required to acquire a lock when getting the next notification sequential ID for entries "
+            + "in the NOTIFICATION_LOG table."),
+    NOTIFICATION_SEQUENCE_LOCK_RETRY_SLEEP_INTERVAL(
+        "metastore.notification.sequence.lock.retry.sleep.interval",
+        "hive.notification.sequence.lock.retry.sleep.interval", 500, TimeUnit.MILLISECONDS,
+        "Sleep interval between retries to acquire a notification lock as described part of property "
+            + NOTIFICATION_SEQUENCE_LOCK_MAX_RETRIES.name()),
+    ORM_RETRIEVE_MAPNULLS_AS_EMPTY_STRINGS("metastore.orm.retrieveMapNullsAsEmptyStrings",
+        "hive.metastore.orm.retrieveMapNullsAsEmptyStrings",false,
+        "Thrift does not support nulls in maps, so any nulls present in maps retrieved from ORM must " +
+            "either be pruned or converted to empty strings. Some backing dbs such as Oracle persist empty strings " +
+            "as nulls, so we should set this parameter if we wish to reverse that behaviour. For others, " +
+            "pruning is the correct behaviour"),
     PARTITION_NAME_WHITELIST_PATTERN("metastore.partition.name.whitelist.pattern",
         "hive.metastore.partition.name.whitelist.pattern", "",
         "Partition names will be checked against this regex pattern and rejected if not matched."),
@@ -534,6 +576,14 @@ public class MetastoreConf {
         "Inteval for cmroot cleanup thread."),
     REPLCMENABLED("metastore.repl.cm.enabled", "hive.repl.cm.enabled", false,
         "Turn on ChangeManager, so delete files will go to cmrootdir."),
+    REPL_COPYFILE_MAXNUMFILES("metastore.repl.copyfile.maxnumfiles",
+        "hive.exec.copyfile.maxnumfiles", 1L,
+        "Maximum number of files Hive uses to do sequential HDFS copies between directories." +
+            "Distributed copies (distcp) will be used instead for larger numbers of files so that copies can be done faster."),
+    REPL_COPYFILE_MAXSIZE("metastore.repl.copyfile.maxsize",
+        "hive.exec.copyfile.maxsize", 32L * 1024 * 1024 /*32M*/,
+        "Maximum file size (in bytes) that Hive uses to do single HDFS copies between directories." +
+            "Distributed copies (distcp) will be used instead for bigger files so that copies can be done faster."),
     SCHEMA_INFO_CLASS("metastore.schema.info.class", "hive.metastore.schema.info.class",
         "org.apache.hadoop.hive.metastore.MetaStoreSchemaInfo",
         "Fully qualified class name for the metastore schema information class \n"
@@ -582,6 +632,8 @@ public class MetastoreConf {
         "Metastore SSL certificate truststore password."),
     STATS_AUTO_GATHER("metastore.stats.autogather", "hive.stats.autogather", true,
         "A flag to gather statistics (only basic) automatically during the INSERT OVERWRITE command."),
+    STATS_FETCH_BITVECTOR("metastore.stats.fetch.bitvector", "hive.stats.fetch.bitvector", false,
+        "Whether we fetch bitvector when we compute ndv. Users can turn it off if they want to use old schema"),
     STATS_NDV_TUNER("metastore.stats.ndv.tuner", "hive.metastore.stats.ndv.tuner", 0.0,
         "Provides a tunable parameter between the lower bound and the higher bound of ndv for aggregate ndv across all the partitions. \n" +
             "The lower bound is equal to the maximum of ndv of all the partitions. The higher bound is equal to the sum of ndv of all the partitions.\n" +
@@ -688,6 +740,10 @@ public class MetastoreConf {
     WRITE_SET_REAPER_INTERVAL("metastore.writeset.reaper.interval",
         "hive.writeset.reaper.interval", 60, TimeUnit.SECONDS,
         "Frequency of WriteSet reaper runs"),
+    WM_DEFAULT_POOL_SIZE("metastore.wm.default.pool.size",
+        "hive.metastore.wm.default.pool.size", 4,
+        "The size of a default pool to create when creating an empty resource plan;\n" +
+        "If not positive, no default pool will be created."),
 
     // Hive values we have copied and use as is
     // These two are used to indicate that we are running tests
@@ -752,11 +808,11 @@ public class MetastoreConf {
     BOOLEAN_TEST_ENTRY("test.bool", "hive.test.bool", true, "comment"),
     CLASS_TEST_ENTRY("test.class", "hive.test.class", "", "comment");
 
-    public final String varname;
-    public final String hiveName;
-    public final Object defaultVal;
-    public final Validator validator;
-    public final boolean caseSensitive;
+    private final String varname;
+    private final String hiveName;
+    private final Object defaultVal;
+    private final Validator validator;
+    private final boolean caseSensitive;
 
     ConfVars(String varname, String hiveName, String defaultVal, String comment) {
       this.varname = varname;
@@ -844,6 +900,30 @@ public class MetastoreConf {
       return caseSensitive;
     }
 
+    /**
+     * If you are calling this, you're probably doing it wrong.  You shouldn't need to use the
+     * underlying variable name.  Use one of the getVar methods instead.  Only use this if you
+     * are 100% sure you know you're doing.  The reason for this is that MetastoreConf goes to a
+     * lot of trouble to make sure it checks both Hive and Metastore values for config keys.  If
+     * you call conf.get(varname) you are undermining that.
+     * @return variable name
+     */
+    public String getVarname() {
+      return varname;
+    }
+
+    /**
+     * If you are calling this, you're probably doing it wrong.  You shouldn't need to use the
+     * underlying variable name.  Use one of the getVar methods instead.  Only use this if you
+     * are 100% sure you know you're doing.  The reason for this is that MetastoreConf goes to a
+     * lot of trouble to make sure it checks both Hive and Metastore values for config keys.  If
+     * you call conf.get(hivename) you are undermining that.
+     * @return variable hive name
+     */
+    public String getHiveName() {
+      return hiveName;
+    }
+
     @Override
     public String toString() {
       return varname;
@@ -923,6 +1003,11 @@ public class MetastoreConf {
     // If we are going to validate the schema, make sure we don't create it
     if (getBoolVar(conf, ConfVars.SCHEMA_VERIFICATION)) {
       setBoolVar(conf, ConfVars.AUTO_CREATE_ALL, false);
+    }
+
+    if (!beenDumped.getAndSet(true) && getBoolVar(conf, ConfVars.DUMP_CONFIG_ON_CREATION) &&
+        LOG.isInfoEnabled()) {
+      LOG.info(dumpConfig(conf));
     }
     return conf;
   }
@@ -1296,8 +1381,8 @@ public class MetastoreConf {
   }
 
   /**
-   * Return the configuration value as a String.  This does not work on time based values as it
-   * doesn't have a time unit.
+   * Return the configuration value as a String.  For time based values it will be returned in
+   * the default time unit appended with an appropriate abbreviation (eg s for seconds, ...)
    * @param conf configuration to read
    * @param var variable to read
    * @return value as an object
@@ -1311,8 +1396,12 @@ public class MetastoreConf {
       return Long.toString(getLongVar(conf, var));
     } else if (var.defaultVal.getClass() == Double.class) {
       return Double.toString(getDoubleVar(conf, var));
+    } else if (var.defaultVal.getClass() == TimeValue.class) {
+      TimeUnit timeUnit = (var.defaultVal.getClass() == TimeValue.class) ?
+          ((TimeValue)var.defaultVal).unit : null;
+      return Long.toString(getTimeVar(conf, var, timeUnit)) + timeAbbreviationFor(timeUnit);
     } else {
-      throw new RuntimeException("Invalid type for getObject " + var.defaultVal.getClass().getName());
+      throw new RuntimeException("Unknown type for getObject " + var.defaultVal.getClass().getName());
     }
   }
 
@@ -1345,6 +1434,45 @@ public class MetastoreConf {
    */
   public static boolean isEmbeddedMetaStore(String msUri) {
     return (msUri == null) || msUri.trim().isEmpty();
+  }
+
+  /**
+   * Dump the configuration file to the log.  It will be dumped at an INFO level.  This can
+   * potentially produce a lot of logs, so you might want to be careful when and where you do it.
+   * It takes care not to dump hidden keys.
+   * @param conf Configuration file to dump
+   * @return String containing dumped config file.
+   */
+  public static String dumpConfig(Configuration conf) {
+    StringBuilder buf = new StringBuilder("MetastoreConf object:\n");
+    if (hiveSiteURL != null) {
+      buf.append("Used hive-site file: ")
+          .append(hiveSiteURL)
+          .append('\n');
+    }
+    if (hiveMetastoreSiteURL != null) {
+      buf.append("Used hivemetastore-site file: ")
+          .append(hiveMetastoreSiteURL)
+          .append('\n');
+    }
+    if (metastoreSiteURL != null) {
+      buf.append("Used metastore-site file: ")
+          .append(metastoreSiteURL)
+          .append('\n');
+    }
+    for (ConfVars var : ConfVars.values()) {
+      if (!unprintables.contains(var.varname)) {
+        buf.append("Key: <")
+            .append(var.varname)
+            .append("> old hive key: <")
+            .append(var.hiveName)
+            .append(">  value: <")
+            .append(getAsString(conf, var))
+            .append(">\n");
+      }
+    }
+    buf.append("Finished MetastoreConf object.\n");
+    return buf.toString();
   }
 
   /**

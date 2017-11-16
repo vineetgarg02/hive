@@ -50,7 +50,6 @@ import org.apache.hadoop.hive.ql.parse.ReplicationSpec;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.plan.Explain.Level;
 import org.apache.hadoop.hive.serde.serdeConstants;
-import org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 import org.apache.hadoop.mapred.OutputFormat;
@@ -101,6 +100,10 @@ public class CreateTableDesc extends DDLDesc implements Serializable {
   List<SQLForeignKey> foreignKeys;
   List<SQLUniqueConstraint> uniqueConstraints;
   List<SQLNotNullConstraint> notNullConstraints;
+  private Long initialMmWriteId; // Initial MM write ID for CTAS and import.
+  // The FSOP configuration for the FSOP that is going to write initial data during ctas.
+  // This is not needed beyond compilation, so it is transient.
+  private transient FileSinkDesc writer;
 
   public CreateTableDesc() {
   }
@@ -715,26 +718,24 @@ public class CreateTableDesc extends DDLDesc implements Serializable {
     HiveStorageHandler storageHandler = tbl.getStorageHandler();
 
     /*
-     * We use LazySimpleSerDe by default.
-     *
-     * If the user didn't specify a SerDe, and any of the columns are not simple
-     * types, we will have to use DynamicSerDe instead.
+     * If the user didn't specify a SerDe, we use the default.
      */
+    String serDeClassName;
     if (getSerName() == null) {
       if (storageHandler == null) {
-        LOG.info("Default to LazySimpleSerDe for table " + tableName);
-        tbl.setSerializationLib(LazySimpleSerDe.class.getName());
+        serDeClassName = PlanUtils.getDefaultSerDe().getName();
+        LOG.info("Default to " + serDeClassName + " for table " + tableName);
       } else {
-        String serDeClassName = storageHandler.getSerDeClass().getName();
+        serDeClassName = storageHandler.getSerDeClass().getName();
         LOG.info("Use StorageHandler-supplied " + serDeClassName
                 + " for table " + tableName);
-        tbl.setSerializationLib(serDeClassName);
       }
     } else {
       // let's validate that the serde exists
-      DDLTask.validateSerDe(getSerName(), conf);
-      tbl.setSerializationLib(getSerName());
+      serDeClassName = getSerName();
+      DDLTask.validateSerDe(serDeClassName, conf);
     }
+    tbl.setSerializationLib(serDeClassName);
 
     if (getFieldDelim() != null) {
       tbl.setSerdeParam(serdeConstants.FIELD_DELIM, getFieldDelim());
@@ -804,7 +805,7 @@ public class CreateTableDesc extends DDLDesc implements Serializable {
       tbl.getTTable().getSd().setOutputFormat(tbl.getOutputFormatClass().getName());
     }
 
-    if (!Utilities.isDefaultNameNode(conf) && DDLTask.doesTableNeedLocation(tbl)) {
+    if (DDLTask.doesTableNeedLocation(tbl)) {
       // If location is specified - ensure that it is a full qualified name
       DDLTask.makeLocationQualified(tbl.getDbName(), tbl.getTTable().getSd(), tableName, conf);
     }
@@ -859,5 +860,23 @@ public class CreateTableDesc extends DDLDesc implements Serializable {
     return tbl;
   }
 
+  public void setInitialMmWriteId(Long mmWriteId) {
+    this.initialMmWriteId = mmWriteId;
+  }
 
+  public Long getInitialMmWriteId() {
+    return initialMmWriteId;
+  }
+
+  
+
+  public FileSinkDesc getAndUnsetWriter() {
+    FileSinkDesc fsd = writer;
+    writer = null;
+    return fsd;
+  }
+
+  public void setWriter(FileSinkDesc writer) {
+    this.writer = writer;
+  }
 }

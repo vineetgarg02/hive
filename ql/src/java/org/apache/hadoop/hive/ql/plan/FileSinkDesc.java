@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Objects;
 
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.ql.io.AcidUtils;
 import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.ql.plan.Explain.Level;
@@ -33,7 +34,7 @@ import org.apache.hadoop.hive.ql.plan.Explain.Vectorization;
  *
  */
 @Explain(displayName = "File Output Operator", explainLevels = { Level.USER, Level.DEFAULT, Level.EXTENDED })
-public class FileSinkDesc extends AbstractOperatorDesc {
+public class FileSinkDesc extends AbstractOperatorDesc implements IStatsGatherDesc {
   private static final long serialVersionUID = 1L;
 
   public enum DPSortState {
@@ -82,7 +83,6 @@ public class FileSinkDesc extends AbstractOperatorDesc {
   // the sub-queries write to sub-directories of a common directory. So, the file sink
   // descriptors for subq1 and subq2 are linked.
   private boolean linkedFileSink = false;
-  private Path parentDir;
   transient private List<FileSinkDesc> linkedFileSinkDesc;
 
   private boolean statsReliable;
@@ -97,6 +97,9 @@ public class FileSinkDesc extends AbstractOperatorDesc {
   private transient Table table;
   private Path destPath;
   private boolean isHiveServerQuery;
+  private Long mmWriteId;
+  private boolean isMerge;
+  private boolean isMmCtas;
 
   /**
    * Whether is a HiveServer query, and the destination table is
@@ -115,7 +118,8 @@ public class FileSinkDesc extends AbstractOperatorDesc {
   public FileSinkDesc(final Path dirName, final TableDesc tableInfo,
       final boolean compressed, final int destTableId, final boolean multiFileSpray,
       final boolean canBeMerged, final int numFiles, final int totalFiles,
-      final ArrayList<ExprNodeDesc> partitionCols, final DynamicPartitionCtx dpCtx, Path destPath) {
+      final ArrayList<ExprNodeDesc> partitionCols, final DynamicPartitionCtx dpCtx, Path destPath,
+      Long mmWriteId, boolean isMmCtas, boolean isInsertOverwrite) {
 
     this.dirName = dirName;
     this.tableInfo = tableInfo;
@@ -129,6 +133,9 @@ public class FileSinkDesc extends AbstractOperatorDesc {
     this.dpCtx = dpCtx;
     this.dpSortState = DPSortState.NONE;
     this.destPath = destPath;
+    this.mmWriteId = mmWriteId;
+    this.isMmCtas = isMmCtas;
+    this.isInsertOverwrite = isInsertOverwrite;
   }
 
   public FileSinkDesc(final Path dirName, final TableDesc tableInfo,
@@ -150,20 +157,21 @@ public class FileSinkDesc extends AbstractOperatorDesc {
   public Object clone() throws CloneNotSupportedException {
     FileSinkDesc ret = new FileSinkDesc(dirName, tableInfo, compressed,
         destTableId, multiFileSpray, canBeMerged, numFiles, totalFiles,
-        partitionCols, dpCtx, destPath);
+        partitionCols, dpCtx, destPath, mmWriteId, isMmCtas, isInsertOverwrite);
     ret.setCompressCodec(compressCodec);
     ret.setCompressType(compressType);
     ret.setGatherStats(gatherStats);
     ret.setStaticSpec(staticSpec);
     ret.setStatsAggPrefix(statsKeyPref);
     ret.setLinkedFileSink(linkedFileSink);
-    ret.setParentDir(parentDir);
     ret.setLinkedFileSinkDesc(linkedFileSinkDesc);
     ret.setStatsReliable(statsReliable);
     ret.setDpSortState(dpSortState);
     ret.setWriteType(writeType);
     ret.setTransactionId(txnId);
+    ret.setStatementId(statementId);
     ret.setStatsTmpDir(statsTmpDir);
+    ret.setIsMerge(isMerge);
     return ret;
   }
 
@@ -193,7 +201,17 @@ public class FileSinkDesc extends AbstractOperatorDesc {
   }
 
   public Path getFinalDirName() {
-    return linkedFileSink ? parentDir : dirName;
+    return linkedFileSink ? dirName.getParent() : dirName;
+  }
+
+  /** getFinalDirName that takes into account MM, but not DP, LB or buckets. */
+  public Path getMergeInputDirName() {
+    Path root = getFinalDirName();
+    if (isMmTable()) {
+      return new Path(root, AcidUtils.deltaSubdir(txnId, txnId, statementId));
+    } else {
+      return root;
+    }
   }
 
   @Explain(displayName = "table", explainLevels = { Level.USER, Level.DEFAULT, Level.EXTENDED })
@@ -263,6 +281,14 @@ public class FileSinkDesc extends AbstractOperatorDesc {
 
   public void setTemporary(boolean temporary) {
     this.temporary = temporary;
+  }
+
+  public boolean isMmTable() {
+    if (getTable() != null) {
+      return AcidUtils.isInsertOnlyTable(table.getParameters());
+    } else { // Dynamic Partition Insert case
+      return AcidUtils.isInsertOnlyTable(getTableInfo().getProperties());
+    }
   }
 
   public boolean isMaterialization() {
@@ -347,6 +373,7 @@ public class FileSinkDesc extends AbstractOperatorDesc {
     this.gatherStats = gatherStats;
   }
 
+  @Override
   @Explain(displayName = "GatherStats", explainLevels = { Level.EXTENDED })
   public boolean isGatherStats() {
     return gatherStats;
@@ -363,6 +390,7 @@ public class FileSinkDesc extends AbstractOperatorDesc {
    * will be aggregated.
    * @return key prefix used for stats publishing and aggregation.
    */
+  @Override
   @Explain(displayName = "Stats Publishing Key Prefix", explainLevels = { Level.EXTENDED })
   public String getStatsAggPrefix() {
     // dirName uniquely identifies destination directory of a FileSinkOperator.
@@ -393,11 +421,7 @@ public class FileSinkDesc extends AbstractOperatorDesc {
   }
 
   public Path getParentDir() {
-    return parentDir;
-  }
-
-  public void setParentDir(Path parentDir) {
-    this.parentDir = parentDir;
+    return dirName.getParent();
   }
 
   public boolean isStatsReliable() {
@@ -489,7 +513,8 @@ public class FileSinkDesc extends AbstractOperatorDesc {
   }
 
 
-  public String getStatsTmpDir() {
+  @Override
+  public String getTmpStatsDir() {
     return statsTmpDir;
   }
 
@@ -497,20 +522,37 @@ public class FileSinkDesc extends AbstractOperatorDesc {
     this.statsTmpDir = statsCollectionTempDir;
   }
 
+  public void setMmWriteId(Long mmWriteId) {
+    this.mmWriteId = mmWriteId;
+  }
+
+  public void setIsMerge(boolean b) {
+    this.isMerge = b;
+  }
+
+  public boolean isMerge() {
+    return isMerge;
+  }
+
+  public boolean isMmCtas() {
+    return isMmCtas;
+  }
+
   public class FileSinkOperatorExplainVectorization extends OperatorExplainVectorization {
 
-    public FileSinkOperatorExplainVectorization(VectorDesc vectorDesc) {
+    public FileSinkOperatorExplainVectorization(VectorFileSinkDesc vectorFileSinkDesc) {
       // Native vectorization not supported.
-      super(vectorDesc, false);
+      super(vectorFileSinkDesc, false);
     }
   }
 
   @Explain(vectorization = Vectorization.OPERATOR, displayName = "File Sink Vectorization", explainLevels = { Level.DEFAULT, Level.EXTENDED })
   public FileSinkOperatorExplainVectorization getFileSinkVectorization() {
-    if (vectorDesc == null) {
+    VectorFileSinkDesc vectorFileSinkDesc = (VectorFileSinkDesc) getVectorDesc();
+    if (vectorFileSinkDesc == null) {
       return null;
     }
-    return new FileSinkOperatorExplainVectorization(vectorDesc);
+    return new FileSinkOperatorExplainVectorization(vectorFileSinkDesc);
   }
 
   public void setInsertOverwrite(boolean isInsertOverwrite) {
@@ -538,4 +580,5 @@ public class FileSinkDesc extends AbstractOperatorDesc {
     }
     return false;
   }
+
 }

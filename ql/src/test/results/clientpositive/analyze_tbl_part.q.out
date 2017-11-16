@@ -35,12 +35,18 @@ PREHOOK: type: QUERY
 PREHOOK: Input: default@src_stat_part
 PREHOOK: Input: default@src_stat_part@partitionid=1
 PREHOOK: Input: default@src_stat_part@partitionid=2
+PREHOOK: Output: default@src_stat_part
+PREHOOK: Output: default@src_stat_part@partitionid=1
+PREHOOK: Output: default@src_stat_part@partitionid=2
 #### A masked pattern was here ####
 POSTHOOK: query: ANALYZE TABLE src_stat_part partition (partitionId) COMPUTE STATISTICS for columns key
 POSTHOOK: type: QUERY
 POSTHOOK: Input: default@src_stat_part
 POSTHOOK: Input: default@src_stat_part@partitionid=1
 POSTHOOK: Input: default@src_stat_part@partitionid=2
+POSTHOOK: Output: default@src_stat_part
+POSTHOOK: Output: default@src_stat_part@partitionid=1
+POSTHOOK: Output: default@src_stat_part@partitionid=2
 #### A masked pattern was here ####
 PREHOOK: query: describe formatted src_stat_part PARTITION(partitionId=1) key
 PREHOOK: type: DESCTABLE
@@ -48,20 +54,35 @@ PREHOOK: Input: default@src_stat_part
 POSTHOOK: query: describe formatted src_stat_part PARTITION(partitionId=1) key
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@src_stat_part
-# col_name            	data_type           	min                 	max                 	num_nulls           	distinct_count      	avg_col_len         	max_col_len         	num_trues           	num_falses          	comment             	bitVector           
-	 	 	 	 	 	 	 	 	 	 	 
-key                 	string              	                    	                    	0                   	16                  	1.72                	3                   	                    	                    	HL                  	from deserializer   
+col_name            	key                 	 	 	 	 	 	 	 	 	 	 
+data_type           	string              	 	 	 	 	 	 	 	 	 	 
+min                 	                    	 	 	 	 	 	 	 	 	 	 
+max                 	                    	 	 	 	 	 	 	 	 	 	 
+num_nulls           	0                   	 	 	 	 	 	 	 	 	 	 
+distinct_count      	16                  	 	 	 	 	 	 	 	 	 	 
+avg_col_len         	1.72                	 	 	 	 	 	 	 	 	 	 
+max_col_len         	3                   	 	 	 	 	 	 	 	 	 	 
+num_trues           	                    	 	 	 	 	 	 	 	 	 	 
+num_falses          	                    	 	 	 	 	 	 	 	 	 	 
+bitVector           	HL                  	 	 	 	 	 	 	 	 	 	 
+comment             	from deserializer   	 	 	 	 	 	 	 	 	 	 
 PREHOOK: query: ANALYZE TABLE src_stat_part partition (partitionId) COMPUTE STATISTICS for columns key, value
 PREHOOK: type: QUERY
 PREHOOK: Input: default@src_stat_part
 PREHOOK: Input: default@src_stat_part@partitionid=1
 PREHOOK: Input: default@src_stat_part@partitionid=2
+PREHOOK: Output: default@src_stat_part
+PREHOOK: Output: default@src_stat_part@partitionid=1
+PREHOOK: Output: default@src_stat_part@partitionid=2
 #### A masked pattern was here ####
 POSTHOOK: query: ANALYZE TABLE src_stat_part partition (partitionId) COMPUTE STATISTICS for columns key, value
 POSTHOOK: type: QUERY
 POSTHOOK: Input: default@src_stat_part
 POSTHOOK: Input: default@src_stat_part@partitionid=1
 POSTHOOK: Input: default@src_stat_part@partitionid=2
+POSTHOOK: Output: default@src_stat_part
+POSTHOOK: Output: default@src_stat_part@partitionid=1
+POSTHOOK: Output: default@src_stat_part@partitionid=2
 #### A masked pattern was here ####
 PREHOOK: query: describe formatted src_stat_part PARTITION(partitionId=1) key
 PREHOOK: type: DESCTABLE
@@ -69,18 +90,36 @@ PREHOOK: Input: default@src_stat_part
 POSTHOOK: query: describe formatted src_stat_part PARTITION(partitionId=1) key
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@src_stat_part
-# col_name            	data_type           	min                 	max                 	num_nulls           	distinct_count      	avg_col_len         	max_col_len         	num_trues           	num_falses          	comment             	bitVector           
-	 	 	 	 	 	 	 	 	 	 	 
-key                 	string              	                    	                    	0                   	16                  	1.72                	3                   	                    	                    	HL                  	from deserializer   
+col_name            	key                 	 	 	 	 	 	 	 	 	 	 
+data_type           	string              	 	 	 	 	 	 	 	 	 	 
+min                 	                    	 	 	 	 	 	 	 	 	 	 
+max                 	                    	 	 	 	 	 	 	 	 	 	 
+num_nulls           	0                   	 	 	 	 	 	 	 	 	 	 
+distinct_count      	16                  	 	 	 	 	 	 	 	 	 	 
+avg_col_len         	1.72                	 	 	 	 	 	 	 	 	 	 
+max_col_len         	3                   	 	 	 	 	 	 	 	 	 	 
+num_trues           	                    	 	 	 	 	 	 	 	 	 	 
+num_falses          	                    	 	 	 	 	 	 	 	 	 	 
+bitVector           	HL                  	 	 	 	 	 	 	 	 	 	 
+comment             	from deserializer   	 	 	 	 	 	 	 	 	 	 
 PREHOOK: query: describe formatted src_stat_part PARTITION(partitionId=2) value
 PREHOOK: type: DESCTABLE
 PREHOOK: Input: default@src_stat_part
 POSTHOOK: query: describe formatted src_stat_part PARTITION(partitionId=2) value
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@src_stat_part
-# col_name            	data_type           	min                 	max                 	num_nulls           	distinct_count      	avg_col_len         	max_col_len         	num_trues           	num_falses          	comment             	bitVector           
-	 	 	 	 	 	 	 	 	 	 	 
-value               	string              	                    	                    	0                   	19                  	4.92                	7                   	                    	                    	HL                  	from deserializer   
+col_name            	value               	 	 	 	 	 	 	 	 	 	 
+data_type           	string              	 	 	 	 	 	 	 	 	 	 
+min                 	                    	 	 	 	 	 	 	 	 	 	 
+max                 	                    	 	 	 	 	 	 	 	 	 	 
+num_nulls           	0                   	 	 	 	 	 	 	 	 	 	 
+distinct_count      	19                  	 	 	 	 	 	 	 	 	 	 
+avg_col_len         	4.92                	 	 	 	 	 	 	 	 	 	 
+max_col_len         	7                   	 	 	 	 	 	 	 	 	 	 
+num_trues           	                    	 	 	 	 	 	 	 	 	 	 
+num_falses          	                    	 	 	 	 	 	 	 	 	 	 
+bitVector           	HL                  	 	 	 	 	 	 	 	 	 	 
+comment             	from deserializer   	 	 	 	 	 	 	 	 	 	 
 PREHOOK: query: create table src_stat_string_part(key string, value string) partitioned by (partitionName string)
 PREHOOK: type: CREATETABLE
 PREHOOK: Output: database:default
@@ -117,19 +156,27 @@ PREHOOK: query: ANALYZE TABLE src_stat_string_part partition (partitionName="p\'
 PREHOOK: type: QUERY
 PREHOOK: Input: default@src_stat_string_part
 PREHOOK: Input: default@src_stat_string_part@partitionname=p%271
+PREHOOK: Output: default@src_stat_string_part
+PREHOOK: Output: default@src_stat_string_part@partitionname=p%271
 #### A masked pattern was here ####
 POSTHOOK: query: ANALYZE TABLE src_stat_string_part partition (partitionName="p\'1") COMPUTE STATISTICS for columns key, value
 POSTHOOK: type: QUERY
 POSTHOOK: Input: default@src_stat_string_part
 POSTHOOK: Input: default@src_stat_string_part@partitionname=p%271
+POSTHOOK: Output: default@src_stat_string_part
+POSTHOOK: Output: default@src_stat_string_part@partitionname=p%271
 #### A masked pattern was here ####
 PREHOOK: query: ANALYZE TABLE src_stat_string_part partition (partitionName="p\"1") COMPUTE STATISTICS for columns key, value
 PREHOOK: type: QUERY
 PREHOOK: Input: default@src_stat_string_part
 PREHOOK: Input: default@src_stat_string_part@partitionname=p%221
+PREHOOK: Output: default@src_stat_string_part
+PREHOOK: Output: default@src_stat_string_part@partitionname=p%221
 #### A masked pattern was here ####
 POSTHOOK: query: ANALYZE TABLE src_stat_string_part partition (partitionName="p\"1") COMPUTE STATISTICS for columns key, value
 POSTHOOK: type: QUERY
 POSTHOOK: Input: default@src_stat_string_part
 POSTHOOK: Input: default@src_stat_string_part@partitionname=p%221
+POSTHOOK: Output: default@src_stat_string_part
+POSTHOOK: Output: default@src_stat_string_part@partitionname=p%221
 #### A masked pattern was here ####

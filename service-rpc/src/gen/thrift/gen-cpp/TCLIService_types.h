@@ -159,7 +159,8 @@ struct TGetInfoType {
     CLI_DESCRIBE_PARAMETER = 10002,
     CLI_CATALOG_NAME = 10003,
     CLI_COLLATION_SEQ = 10004,
-    CLI_MAX_IDENTIFIER_LEN = 10005
+    CLI_MAX_IDENTIFIER_LEN = 10005,
+    CLI_ODBC_KEYWORDS = 10006
   };
 };
 
@@ -353,6 +354,10 @@ class TRenewDelegationTokenReq;
 class TRenewDelegationTokenResp;
 
 class TProgressUpdateResp;
+
+class TGetQueryIdReq;
+
+class TGetQueryIdResp;
 
 typedef struct _TTypeQualifierValue__isset {
   _TTypeQualifierValue__isset() : i32Value(false), stringValue(false) {}
@@ -4566,6 +4571,86 @@ class TProgressUpdateResp {
 void swap(TProgressUpdateResp &a, TProgressUpdateResp &b);
 
 inline std::ostream& operator<<(std::ostream& out, const TProgressUpdateResp& obj)
+{
+  obj.printTo(out);
+  return out;
+}
+
+
+class TGetQueryIdReq {
+ public:
+
+  TGetQueryIdReq(const TGetQueryIdReq&);
+  TGetQueryIdReq& operator=(const TGetQueryIdReq&);
+  TGetQueryIdReq() {
+  }
+
+  virtual ~TGetQueryIdReq() throw();
+  TOperationHandle operationHandle;
+
+  void __set_operationHandle(const TOperationHandle& val);
+
+  bool operator == (const TGetQueryIdReq & rhs) const
+  {
+    if (!(operationHandle == rhs.operationHandle))
+      return false;
+    return true;
+  }
+  bool operator != (const TGetQueryIdReq &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const TGetQueryIdReq & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+  virtual void printTo(std::ostream& out) const;
+};
+
+void swap(TGetQueryIdReq &a, TGetQueryIdReq &b);
+
+inline std::ostream& operator<<(std::ostream& out, const TGetQueryIdReq& obj)
+{
+  obj.printTo(out);
+  return out;
+}
+
+
+class TGetQueryIdResp {
+ public:
+
+  TGetQueryIdResp(const TGetQueryIdResp&);
+  TGetQueryIdResp& operator=(const TGetQueryIdResp&);
+  TGetQueryIdResp() : queryId() {
+  }
+
+  virtual ~TGetQueryIdResp() throw();
+  std::string queryId;
+
+  void __set_queryId(const std::string& val);
+
+  bool operator == (const TGetQueryIdResp & rhs) const
+  {
+    if (!(queryId == rhs.queryId))
+      return false;
+    return true;
+  }
+  bool operator != (const TGetQueryIdResp &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const TGetQueryIdResp & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+  virtual void printTo(std::ostream& out) const;
+};
+
+void swap(TGetQueryIdResp &a, TGetQueryIdResp &b);
+
+inline std::ostream& operator<<(std::ostream& out, const TGetQueryIdResp& obj)
 {
   obj.printTo(out);
   return out;

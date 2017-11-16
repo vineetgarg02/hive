@@ -24,6 +24,7 @@ import static org.junit.Assert.fail;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.UtilsForTest;
 import org.apache.hadoop.hive.cli.CliSessionState;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -49,7 +50,7 @@ public class TestFilterHooks {
   public static class DummyMetaStoreFilterHookImpl extends DefaultMetaStoreFilterHookImpl {
     public static boolean blockResults = false;
 
-    public DummyMetaStoreFilterHookImpl(HiveConf conf) {
+    public DummyMetaStoreFilterHookImpl(Configuration conf) {
       super(conf);
     }
 
@@ -173,9 +174,9 @@ public class TestFilterHooks {
     hiveConf.set(HiveConf.ConfVars.HIVE_SUPPORT_CONCURRENCY.varname, "false");
     hiveConf.setVar(ConfVars.METASTORE_FILTER_HOOK, DummyMetaStoreFilterHookImpl.class.getName());
     UtilsForTest.setNewDerbyDbLocation(hiveConf, TestFilterHooks.class.getSimpleName());
-    int port = MetaStoreUtils.findFreePort();
+    int port = MetaStoreTestUtils.findFreePort();
     hiveConf.setVar(HiveConf.ConfVars.METASTOREURIS, "thrift://localhost:" + port);
-    MetaStoreUtils.startMetaStore(port, HadoopThriftAuthBridge.getBridge(), hiveConf);
+    MetaStoreTestUtils.startMetaStore(port, HadoopThriftAuthBridge.getBridge(), hiveConf);
 
     SessionState.start(new CliSessionState(hiveConf));
     msc = new HiveMetaStoreClient(hiveConf);

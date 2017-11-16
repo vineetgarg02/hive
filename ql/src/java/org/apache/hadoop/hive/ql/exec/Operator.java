@@ -71,8 +71,9 @@ public abstract class Operator<T extends OperatorDesc> implements Serializable,C
 
   private static final long serialVersionUID = 1L;
 
-  public static final String HIVECOUNTERCREATEDFILES = "CREATED_FILES";
-  public static final String HIVECOUNTERFATAL = "FATAL_ERROR";
+  public static final String HIVE_COUNTER_CREATED_FILES = "CREATED_FILES";
+  public static final String HIVE_COUNTER_CREATED_DYNAMIC_PARTITIONS = "CREATED_DYNAMIC_PARTITIONS";
+  public static final String HIVE_COUNTER_FATAL = "FATAL_ERROR";
   public static final String CONTEXT_NAME_KEY = "__hive.context.name";
 
   private transient Configuration configuration;
@@ -325,6 +326,8 @@ public abstract class Operator<T extends OperatorDesc> implements Serializable,C
   @SuppressWarnings("unchecked")
   public final void initialize(Configuration hconf, ObjectInspector[] inputOIs)
       throws HiveException {
+    // String className = this.getClass().getName();
+
     this.done = false;
     if (state == State.INIT) {
       return;
@@ -343,7 +346,6 @@ public abstract class Operator<T extends OperatorDesc> implements Serializable,C
       inputObjInspectors = inputOIs;
     }
 
-    // initialize structure to maintain child op info. operator tree changes
     // while initializing so this need to be done here instead of constructor
     childOperatorsArray = new Operator[childOperators.size()];
     for (int i = 0; i < childOperatorsArray.length; i++) {

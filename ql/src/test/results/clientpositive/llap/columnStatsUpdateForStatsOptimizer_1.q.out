@@ -25,7 +25,6 @@ POSTHOOK: query: desc formatted calendar
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@calendar
 # col_name            	data_type           	comment             
-	 	 
 year                	int                 	                    
 month               	int                 	                    
 	 	 
@@ -68,7 +67,6 @@ POSTHOOK: query: desc formatted calendar
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@calendar
 # col_name            	data_type           	comment             
-	 	 
 year                	int                 	                    
 month               	int                 	                    
 	 	 
@@ -130,19 +128,19 @@ STAGE PLANS:
             Map Operator Tree:
                 TableScan
                   alias: calendar
-                  Statistics: Num rows: 3 Data size: 21 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 3 Data size: 12 Basic stats: COMPLETE Column stats: NONE
                   Select Operator
                     expressions: year (type: int)
                     outputColumnNames: year
-                    Statistics: Num rows: 3 Data size: 21 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 3 Data size: 12 Basic stats: COMPLETE Column stats: NONE
                     Group By Operator
                       aggregations: max(year)
                       mode: hash
                       outputColumnNames: _col0
-                      Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         sort order: 
-                        Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: NONE
                         value expressions: _col0 (type: int)
             Execution mode: llap
             LLAP IO: no inputs
@@ -153,10 +151,10 @@ STAGE PLANS:
                 aggregations: max(VALUE._col0)
                 mode: mergepartial
                 outputColumnNames: _col0
-                Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: NONE
                 File Output Operator
                   compressed: false
-                  Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: NONE
                   table:
                       input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                       output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
@@ -203,7 +201,6 @@ POSTHOOK: query: desc formatted calendar
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@calendar
 # col_name            	data_type           	comment             
-	 	 
 year                	int                 	                    
 month               	int                 	                    
 	 	 
@@ -269,7 +266,6 @@ POSTHOOK: query: desc formatted calendar
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@calendar
 # col_name            	data_type           	comment             
-	 	 
 year                	int                 	                    
 month               	int                 	                    
 	 	 
@@ -448,7 +444,6 @@ POSTHOOK: query: desc formatted calendar
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@calendar
 # col_name            	data_type           	comment             
-	 	 
 year                	int                 	                    
 month               	int                 	                    
 	 	 
@@ -583,7 +578,6 @@ POSTHOOK: query: desc formatted calendar
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@calendar
 # col_name            	data_type           	comment             
-	 	 
 year                	int                 	                    
 month               	int                 	                    
 	 	 
@@ -656,12 +650,10 @@ POSTHOOK: query: desc formatted calendarp partition (p=1)
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@calendarp
 # col_name            	data_type           	comment             
-	 	 
 year                	int                 	                    
 	 	 
 # Partition Information	 	 
 # col_name            	data_type           	comment             
-	 	 
 p                   	int                 	                    
 	 	 
 # Detailed Partition Information	 	 
@@ -707,19 +699,19 @@ STAGE PLANS:
             Map Operator Tree:
                 TableScan
                   alias: calendarp
-                  Statistics: Num rows: 3 Data size: 36 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 3 Data size: 24 Basic stats: COMPLETE Column stats: NONE
                   Select Operator
                     expressions: year (type: int)
                     outputColumnNames: year
-                    Statistics: Num rows: 3 Data size: 36 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 3 Data size: 24 Basic stats: COMPLETE Column stats: NONE
                     Group By Operator
                       aggregations: max(year)
                       mode: hash
                       outputColumnNames: _col0
-                      Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         sort order: 
-                        Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: NONE
                         value expressions: _col0 (type: int)
             Execution mode: llap
             LLAP IO: no inputs
@@ -730,10 +722,10 @@ STAGE PLANS:
                 aggregations: max(VALUE._col0)
                 mode: mergepartial
                 outputColumnNames: _col0
-                Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: NONE
                 File Output Operator
                   compressed: false
-                  Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: NONE
                   table:
                       input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                       output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
@@ -777,12 +769,10 @@ POSTHOOK: query: desc formatted calendarp partition (p=1)
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@calendarp
 # col_name            	data_type           	comment             
-	 	 
 year                	int                 	                    
 	 	 
 # Partition Information	 	 
 # col_name            	data_type           	comment             
-	 	 
 p                   	int                 	                    
 	 	 
 # Detailed Partition Information	 	 
@@ -836,12 +826,10 @@ POSTHOOK: query: desc formatted calendarp partition (p=1)
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@calendarp
 # col_name            	data_type           	comment             
-	 	 
 year                	int                 	                    
 	 	 
 # Partition Information	 	 
 # col_name            	data_type           	comment             
-	 	 
 p                   	int                 	                    
 	 	 
 # Detailed Partition Information	 	 
@@ -959,7 +947,6 @@ POSTHOOK: query: desc formatted t
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@t
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	                    
 value               	string              	                    
 	 	 
@@ -1001,7 +988,6 @@ POSTHOOK: query: desc formatted t
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@t
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	                    
 value               	string              	                    
 	 	 

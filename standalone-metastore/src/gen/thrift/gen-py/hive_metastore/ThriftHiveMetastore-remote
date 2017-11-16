@@ -86,6 +86,7 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
   print('   get_partitions_with_auth(string db_name, string tbl_name, i16 max_parts, string user_name,  group_names)')
   print('   get_partitions_pspec(string db_name, string tbl_name, i32 max_parts)')
   print('   get_partition_names(string db_name, string tbl_name, i16 max_parts)')
+  print('  PartitionValuesResponse get_partition_values(PartitionValuesRequest request)')
   print('   get_partitions_ps(string db_name, string tbl_name,  part_vals, i16 max_parts)')
   print('   get_partitions_ps_with_auth(string db_name, string tbl_name,  part_vals, i16 max_parts, string user_name,  group_names)')
   print('   get_partition_names_ps(string db_name, string tbl_name,  part_vals, i16 max_parts)')
@@ -185,6 +186,17 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
   print('  ClearFileMetadataResult clear_file_metadata(ClearFileMetadataRequest req)')
   print('  CacheFileMetadataResult cache_file_metadata(CacheFileMetadataRequest req)')
   print('  string get_metastore_db_uuid()')
+  print('  WMCreateResourcePlanResponse create_resource_plan(WMCreateResourcePlanRequest request)')
+  print('  WMGetResourcePlanResponse get_resource_plan(WMGetResourcePlanRequest request)')
+  print('  WMGetActiveResourcePlanResponse get_active_resource_plan(WMGetActiveResourcePlanRequest request)')
+  print('  WMGetAllResourcePlanResponse get_all_resource_plans(WMGetAllResourcePlanRequest request)')
+  print('  WMAlterResourcePlanResponse alter_resource_plan(WMAlterResourcePlanRequest request)')
+  print('  WMValidateResourcePlanResponse validate_resource_plan(WMValidateResourcePlanRequest request)')
+  print('  WMDropResourcePlanResponse drop_resource_plan(WMDropResourcePlanRequest request)')
+  print('  WMCreateTriggerResponse create_wm_trigger(WMCreateTriggerRequest request)')
+  print('  WMAlterTriggerResponse alter_wm_trigger(WMAlterTriggerRequest request)')
+  print('  WMDropTriggerResponse drop_wm_trigger(WMDropTriggerRequest request)')
+  print('  WMGetTriggersForResourePlanResponse get_triggers_for_resourceplan(WMGetTriggersForResourePlanRequest request)')
   print('  string getName()')
   print('  string getVersion()')
   print('  fb_status getStatus()')
@@ -625,6 +637,12 @@ elif cmd == 'get_partition_names':
     print('get_partition_names requires 3 args')
     sys.exit(1)
   pp.pprint(client.get_partition_names(args[0],args[1],eval(args[2]),))
+
+elif cmd == 'get_partition_values':
+  if len(args) != 1:
+    print('get_partition_values requires 1 args')
+    sys.exit(1)
+  pp.pprint(client.get_partition_values(eval(args[0]),))
 
 elif cmd == 'get_partitions_ps':
   if len(args) != 4:
@@ -1219,6 +1237,72 @@ elif cmd == 'get_metastore_db_uuid':
     print('get_metastore_db_uuid requires 0 args')
     sys.exit(1)
   pp.pprint(client.get_metastore_db_uuid())
+
+elif cmd == 'create_resource_plan':
+  if len(args) != 1:
+    print('create_resource_plan requires 1 args')
+    sys.exit(1)
+  pp.pprint(client.create_resource_plan(eval(args[0]),))
+
+elif cmd == 'get_resource_plan':
+  if len(args) != 1:
+    print('get_resource_plan requires 1 args')
+    sys.exit(1)
+  pp.pprint(client.get_resource_plan(eval(args[0]),))
+
+elif cmd == 'get_active_resource_plan':
+  if len(args) != 1:
+    print('get_active_resource_plan requires 1 args')
+    sys.exit(1)
+  pp.pprint(client.get_active_resource_plan(eval(args[0]),))
+
+elif cmd == 'get_all_resource_plans':
+  if len(args) != 1:
+    print('get_all_resource_plans requires 1 args')
+    sys.exit(1)
+  pp.pprint(client.get_all_resource_plans(eval(args[0]),))
+
+elif cmd == 'alter_resource_plan':
+  if len(args) != 1:
+    print('alter_resource_plan requires 1 args')
+    sys.exit(1)
+  pp.pprint(client.alter_resource_plan(eval(args[0]),))
+
+elif cmd == 'validate_resource_plan':
+  if len(args) != 1:
+    print('validate_resource_plan requires 1 args')
+    sys.exit(1)
+  pp.pprint(client.validate_resource_plan(eval(args[0]),))
+
+elif cmd == 'drop_resource_plan':
+  if len(args) != 1:
+    print('drop_resource_plan requires 1 args')
+    sys.exit(1)
+  pp.pprint(client.drop_resource_plan(eval(args[0]),))
+
+elif cmd == 'create_wm_trigger':
+  if len(args) != 1:
+    print('create_wm_trigger requires 1 args')
+    sys.exit(1)
+  pp.pprint(client.create_wm_trigger(eval(args[0]),))
+
+elif cmd == 'alter_wm_trigger':
+  if len(args) != 1:
+    print('alter_wm_trigger requires 1 args')
+    sys.exit(1)
+  pp.pprint(client.alter_wm_trigger(eval(args[0]),))
+
+elif cmd == 'drop_wm_trigger':
+  if len(args) != 1:
+    print('drop_wm_trigger requires 1 args')
+    sys.exit(1)
+  pp.pprint(client.drop_wm_trigger(eval(args[0]),))
+
+elif cmd == 'get_triggers_for_resourceplan':
+  if len(args) != 1:
+    print('get_triggers_for_resourceplan requires 1 args')
+    sys.exit(1)
+  pp.pprint(client.get_triggers_for_resourceplan(eval(args[0]),))
 
 elif cmd == 'getName':
   if len(args) != 0:

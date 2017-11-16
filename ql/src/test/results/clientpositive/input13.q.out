@@ -89,7 +89,7 @@ STAGE PLANS:
                       serde: org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe
                       name: default.dest1
             Filter Operator
-              predicate: ((key >= 100) and (key < 200)) (type: boolean)
+              predicate: ((key < 200) and (key >= 100)) (type: boolean)
               Statistics: Num rows: 55 Data size: 584 Basic stats: COMPLETE Column stats: NONE
               Select Operator
                 expressions: UDFToInteger(key) (type: int), value (type: string)
@@ -104,7 +104,7 @@ STAGE PLANS:
                       serde: org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe
                       name: default.dest2
             Filter Operator
-              predicate: ((key >= 200) and (key < 300)) (type: boolean)
+              predicate: ((key < 300) and (key >= 200)) (type: boolean)
               Statistics: Num rows: 55 Data size: 584 Basic stats: COMPLETE Column stats: NONE
               Select Operator
                 expressions: UDFToInteger(key) (type: int)
@@ -153,7 +153,8 @@ STAGE PLANS:
               name: default.dest1
 
   Stage: Stage-5
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 
   Stage: Stage-6
     Map Reduce
@@ -205,7 +206,8 @@ STAGE PLANS:
               name: default.dest2
 
   Stage: Stage-11
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 
   Stage: Stage-12
     Map Reduce
@@ -260,7 +262,8 @@ STAGE PLANS:
               name: default.dest3
 
   Stage: Stage-17
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 
   Stage: Stage-18
     Map Reduce

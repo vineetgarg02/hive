@@ -18,20 +18,22 @@
 package org.apache.hadoop.hive.ql.exec.repl.bootstrap.load.table;
 
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.metastore.api.MetaException;
+import org.apache.hadoop.hive.metastore.utils.MetaStoreUtils;
 import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.exec.ReplCopyTask;
 import org.apache.hadoop.hive.ql.exec.Task;
 import org.apache.hadoop.hive.ql.exec.TaskFactory;
 import org.apache.hadoop.hive.ql.exec.Utilities;
 import org.apache.hadoop.hive.ql.exec.repl.ReplStateLogWork;
-import org.apache.hadoop.hive.ql.exec.repl.bootstrap.ReplLoadTask;
+import org.apache.hadoop.hive.ql.exec.repl.bootstrap.AddDependencyToLeaves;
 import org.apache.hadoop.hive.ql.exec.repl.bootstrap.events.TableEvent;
 import org.apache.hadoop.hive.ql.exec.repl.bootstrap.load.TaskTracker;
 import org.apache.hadoop.hive.ql.exec.repl.bootstrap.load.util.Context;
+import org.apache.hadoop.hive.ql.exec.repl.bootstrap.load.util.PathUtils;
+import org.apache.hadoop.hive.ql.exec.util.DAGTraversal;
 import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.ql.parse.EximUtil;
 import org.apache.hadoop.hive.ql.parse.ImportSemanticAnalyzer;
@@ -40,7 +42,9 @@ import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.parse.repl.ReplLogger;
 import org.apache.hadoop.hive.ql.plan.ImportTableDesc;
 import org.apache.hadoop.hive.ql.plan.LoadTableDesc;
+import org.apache.hadoop.hive.ql.plan.LoadTableDesc.LoadFileType;
 import org.apache.hadoop.hive.ql.plan.MoveWork;
+import org.apache.hadoop.hive.ql.session.SessionState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,12 +79,12 @@ public class LoadTable {
   private void createTableReplLogTask(String tableName, TableType tableType) throws SemanticException {
     ReplStateLogWork replLogWork = new ReplStateLogWork(replLogger,tableName, tableType);
     Task<ReplStateLogWork> replLogTask = TaskFactory.get(replLogWork, context.hiveConf);
-    ReplLoadTask.dependency(tracker.tasks(), replLogTask);
+    DAGTraversal.traverse(tracker.tasks(), new AddDependencyToLeaves(replLogTask));
 
     if (tracker.tasks().isEmpty()) {
       tracker.addTask(replLogTask);
     } else {
-      ReplLoadTask.dependency(tracker.tasks(), replLogTask);
+      DAGTraversal.traverse(tracker.tasks(), new AddDependencyToLeaves(replLogTask));
 
       List<Task<? extends Serializable>> visited = new ArrayList<>();
       tracker.updateTaskCount(replLogTask, visited);
@@ -218,15 +222,18 @@ public class LoadTable {
   private Task<?> loadTableTask(Table table, ReplicationSpec replicationSpec, Path tgtPath,
       Path fromURI) {
     Path dataPath = new Path(fromURI, EximUtil.DATA_PATH_NAME);
-    Path tmpPath = context.utils.getExternalTmpPath(tgtPath);
+    Path tmpPath = PathUtils.getExternalTmpPath(tgtPath, context.pathInfo);
     Task<?> copyTask =
         ReplCopyTask.getLoadCopyTask(replicationSpec, dataPath, tmpPath, context.hiveConf);
 
     LoadTableDesc loadTableWork = new LoadTableDesc(
-        tmpPath, Utilities.getTableDesc(table), new TreeMap<>(), replicationSpec.isReplace()
+        tmpPath, Utilities.getTableDesc(table), new TreeMap<>(),
+        replicationSpec.isReplace() ? LoadFileType.REPLACE_ALL : LoadFileType.OVERWRITE_EXISTING,
+        SessionState.get().getTxnMgr().getCurrentTxnId()
     );
     MoveWork moveWork =
-        new MoveWork(new HashSet<>(), new HashSet<>(), loadTableWork, null, false);
+        new MoveWork(new HashSet<>(), new HashSet<>(), loadTableWork, null, false,
+            context.sessionStateLineageState);
     Task<?> loadTableTask = TaskFactory.get(moveWork, context.hiveConf);
     copyTask.addDependentTask(loadTableTask);
     return copyTask;

@@ -32,6 +32,7 @@ import org.apache.hadoop.hive.common.classification.InterfaceAudience;
 import org.apache.hadoop.hive.common.classification.InterfaceStability;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
+import org.apache.hadoop.hive.ql.io.AcidUtils;
 import org.apache.hadoop.hive.ql.metadata.HiveStorageHandler;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Index;
@@ -55,7 +56,7 @@ import org.slf4j.LoggerFactory;
 /** The OutputFormat to use to write data to HCatalog. The key value is ignored and
  *  should be given as null. The value is the HCatRecord to write.*/
 @InterfaceAudience.Public
-@InterfaceStability.Evolving
+@InterfaceStability.Stable
 public class HCatOutputFormat extends HCatBaseOutputFormat {
 
   static final private Logger LOG = LoggerFactory.getLogger(HCatOutputFormat.class);
@@ -111,6 +112,10 @@ public class HCatOutputFormat extends HCatBaseOutputFormat {
 
       if (sd.getSortCols() != null && !sd.getSortCols().isEmpty()) {
         throw new HCatException(ErrorType.ERROR_NOT_SUPPORTED, "Store into a partition with sorted column definition from Pig/Mapreduce is not supported");
+      }
+
+      if (AcidUtils.isAcidTable(table)) {
+        throw new HCatException(ErrorType.ERROR_NOT_SUPPORTED, "Store into an insert-only ACID table from Pig/Mapreduce is not supported");
       }
 
       // Set up a common id hash for this job, so that when we create any temporary directory

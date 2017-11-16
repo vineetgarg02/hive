@@ -94,7 +94,8 @@ STAGE PLANS:
           name: default.nzhang_CTAS1
 
   Stage: Stage-2
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 
 PREHOOK: query: create table nzhang_CTAS1 as select key k, value from src sort by k, value limit 10
 PREHOOK: type: CREATETABLE_AS_SELECT
@@ -133,7 +134,6 @@ POSTHOOK: query: describe formatted nzhang_CTAS1
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@nzhang_ctas1
 # col_name            	data_type           	comment             
-	 	 
 k                   	string              	                    
 value               	string              	                    
 	 	 
@@ -241,7 +241,8 @@ STAGE PLANS:
           name: default.nzhang_ctas2
 
   Stage: Stage-2
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 
 PREHOOK: query: create table nzhang_ctas2 as select * from src sort by key, value limit 10
 PREHOOK: type: CREATETABLE_AS_SELECT
@@ -280,7 +281,6 @@ POSTHOOK: query: describe formatted nzhang_CTAS2
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@nzhang_ctas2
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	                    
 value               	string              	                    
 	 	 
@@ -388,7 +388,8 @@ STAGE PLANS:
           name: default.nzhang_ctas3
 
   Stage: Stage-2
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 
 PREHOOK: query: create table nzhang_ctas3 row format serde "org.apache.hadoop.hive.serde2.columnar.ColumnarSerDe" stored as RCFile as select key/2 half_key, concat(value, "_con") conb  from src sort by half_key, conb limit 10
 PREHOOK: type: CREATETABLE_AS_SELECT
@@ -427,7 +428,6 @@ POSTHOOK: query: describe formatted nzhang_CTAS3
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@nzhang_ctas3
 # col_name            	data_type           	comment             
-	 	 
 half_key            	double              	                    
 conb                	string              	                    
 	 	 
@@ -491,7 +491,6 @@ POSTHOOK: query: describe formatted nzhang_CTAS3
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@nzhang_ctas3
 # col_name            	data_type           	comment             
-	 	 
 half_key            	double              	                    
 conb                	string              	                    
 	 	 
@@ -600,7 +599,8 @@ STAGE PLANS:
           name: default.nzhang_ctas4
 
   Stage: Stage-2
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 
 PREHOOK: query: create table nzhang_ctas4 row format delimited fields terminated by ',' stored as textfile as select key, value from src sort by key, value limit 10
 PREHOOK: type: CREATETABLE_AS_SELECT
@@ -639,7 +639,6 @@ POSTHOOK: query: describe formatted nzhang_CTAS4
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@nzhang_ctas4
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	                    
 value               	string              	                    
 	 	 
@@ -751,7 +750,8 @@ STAGE PLANS:
           name: default.nzhang_ctas5
 
   Stage: Stage-2
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 
 PREHOOK: query: create table nzhang_ctas5 row format delimited fields terminated by ',' lines terminated by '\012' stored as textfile as select key, value from src sort by key, value limit 10
 PREHOOK: type: CREATETABLE_AS_SELECT

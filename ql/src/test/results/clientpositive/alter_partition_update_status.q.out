@@ -22,11 +22,15 @@ PREHOOK: query: ANALYZE TABLE src_stat_part_one PARTITION(partitionId=1) COMPUTE
 PREHOOK: type: QUERY
 PREHOOK: Input: default@src_stat_part_one
 PREHOOK: Input: default@src_stat_part_one@partitionid=1
+PREHOOK: Output: default@src_stat_part_one
+PREHOOK: Output: default@src_stat_part_one@partitionid=1
 #### A masked pattern was here ####
 POSTHOOK: query: ANALYZE TABLE src_stat_part_one PARTITION(partitionId=1) COMPUTE STATISTICS for columns
 POSTHOOK: type: QUERY
 POSTHOOK: Input: default@src_stat_part_one
 POSTHOOK: Input: default@src_stat_part_one@partitionid=1
+POSTHOOK: Output: default@src_stat_part_one
+POSTHOOK: Output: default@src_stat_part_one@partitionid=1
 #### A masked pattern was here ####
 PREHOOK: query: describe formatted src_stat_part_one PARTITION(partitionId=1) key
 PREHOOK: type: DESCTABLE
@@ -34,9 +38,18 @@ PREHOOK: Input: default@src_stat_part_one
 POSTHOOK: query: describe formatted src_stat_part_one PARTITION(partitionId=1) key
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@src_stat_part_one
-# col_name            	data_type           	min                 	max                 	num_nulls           	distinct_count      	avg_col_len         	max_col_len         	num_trues           	num_falses          	comment             	bitVector           
-	 	 	 	 	 	 	 	 	 	 	 
-key                 	string              	                    	                    	0                   	16                  	1.72                	3                   	                    	                    	HL                  	from deserializer   
+col_name            	key                 	 	 	 	 	 	 	 	 	 	 
+data_type           	string              	 	 	 	 	 	 	 	 	 	 
+min                 	                    	 	 	 	 	 	 	 	 	 	 
+max                 	                    	 	 	 	 	 	 	 	 	 	 
+num_nulls           	0                   	 	 	 	 	 	 	 	 	 	 
+distinct_count      	16                  	 	 	 	 	 	 	 	 	 	 
+avg_col_len         	1.72                	 	 	 	 	 	 	 	 	 	 
+max_col_len         	3                   	 	 	 	 	 	 	 	 	 	 
+num_trues           	                    	 	 	 	 	 	 	 	 	 	 
+num_falses          	                    	 	 	 	 	 	 	 	 	 	 
+bitVector           	HL                  	 	 	 	 	 	 	 	 	 	 
+comment             	from deserializer   	 	 	 	 	 	 	 	 	 	 
 PREHOOK: query: ALTER TABLE src_stat_part_one PARTITION(partitionId=1) UPDATE STATISTICS for column key SET ('numDVs'='11','avgColLen'='2.2')
 PREHOOK: type: ALTERTABLE_UPDATEPARTSTATS
 POSTHOOK: query: ALTER TABLE src_stat_part_one PARTITION(partitionId=1) UPDATE STATISTICS for column key SET ('numDVs'='11','avgColLen'='2.2')
@@ -47,9 +60,18 @@ PREHOOK: Input: default@src_stat_part_one
 POSTHOOK: query: describe formatted src_stat_part_one PARTITION(partitionId=1) key
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@src_stat_part_one
-# col_name            	data_type           	min                 	max                 	num_nulls           	distinct_count      	avg_col_len         	max_col_len         	num_trues           	num_falses          	comment             	bitVector           
-	 	 	 	 	 	 	 	 	 	 	 
-key                 	string              	                    	                    	0                   	11                  	2.2                 	3                   	                    	                    	HL                  	from deserializer   
+col_name            	key                 	 	 	 	 	 	 	 	 	 	 
+data_type           	string              	 	 	 	 	 	 	 	 	 	 
+min                 	                    	 	 	 	 	 	 	 	 	 	 
+max                 	                    	 	 	 	 	 	 	 	 	 	 
+num_nulls           	0                   	 	 	 	 	 	 	 	 	 	 
+distinct_count      	11                  	 	 	 	 	 	 	 	 	 	 
+avg_col_len         	2.2                 	 	 	 	 	 	 	 	 	 	 
+max_col_len         	3                   	 	 	 	 	 	 	 	 	 	 
+num_trues           	                    	 	 	 	 	 	 	 	 	 	 
+num_falses          	                    	 	 	 	 	 	 	 	 	 	 
+bitVector           	HL                  	 	 	 	 	 	 	 	 	 	 
+comment             	from deserializer   	 	 	 	 	 	 	 	 	 	 
 PREHOOK: query: create table src_stat_part_two(key string, value string) partitioned by (px int, py string)
 PREHOOK: type: CREATETABLE
 PREHOOK: Output: database:default
@@ -74,11 +96,15 @@ PREHOOK: query: ANALYZE TABLE src_stat_part_two PARTITION(px=1) COMPUTE STATISTI
 PREHOOK: type: QUERY
 PREHOOK: Input: default@src_stat_part_two
 PREHOOK: Input: default@src_stat_part_two@px=1/py=a
+PREHOOK: Output: default@src_stat_part_two
+PREHOOK: Output: default@src_stat_part_two@px=1/py=a
 #### A masked pattern was here ####
 POSTHOOK: query: ANALYZE TABLE src_stat_part_two PARTITION(px=1) COMPUTE STATISTICS for columns
 POSTHOOK: type: QUERY
 POSTHOOK: Input: default@src_stat_part_two
 POSTHOOK: Input: default@src_stat_part_two@px=1/py=a
+POSTHOOK: Output: default@src_stat_part_two
+POSTHOOK: Output: default@src_stat_part_two@px=1/py=a
 #### A masked pattern was here ####
 PREHOOK: query: describe formatted src_stat_part_two PARTITION(px=1, py='a') key
 PREHOOK: type: DESCTABLE
@@ -86,9 +112,18 @@ PREHOOK: Input: default@src_stat_part_two
 POSTHOOK: query: describe formatted src_stat_part_two PARTITION(px=1, py='a') key
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@src_stat_part_two
-# col_name            	data_type           	min                 	max                 	num_nulls           	distinct_count      	avg_col_len         	max_col_len         	num_trues           	num_falses          	comment             	bitVector           
-	 	 	 	 	 	 	 	 	 	 	 
-key                 	string              	                    	                    	0                   	16                  	1.72                	3                   	                    	                    	HL                  	from deserializer   
+col_name            	key                 	 	 	 	 	 	 	 	 	 	 
+data_type           	string              	 	 	 	 	 	 	 	 	 	 
+min                 	                    	 	 	 	 	 	 	 	 	 	 
+max                 	                    	 	 	 	 	 	 	 	 	 	 
+num_nulls           	0                   	 	 	 	 	 	 	 	 	 	 
+distinct_count      	16                  	 	 	 	 	 	 	 	 	 	 
+avg_col_len         	1.72                	 	 	 	 	 	 	 	 	 	 
+max_col_len         	3                   	 	 	 	 	 	 	 	 	 	 
+num_trues           	                    	 	 	 	 	 	 	 	 	 	 
+num_falses          	                    	 	 	 	 	 	 	 	 	 	 
+bitVector           	HL                  	 	 	 	 	 	 	 	 	 	 
+comment             	from deserializer   	 	 	 	 	 	 	 	 	 	 
 PREHOOK: query: ALTER TABLE src_stat_part_two PARTITION(px=1, py='a') UPDATE STATISTICS for column key SET ('numDVs'='30','maxColLen'='40')
 PREHOOK: type: ALTERTABLE_UPDATEPARTSTATS
 POSTHOOK: query: ALTER TABLE src_stat_part_two PARTITION(px=1, py='a') UPDATE STATISTICS for column key SET ('numDVs'='30','maxColLen'='40')
@@ -99,9 +134,18 @@ PREHOOK: Input: default@src_stat_part_two
 POSTHOOK: query: describe formatted src_stat_part_two PARTITION(px=1, py='a') key
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@src_stat_part_two
-# col_name            	data_type           	min                 	max                 	num_nulls           	distinct_count      	avg_col_len         	max_col_len         	num_trues           	num_falses          	comment             	bitVector           
-	 	 	 	 	 	 	 	 	 	 	 
-key                 	string              	                    	                    	0                   	30                  	1.72                	40                  	                    	                    	HL                  	from deserializer   
+col_name            	key                 	 	 	 	 	 	 	 	 	 	 
+data_type           	string              	 	 	 	 	 	 	 	 	 	 
+min                 	                    	 	 	 	 	 	 	 	 	 	 
+max                 	                    	 	 	 	 	 	 	 	 	 	 
+num_nulls           	0                   	 	 	 	 	 	 	 	 	 	 
+distinct_count      	30                  	 	 	 	 	 	 	 	 	 	 
+avg_col_len         	1.72                	 	 	 	 	 	 	 	 	 	 
+max_col_len         	40                  	 	 	 	 	 	 	 	 	 	 
+num_trues           	                    	 	 	 	 	 	 	 	 	 	 
+num_falses          	                    	 	 	 	 	 	 	 	 	 	 
+bitVector           	HL                  	 	 	 	 	 	 	 	 	 	 
+comment             	from deserializer   	 	 	 	 	 	 	 	 	 	 
 PREHOOK: query: create database if not exists dummydb
 PREHOOK: type: CREATEDATABASE
 PREHOOK: Output: database:dummydb
@@ -124,9 +168,18 @@ PREHOOK: Input: default@src_stat_part_two
 POSTHOOK: query: describe formatted default.src_stat_part_two PARTITION(px=1, py='a') key
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@src_stat_part_two
-# col_name            	data_type           	min                 	max                 	num_nulls           	distinct_count      	avg_col_len         	max_col_len         	num_trues           	num_falses          	comment             	bitVector           
-	 	 	 	 	 	 	 	 	 	 	 
-key                 	string              	                    	                    	0                   	40                  	1.72                	50                  	                    	                    	HL                  	from deserializer   
+col_name            	key                 	 	 	 	 	 	 	 	 	 	 
+data_type           	string              	 	 	 	 	 	 	 	 	 	 
+min                 	                    	 	 	 	 	 	 	 	 	 	 
+max                 	                    	 	 	 	 	 	 	 	 	 	 
+num_nulls           	0                   	 	 	 	 	 	 	 	 	 	 
+distinct_count      	40                  	 	 	 	 	 	 	 	 	 	 
+avg_col_len         	1.72                	 	 	 	 	 	 	 	 	 	 
+max_col_len         	50                  	 	 	 	 	 	 	 	 	 	 
+num_trues           	                    	 	 	 	 	 	 	 	 	 	 
+num_falses          	                    	 	 	 	 	 	 	 	 	 	 
+bitVector           	HL                  	 	 	 	 	 	 	 	 	 	 
+comment             	from deserializer   	 	 	 	 	 	 	 	 	 	 
 PREHOOK: query: use default
 PREHOOK: type: SWITCHDATABASE
 PREHOOK: Input: database:default

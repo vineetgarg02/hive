@@ -1059,8 +1059,26 @@ module ThriftHiveMetastore
     def recv_get_partition_names()
       result = receive_message(Get_partition_names_result)
       return result.success unless result.success.nil?
+      raise result.o1 unless result.o1.nil?
       raise result.o2 unless result.o2.nil?
       raise ::Thrift::ApplicationException.new(::Thrift::ApplicationException::MISSING_RESULT, 'get_partition_names failed: unknown result')
+    end
+
+    def get_partition_values(request)
+      send_get_partition_values(request)
+      return recv_get_partition_values()
+    end
+
+    def send_get_partition_values(request)
+      send_message('get_partition_values', Get_partition_values_args, :request => request)
+    end
+
+    def recv_get_partition_values()
+      result = receive_message(Get_partition_values_result)
+      return result.success unless result.success.nil?
+      raise result.o1 unless result.o1.nil?
+      raise result.o2 unless result.o2.nil?
+      raise ::Thrift::ApplicationException.new(::Thrift::ApplicationException::MISSING_RESULT, 'get_partition_values failed: unknown result')
     end
 
     def get_partitions_ps(db_name, tbl_name, part_vals, max_parts)
@@ -2675,6 +2693,198 @@ module ThriftHiveMetastore
       raise ::Thrift::ApplicationException.new(::Thrift::ApplicationException::MISSING_RESULT, 'get_metastore_db_uuid failed: unknown result')
     end
 
+    def create_resource_plan(request)
+      send_create_resource_plan(request)
+      return recv_create_resource_plan()
+    end
+
+    def send_create_resource_plan(request)
+      send_message('create_resource_plan', Create_resource_plan_args, :request => request)
+    end
+
+    def recv_create_resource_plan()
+      result = receive_message(Create_resource_plan_result)
+      return result.success unless result.success.nil?
+      raise result.o1 unless result.o1.nil?
+      raise result.o2 unless result.o2.nil?
+      raise result.o3 unless result.o3.nil?
+      raise ::Thrift::ApplicationException.new(::Thrift::ApplicationException::MISSING_RESULT, 'create_resource_plan failed: unknown result')
+    end
+
+    def get_resource_plan(request)
+      send_get_resource_plan(request)
+      return recv_get_resource_plan()
+    end
+
+    def send_get_resource_plan(request)
+      send_message('get_resource_plan', Get_resource_plan_args, :request => request)
+    end
+
+    def recv_get_resource_plan()
+      result = receive_message(Get_resource_plan_result)
+      return result.success unless result.success.nil?
+      raise result.o1 unless result.o1.nil?
+      raise result.o2 unless result.o2.nil?
+      raise ::Thrift::ApplicationException.new(::Thrift::ApplicationException::MISSING_RESULT, 'get_resource_plan failed: unknown result')
+    end
+
+    def get_active_resource_plan(request)
+      send_get_active_resource_plan(request)
+      return recv_get_active_resource_plan()
+    end
+
+    def send_get_active_resource_plan(request)
+      send_message('get_active_resource_plan', Get_active_resource_plan_args, :request => request)
+    end
+
+    def recv_get_active_resource_plan()
+      result = receive_message(Get_active_resource_plan_result)
+      return result.success unless result.success.nil?
+      raise result.o2 unless result.o2.nil?
+      raise ::Thrift::ApplicationException.new(::Thrift::ApplicationException::MISSING_RESULT, 'get_active_resource_plan failed: unknown result')
+    end
+
+    def get_all_resource_plans(request)
+      send_get_all_resource_plans(request)
+      return recv_get_all_resource_plans()
+    end
+
+    def send_get_all_resource_plans(request)
+      send_message('get_all_resource_plans', Get_all_resource_plans_args, :request => request)
+    end
+
+    def recv_get_all_resource_plans()
+      result = receive_message(Get_all_resource_plans_result)
+      return result.success unless result.success.nil?
+      raise result.o1 unless result.o1.nil?
+      raise ::Thrift::ApplicationException.new(::Thrift::ApplicationException::MISSING_RESULT, 'get_all_resource_plans failed: unknown result')
+    end
+
+    def alter_resource_plan(request)
+      send_alter_resource_plan(request)
+      return recv_alter_resource_plan()
+    end
+
+    def send_alter_resource_plan(request)
+      send_message('alter_resource_plan', Alter_resource_plan_args, :request => request)
+    end
+
+    def recv_alter_resource_plan()
+      result = receive_message(Alter_resource_plan_result)
+      return result.success unless result.success.nil?
+      raise result.o1 unless result.o1.nil?
+      raise result.o2 unless result.o2.nil?
+      raise result.o3 unless result.o3.nil?
+      raise ::Thrift::ApplicationException.new(::Thrift::ApplicationException::MISSING_RESULT, 'alter_resource_plan failed: unknown result')
+    end
+
+    def validate_resource_plan(request)
+      send_validate_resource_plan(request)
+      return recv_validate_resource_plan()
+    end
+
+    def send_validate_resource_plan(request)
+      send_message('validate_resource_plan', Validate_resource_plan_args, :request => request)
+    end
+
+    def recv_validate_resource_plan()
+      result = receive_message(Validate_resource_plan_result)
+      return result.success unless result.success.nil?
+      raise result.o1 unless result.o1.nil?
+      raise result.o2 unless result.o2.nil?
+      raise ::Thrift::ApplicationException.new(::Thrift::ApplicationException::MISSING_RESULT, 'validate_resource_plan failed: unknown result')
+    end
+
+    def drop_resource_plan(request)
+      send_drop_resource_plan(request)
+      return recv_drop_resource_plan()
+    end
+
+    def send_drop_resource_plan(request)
+      send_message('drop_resource_plan', Drop_resource_plan_args, :request => request)
+    end
+
+    def recv_drop_resource_plan()
+      result = receive_message(Drop_resource_plan_result)
+      return result.success unless result.success.nil?
+      raise result.o1 unless result.o1.nil?
+      raise result.o2 unless result.o2.nil?
+      raise result.o3 unless result.o3.nil?
+      raise ::Thrift::ApplicationException.new(::Thrift::ApplicationException::MISSING_RESULT, 'drop_resource_plan failed: unknown result')
+    end
+
+    def create_wm_trigger(request)
+      send_create_wm_trigger(request)
+      return recv_create_wm_trigger()
+    end
+
+    def send_create_wm_trigger(request)
+      send_message('create_wm_trigger', Create_wm_trigger_args, :request => request)
+    end
+
+    def recv_create_wm_trigger()
+      result = receive_message(Create_wm_trigger_result)
+      return result.success unless result.success.nil?
+      raise result.o1 unless result.o1.nil?
+      raise result.o2 unless result.o2.nil?
+      raise result.o3 unless result.o3.nil?
+      raise result.o4 unless result.o4.nil?
+      raise ::Thrift::ApplicationException.new(::Thrift::ApplicationException::MISSING_RESULT, 'create_wm_trigger failed: unknown result')
+    end
+
+    def alter_wm_trigger(request)
+      send_alter_wm_trigger(request)
+      return recv_alter_wm_trigger()
+    end
+
+    def send_alter_wm_trigger(request)
+      send_message('alter_wm_trigger', Alter_wm_trigger_args, :request => request)
+    end
+
+    def recv_alter_wm_trigger()
+      result = receive_message(Alter_wm_trigger_result)
+      return result.success unless result.success.nil?
+      raise result.o1 unless result.o1.nil?
+      raise result.o2 unless result.o2.nil?
+      raise result.o3 unless result.o3.nil?
+      raise ::Thrift::ApplicationException.new(::Thrift::ApplicationException::MISSING_RESULT, 'alter_wm_trigger failed: unknown result')
+    end
+
+    def drop_wm_trigger(request)
+      send_drop_wm_trigger(request)
+      return recv_drop_wm_trigger()
+    end
+
+    def send_drop_wm_trigger(request)
+      send_message('drop_wm_trigger', Drop_wm_trigger_args, :request => request)
+    end
+
+    def recv_drop_wm_trigger()
+      result = receive_message(Drop_wm_trigger_result)
+      return result.success unless result.success.nil?
+      raise result.o1 unless result.o1.nil?
+      raise result.o2 unless result.o2.nil?
+      raise result.o3 unless result.o3.nil?
+      raise ::Thrift::ApplicationException.new(::Thrift::ApplicationException::MISSING_RESULT, 'drop_wm_trigger failed: unknown result')
+    end
+
+    def get_triggers_for_resourceplan(request)
+      send_get_triggers_for_resourceplan(request)
+      return recv_get_triggers_for_resourceplan()
+    end
+
+    def send_get_triggers_for_resourceplan(request)
+      send_message('get_triggers_for_resourceplan', Get_triggers_for_resourceplan_args, :request => request)
+    end
+
+    def recv_get_triggers_for_resourceplan()
+      result = receive_message(Get_triggers_for_resourceplan_result)
+      return result.success unless result.success.nil?
+      raise result.o1 unless result.o1.nil?
+      raise result.o2 unless result.o2.nil?
+      raise ::Thrift::ApplicationException.new(::Thrift::ApplicationException::MISSING_RESULT, 'get_triggers_for_resourceplan failed: unknown result')
+    end
+
   end
 
   class Processor < ::FacebookService::Processor 
@@ -3508,10 +3718,25 @@ module ThriftHiveMetastore
       result = Get_partition_names_result.new()
       begin
         result.success = @handler.get_partition_names(args.db_name, args.tbl_name, args.max_parts)
+      rescue ::NoSuchObjectException => o1
+        result.o1 = o1
       rescue ::MetaException => o2
         result.o2 = o2
       end
       write_result(result, oprot, 'get_partition_names', seqid)
+    end
+
+    def process_get_partition_values(seqid, iprot, oprot)
+      args = read_args(iprot, Get_partition_values_args)
+      result = Get_partition_values_result.new()
+      begin
+        result.success = @handler.get_partition_values(args.request)
+      rescue ::MetaException => o1
+        result.o1 = o1
+      rescue ::NoSuchObjectException => o2
+        result.o2 = o2
+      end
+      write_result(result, oprot, 'get_partition_values', seqid)
     end
 
     def process_get_partitions_ps(seqid, iprot, oprot)
@@ -4649,6 +4874,159 @@ module ThriftHiveMetastore
         result.o1 = o1
       end
       write_result(result, oprot, 'get_metastore_db_uuid', seqid)
+    end
+
+    def process_create_resource_plan(seqid, iprot, oprot)
+      args = read_args(iprot, Create_resource_plan_args)
+      result = Create_resource_plan_result.new()
+      begin
+        result.success = @handler.create_resource_plan(args.request)
+      rescue ::AlreadyExistsException => o1
+        result.o1 = o1
+      rescue ::InvalidObjectException => o2
+        result.o2 = o2
+      rescue ::MetaException => o3
+        result.o3 = o3
+      end
+      write_result(result, oprot, 'create_resource_plan', seqid)
+    end
+
+    def process_get_resource_plan(seqid, iprot, oprot)
+      args = read_args(iprot, Get_resource_plan_args)
+      result = Get_resource_plan_result.new()
+      begin
+        result.success = @handler.get_resource_plan(args.request)
+      rescue ::NoSuchObjectException => o1
+        result.o1 = o1
+      rescue ::MetaException => o2
+        result.o2 = o2
+      end
+      write_result(result, oprot, 'get_resource_plan', seqid)
+    end
+
+    def process_get_active_resource_plan(seqid, iprot, oprot)
+      args = read_args(iprot, Get_active_resource_plan_args)
+      result = Get_active_resource_plan_result.new()
+      begin
+        result.success = @handler.get_active_resource_plan(args.request)
+      rescue ::MetaException => o2
+        result.o2 = o2
+      end
+      write_result(result, oprot, 'get_active_resource_plan', seqid)
+    end
+
+    def process_get_all_resource_plans(seqid, iprot, oprot)
+      args = read_args(iprot, Get_all_resource_plans_args)
+      result = Get_all_resource_plans_result.new()
+      begin
+        result.success = @handler.get_all_resource_plans(args.request)
+      rescue ::MetaException => o1
+        result.o1 = o1
+      end
+      write_result(result, oprot, 'get_all_resource_plans', seqid)
+    end
+
+    def process_alter_resource_plan(seqid, iprot, oprot)
+      args = read_args(iprot, Alter_resource_plan_args)
+      result = Alter_resource_plan_result.new()
+      begin
+        result.success = @handler.alter_resource_plan(args.request)
+      rescue ::NoSuchObjectException => o1
+        result.o1 = o1
+      rescue ::InvalidOperationException => o2
+        result.o2 = o2
+      rescue ::MetaException => o3
+        result.o3 = o3
+      end
+      write_result(result, oprot, 'alter_resource_plan', seqid)
+    end
+
+    def process_validate_resource_plan(seqid, iprot, oprot)
+      args = read_args(iprot, Validate_resource_plan_args)
+      result = Validate_resource_plan_result.new()
+      begin
+        result.success = @handler.validate_resource_plan(args.request)
+      rescue ::NoSuchObjectException => o1
+        result.o1 = o1
+      rescue ::MetaException => o2
+        result.o2 = o2
+      end
+      write_result(result, oprot, 'validate_resource_plan', seqid)
+    end
+
+    def process_drop_resource_plan(seqid, iprot, oprot)
+      args = read_args(iprot, Drop_resource_plan_args)
+      result = Drop_resource_plan_result.new()
+      begin
+        result.success = @handler.drop_resource_plan(args.request)
+      rescue ::NoSuchObjectException => o1
+        result.o1 = o1
+      rescue ::InvalidOperationException => o2
+        result.o2 = o2
+      rescue ::MetaException => o3
+        result.o3 = o3
+      end
+      write_result(result, oprot, 'drop_resource_plan', seqid)
+    end
+
+    def process_create_wm_trigger(seqid, iprot, oprot)
+      args = read_args(iprot, Create_wm_trigger_args)
+      result = Create_wm_trigger_result.new()
+      begin
+        result.success = @handler.create_wm_trigger(args.request)
+      rescue ::AlreadyExistsException => o1
+        result.o1 = o1
+      rescue ::NoSuchObjectException => o2
+        result.o2 = o2
+      rescue ::InvalidObjectException => o3
+        result.o3 = o3
+      rescue ::MetaException => o4
+        result.o4 = o4
+      end
+      write_result(result, oprot, 'create_wm_trigger', seqid)
+    end
+
+    def process_alter_wm_trigger(seqid, iprot, oprot)
+      args = read_args(iprot, Alter_wm_trigger_args)
+      result = Alter_wm_trigger_result.new()
+      begin
+        result.success = @handler.alter_wm_trigger(args.request)
+      rescue ::NoSuchObjectException => o1
+        result.o1 = o1
+      rescue ::InvalidObjectException => o2
+        result.o2 = o2
+      rescue ::MetaException => o3
+        result.o3 = o3
+      end
+      write_result(result, oprot, 'alter_wm_trigger', seqid)
+    end
+
+    def process_drop_wm_trigger(seqid, iprot, oprot)
+      args = read_args(iprot, Drop_wm_trigger_args)
+      result = Drop_wm_trigger_result.new()
+      begin
+        result.success = @handler.drop_wm_trigger(args.request)
+      rescue ::NoSuchObjectException => o1
+        result.o1 = o1
+      rescue ::InvalidOperationException => o2
+        result.o2 = o2
+      rescue ::MetaException => o3
+        result.o3 = o3
+      end
+      write_result(result, oprot, 'drop_wm_trigger', seqid)
+    end
+
+    def process_get_triggers_for_resourceplan(seqid, iprot, oprot)
+      args = read_args(iprot, Get_triggers_for_resourceplan_args)
+      result = Get_triggers_for_resourceplan_result.new()
+      begin
+        result.success = @handler.get_triggers_for_resourceplan(args.request)
+      rescue ::NoSuchObjectException => o1
+        result.o1 = o1
+      rescue ::MetaException => o2
+        result.o2 = o2
+      end
+      write_result(result, oprot, 'get_triggers_for_resourceplan', seqid)
     end
 
   end
@@ -7045,11 +7423,49 @@ module ThriftHiveMetastore
   class Get_partition_names_result
     include ::Thrift::Struct, ::Thrift::Struct_Union
     SUCCESS = 0
-    O2 = 1
+    O1 = 1
+    O2 = 2
 
     FIELDS = {
       SUCCESS => {:type => ::Thrift::Types::LIST, :name => 'success', :element => {:type => ::Thrift::Types::STRING}},
+      O1 => {:type => ::Thrift::Types::STRUCT, :name => 'o1', :class => ::NoSuchObjectException},
       O2 => {:type => ::Thrift::Types::STRUCT, :name => 'o2', :class => ::MetaException}
+    }
+
+    def struct_fields; FIELDS; end
+
+    def validate
+    end
+
+    ::Thrift::Struct.generate_accessors self
+  end
+
+  class Get_partition_values_args
+    include ::Thrift::Struct, ::Thrift::Struct_Union
+    REQUEST = 1
+
+    FIELDS = {
+      REQUEST => {:type => ::Thrift::Types::STRUCT, :name => 'request', :class => ::PartitionValuesRequest}
+    }
+
+    def struct_fields; FIELDS; end
+
+    def validate
+    end
+
+    ::Thrift::Struct.generate_accessors self
+  end
+
+  class Get_partition_values_result
+    include ::Thrift::Struct, ::Thrift::Struct_Union
+    SUCCESS = 0
+    O1 = 1
+    O2 = 2
+
+    FIELDS = {
+      SUCCESS => {:type => ::Thrift::Types::STRUCT, :name => 'success', :class => ::PartitionValuesResponse},
+      O1 => {:type => ::Thrift::Types::STRUCT, :name => 'o1', :class => ::MetaException},
+      O2 => {:type => ::Thrift::Types::STRUCT, :name => 'o2', :class => ::NoSuchObjectException}
     }
 
     def struct_fields; FIELDS; end
@@ -10658,6 +11074,412 @@ module ThriftHiveMetastore
     FIELDS = {
       SUCCESS => {:type => ::Thrift::Types::STRING, :name => 'success'},
       O1 => {:type => ::Thrift::Types::STRUCT, :name => 'o1', :class => ::MetaException}
+    }
+
+    def struct_fields; FIELDS; end
+
+    def validate
+    end
+
+    ::Thrift::Struct.generate_accessors self
+  end
+
+  class Create_resource_plan_args
+    include ::Thrift::Struct, ::Thrift::Struct_Union
+    REQUEST = 1
+
+    FIELDS = {
+      REQUEST => {:type => ::Thrift::Types::STRUCT, :name => 'request', :class => ::WMCreateResourcePlanRequest}
+    }
+
+    def struct_fields; FIELDS; end
+
+    def validate
+    end
+
+    ::Thrift::Struct.generate_accessors self
+  end
+
+  class Create_resource_plan_result
+    include ::Thrift::Struct, ::Thrift::Struct_Union
+    SUCCESS = 0
+    O1 = 1
+    O2 = 2
+    O3 = 3
+
+    FIELDS = {
+      SUCCESS => {:type => ::Thrift::Types::STRUCT, :name => 'success', :class => ::WMCreateResourcePlanResponse},
+      O1 => {:type => ::Thrift::Types::STRUCT, :name => 'o1', :class => ::AlreadyExistsException},
+      O2 => {:type => ::Thrift::Types::STRUCT, :name => 'o2', :class => ::InvalidObjectException},
+      O3 => {:type => ::Thrift::Types::STRUCT, :name => 'o3', :class => ::MetaException}
+    }
+
+    def struct_fields; FIELDS; end
+
+    def validate
+    end
+
+    ::Thrift::Struct.generate_accessors self
+  end
+
+  class Get_resource_plan_args
+    include ::Thrift::Struct, ::Thrift::Struct_Union
+    REQUEST = 1
+
+    FIELDS = {
+      REQUEST => {:type => ::Thrift::Types::STRUCT, :name => 'request', :class => ::WMGetResourcePlanRequest}
+    }
+
+    def struct_fields; FIELDS; end
+
+    def validate
+    end
+
+    ::Thrift::Struct.generate_accessors self
+  end
+
+  class Get_resource_plan_result
+    include ::Thrift::Struct, ::Thrift::Struct_Union
+    SUCCESS = 0
+    O1 = 1
+    O2 = 2
+
+    FIELDS = {
+      SUCCESS => {:type => ::Thrift::Types::STRUCT, :name => 'success', :class => ::WMGetResourcePlanResponse},
+      O1 => {:type => ::Thrift::Types::STRUCT, :name => 'o1', :class => ::NoSuchObjectException},
+      O2 => {:type => ::Thrift::Types::STRUCT, :name => 'o2', :class => ::MetaException}
+    }
+
+    def struct_fields; FIELDS; end
+
+    def validate
+    end
+
+    ::Thrift::Struct.generate_accessors self
+  end
+
+  class Get_active_resource_plan_args
+    include ::Thrift::Struct, ::Thrift::Struct_Union
+    REQUEST = 1
+
+    FIELDS = {
+      REQUEST => {:type => ::Thrift::Types::STRUCT, :name => 'request', :class => ::WMGetActiveResourcePlanRequest}
+    }
+
+    def struct_fields; FIELDS; end
+
+    def validate
+    end
+
+    ::Thrift::Struct.generate_accessors self
+  end
+
+  class Get_active_resource_plan_result
+    include ::Thrift::Struct, ::Thrift::Struct_Union
+    SUCCESS = 0
+    O2 = 1
+
+    FIELDS = {
+      SUCCESS => {:type => ::Thrift::Types::STRUCT, :name => 'success', :class => ::WMGetActiveResourcePlanResponse},
+      O2 => {:type => ::Thrift::Types::STRUCT, :name => 'o2', :class => ::MetaException}
+    }
+
+    def struct_fields; FIELDS; end
+
+    def validate
+    end
+
+    ::Thrift::Struct.generate_accessors self
+  end
+
+  class Get_all_resource_plans_args
+    include ::Thrift::Struct, ::Thrift::Struct_Union
+    REQUEST = 1
+
+    FIELDS = {
+      REQUEST => {:type => ::Thrift::Types::STRUCT, :name => 'request', :class => ::WMGetAllResourcePlanRequest}
+    }
+
+    def struct_fields; FIELDS; end
+
+    def validate
+    end
+
+    ::Thrift::Struct.generate_accessors self
+  end
+
+  class Get_all_resource_plans_result
+    include ::Thrift::Struct, ::Thrift::Struct_Union
+    SUCCESS = 0
+    O1 = 1
+
+    FIELDS = {
+      SUCCESS => {:type => ::Thrift::Types::STRUCT, :name => 'success', :class => ::WMGetAllResourcePlanResponse},
+      O1 => {:type => ::Thrift::Types::STRUCT, :name => 'o1', :class => ::MetaException}
+    }
+
+    def struct_fields; FIELDS; end
+
+    def validate
+    end
+
+    ::Thrift::Struct.generate_accessors self
+  end
+
+  class Alter_resource_plan_args
+    include ::Thrift::Struct, ::Thrift::Struct_Union
+    REQUEST = 1
+
+    FIELDS = {
+      REQUEST => {:type => ::Thrift::Types::STRUCT, :name => 'request', :class => ::WMAlterResourcePlanRequest}
+    }
+
+    def struct_fields; FIELDS; end
+
+    def validate
+    end
+
+    ::Thrift::Struct.generate_accessors self
+  end
+
+  class Alter_resource_plan_result
+    include ::Thrift::Struct, ::Thrift::Struct_Union
+    SUCCESS = 0
+    O1 = 1
+    O2 = 2
+    O3 = 3
+
+    FIELDS = {
+      SUCCESS => {:type => ::Thrift::Types::STRUCT, :name => 'success', :class => ::WMAlterResourcePlanResponse},
+      O1 => {:type => ::Thrift::Types::STRUCT, :name => 'o1', :class => ::NoSuchObjectException},
+      O2 => {:type => ::Thrift::Types::STRUCT, :name => 'o2', :class => ::InvalidOperationException},
+      O3 => {:type => ::Thrift::Types::STRUCT, :name => 'o3', :class => ::MetaException}
+    }
+
+    def struct_fields; FIELDS; end
+
+    def validate
+    end
+
+    ::Thrift::Struct.generate_accessors self
+  end
+
+  class Validate_resource_plan_args
+    include ::Thrift::Struct, ::Thrift::Struct_Union
+    REQUEST = 1
+
+    FIELDS = {
+      REQUEST => {:type => ::Thrift::Types::STRUCT, :name => 'request', :class => ::WMValidateResourcePlanRequest}
+    }
+
+    def struct_fields; FIELDS; end
+
+    def validate
+    end
+
+    ::Thrift::Struct.generate_accessors self
+  end
+
+  class Validate_resource_plan_result
+    include ::Thrift::Struct, ::Thrift::Struct_Union
+    SUCCESS = 0
+    O1 = 1
+    O2 = 2
+
+    FIELDS = {
+      SUCCESS => {:type => ::Thrift::Types::STRUCT, :name => 'success', :class => ::WMValidateResourcePlanResponse},
+      O1 => {:type => ::Thrift::Types::STRUCT, :name => 'o1', :class => ::NoSuchObjectException},
+      O2 => {:type => ::Thrift::Types::STRUCT, :name => 'o2', :class => ::MetaException}
+    }
+
+    def struct_fields; FIELDS; end
+
+    def validate
+    end
+
+    ::Thrift::Struct.generate_accessors self
+  end
+
+  class Drop_resource_plan_args
+    include ::Thrift::Struct, ::Thrift::Struct_Union
+    REQUEST = 1
+
+    FIELDS = {
+      REQUEST => {:type => ::Thrift::Types::STRUCT, :name => 'request', :class => ::WMDropResourcePlanRequest}
+    }
+
+    def struct_fields; FIELDS; end
+
+    def validate
+    end
+
+    ::Thrift::Struct.generate_accessors self
+  end
+
+  class Drop_resource_plan_result
+    include ::Thrift::Struct, ::Thrift::Struct_Union
+    SUCCESS = 0
+    O1 = 1
+    O2 = 2
+    O3 = 3
+
+    FIELDS = {
+      SUCCESS => {:type => ::Thrift::Types::STRUCT, :name => 'success', :class => ::WMDropResourcePlanResponse},
+      O1 => {:type => ::Thrift::Types::STRUCT, :name => 'o1', :class => ::NoSuchObjectException},
+      O2 => {:type => ::Thrift::Types::STRUCT, :name => 'o2', :class => ::InvalidOperationException},
+      O3 => {:type => ::Thrift::Types::STRUCT, :name => 'o3', :class => ::MetaException}
+    }
+
+    def struct_fields; FIELDS; end
+
+    def validate
+    end
+
+    ::Thrift::Struct.generate_accessors self
+  end
+
+  class Create_wm_trigger_args
+    include ::Thrift::Struct, ::Thrift::Struct_Union
+    REQUEST = 1
+
+    FIELDS = {
+      REQUEST => {:type => ::Thrift::Types::STRUCT, :name => 'request', :class => ::WMCreateTriggerRequest}
+    }
+
+    def struct_fields; FIELDS; end
+
+    def validate
+    end
+
+    ::Thrift::Struct.generate_accessors self
+  end
+
+  class Create_wm_trigger_result
+    include ::Thrift::Struct, ::Thrift::Struct_Union
+    SUCCESS = 0
+    O1 = 1
+    O2 = 2
+    O3 = 3
+    O4 = 4
+
+    FIELDS = {
+      SUCCESS => {:type => ::Thrift::Types::STRUCT, :name => 'success', :class => ::WMCreateTriggerResponse},
+      O1 => {:type => ::Thrift::Types::STRUCT, :name => 'o1', :class => ::AlreadyExistsException},
+      O2 => {:type => ::Thrift::Types::STRUCT, :name => 'o2', :class => ::NoSuchObjectException},
+      O3 => {:type => ::Thrift::Types::STRUCT, :name => 'o3', :class => ::InvalidObjectException},
+      O4 => {:type => ::Thrift::Types::STRUCT, :name => 'o4', :class => ::MetaException}
+    }
+
+    def struct_fields; FIELDS; end
+
+    def validate
+    end
+
+    ::Thrift::Struct.generate_accessors self
+  end
+
+  class Alter_wm_trigger_args
+    include ::Thrift::Struct, ::Thrift::Struct_Union
+    REQUEST = 1
+
+    FIELDS = {
+      REQUEST => {:type => ::Thrift::Types::STRUCT, :name => 'request', :class => ::WMAlterTriggerRequest}
+    }
+
+    def struct_fields; FIELDS; end
+
+    def validate
+    end
+
+    ::Thrift::Struct.generate_accessors self
+  end
+
+  class Alter_wm_trigger_result
+    include ::Thrift::Struct, ::Thrift::Struct_Union
+    SUCCESS = 0
+    O1 = 1
+    O2 = 2
+    O3 = 3
+
+    FIELDS = {
+      SUCCESS => {:type => ::Thrift::Types::STRUCT, :name => 'success', :class => ::WMAlterTriggerResponse},
+      O1 => {:type => ::Thrift::Types::STRUCT, :name => 'o1', :class => ::NoSuchObjectException},
+      O2 => {:type => ::Thrift::Types::STRUCT, :name => 'o2', :class => ::InvalidObjectException},
+      O3 => {:type => ::Thrift::Types::STRUCT, :name => 'o3', :class => ::MetaException}
+    }
+
+    def struct_fields; FIELDS; end
+
+    def validate
+    end
+
+    ::Thrift::Struct.generate_accessors self
+  end
+
+  class Drop_wm_trigger_args
+    include ::Thrift::Struct, ::Thrift::Struct_Union
+    REQUEST = 1
+
+    FIELDS = {
+      REQUEST => {:type => ::Thrift::Types::STRUCT, :name => 'request', :class => ::WMDropTriggerRequest}
+    }
+
+    def struct_fields; FIELDS; end
+
+    def validate
+    end
+
+    ::Thrift::Struct.generate_accessors self
+  end
+
+  class Drop_wm_trigger_result
+    include ::Thrift::Struct, ::Thrift::Struct_Union
+    SUCCESS = 0
+    O1 = 1
+    O2 = 2
+    O3 = 3
+
+    FIELDS = {
+      SUCCESS => {:type => ::Thrift::Types::STRUCT, :name => 'success', :class => ::WMDropTriggerResponse},
+      O1 => {:type => ::Thrift::Types::STRUCT, :name => 'o1', :class => ::NoSuchObjectException},
+      O2 => {:type => ::Thrift::Types::STRUCT, :name => 'o2', :class => ::InvalidOperationException},
+      O3 => {:type => ::Thrift::Types::STRUCT, :name => 'o3', :class => ::MetaException}
+    }
+
+    def struct_fields; FIELDS; end
+
+    def validate
+    end
+
+    ::Thrift::Struct.generate_accessors self
+  end
+
+  class Get_triggers_for_resourceplan_args
+    include ::Thrift::Struct, ::Thrift::Struct_Union
+    REQUEST = 1
+
+    FIELDS = {
+      REQUEST => {:type => ::Thrift::Types::STRUCT, :name => 'request', :class => ::WMGetTriggersForResourePlanRequest}
+    }
+
+    def struct_fields; FIELDS; end
+
+    def validate
+    end
+
+    ::Thrift::Struct.generate_accessors self
+  end
+
+  class Get_triggers_for_resourceplan_result
+    include ::Thrift::Struct, ::Thrift::Struct_Union
+    SUCCESS = 0
+    O1 = 1
+    O2 = 2
+
+    FIELDS = {
+      SUCCESS => {:type => ::Thrift::Types::STRUCT, :name => 'success', :class => ::WMGetTriggersForResourePlanResponse},
+      O1 => {:type => ::Thrift::Types::STRUCT, :name => 'o1', :class => ::NoSuchObjectException},
+      O2 => {:type => ::Thrift::Types::STRUCT, :name => 'o2', :class => ::MetaException}
     }
 
     def struct_fields; FIELDS; end

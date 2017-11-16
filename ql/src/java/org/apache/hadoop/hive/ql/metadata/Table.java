@@ -41,6 +41,7 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.TableType;
+import org.apache.hadoop.hive.metastore.Warehouse;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.metastore.api.Order;
@@ -211,12 +212,9 @@ public class Table implements Serializable {
       }
     }
 
-    if (isView()) {
+    if (isView() || isMaterializedView()) {
       assert (getViewOriginalText() != null);
       assert (getViewExpandedText() != null);
-    } else if (isMaterializedView()) {
-      assert(getViewOriginalText() != null);
-      assert(getViewExpandedText() == null);
     } else {
       assert(getViewOriginalText() == null);
       assert(getViewExpandedText() == null);
@@ -912,6 +910,10 @@ public class Table implements Serializable {
       != null;
   }
 
+  public String getFullyQualifiedName() {
+    return Warehouse.getQualifiedName(tTable);
+  }
+
   /**
    * @return include the db name
    */
@@ -970,6 +972,7 @@ public class Table implements Serializable {
   public static boolean shouldStoreFieldsInMetastore(
       HiveConf conf, String serdeLib, Map<String, String> tableParams) {
     if (hasMetastoreBasedSchema(conf, serdeLib))  return true;
+    if (HiveConf.getBoolVar(conf, ConfVars.HIVE_LEGACY_SCHEMA_FOR_ALL_SERDES)) return true;
     // Table may or may not be using metastore. Only the SerDe can tell us.
     AbstractSerDe deserializer = null;
     try {
@@ -1026,5 +1029,4 @@ public class Table implements Serializable {
   public boolean hasDeserializer() {
     return deserializer != null;
   }
-
 };

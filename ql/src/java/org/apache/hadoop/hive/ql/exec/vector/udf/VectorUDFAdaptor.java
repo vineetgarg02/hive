@@ -31,9 +31,11 @@ import org.apache.hadoop.hive.ql.exec.vector.expressions.StringExpr;
 import org.apache.hadoop.hive.ql.exec.vector.expressions.VectorExpression;
 import org.apache.hadoop.hive.ql.exec.vector.expressions.VectorExpressionWriter;
 import org.apache.hadoop.hive.ql.exec.vector.expressions.VectorExpressionWriterFactory;
+import org.apache.hadoop.hive.ql.exec.vector.expressions.IfExprConditionalFilter;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.plan.ExprNodeGenericFuncDesc;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDF;
+import org.apache.hadoop.hive.ql.udf.generic.GenericUDFIf;
 import org.apache.hadoop.hive.serde2.io.DateWritable;
 import org.apache.hadoop.hive.serde2.io.HiveCharWritable;
 import org.apache.hadoop.hive.serde2.io.HiveVarcharWritable;
@@ -57,10 +59,10 @@ public class VectorUDFAdaptor extends VectorExpression {
 
   private static final long serialVersionUID = 1L;
 
-  private int outputColumn;
   private String resultType;
   private VectorUDFArgDesc[] argDescs;
   private ExprNodeGenericFuncDesc expr;
+  private IfExprConditionalFilter cf;
 
   private transient GenericUDF genericUDF;
   private transient GenericUDF.DeferredObject[] deferredChildren;
@@ -75,13 +77,12 @@ public class VectorUDFAdaptor extends VectorExpression {
 
   public VectorUDFAdaptor (
       ExprNodeGenericFuncDesc expr,
-      int outputColumn,
+      int outputColumnNum,
       String resultType,
       VectorUDFArgDesc[] argDescs) throws HiveException {
 
-    this();
+    super(outputColumnNum);
     this.expr = expr;
-    this.outputColumn = outputColumn;
     this.resultType = resultType;
     this.argDescs = argDescs;
   }
@@ -101,9 +102,16 @@ public class VectorUDFAdaptor extends VectorExpression {
     }
     outputTypeInfo = expr.getTypeInfo();
     outputVectorAssignRow = new VectorAssignRow();
-    outputVectorAssignRow.init(outputTypeInfo, outputColumn);
+    outputVectorAssignRow.init(outputTypeInfo, outputColumnNum);
 
     genericUDF.initialize(childrenOIs);
+    if((GenericUDFIf.class.getName()).equals(genericUDF.getUdfName())){
+
+      // UNDONE: This kind of work should be done in VectorizationContext.
+      cf = new IfExprConditionalFilter
+        (argDescs[0].getColumnNum(), argDescs[1].getColumnNum(),
+          argDescs[2].getColumnNum(), outputColumnNum);
+    }
 
     // Initialize constant arguments
     for (int i = 0; i < argDescs.length; i++) {
@@ -125,12 +133,16 @@ public class VectorUDFAdaptor extends VectorExpression {
     }
 
     if (childExpressions != null) {
-      super.evaluateChildren(batch);
+      if ((GenericUDFIf.class.getName()).equals(genericUDF.getUdfName()) && cf != null) {
+        cf.evaluateIfConditionalExpr(batch, childExpressions);
+      } else {
+        super.evaluateChildren(batch);
+      }
     }
 
     int[] sel = batch.selected;
     int n = batch.size;
-    ColumnVector outV = batch.cols[outputColumn];
+    ColumnVector outV = batch.cols[outputColumnNum];
 
     // If the output column is of type string, initialize the buffer to receive data.
     if (outV instanceof BytesColumnVector) {
@@ -142,17 +154,17 @@ public class VectorUDFAdaptor extends VectorExpression {
       return;
     }
 
-    batch.cols[outputColumn].noNulls = true;
+    batch.cols[outputColumnNum].noNulls = true;
 
     /* If all input columns are repeating, just evaluate function
      * for row 0 in the batch and set output repeating.
      */
     if (allInputColsRepeating(batch)) {
       setResult(0, batch);
-      batch.cols[outputColumn].isRepeating = true;
+      batch.cols[outputColumnNum].isRepeating = true;
       return;
     } else {
-      batch.cols[outputColumn].isRepeating = false;
+      batch.cols[outputColumnNum].isRepeating = false;
     }
 
     if (batch.selectedInUse) {
@@ -215,44 +227,6 @@ public class VectorUDFAdaptor extends VectorExpression {
     // Set output column vector entry.  Since we have one output column, the logical index = 0.
     outputVectorAssignRow.assignRowColumn(
         b, /* batchIndex */ i, /* logicalColumnIndex */ 0, result);
-  }
-
-  @Override
-  public int getOutputColumn() {
-    return outputColumn;
-  }
-
-  public void setOutputColumn(int outputColumn) {
-    this.outputColumn = outputColumn;
-  }
-
-  @Override
-  public String getOutputType() {
-    return resultType;
-  }
-
-  public String getResultType() {
-    return resultType;
-  }
-
-  public void setResultType(String resultType) {
-    this.resultType = resultType;
-  }
-
-  public VectorUDFArgDesc[] getArgDescs() {
-    return argDescs;
-  }
-
-  public void setArgDescs(VectorUDFArgDesc[] argDescs) {
-    this.argDescs = argDescs;
-  }
-
-  public ExprNodeGenericFuncDesc getExpr() {
-    return expr;
-  }
-
-  public void setExpr(ExprNodeGenericFuncDesc expr) {
-    this.expr = expr;
   }
 
   @Override

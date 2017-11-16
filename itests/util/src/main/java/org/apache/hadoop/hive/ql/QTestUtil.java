@@ -18,7 +18,7 @@
 
 package org.apache.hadoop.hive.ql;
 
-import static org.apache.hadoop.hive.metastore.MetaStoreUtils.DEFAULT_DATABASE_NAME;
+import static org.apache.hadoop.hive.metastore.Warehouse.DEFAULT_DATABASE_NAME;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -85,9 +85,7 @@ import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HBaseTestingUtility;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.zookeeper.MiniZooKeeperCluster;
 import org.apache.hadoop.hive.cli.CliDriver;
 import org.apache.hadoop.hive.cli.CliSessionState;
@@ -101,7 +99,7 @@ import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.llap.LlapItUtils;
 import org.apache.hadoop.hive.llap.daemon.MiniLlapCluster;
 import org.apache.hadoop.hive.llap.io.api.LlapProxy;
-import org.apache.hadoop.hive.metastore.MetaStoreUtils;
+import org.apache.hadoop.hive.metastore.Warehouse;
 import org.apache.hadoop.hive.metastore.api.Index;
 import org.apache.hadoop.hive.ql.exec.FunctionRegistry;
 import org.apache.hadoop.hive.ql.exec.Task;
@@ -655,7 +653,7 @@ public class QTestUtil {
     }
 
     if (clusterType.getCoreClusterType() == CoreClusterType.TEZ) {
-      SessionState.get().getTezSession().close(false);
+      SessionState.get().getTezSession().destroy();
     }
     setup.tearDown();
     if (sparkSession != null) {
@@ -708,7 +706,9 @@ public class QTestUtil {
   public void addFile(File qf, boolean partial) throws IOException  {
     String query = readEntireFileIntoString(qf);
     qMap.put(qf.getName(), query);
-    if (partial) return;
+    if (partial) {
+      return;
+    }
 
     if(checkHadoopVersionExclude(qf.getName(), query)) {
       qSkipSet.add(qf.getName());
@@ -1092,7 +1092,6 @@ public class QTestUtil {
     conf.set("hive.execution.engine", execEngine);
     db = Hive.get(conf);
     drv = new Driver(conf);
-    drv.init();
     pd = new ParseDriver();
     sem = new SemanticAnalyzer(queryState);
   }
@@ -1423,7 +1422,7 @@ public class QTestUtil {
       .run("FROM dest4_sequencefile INSERT OVERWRITE TABLE dest4 SELECT dest4_sequencefile.*");
 
     // Drop dest4_sequencefile
-    db.dropTable(MetaStoreUtils.DEFAULT_DATABASE_NAME, "dest4_sequencefile",
+    db.dropTable(Warehouse.DEFAULT_DATABASE_NAME, "dest4_sequencefile",
         true, true);
   }
 
@@ -1561,6 +1560,16 @@ public class QTestUtil {
           }
         }
       }
+      else {
+        for (PatternReplacementPair prp : partialPlanMask) {
+          matcher = prp.pattern.matcher(line);
+          if (matcher.find()) {
+            line = line.replaceAll(prp.pattern.pattern(), prp.replacement);
+            partialMaskWasMatched = true;
+            break;
+          }
+        }
+      }
 
       if (!partialMaskWasMatched) {
         for (Pair<Pattern, String> pair : patternsWithMaskComments) {
@@ -1650,7 +1659,26 @@ public class QTestUtil {
       "data/warehouse/(.*?/)+\\.hive-staging"  // the directory might be db/table/partition
       //TODO: add more expected test result here
   });
-
+  /**
+   * Pattern to match and (partial) replacement text.
+   * For example, {"transaction":76,"bucketid":8249877}.  We just want to mask 76 but a regex that
+   * matches just 76 will match a lot of other things.
+   */
+  private final static class PatternReplacementPair {
+    private final Pattern pattern;
+    private final String replacement;
+    PatternReplacementPair(Pattern p, String r) {
+      pattern = p;
+      replacement = r;
+    }
+  }
+  private final PatternReplacementPair[] partialPlanMask;
+  {
+    ArrayList<PatternReplacementPair> ppm = new ArrayList<>();
+    ppm.add(new PatternReplacementPair(Pattern.compile("\\{\"transactionid\":[1-9][0-9]*,\"bucketid\":"),
+      "{\"transactionid\":### Masked txnid ###,\"bucketid\":"));
+    partialPlanMask = ppm.toArray(new PatternReplacementPair[ppm.size()]);
+  }
   /* This list may be modified by specific cli drivers to mask strings that change on every test */
   private final List<Pair<Pattern, String>> patternsWithMaskComments = new ArrayList<Pair<Pattern, String>>() {{
     add(toPatternPair("(pblob|s3.?|swift|wasb.?).*hive-staging.*","### BLOBSTORE_STAGING_PATH ###"));
@@ -1711,9 +1739,10 @@ public class QTestUtil {
         getQuotedString(inFileName),
         getQuotedString(outFileName)
     }).getReturnCode();
-    if (result != 0)
+    if (result != 0) {
       throw new IllegalStateException("Unexpected error while overwriting " +
           inFileName + " with " + outFileName);
+    }
   }
 
   private static QTestProcessExecResult executeDiffCommand(String inFileName,
@@ -1772,8 +1801,9 @@ public class QTestUtil {
         "sort",
         getQuotedString(in),
     }, out, null).getReturnCode();
-    if (result != 0)
+    if (result != 0) {
       throw new IllegalStateException("Unexpected error while sorting " + in);
+    }
   }
 
   private static QTestProcessExecResult executeCmd(Collection<String> args) throws Exception {
@@ -1838,7 +1868,6 @@ public class QTestUtil {
   }
 
   public void resetParser() throws SemanticException {
-    drv.init();
     pd = new ParseDriver();
     queryState = new QueryState.Builder().withHiveConf(conf).build();
     sem = new SemanticAnalyzer(queryState);
@@ -2110,7 +2139,9 @@ public class QTestUtil {
   }
 
   private static void ensureQvFileList(String queryDir) {
-    if (cachedQvFileList != null) return;
+    if (cachedQvFileList != null) {
+      return;
+    }
     // Not thread-safe.
     System.out.println("Getting versions from " + queryDir);
     cachedQvFileList = (new File(queryDir)).list(new FilenameFilter() {
@@ -2119,7 +2150,9 @@ public class QTestUtil {
         return name.toLowerCase().endsWith(".qv");
       }
     });
-    if (cachedQvFileList == null) return; // no files at all
+    if (cachedQvFileList == null) {
+      return; // no files at all
+    }
     Arrays.sort(cachedQvFileList, String.CASE_INSENSITIVE_ORDER);
     List<String> defaults = getVersionFilesInternal("default");
     cachedDefaultQvFileList = (defaults != null)

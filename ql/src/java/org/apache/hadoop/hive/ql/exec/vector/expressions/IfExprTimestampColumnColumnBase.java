@@ -26,34 +26,28 @@ import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
  * The first is always a boolean (LongColumnVector).
  * The second and third are long columns or long expression results.
  */
-public abstract class IfExprTimestampColumnColumnBase extends VectorExpression {
+public abstract class IfExprTimestampColumnColumnBase extends IfExprConditionalFilter {
 
   private static final long serialVersionUID = 1L;
 
-  private int arg1Column, arg2Column, arg3Column;
-  private int outputColumn;
-
   public IfExprTimestampColumnColumnBase(int arg1Column, int arg2Column, int arg3Column, int outputColumn) {
-    this.arg1Column = arg1Column;
-    this.arg2Column = arg2Column;
-    this.arg3Column = arg3Column;
-    this.outputColumn = outputColumn;
+    super(arg1Column, arg2Column, arg3Column, outputColumn);
   }
 
   public IfExprTimestampColumnColumnBase() {
+    super();
   }
 
   @Override
   public void evaluate(VectorizedRowBatch batch) {
-
     if (childExpressions != null) {
-      super.evaluateChildren(batch);
+      super.evaluateIfConditionalExpr(batch, childExpressions);
     }
 
     LongColumnVector arg1ColVector = (LongColumnVector) batch.cols[arg1Column];
     TimestampColumnVector arg2ColVector = (TimestampColumnVector) batch.cols[arg2Column];
     TimestampColumnVector arg3ColVector = (TimestampColumnVector) batch.cols[arg3Column];
-    TimestampColumnVector outputColVector = (TimestampColumnVector) batch.cols[outputColumn];
+    TimestampColumnVector outputColVector = (TimestampColumnVector) batch.cols[outputColumnNum];
     int[] sel = batch.selected;
     boolean[] outputIsNull = outputColVector.isNull;
     outputColVector.noNulls = arg2ColVector.noNulls && arg3ColVector.noNulls;
@@ -125,17 +119,8 @@ public abstract class IfExprTimestampColumnColumnBase extends VectorExpression {
   }
 
   @Override
-  public int getOutputColumn() {
-    return outputColumn;
-  }
-
-  @Override
-  public String getOutputType() {
-    return "long";
-  }
-
-  @Override
   public String vectorExpressionParameters() {
-    return "col " + arg1Column + ", col "+ arg2Column + ", col "+ arg3Column;
+    return getColumnParamString(0, arg1Column) + ", " + getColumnParamString(1, arg2Column) +
+        getColumnParamString(2, arg3Column);
   }
 }

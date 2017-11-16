@@ -23,10 +23,11 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.apache.hadoop.hive.metastore.api.Partition;
+import org.apache.hadoop.hive.ql.exec.Utilities;
 import org.apache.hadoop.hive.ql.hooks.ReadEntity;
 import org.apache.hadoop.hive.ql.hooks.WriteEntity;
 import org.apache.hadoop.hive.ql.plan.Explain.Level;
-
+import org.apache.hadoop.hive.ql.session.LineageState;
 
 /**
  * MoveWork.
@@ -38,6 +39,12 @@ public class MoveWork implements Serializable {
   private LoadTableDesc loadTableWork;
   private LoadFileDesc loadFileWork;
   private LoadMultiFilesDesc loadMultiFilesWork;
+  /*
+  these are sessionState objects that are copied over to work to allow for parallel execution.
+  based on the current use case the methods are selectively synchronized, which might need to be
+  taken care when using other methods.
+   */
+  private final LineageState sessionStateLineageState;
 
   private boolean checkFileFormat;
   private boolean srcLocal;
@@ -55,19 +62,28 @@ public class MoveWork implements Serializable {
    * List of inserted partitions
    */
   protected List<Partition> movedParts;
+  private boolean isNoop;
 
   public MoveWork() {
+    sessionStateLineageState = null;
   }
 
-  public MoveWork(HashSet<ReadEntity> inputs, HashSet<WriteEntity> outputs) {
+
+  private MoveWork(HashSet<ReadEntity> inputs, HashSet<WriteEntity> outputs,
+      LineageState lineageState) {
     this.inputs = inputs;
     this.outputs = outputs;
+    sessionStateLineageState = lineageState;
   }
 
   public MoveWork(HashSet<ReadEntity> inputs, HashSet<WriteEntity> outputs,
       final LoadTableDesc loadTableWork, final LoadFileDesc loadFileWork,
-      boolean checkFileFormat, boolean srcLocal) {
-    this(inputs, outputs);
+      boolean checkFileFormat, boolean srcLocal, LineageState lineageState) {
+    this(inputs, outputs, lineageState);
+    if (Utilities.FILE_OP_LOGGER.isTraceEnabled()) {
+      Utilities.FILE_OP_LOGGER.trace("Creating MoveWork " + System.identityHashCode(this)
+        + " with " + loadTableWork + "; " + loadFileWork);
+    }
     this.loadTableWork = loadTableWork;
     this.loadFileWork = loadFileWork;
     this.checkFileFormat = checkFileFormat;
@@ -76,11 +92,8 @@ public class MoveWork implements Serializable {
 
   public MoveWork(HashSet<ReadEntity> inputs, HashSet<WriteEntity> outputs,
       final LoadTableDesc loadTableWork, final LoadFileDesc loadFileWork,
-      boolean checkFileFormat) {
-    this(inputs, outputs);
-    this.loadTableWork = loadTableWork;
-    this.loadFileWork = loadFileWork;
-    this.checkFileFormat = checkFileFormat;
+      boolean checkFileFormat, LineageState lineageState) {
+    this(inputs, outputs, loadTableWork, loadFileWork, checkFileFormat, false, lineageState);
   }
 
   public MoveWork(final MoveWork o) {
@@ -91,6 +104,7 @@ public class MoveWork implements Serializable {
     srcLocal = o.isSrcLocal();
     inputs = o.getInputs();
     outputs = o.getOutputs();
+    sessionStateLineageState = o.sessionStateLineageState;
   }
 
   @Explain(displayName = "tables", explainLevels = { Level.USER, Level.DEFAULT, Level.EXTENDED })
@@ -151,5 +165,8 @@ public class MoveWork implements Serializable {
   public void setSrcLocal(boolean srcLocal) {
     this.srcLocal = srcLocal;
   }
-
+  
+  public LineageState getLineagState() {
+    return sessionStateLineageState;
+  }
 }

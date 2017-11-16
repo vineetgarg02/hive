@@ -90,7 +90,7 @@ public class ReduceRecordProcessor extends RecordProcessor {
 
     String queryId = HiveConf.getVar(jconf, HiveConf.ConfVars.HIVEQUERYID);
     cache = ObjectCacheFactory.getCache(jconf, queryId, true);
-    dynamicValueCache = ObjectCacheFactory.getCache(jconf, queryId, false);
+    dynamicValueCache = ObjectCacheFactory.getCache(jconf, queryId, false, true);
 
     String cacheKey = processorContext.getTaskVertexName() + REDUCE_PLAN_KEY;
     cacheKeys = Lists.newArrayList(cacheKey);
@@ -297,7 +297,8 @@ public class ReduceRecordProcessor extends RecordProcessor {
     boolean vectorizedRecordSource = (tag == bigTablePosition) && redWork.getVectorMode();
     sources[tag].init(jconf, redWork.getReducer(), vectorizedRecordSource, keyTableDesc,
         valueTableDesc, reader, tag == bigTablePosition, (byte) tag,
-        redWork.getVectorizedRowBatchCtx(), redWork.getVectorizedVertexNum());
+        redWork.getVectorizedRowBatchCtx(), redWork.getVectorizedVertexNum(),
+        redWork.getVectorizedTestingReducerBatchSize());
     ois[tag] = sources[tag].getObjectInspector();
   }
 

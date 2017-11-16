@@ -29,10 +29,12 @@ POSTHOOK: Output: default@s/c
 PREHOOK: query: ANALYZE TABLE `s/c` COMPUTE STATISTICS FOR COLUMNS key,value
 PREHOOK: type: QUERY
 PREHOOK: Input: default@s/c
+PREHOOK: Output: default@s/c
 #### A masked pattern was here ####
 POSTHOOK: query: ANALYZE TABLE `s/c` COMPUTE STATISTICS FOR COLUMNS key,value
 POSTHOOK: type: QUERY
 POSTHOOK: Input: default@s/c
+POSTHOOK: Output: default@s/c
 #### A masked pattern was here ####
 PREHOOK: query: SELECT key, value FROM `s/c` WHERE key > 80 AND key < 100
 PREHOOK: type: QUERY
@@ -102,7 +104,7 @@ STAGE PLANS:
             alias: s/c
             Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
-              predicate: ((UDFToDouble(key) > 80.0) and (UDFToDouble(key) < 100.0)) (type: boolean)
+              predicate: ((UDFToDouble(key) < 100.0) and (UDFToDouble(key) > 80.0)) (type: boolean)
               Statistics: Num rows: 55 Data size: 584 Basic stats: COMPLETE Column stats: NONE
               Select Operator
                 expressions: key (type: string), value (type: string)
@@ -172,7 +174,7 @@ STAGE PLANS:
             alias: default__s/c_src_index__
             filterExpr: ((UDFToDouble(key) > 80.0) and (UDFToDouble(key) < 100.0)) (type: boolean)
             Filter Operator
-              predicate: ((UDFToDouble(key) > 80.0) and (UDFToDouble(key) < 100.0)) (type: boolean)
+              predicate: ((UDFToDouble(key) < 100.0) and (UDFToDouble(key) > 80.0)) (type: boolean)
               Select Operator
                 expressions: _bucketname (type: string), _offsets (type: array<bigint>)
                 outputColumnNames: _col0, _col1
@@ -206,7 +208,7 @@ STAGE PLANS:
             filterExpr: ((UDFToDouble(key) > 80.0) and (UDFToDouble(key) < 100.0)) (type: boolean)
             Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
-              predicate: ((UDFToDouble(key) > 80.0) and (UDFToDouble(key) < 100.0)) (type: boolean)
+              predicate: ((UDFToDouble(key) < 100.0) and (UDFToDouble(key) > 80.0)) (type: boolean)
               Statistics: Num rows: 55 Data size: 584 Basic stats: COMPLETE Column stats: NONE
               Select Operator
                 expressions: key (type: string), value (type: string)

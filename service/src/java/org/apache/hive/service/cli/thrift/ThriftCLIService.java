@@ -88,6 +88,8 @@ import org.apache.hive.service.rpc.thrift.TGetOperationStatusReq;
 import org.apache.hive.service.rpc.thrift.TGetOperationStatusResp;
 import org.apache.hive.service.rpc.thrift.TGetPrimaryKeysReq;
 import org.apache.hive.service.rpc.thrift.TGetPrimaryKeysResp;
+import org.apache.hive.service.rpc.thrift.TGetQueryIdReq;
+import org.apache.hive.service.rpc.thrift.TGetQueryIdResp;
 import org.apache.hive.service.rpc.thrift.TGetResultSetMetadataReq;
 import org.apache.hive.service.rpc.thrift.TGetResultSetMetadataResp;
 import org.apache.hive.service.rpc.thrift.TGetSchemasReq;
@@ -318,8 +320,6 @@ public abstract class ThriftCLIService extends AbstractService implements TCLISe
     LOG.info("Client protocol version: " + req.getClient_protocol());
     TOpenSessionResp resp = new TOpenSessionResp();
     try {
-      Map<String, String> openConf = req.getConfiguration();
-
       SessionHandle sessionHandle = getSessionHandle(req, resp);
       resp.setSessionHandle(sessionHandle.toTSessionHandle());
       Map<String, String> configurationMap = new HashMap<String, String>();
@@ -659,6 +659,7 @@ public abstract class ThriftCLIService extends AbstractService implements TCLISe
       OperationStatus operationStatus =
           cliService.getOperationStatus(operationHandle, req.isGetProgressUpdate());
       resp.setOperationState(operationStatus.getState().toTOperationState());
+      resp.setErrorMessage(operationStatus.getState().getErrorMessage());
       HiveSQLException opException = operationStatus.getOperationException();
       resp.setTaskStatus(operationStatus.getTaskStatus());
       resp.setOperationStarted(operationStatus.getOperationStarted());
@@ -799,6 +800,15 @@ public abstract class ThriftCLIService extends AbstractService implements TCLISe
 	  resp.setStatus(HiveSQLException.toTStatus(e));
 	}
     return resp;
+  }
+
+  @Override
+  public TGetQueryIdResp GetQueryId(TGetQueryIdReq req) throws TException {
+    try {
+      return new TGetQueryIdResp(cliService.getQueryId(req.getOperationHandle()));
+    } catch (HiveSQLException e) {
+      throw new TException(e);
+    }
   }
 
   @Override

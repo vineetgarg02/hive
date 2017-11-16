@@ -29,18 +29,12 @@ import org.apache.hadoop.hive.ql.exec.vector.VectorExpressionDescriptor;
  * The first is always a boolean (LongColumnVector).
  * The second and third are string columns or string expression results.
  */
-public class IfExprStringGroupColumnStringGroupColumn extends VectorExpression {
+public class IfExprStringGroupColumnStringGroupColumn extends IfExprConditionalFilter {
 
   private static final long serialVersionUID = 1L;
 
-  private int arg1Column, arg2Column, arg3Column;
-  private int outputColumn;
-
   public IfExprStringGroupColumnStringGroupColumn(int arg1Column, int arg2Column, int arg3Column, int outputColumn) {
-    this.arg1Column = arg1Column;
-    this.arg2Column = arg2Column;
-    this.arg3Column = arg3Column;
-    this.outputColumn = outputColumn;
+    super(arg1Column, arg2Column, arg3Column, outputColumn);
   }
 
   public IfExprStringGroupColumnStringGroupColumn() {
@@ -51,13 +45,13 @@ public class IfExprStringGroupColumnStringGroupColumn extends VectorExpression {
   public void evaluate(VectorizedRowBatch batch) {
 
     if (childExpressions != null) {
-      super.evaluateChildren(batch);
+      super.evaluateIfConditionalExpr(batch, childExpressions);
     }
 
     LongColumnVector arg1ColVector = (LongColumnVector) batch.cols[arg1Column];
     BytesColumnVector arg2ColVector = (BytesColumnVector) batch.cols[arg2Column];
     BytesColumnVector arg3ColVector = (BytesColumnVector) batch.cols[arg3Column];
-    BytesColumnVector outputColVector = (BytesColumnVector) batch.cols[outputColumn];
+    BytesColumnVector outputColVector = (BytesColumnVector) batch.cols[outputColumnNum];
     int[] sel = batch.selected;
     boolean[] outputIsNull = outputColVector.isNull;
     outputColVector.noNulls = arg2ColVector.noNulls && arg3ColVector.noNulls;
@@ -167,18 +161,9 @@ public class IfExprStringGroupColumnStringGroupColumn extends VectorExpression {
   }
 
   @Override
-  public int getOutputColumn() {
-    return outputColumn;
-  }
-
-  @Override
-  public String getOutputType() {
-    return "String";
-  }	
-
-  @Override
   public String vectorExpressionParameters() {
-    return "col " + arg1Column + ", col "+ arg2Column + ", col "+ arg3Column;
+    return getColumnParamString(0, arg1Column) + ", " + getColumnParamString(1, arg2Column) +
+         ", " + getColumnParamString(2, arg2Column);
   }
 
   @Override

@@ -40,23 +40,23 @@ STAGE PLANS:
       Map Operator Tree:
           TableScan
             alias: src5
-            Statistics: Num rows: 2 Data size: 560 Basic stats: COMPLETE Column stats: NONE
+            Statistics: Num rows: 1 Data size: 560 Basic stats: COMPLETE Column stats: NONE
             Select Operator
               expressions: key (type: string), value (type: string)
               outputColumnNames: _col0, _col1
-              Statistics: Num rows: 2 Data size: 560 Basic stats: COMPLETE Column stats: NONE
+              Statistics: Num rows: 1 Data size: 560 Basic stats: COMPLETE Column stats: NONE
               Reduce Output Operator
                 key expressions: _col0 (type: string), _col1 (type: string)
                 sort order: ++
-                Statistics: Num rows: 2 Data size: 560 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 1 Data size: 560 Basic stats: COMPLETE Column stats: NONE
       Reduce Operator Tree:
         Select Operator
           expressions: KEY.reducesinkkey0 (type: string), KEY.reducesinkkey1 (type: string)
           outputColumnNames: _col0, _col1
-          Statistics: Num rows: 2 Data size: 560 Basic stats: COMPLETE Column stats: NONE
+          Statistics: Num rows: 1 Data size: 560 Basic stats: COMPLETE Column stats: NONE
           File Output Operator
             compressed: false
-            Statistics: Num rows: 2 Data size: 560 Basic stats: COMPLETE Column stats: NONE
+            Statistics: Num rows: 1 Data size: 560 Basic stats: COMPLETE Column stats: NONE
             table:
                 input format: org.apache.hadoop.mapred.TextInputFormat
                 output format: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
@@ -79,7 +79,8 @@ STAGE PLANS:
           name: default.total_ordered
 
   Stage: Stage-2
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 
 PREHOOK: query: create table total_ordered as select * from src5 order by key, value
 PREHOOK: type: CREATETABLE_AS_SELECT
@@ -100,7 +101,6 @@ POSTHOOK: query: desc formatted total_ordered
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@total_ordered
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	                    
 value               	string              	                    
 	 	 
@@ -211,7 +211,6 @@ POSTHOOK: query: desc formatted total_ordered
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@total_ordered
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	                    
 value               	string              	                    
 	 	 

@@ -49,7 +49,6 @@ POSTHOOK: query: describe formatted src_multi1
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@src_multi1
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	default             
 value               	string              	default             
 	 	 
@@ -126,7 +125,6 @@ POSTHOOK: query: describe formatted a
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@a
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	default             
 value               	string              	default             
 	 	 
@@ -161,7 +159,6 @@ POSTHOOK: query: describe formatted b
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@b
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	default             
 value               	string              	default             
 	 	 
@@ -246,7 +243,6 @@ POSTHOOK: query: describe formatted a
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@a
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	default             
 value               	string              	default             
 	 	 
@@ -281,7 +277,6 @@ POSTHOOK: query: describe formatted b
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@b
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	default             
 value               	string              	default             
 	 	 
@@ -340,7 +335,6 @@ POSTHOOK: query: describe formatted src_multi2
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@src_multi2
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	default             
 value               	string              	default             
 	 	 
@@ -382,6 +376,44 @@ POSTHOOK: query: create table if not exists nzhang_part14 (key string)
 POSTHOOK: type: CREATETABLE
 POSTHOOK: Output: database:default
 POSTHOOK: Output: default@nzhang_part14
+PREHOOK: query: desc formatted nzhang_part14
+PREHOOK: type: DESCTABLE
+PREHOOK: Input: default@nzhang_part14
+POSTHOOK: query: desc formatted nzhang_part14
+POSTHOOK: type: DESCTABLE
+POSTHOOK: Input: default@nzhang_part14
+# col_name            	data_type           	comment             
+key                 	string              	                    
+	 	 
+# Partition Information	 	 
+# col_name            	data_type           	comment             
+value               	string              	                    
+	 	 
+# Detailed Table Information	 	 
+Database:           	default             	 
+#### A masked pattern was here ####
+Retention:          	0                   	 
+#### A masked pattern was here ####
+Table Type:         	MANAGED_TABLE       	 
+Table Parameters:	 	 
+	COLUMN_STATS_ACCURATE	{\"BASIC_STATS\":\"true\"}
+	numFiles            	0                   
+	numPartitions       	0                   
+	numRows             	0                   
+	rawDataSize         	0                   
+	totalSize           	0                   
+#### A masked pattern was here ####
+	 	 
+# Storage Information	 	 
+SerDe Library:      	org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe	 
+InputFormat:        	org.apache.hadoop.mapred.TextInputFormat	 
+OutputFormat:       	org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat	 
+Compressed:         	No                  	 
+Num Buckets:        	-1                  	 
+Bucket Columns:     	[]                  	 
+Sort Columns:       	[]                  	 
+Storage Desc Params:	 	 
+	serialization.format	1                   
 PREHOOK: query: insert overwrite table nzhang_part14 partition(value) 
 select key, value from (
   select * from (select 'k1' as key, cast(null as string) as value from src limit 2)a 
@@ -407,6 +439,42 @@ POSTHOOK: Output: default@nzhang_part14@value=
 POSTHOOK: Output: default@nzhang_part14@value=__HIVE_DEFAULT_PARTITION__
 POSTHOOK: Lineage: nzhang_part14 PARTITION(value= ).key EXPRESSION []
 POSTHOOK: Lineage: nzhang_part14 PARTITION(value=__HIVE_DEFAULT_PARTITION__).key EXPRESSION []
+PREHOOK: query: desc formatted nzhang_part14 partition (value=' ')
+PREHOOK: type: DESCTABLE
+PREHOOK: Input: default@nzhang_part14
+POSTHOOK: query: desc formatted nzhang_part14 partition (value=' ')
+POSTHOOK: type: DESCTABLE
+POSTHOOK: Input: default@nzhang_part14
+# col_name            	data_type           	comment             
+key                 	string              	                    
+	 	 
+# Partition Information	 	 
+# col_name            	data_type           	comment             
+value               	string              	                    
+	 	 
+# Detailed Partition Information	 	 
+Partition Value:    	[ ]                 	 
+Database:           	default             	 
+Table:              	nzhang_part14       	 
+#### A masked pattern was here ####
+Partition Parameters:	 	 
+	COLUMN_STATS_ACCURATE	{\"BASIC_STATS\":\"true\",\"COLUMN_STATS\":{\"key\":\"true\"}}
+	numFiles            	1                   
+	numRows             	2                   
+	rawDataSize         	4                   
+	totalSize           	6                   
+#### A masked pattern was here ####
+	 	 
+# Storage Information	 	 
+SerDe Library:      	org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe	 
+InputFormat:        	org.apache.hadoop.mapred.TextInputFormat	 
+OutputFormat:       	org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat	 
+Compressed:         	No                  	 
+Num Buckets:        	-1                  	 
+Bucket Columns:     	[]                  	 
+Sort Columns:       	[]                  	 
+Storage Desc Params:	 	 
+	serialization.format	1                   
 PREHOOK: query: explain select key from nzhang_part14
 PREHOOK: type: QUERY
 POSTHOOK: query: explain select key from nzhang_part14
@@ -477,11 +545,11 @@ STAGE PLANS:
       Processor Tree:
         TableScan
           alias: nzhang_part14
-          Statistics: Num rows: 11 Data size: 946 Basic stats: COMPLETE Column stats: COMPLETE
+          Statistics: Num rows: 11 Data size: 946 Basic stats: COMPLETE Column stats: PARTIAL
           Select Operator
             expressions: key (type: string)
             outputColumnNames: _col0
-            Statistics: Num rows: 11 Data size: 946 Basic stats: COMPLETE Column stats: COMPLETE
+            Statistics: Num rows: 11 Data size: 946 Basic stats: COMPLETE Column stats: PARTIAL
             ListSink
 
 PREHOOK: query: create table alter5 ( col1 string ) partitioned by (dt string)
@@ -508,12 +576,10 @@ POSTHOOK: query: describe formatted alter5 partition (dt='a')
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@alter5
 # col_name            	data_type           	comment             
-	 	 
 col1                	string              	                    
 	 	 
 # Partition Information	 	 
 # col_name            	data_type           	comment             
-	 	 
 dt                  	string              	                    
 	 	 
 # Detailed Partition Information	 	 
@@ -550,12 +616,10 @@ POSTHOOK: query: describe formatted alter5 partition (dt='a')
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@alter5
 # col_name            	data_type           	comment             
-	 	 
 col1                	string              	                    
 	 	 
 # Partition Information	 	 
 # col_name            	data_type           	comment             
-	 	 
 dt                  	string              	                    
 	 	 
 # Detailed Partition Information	 	 
@@ -633,13 +697,11 @@ POSTHOOK: query: describe formatted src_stat_part PARTITION(partitionId=1)
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@src_stat_part
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	                    
 value               	string              	                    
 	 	 
 # Partition Information	 	 
 # col_name            	data_type           	comment             
-	 	 
 partitionid         	int                 	                    
 	 	 
 # Detailed Partition Information	 	 
@@ -684,13 +746,11 @@ POSTHOOK: query: describe formatted src_stat_part PARTITION(partitionId=2)
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@src_stat_part
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	                    
 value               	string              	                    
 	 	 
 # Partition Information	 	 
 # col_name            	data_type           	comment             
-	 	 
 partitionid         	int                 	                    
 	 	 
 # Detailed Partition Information	 	 
@@ -823,13 +883,11 @@ POSTHOOK: query: describe formatted tab_part partition (ds='2008-04-08')
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@tab_part
 # col_name            	data_type           	comment             
-	 	 
 key                 	int                 	                    
 value               	string              	                    
 	 	 
 # Partition Information	 	 
 # col_name            	data_type           	comment             
-	 	 
 ds                  	string              	                    
 	 	 
 # Detailed Partition Information	 	 
@@ -884,13 +942,11 @@ POSTHOOK: query: describe formatted tab partition (ds='2008-04-08')
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@tab
 # col_name            	data_type           	comment             
-	 	 
 key                 	int                 	                    
 value               	string              	                    
 	 	 
 # Partition Information	 	 
 # col_name            	data_type           	comment             
-	 	 
 ds                  	string              	                    
 	 	 
 # Detailed Partition Information	 	 
@@ -941,13 +997,11 @@ POSTHOOK: query: describe formatted nzhang_part14
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@nzhang_part14
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	                    
 value               	string              	                    
 	 	 
 # Partition Information	 	 
 # col_name            	data_type           	comment             
-	 	 
 ds                  	string              	                    
 hr                  	string              	                    
 	 	 
@@ -958,6 +1012,12 @@ Retention:          	0
 #### A masked pattern was here ####
 Table Type:         	MANAGED_TABLE       	 
 Table Parameters:	 	 
+	COLUMN_STATS_ACCURATE	{\"BASIC_STATS\":\"true\"}
+	numFiles            	0                   
+	numPartitions       	0                   
+	numRows             	0                   
+	rawDataSize         	0                   
+	totalSize           	0                   
 #### A masked pattern was here ####
 	 	 
 # Storage Information	 	 
@@ -1007,13 +1067,11 @@ POSTHOOK: query: desc formatted nzhang_part14 partition(ds='1', hr='3')
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@nzhang_part14
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	                    
 value               	string              	                    
 	 	 
 # Partition Information	 	 
 # col_name            	data_type           	comment             
-	 	 
 ds                  	string              	                    
 hr                  	string              	                    
 	 	 
@@ -1070,13 +1128,11 @@ POSTHOOK: query: desc formatted nzhang_part14 PARTITION(ds='2010-03-03', hr='12'
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@nzhang_part14
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	                    
 value               	string              	                    
 	 	 
 # Partition Information	 	 
 # col_name            	data_type           	comment             
-	 	 
 ds                  	string              	                    
 hr                  	string              	                    
 	 	 
@@ -1151,13 +1207,11 @@ POSTHOOK: query: desc formatted nzhang_part14 PARTITION(ds='2010-03-03', hr='12'
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@nzhang_part14
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	                    
 value               	string              	                    
 	 	 
 # Partition Information	 	 
 # col_name            	data_type           	comment             
-	 	 
 ds                  	string              	                    
 hr                  	string              	                    
 	 	 

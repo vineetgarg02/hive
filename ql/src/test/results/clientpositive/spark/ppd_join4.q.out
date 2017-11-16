@@ -52,8 +52,7 @@ STAGE PLANS:
   Stage: Stage-1
     Spark
       Edges:
-        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 2)
-        Reducer 3 <- Map 4 (PARTITION-LEVEL SORT, 2), Reducer 2 (PARTITION-LEVEL SORT, 2)
+        Reducer 2 <- Map 1 (PARTITION-LEVEL SORT, 2), Map 3 (PARTITION-LEVEL SORT, 2)
 #### A masked pattern was here ####
       Vertices:
         Map 1 
@@ -62,15 +61,16 @@ STAGE PLANS:
                   alias: test_tbl
                   Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
                   Filter Operator
-                    predicate: ((id is not null and (name = 'c')) and (id = 'a')) (type: boolean)
+                    predicate: ((id = 'a') and (name = 'c')) (type: boolean)
                     Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
                     Select Operator
                       Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
                       Reduce Output Operator
                         key expressions: 'a' (type: string)
                         sort order: +
+                        Map-reduce partition columns: 'a' (type: string)
                         Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
-        Map 4 
+        Map 3 
             Map Operator Tree:
                 TableScan
                   alias: t3
@@ -84,15 +84,6 @@ STAGE PLANS:
                       Map-reduce partition columns: 'a' (type: string)
                       Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
         Reducer 2 
-            Reduce Operator Tree:
-              Select Operator
-                Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
-                Reduce Output Operator
-                  key expressions: 'a' (type: string)
-                  sort order: +
-                  Map-reduce partition columns: 'a' (type: string)
-                  Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
-        Reducer 3 
             Reduce Operator Tree:
               Join Operator
                 condition map:

@@ -75,6 +75,13 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.apache.hive</groupId>
+      <artifactId>hive-metastore</artifactId>
+      <version>${project.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.apache.hive.hcatalog</groupId>
       <artifactId>hive-hcatalog-core</artifactId>
       <version>${project.version}</version>
@@ -84,7 +91,7 @@
   </dependencies>
   <build>
       <sourceDirectory>${basedir}/src/main/java</sourceDirectory>
-      <testSourceDirectory>${basedir}/src/test</testSourceDirectory>
+      <testSourceDirectory>${basedir}/src/test/java</testSourceDirectory>
       <plugins>
           <plugin>
               <groupId>org.apache.maven.plugins</groupId>

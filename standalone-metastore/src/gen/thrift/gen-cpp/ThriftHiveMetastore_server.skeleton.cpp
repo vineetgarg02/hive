@@ -332,6 +332,11 @@ class ThriftHiveMetastoreHandler : virtual public ThriftHiveMetastoreIf {
     printf("get_partition_names\n");
   }
 
+  void get_partition_values(PartitionValuesResponse& _return, const PartitionValuesRequest& request) {
+    // Your implementation goes here
+    printf("get_partition_values\n");
+  }
+
   void get_partitions_ps(std::vector<Partition> & _return, const std::string& db_name, const std::string& tbl_name, const std::vector<std::string> & part_vals, const int16_t max_parts) {
     // Your implementation goes here
     printf("get_partitions_ps\n");
@@ -825,6 +830,61 @@ class ThriftHiveMetastoreHandler : virtual public ThriftHiveMetastoreIf {
   void get_metastore_db_uuid(std::string& _return) {
     // Your implementation goes here
     printf("get_metastore_db_uuid\n");
+  }
+
+  void create_resource_plan(WMCreateResourcePlanResponse& _return, const WMCreateResourcePlanRequest& request) {
+    // Your implementation goes here
+    printf("create_resource_plan\n");
+  }
+
+  void get_resource_plan(WMGetResourcePlanResponse& _return, const WMGetResourcePlanRequest& request) {
+    // Your implementation goes here
+    printf("get_resource_plan\n");
+  }
+
+  void get_active_resource_plan(WMGetActiveResourcePlanResponse& _return, const WMGetActiveResourcePlanRequest& request) {
+    // Your implementation goes here
+    printf("get_active_resource_plan\n");
+  }
+
+  void get_all_resource_plans(WMGetAllResourcePlanResponse& _return, const WMGetAllResourcePlanRequest& request) {
+    // Your implementation goes here
+    printf("get_all_resource_plans\n");
+  }
+
+  void alter_resource_plan(WMAlterResourcePlanResponse& _return, const WMAlterResourcePlanRequest& request) {
+    // Your implementation goes here
+    printf("alter_resource_plan\n");
+  }
+
+  void validate_resource_plan(WMValidateResourcePlanResponse& _return, const WMValidateResourcePlanRequest& request) {
+    // Your implementation goes here
+    printf("validate_resource_plan\n");
+  }
+
+  void drop_resource_plan(WMDropResourcePlanResponse& _return, const WMDropResourcePlanRequest& request) {
+    // Your implementation goes here
+    printf("drop_resource_plan\n");
+  }
+
+  void create_wm_trigger(WMCreateTriggerResponse& _return, const WMCreateTriggerRequest& request) {
+    // Your implementation goes here
+    printf("create_wm_trigger\n");
+  }
+
+  void alter_wm_trigger(WMAlterTriggerResponse& _return, const WMAlterTriggerRequest& request) {
+    // Your implementation goes here
+    printf("alter_wm_trigger\n");
+  }
+
+  void drop_wm_trigger(WMDropTriggerResponse& _return, const WMDropTriggerRequest& request) {
+    // Your implementation goes here
+    printf("drop_wm_trigger\n");
+  }
+
+  void get_triggers_for_resourceplan(WMGetTriggersForResourePlanResponse& _return, const WMGetTriggersForResourePlanRequest& request) {
+    // Your implementation goes here
+    printf("get_triggers_for_resourceplan\n");
   }
 
 };

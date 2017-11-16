@@ -45,9 +45,10 @@ class SessionExpirationTracker {
   private final long sessionLifetimeMs;
   private final long sessionLifetimeJitterMs;
   private final RestartImpl sessionRestartImpl;
+  private volatile SessionState initSessionState;
 
   interface RestartImpl {
-    void closeAndReopenPoolSession(TezSessionPoolSession session) throws Exception;
+    void closeAndReopenExpiredSession(TezSessionPoolSession session) throws Exception;
   }
 
   public static SessionExpirationTracker create(HiveConf conf, RestartImpl restartImpl) {
@@ -68,7 +69,6 @@ class SessionExpirationTracker {
       LOG.debug("Session expiration is enabled; session lifetime is "
           + sessionLifetimeMs + " + [0, " + sessionLifetimeJitterMs + ") ms");
     }
-    final SessionState initSessionState = SessionState.get();
     expirationQueue = new PriorityBlockingQueue<>(11, new Comparator<TezSessionPoolSession>() {
       @Override
       public int compare(TezSessionPoolSession o1, TezSessionPoolSession o2) {
@@ -114,7 +114,7 @@ class SessionExpirationTracker {
         TezSessionPoolSession next = restartQueue.take();
         LOG.info("Restarting the expired session [" + next + "]");
         try {
-          sessionRestartImpl.closeAndReopenPoolSession(next);
+          sessionRestartImpl.closeAndReopenExpiredSession(next);
         } catch (InterruptedException ie) {
           throw ie;
         } catch (Exception e) {
@@ -179,6 +179,7 @@ class SessionExpirationTracker {
 
 
   public void start() {
+    initSessionState = SessionState.get();
     expirationThread.start();
     restartThread.start();
   }
@@ -224,12 +225,12 @@ class SessionExpirationTracker {
     expirationQueue.remove(session);
   }
 
+  public void closeAndRestartExpiredSessionAsync(TezSessionPoolSession session) {
+    restartQueue.add(session);
+  }
+
   public void closeAndRestartExpiredSession(
-      TezSessionPoolSession session, boolean isAsync) throws Exception {
-    if (isAsync) {
-      restartQueue.add(session);
-    } else {
-      sessionRestartImpl.closeAndReopenPoolSession(session);
-    }
+      TezSessionPoolSession session) throws Exception {
+    sessionRestartImpl.closeAndReopenExpiredSession(session);
   }
 }

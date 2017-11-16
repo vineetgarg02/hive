@@ -769,7 +769,7 @@ STAGE PLANS:
           alias: src
           Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
           Filter Operator
-            predicate: ((UDFToDouble(key) > 200.0) and (UDFToDouble(key) < 250.0)) (type: boolean)
+            predicate: ((UDFToDouble(key) < 250.0) and (UDFToDouble(key) > 200.0)) (type: boolean)
             Statistics: Num rows: 55 Data size: 584 Basic stats: COMPLETE Column stats: NONE
             Select Operator
               expressions: value (type: string), key (type: string)
@@ -1090,7 +1090,8 @@ STAGE PLANS:
           name: default.srcx
 
   Stage: Stage-2
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 
 PREHOOK: query: explain analyze table src compute statistics
 PREHOOK: type: QUERY
@@ -1109,7 +1110,8 @@ STAGE PLANS:
             Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: COMPLETE
 
   Stage: Stage-1
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 
 PREHOOK: query: explain select * from src join src src2 on src.key=src2.key
 PREHOOK: type: QUERY

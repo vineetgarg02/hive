@@ -81,7 +81,9 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: [DECIMAL_64]
+                vectorizationSupportRemovedReasons: [DECIMAL_64 disabled because LLAP is enabled]
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.mapred.TextInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: false
@@ -91,7 +93,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -127,7 +128,8 @@ STAGE PLANS:
           name: default.srcpart_date
 
   Stage: Stage-3
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 
   Stage: Stage-0
     Move Operator
@@ -258,7 +260,9 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: [DECIMAL_64]
+                vectorizationSupportRemovedReasons: [DECIMAL_64 disabled because LLAP is enabled]
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.mapred.TextInputFormat
                 allNative: true
                 usesVectorUDFAdaptor: false
@@ -268,40 +272,41 @@ STAGE PLANS:
                 TableScan
                   alias: srcpart_date
                   filterExpr: ((date = '2008-04-08') and ds is not null) (type: boolean)
-                  Statistics: Num rows: 2 Data size: 376 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: ((date = '2008-04-08') and ds is not null) (type: boolean)
-                    Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: ds (type: string)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: _col0 (type: string)
                         sort order: +
                         Map-reduce partition columns: _col0 (type: string)
-                        Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                       Select Operator
                         expressions: _col0 (type: string)
                         outputColumnNames: _col0
-                        Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                         Group By Operator
                           keys: _col0 (type: string)
                           mode: hash
                           outputColumnNames: _col0
-                          Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                           Dynamic Partitioning Event Operator
                             Target column: ds (string)
                             Target Input: srcpart
                             Partition key expr: ds
-                            Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                            Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                             Target Vertex: Map 1
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: []
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: false
@@ -330,7 +335,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -414,7 +418,9 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: [DECIMAL_64]
+                vectorizationSupportRemovedReasons: [DECIMAL_64 disabled because LLAP is enabled]
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.mapred.TextInputFormat
                 allNative: true
                 usesVectorUDFAdaptor: false
@@ -424,25 +430,26 @@ STAGE PLANS:
                 TableScan
                   alias: srcpart_date
                   filterExpr: ((date = '2008-04-08') and ds is not null) (type: boolean)
-                  Statistics: Num rows: 2 Data size: 376 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: ((date = '2008-04-08') and ds is not null) (type: boolean)
-                    Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: ds (type: string)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: _col0 (type: string)
                         sort order: +
                         Map-reduce partition columns: _col0 (type: string)
-                        Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: []
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
                 allNative: true
                 usesVectorUDFAdaptor: false
@@ -471,7 +478,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -571,7 +577,9 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: [DECIMAL_64]
+                vectorizationSupportRemovedReasons: [DECIMAL_64 disabled because LLAP is enabled]
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.mapred.TextInputFormat
                 allNative: true
                 usesVectorUDFAdaptor: false
@@ -581,40 +589,41 @@ STAGE PLANS:
                 TableScan
                   alias: srcpart_date
                   filterExpr: ((date = '2008-04-08') and ds is not null) (type: boolean)
-                  Statistics: Num rows: 2 Data size: 376 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: ((date = '2008-04-08') and ds is not null) (type: boolean)
-                    Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: ds (type: string)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: _col0 (type: string)
                         sort order: +
                         Map-reduce partition columns: _col0 (type: string)
-                        Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                       Select Operator
                         expressions: _col0 (type: string)
                         outputColumnNames: _col0
-                        Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                         Group By Operator
                           keys: _col0 (type: string)
                           mode: hash
                           outputColumnNames: _col0
-                          Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                           Dynamic Partitioning Event Operator
                             Target column: ds (string)
                             Target Input: srcpart
                             Partition key expr: ds
-                            Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                            Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                             Target Vertex: Map 1
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: []
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: false
@@ -624,40 +633,41 @@ STAGE PLANS:
                 TableScan
                   alias: srcpart_hour
                   filterExpr: ((UDFToDouble(hour) = 11.0) and hr is not null) (type: boolean)
-                  Statistics: Num rows: 2 Data size: 344 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: ((UDFToDouble(hour) = 11.0) and hr is not null) (type: boolean)
-                    Statistics: Num rows: 1 Data size: 172 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 1 Data size: 368 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: hr (type: string)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 1 Data size: 172 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 1 Data size: 368 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: _col0 (type: string)
                         sort order: +
                         Map-reduce partition columns: _col0 (type: string)
-                        Statistics: Num rows: 1 Data size: 172 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 1 Data size: 368 Basic stats: COMPLETE Column stats: NONE
                       Select Operator
                         expressions: _col0 (type: string)
                         outputColumnNames: _col0
-                        Statistics: Num rows: 1 Data size: 172 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 1 Data size: 368 Basic stats: COMPLETE Column stats: NONE
                         Group By Operator
                           keys: _col0 (type: string)
                           mode: hash
                           outputColumnNames: _col0
-                          Statistics: Num rows: 1 Data size: 172 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 1 Data size: 368 Basic stats: COMPLETE Column stats: NONE
                           Dynamic Partitioning Event Operator
                             Target column: hr (string)
                             Target Input: srcpart
                             Partition key expr: hr
-                            Statistics: Num rows: 1 Data size: 172 Basic stats: COMPLETE Column stats: NONE
+                            Statistics: Num rows: 1 Data size: 368 Basic stats: COMPLETE Column stats: NONE
                             Target Vertex: Map 1
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: []
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: true
@@ -702,7 +712,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -794,7 +803,9 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: [DECIMAL_64]
+                vectorizationSupportRemovedReasons: [DECIMAL_64 disabled because LLAP is enabled]
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.mapred.TextInputFormat
                 allNative: true
                 usesVectorUDFAdaptor: false
@@ -804,25 +815,26 @@ STAGE PLANS:
                 TableScan
                   alias: srcpart_date
                   filterExpr: ((date = '2008-04-08') and ds is not null) (type: boolean)
-                  Statistics: Num rows: 2 Data size: 376 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: ((date = '2008-04-08') and ds is not null) (type: boolean)
-                    Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: ds (type: string)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: _col0 (type: string)
                         sort order: +
                         Map-reduce partition columns: _col0 (type: string)
-                        Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: []
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
                 allNative: true
                 usesVectorUDFAdaptor: false
@@ -832,25 +844,26 @@ STAGE PLANS:
                 TableScan
                   alias: srcpart_hour
                   filterExpr: ((UDFToDouble(hour) = 11.0) and hr is not null) (type: boolean)
-                  Statistics: Num rows: 2 Data size: 344 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: ((UDFToDouble(hour) = 11.0) and hr is not null) (type: boolean)
-                    Statistics: Num rows: 1 Data size: 172 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 1 Data size: 368 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: hr (type: string)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 1 Data size: 172 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 1 Data size: 368 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: _col0 (type: string)
                         sort order: +
                         Map-reduce partition columns: _col0 (type: string)
-                        Statistics: Num rows: 1 Data size: 172 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 1 Data size: 368 Basic stats: COMPLETE Column stats: NONE
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: []
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
                 allNative: true
                 usesVectorUDFAdaptor: true
@@ -895,7 +908,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -993,7 +1005,9 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: [DECIMAL_64]
+                vectorizationSupportRemovedReasons: [DECIMAL_64 disabled because LLAP is enabled]
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.mapred.TextInputFormat
                 allNative: true
                 usesVectorUDFAdaptor: false
@@ -1003,55 +1017,56 @@ STAGE PLANS:
                 TableScan
                   alias: srcpart_date_hour
                   filterExpr: ((date = '2008-04-08') and (UDFToDouble(hour) = 11.0) and ds is not null and hr is not null) (type: boolean)
-                  Statistics: Num rows: 4 Data size: 1440 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 4 Data size: 2944 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
-                    predicate: ((date = '2008-04-08') and (UDFToDouble(hour) = 11.0) and ds is not null and hr is not null) (type: boolean)
-                    Statistics: Num rows: 1 Data size: 360 Basic stats: COMPLETE Column stats: NONE
+                    predicate: ((UDFToDouble(hour) = 11.0) and (date = '2008-04-08') and ds is not null and hr is not null) (type: boolean)
+                    Statistics: Num rows: 2 Data size: 1472 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: ds (type: string), hr (type: string)
                       outputColumnNames: _col0, _col2
-                      Statistics: Num rows: 1 Data size: 360 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 2 Data size: 1472 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: _col0 (type: string), _col2 (type: string)
                         sort order: ++
                         Map-reduce partition columns: _col0 (type: string), _col2 (type: string)
-                        Statistics: Num rows: 1 Data size: 360 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 2 Data size: 1472 Basic stats: COMPLETE Column stats: NONE
                       Select Operator
                         expressions: _col0 (type: string)
                         outputColumnNames: _col0
-                        Statistics: Num rows: 1 Data size: 360 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 2 Data size: 1472 Basic stats: COMPLETE Column stats: NONE
                         Group By Operator
                           keys: _col0 (type: string)
                           mode: hash
                           outputColumnNames: _col0
-                          Statistics: Num rows: 1 Data size: 360 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 2 Data size: 1472 Basic stats: COMPLETE Column stats: NONE
                           Dynamic Partitioning Event Operator
                             Target column: ds (string)
                             Target Input: srcpart
                             Partition key expr: ds
-                            Statistics: Num rows: 1 Data size: 360 Basic stats: COMPLETE Column stats: NONE
+                            Statistics: Num rows: 2 Data size: 1472 Basic stats: COMPLETE Column stats: NONE
                             Target Vertex: Map 1
                       Select Operator
                         expressions: _col2 (type: string)
                         outputColumnNames: _col0
-                        Statistics: Num rows: 1 Data size: 360 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 2 Data size: 1472 Basic stats: COMPLETE Column stats: NONE
                         Group By Operator
                           keys: _col0 (type: string)
                           mode: hash
                           outputColumnNames: _col0
-                          Statistics: Num rows: 1 Data size: 360 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 2 Data size: 1472 Basic stats: COMPLETE Column stats: NONE
                           Dynamic Partitioning Event Operator
                             Target column: hr (string)
                             Target Input: srcpart
                             Partition key expr: hr
-                            Statistics: Num rows: 1 Data size: 360 Basic stats: COMPLETE Column stats: NONE
+                            Statistics: Num rows: 2 Data size: 1472 Basic stats: COMPLETE Column stats: NONE
                             Target Vertex: Map 1
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: []
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: true
@@ -1080,7 +1095,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -1164,7 +1178,9 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: [DECIMAL_64]
+                vectorizationSupportRemovedReasons: [DECIMAL_64 disabled because LLAP is enabled]
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.mapred.TextInputFormat
                 allNative: true
                 usesVectorUDFAdaptor: false
@@ -1174,25 +1190,26 @@ STAGE PLANS:
                 TableScan
                   alias: srcpart_date_hour
                   filterExpr: ((date = '2008-04-08') and (UDFToDouble(hour) = 11.0) and ds is not null and hr is not null) (type: boolean)
-                  Statistics: Num rows: 4 Data size: 1440 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 4 Data size: 2944 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
-                    predicate: ((date = '2008-04-08') and (UDFToDouble(hour) = 11.0) and ds is not null and hr is not null) (type: boolean)
-                    Statistics: Num rows: 1 Data size: 360 Basic stats: COMPLETE Column stats: NONE
+                    predicate: ((UDFToDouble(hour) = 11.0) and (date = '2008-04-08') and ds is not null and hr is not null) (type: boolean)
+                    Statistics: Num rows: 2 Data size: 1472 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: ds (type: string), hr (type: string)
                       outputColumnNames: _col0, _col2
-                      Statistics: Num rows: 1 Data size: 360 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 2 Data size: 1472 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: _col0 (type: string), _col2 (type: string)
                         sort order: ++
                         Map-reduce partition columns: _col0 (type: string), _col2 (type: string)
-                        Statistics: Num rows: 1 Data size: 360 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 2 Data size: 1472 Basic stats: COMPLETE Column stats: NONE
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: []
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
                 allNative: true
                 usesVectorUDFAdaptor: true
@@ -1221,7 +1238,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -1316,7 +1332,9 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: [DECIMAL_64]
+                vectorizationSupportRemovedReasons: [DECIMAL_64 disabled because LLAP is enabled]
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.mapred.TextInputFormat
                 allNative: true
                 usesVectorUDFAdaptor: false
@@ -1326,40 +1344,41 @@ STAGE PLANS:
                 TableScan
                   alias: srcpart_date
                   filterExpr: ((date = 'I DONT EXIST') and ds is not null) (type: boolean)
-                  Statistics: Num rows: 2 Data size: 376 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: ((date = 'I DONT EXIST') and ds is not null) (type: boolean)
-                    Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: ds (type: string)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: _col0 (type: string)
                         sort order: +
                         Map-reduce partition columns: _col0 (type: string)
-                        Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                       Select Operator
                         expressions: _col0 (type: string)
                         outputColumnNames: _col0
-                        Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                         Group By Operator
                           keys: _col0 (type: string)
                           mode: hash
                           outputColumnNames: _col0
-                          Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                           Dynamic Partitioning Event Operator
                             Target column: ds (string)
                             Target Input: srcpart
                             Partition key expr: ds
-                            Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                            Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                             Target Vertex: Map 1
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: []
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: false
@@ -1388,7 +1407,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -1472,7 +1490,9 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: [DECIMAL_64]
+                vectorizationSupportRemovedReasons: [DECIMAL_64 disabled because LLAP is enabled]
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.mapred.TextInputFormat
                 allNative: true
                 usesVectorUDFAdaptor: false
@@ -1482,25 +1502,26 @@ STAGE PLANS:
                 TableScan
                   alias: srcpart_date
                   filterExpr: ((date = 'I DONT EXIST') and ds is not null) (type: boolean)
-                  Statistics: Num rows: 2 Data size: 376 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: ((date = 'I DONT EXIST') and ds is not null) (type: boolean)
-                    Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: ds (type: string)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: _col0 (type: string)
                         sort order: +
                         Map-reduce partition columns: _col0 (type: string)
-                        Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: []
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
                 allNative: true
                 usesVectorUDFAdaptor: false
@@ -1529,7 +1550,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -1622,7 +1642,9 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: [DECIMAL_64]
+                vectorizationSupportRemovedReasons: [DECIMAL_64 disabled because LLAP is enabled]
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.mapred.TextInputFormat
                 allNative: true
                 usesVectorUDFAdaptor: true
@@ -1632,40 +1654,41 @@ STAGE PLANS:
                 TableScan
                   alias: srcpart_double_hour
                   filterExpr: ((UDFToDouble(hour) = 11.0) and hr is not null) (type: boolean)
-                  Statistics: Num rows: 2 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 2 Data size: 384 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: ((UDFToDouble(hour) = 11.0) and hr is not null) (type: boolean)
-                    Statistics: Num rows: 1 Data size: 94 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 1 Data size: 192 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: hr (type: double)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 1 Data size: 94 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 1 Data size: 192 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: UDFToDouble(UDFToInteger((_col0 / 2.0))) (type: double)
                         sort order: +
                         Map-reduce partition columns: UDFToDouble(UDFToInteger((_col0 / 2.0))) (type: double)
-                        Statistics: Num rows: 1 Data size: 94 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 1 Data size: 192 Basic stats: COMPLETE Column stats: NONE
                       Select Operator
                         expressions: UDFToDouble(UDFToInteger((_col0 / 2.0))) (type: double)
                         outputColumnNames: _col0
-                        Statistics: Num rows: 1 Data size: 94 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 1 Data size: 192 Basic stats: COMPLETE Column stats: NONE
                         Group By Operator
                           keys: _col0 (type: double)
                           mode: hash
                           outputColumnNames: _col0
-                          Statistics: Num rows: 1 Data size: 94 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 1 Data size: 192 Basic stats: COMPLETE Column stats: NONE
                           Dynamic Partitioning Event Operator
                             Target column: hr (string)
                             Target Input: srcpart
                             Partition key expr: UDFToDouble(hr)
-                            Statistics: Num rows: 1 Data size: 94 Basic stats: COMPLETE Column stats: NONE
+                            Statistics: Num rows: 1 Data size: 192 Basic stats: COMPLETE Column stats: NONE
                             Target Vertex: Map 1
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: []
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: true
@@ -1694,7 +1717,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -1778,7 +1800,9 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: [DECIMAL_64]
+                vectorizationSupportRemovedReasons: [DECIMAL_64 disabled because LLAP is enabled]
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.mapred.TextInputFormat
                 allNative: true
                 usesVectorUDFAdaptor: true
@@ -1788,40 +1812,41 @@ STAGE PLANS:
                 TableScan
                   alias: srcpart_double_hour
                   filterExpr: ((UDFToDouble(hour) = 11.0) and hr is not null) (type: boolean)
-                  Statistics: Num rows: 2 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 2 Data size: 384 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: ((UDFToDouble(hour) = 11.0) and hr is not null) (type: boolean)
-                    Statistics: Num rows: 1 Data size: 94 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 1 Data size: 192 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: hr (type: double)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 1 Data size: 94 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 1 Data size: 192 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: _col0 (type: double)
                         sort order: +
                         Map-reduce partition columns: _col0 (type: double)
-                        Statistics: Num rows: 1 Data size: 94 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 1 Data size: 192 Basic stats: COMPLETE Column stats: NONE
                       Select Operator
                         expressions: _col0 (type: double)
                         outputColumnNames: _col0
-                        Statistics: Num rows: 1 Data size: 94 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 1 Data size: 192 Basic stats: COMPLETE Column stats: NONE
                         Group By Operator
                           keys: _col0 (type: double)
                           mode: hash
                           outputColumnNames: _col0
-                          Statistics: Num rows: 1 Data size: 94 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 1 Data size: 192 Basic stats: COMPLETE Column stats: NONE
                           Dynamic Partitioning Event Operator
                             Target column: hr (string)
                             Target Input: srcpart
                             Partition key expr: (UDFToDouble(hr) * 2.0)
-                            Statistics: Num rows: 1 Data size: 94 Basic stats: COMPLETE Column stats: NONE
+                            Statistics: Num rows: 1 Data size: 192 Basic stats: COMPLETE Column stats: NONE
                             Target Vertex: Map 1
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: []
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: true
@@ -1850,7 +1875,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -1934,7 +1958,9 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: [DECIMAL_64]
+                vectorizationSupportRemovedReasons: [DECIMAL_64 disabled because LLAP is enabled]
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.mapred.TextInputFormat
                 allNative: true
                 usesVectorUDFAdaptor: true
@@ -1944,25 +1970,26 @@ STAGE PLANS:
                 TableScan
                   alias: srcpart_double_hour
                   filterExpr: ((UDFToDouble(hour) = 11.0) and hr is not null) (type: boolean)
-                  Statistics: Num rows: 2 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 2 Data size: 384 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: ((UDFToDouble(hour) = 11.0) and hr is not null) (type: boolean)
-                    Statistics: Num rows: 1 Data size: 94 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 1 Data size: 192 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: hr (type: double)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 1 Data size: 94 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 1 Data size: 192 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: UDFToDouble(UDFToInteger((_col0 / 2.0))) (type: double)
                         sort order: +
                         Map-reduce partition columns: UDFToDouble(UDFToInteger((_col0 / 2.0))) (type: double)
-                        Statistics: Num rows: 1 Data size: 94 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 1 Data size: 192 Basic stats: COMPLETE Column stats: NONE
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: []
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
                 allNative: true
                 usesVectorUDFAdaptor: true
@@ -1991,7 +2018,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -2075,7 +2101,9 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: [DECIMAL_64]
+                vectorizationSupportRemovedReasons: [DECIMAL_64 disabled because LLAP is enabled]
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.mapred.TextInputFormat
                 allNative: true
                 usesVectorUDFAdaptor: true
@@ -2085,25 +2113,26 @@ STAGE PLANS:
                 TableScan
                   alias: srcpart_double_hour
                   filterExpr: ((UDFToDouble(hour) = 11.0) and hr is not null) (type: boolean)
-                  Statistics: Num rows: 2 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 2 Data size: 384 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: ((UDFToDouble(hour) = 11.0) and hr is not null) (type: boolean)
-                    Statistics: Num rows: 1 Data size: 94 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 1 Data size: 192 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: hr (type: double)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 1 Data size: 94 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 1 Data size: 192 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: _col0 (type: double)
                         sort order: +
                         Map-reduce partition columns: _col0 (type: double)
-                        Statistics: Num rows: 1 Data size: 94 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 1 Data size: 192 Basic stats: COMPLETE Column stats: NONE
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: []
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
                 allNative: true
                 usesVectorUDFAdaptor: true
@@ -2132,7 +2161,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -2229,7 +2257,9 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: [DECIMAL_64]
+                vectorizationSupportRemovedReasons: [DECIMAL_64 disabled because LLAP is enabled]
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.mapred.TextInputFormat
                 allNative: true
                 usesVectorUDFAdaptor: true
@@ -2239,40 +2269,41 @@ STAGE PLANS:
                 TableScan
                   alias: srcpart_double_hour
                   filterExpr: ((UDFToDouble(hour) = 11.0) and hr is not null) (type: boolean)
-                  Statistics: Num rows: 2 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 2 Data size: 384 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: ((UDFToDouble(hour) = 11.0) and hr is not null) (type: boolean)
-                    Statistics: Num rows: 1 Data size: 94 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 1 Data size: 192 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: hr (type: double)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 1 Data size: 94 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 1 Data size: 192 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: UDFToString(_col0) (type: string)
                         sort order: +
                         Map-reduce partition columns: UDFToString(_col0) (type: string)
-                        Statistics: Num rows: 1 Data size: 94 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 1 Data size: 192 Basic stats: COMPLETE Column stats: NONE
                       Select Operator
                         expressions: UDFToString(_col0) (type: string)
                         outputColumnNames: _col0
-                        Statistics: Num rows: 1 Data size: 94 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 1 Data size: 192 Basic stats: COMPLETE Column stats: NONE
                         Group By Operator
                           keys: _col0 (type: string)
                           mode: hash
                           outputColumnNames: _col0
-                          Statistics: Num rows: 1 Data size: 94 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 1 Data size: 192 Basic stats: COMPLETE Column stats: NONE
                           Dynamic Partitioning Event Operator
                             Target column: hr (string)
                             Target Input: srcpart
                             Partition key expr: UDFToString((UDFToDouble(hr) * 2.0))
-                            Statistics: Num rows: 1 Data size: 94 Basic stats: COMPLETE Column stats: NONE
+                            Statistics: Num rows: 1 Data size: 192 Basic stats: COMPLETE Column stats: NONE
                             Target Vertex: Map 1
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: []
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: true
@@ -2301,7 +2332,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -2375,7 +2405,7 @@ STAGE PLANS:
     Tez
 #### A masked pattern was here ####
       Edges:
-        Reducer 2 <- Map 1 (CUSTOM_SIMPLE_EDGE), Reducer 4 (CUSTOM_SIMPLE_EDGE)
+        Reducer 2 <- Map 1 (XPROD_EDGE), Reducer 4 (XPROD_EDGE)
         Reducer 3 <- Reducer 2 (CUSTOM_SIMPLE_EDGE)
         Reducer 4 <- Map 1 (SIMPLE_EDGE)
 #### A masked pattern was here ####
@@ -2406,7 +2436,9 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: [DECIMAL_64]
+                vectorizationSupportRemovedReasons: [DECIMAL_64 disabled because LLAP is enabled]
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.mapred.TextInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: false
@@ -2435,7 +2467,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -2457,7 +2488,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -2524,7 +2554,7 @@ STAGE PLANS:
     Tez
 #### A masked pattern was here ####
       Edges:
-        Reducer 2 <- Map 1 (CUSTOM_SIMPLE_EDGE), Map 4 (CUSTOM_SIMPLE_EDGE)
+        Reducer 2 <- Map 1 (XPROD_EDGE), Map 4 (XPROD_EDGE)
         Reducer 3 <- Reducer 2 (CUSTOM_SIMPLE_EDGE)
 #### A masked pattern was here ####
       Vertices:
@@ -2546,7 +2576,9 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: [DECIMAL_64]
+                vectorizationSupportRemovedReasons: [DECIMAL_64 disabled because LLAP is enabled]
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.mapred.TextInputFormat
                 allNative: true
                 usesVectorUDFAdaptor: false
@@ -2556,24 +2588,25 @@ STAGE PLANS:
                 TableScan
                   alias: srcpart_date_hour
                   filterExpr: ((date = '2008-04-08') and (UDFToDouble(hour) = 11.0)) (type: boolean)
-                  Statistics: Num rows: 4 Data size: 1440 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 4 Data size: 2944 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
-                    predicate: ((date = '2008-04-08') and (UDFToDouble(hour) = 11.0)) (type: boolean)
-                    Statistics: Num rows: 1 Data size: 360 Basic stats: COMPLETE Column stats: NONE
+                    predicate: ((UDFToDouble(hour) = 11.0) and (date = '2008-04-08')) (type: boolean)
+                    Statistics: Num rows: 2 Data size: 1472 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: ds (type: string), hr (type: string)
                       outputColumnNames: _col0, _col2
-                      Statistics: Num rows: 1 Data size: 360 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 2 Data size: 1472 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         sort order: 
-                        Statistics: Num rows: 1 Data size: 360 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 2 Data size: 1472 Basic stats: COMPLETE Column stats: NONE
                         value expressions: _col0 (type: string), _col2 (type: string)
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: []
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
                 allNative: true
                 usesVectorUDFAdaptor: true
@@ -2589,9 +2622,9 @@ STAGE PLANS:
                   1 
                 outputColumnNames: _col0, _col1, _col2, _col4
                 residual filter predicates: {((_col0 = _col2) or (_col1 = _col4))}
-                Statistics: Num rows: 2000 Data size: 1458000 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 4000 Data size: 4420000 Basic stats: COMPLETE Column stats: NONE
                 Select Operator
-                  Statistics: Num rows: 2000 Data size: 1458000 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 4000 Data size: 4420000 Basic stats: COMPLETE Column stats: NONE
                   Group By Operator
                     aggregations: count()
                     mode: hash
@@ -2606,7 +2639,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -2690,7 +2722,9 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: [DECIMAL_64]
+                vectorizationSupportRemovedReasons: [DECIMAL_64 disabled because LLAP is enabled]
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.mapred.TextInputFormat
                 allNative: true
                 usesVectorUDFAdaptor: false
@@ -2700,55 +2734,56 @@ STAGE PLANS:
                 TableScan
                   alias: srcpart_date_hour
                   filterExpr: ((date = '2008-04-08') and (UDFToDouble(hour) = 11.0) and ds is not null and hr is not null) (type: boolean)
-                  Statistics: Num rows: 4 Data size: 1440 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 4 Data size: 2944 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
-                    predicate: ((date = '2008-04-08') and (UDFToDouble(hour) = 11.0) and ds is not null and hr is not null) (type: boolean)
-                    Statistics: Num rows: 1 Data size: 360 Basic stats: COMPLETE Column stats: NONE
+                    predicate: ((UDFToDouble(hour) = 11.0) and (date = '2008-04-08') and ds is not null and hr is not null) (type: boolean)
+                    Statistics: Num rows: 2 Data size: 1472 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: ds (type: string), hr (type: string)
                       outputColumnNames: _col0, _col2
-                      Statistics: Num rows: 1 Data size: 360 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 2 Data size: 1472 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: _col0 (type: string), _col2 (type: string)
                         sort order: ++
                         Map-reduce partition columns: _col0 (type: string), _col2 (type: string)
-                        Statistics: Num rows: 1 Data size: 360 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 2 Data size: 1472 Basic stats: COMPLETE Column stats: NONE
                       Select Operator
                         expressions: _col0 (type: string)
                         outputColumnNames: _col0
-                        Statistics: Num rows: 1 Data size: 360 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 2 Data size: 1472 Basic stats: COMPLETE Column stats: NONE
                         Group By Operator
                           keys: _col0 (type: string)
                           mode: hash
                           outputColumnNames: _col0
-                          Statistics: Num rows: 1 Data size: 360 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 2 Data size: 1472 Basic stats: COMPLETE Column stats: NONE
                           Dynamic Partitioning Event Operator
                             Target column: ds (string)
                             Target Input: srcpart
                             Partition key expr: ds
-                            Statistics: Num rows: 1 Data size: 360 Basic stats: COMPLETE Column stats: NONE
+                            Statistics: Num rows: 2 Data size: 1472 Basic stats: COMPLETE Column stats: NONE
                             Target Vertex: Map 1
                       Select Operator
                         expressions: _col2 (type: string)
                         outputColumnNames: _col0
-                        Statistics: Num rows: 1 Data size: 360 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 2 Data size: 1472 Basic stats: COMPLETE Column stats: NONE
                         Group By Operator
                           keys: _col0 (type: string)
                           mode: hash
                           outputColumnNames: _col0
-                          Statistics: Num rows: 1 Data size: 360 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 2 Data size: 1472 Basic stats: COMPLETE Column stats: NONE
                           Dynamic Partitioning Event Operator
                             Target column: hr (string)
                             Target Input: srcpart
                             Partition key expr: hr
-                            Statistics: Num rows: 1 Data size: 360 Basic stats: COMPLETE Column stats: NONE
+                            Statistics: Num rows: 2 Data size: 1472 Basic stats: COMPLETE Column stats: NONE
                             Target Vertex: Map 1
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: []
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: true
@@ -2777,7 +2812,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -2861,7 +2895,9 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: [DECIMAL_64]
+                vectorizationSupportRemovedReasons: [DECIMAL_64 disabled because LLAP is enabled]
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.mapred.TextInputFormat
                 allNative: true
                 usesVectorUDFAdaptor: false
@@ -2871,40 +2907,41 @@ STAGE PLANS:
                 TableScan
                   alias: srcpart_date
                   filterExpr: ((date = '2008-04-08') and ds is not null) (type: boolean)
-                  Statistics: Num rows: 2 Data size: 376 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: ((date = '2008-04-08') and ds is not null) (type: boolean)
-                    Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: ds (type: string)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: _col0 (type: string)
                         sort order: +
                         Map-reduce partition columns: _col0 (type: string)
-                        Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                       Select Operator
                         expressions: _col0 (type: string)
                         outputColumnNames: _col0
-                        Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                         Group By Operator
                           keys: _col0 (type: string)
                           mode: hash
                           outputColumnNames: _col0
-                          Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                           Dynamic Partitioning Event Operator
                             Target column: ds (string)
                             Target Input: srcpart
                             Partition key expr: ds
-                            Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                            Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                             Target Vertex: Map 1
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: []
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: false
@@ -2933,7 +2970,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -2983,40 +3019,41 @@ STAGE PLANS:
                 TableScan
                   alias: srcpart_date
                   filterExpr: (date = '2008-04-08') (type: boolean)
-                  Statistics: Num rows: 2 Data size: 376 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: (date = '2008-04-08') (type: boolean)
-                    Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: ds (type: string)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: _col0 (type: string)
                         sort order: +
                         Map-reduce partition columns: _col0 (type: string)
-                        Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                       Select Operator
                         expressions: _col0 (type: string)
                         outputColumnNames: _col0
-                        Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                         Group By Operator
                           keys: _col0 (type: string)
                           mode: hash
                           outputColumnNames: _col0
-                          Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                           Dynamic Partitioning Event Operator
                             Target column: ds (string)
                             Target Input: srcpart
                             Partition key expr: ds
-                            Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                            Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                             Target Vertex: Map 4
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: []
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: false
@@ -3040,7 +3077,9 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: [DECIMAL_64]
+                vectorizationSupportRemovedReasons: [DECIMAL_64 disabled because LLAP is enabled]
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.mapred.TextInputFormat
                 allNative: true
                 usesVectorUDFAdaptor: false
@@ -3069,7 +3108,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -3133,7 +3171,9 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: [DECIMAL_64]
+                vectorizationSupportRemovedReasons: [DECIMAL_64 disabled because LLAP is enabled]
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.mapred.TextInputFormat
                 allNative: true
                 usesVectorUDFAdaptor: false
@@ -3143,40 +3183,41 @@ STAGE PLANS:
                 TableScan
                   alias: srcpart_date
                   filterExpr: (date = '2008-04-08') (type: boolean)
-                  Statistics: Num rows: 2 Data size: 376 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: (date = '2008-04-08') (type: boolean)
-                    Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: ds (type: string)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: _col0 (type: string)
                         sort order: +
                         Map-reduce partition columns: _col0 (type: string)
-                        Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                       Select Operator
                         expressions: _col0 (type: string)
                         outputColumnNames: _col0
-                        Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                         Group By Operator
                           keys: _col0 (type: string)
                           mode: hash
                           outputColumnNames: _col0
-                          Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                           Dynamic Partitioning Event Operator
                             Target column: ds (string)
                             Target Input: srcpart
                             Partition key expr: ds
-                            Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                            Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                             Target Vertex: Map 1
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: []
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: false
@@ -3205,7 +3246,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -3273,7 +3313,9 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: [DECIMAL_64]
+                vectorizationSupportRemovedReasons: [DECIMAL_64 disabled because LLAP is enabled]
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.mapred.TextInputFormat
                 allNative: true
                 usesVectorUDFAdaptor: false
@@ -3283,40 +3325,41 @@ STAGE PLANS:
                 TableScan
                   alias: srcpart_date
                   filterExpr: ((date = '2008-04-08') and ds is not null) (type: boolean)
-                  Statistics: Num rows: 2 Data size: 376 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: ((date = '2008-04-08') and ds is not null) (type: boolean)
-                    Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: ds (type: string)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: _col0 (type: string)
                         sort order: +
                         Map-reduce partition columns: _col0 (type: string)
-                        Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                       Select Operator
                         expressions: _col0 (type: string)
                         outputColumnNames: _col0
-                        Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                         Group By Operator
                           keys: _col0 (type: string)
                           mode: hash
                           outputColumnNames: _col0
-                          Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                           Dynamic Partitioning Event Operator
                             Target column: ds (string)
                             Target Input: srcpart
                             Partition key expr: ds
-                            Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                            Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                             Target Vertex: Map 1
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: []
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: false
@@ -3326,40 +3369,41 @@ STAGE PLANS:
                 TableScan
                   alias: srcpart_hour
                   filterExpr: ((UDFToDouble(hour) = 11.0) and (UDFToDouble(hr) = 11.0)) (type: boolean)
-                  Statistics: Num rows: 2 Data size: 344 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: ((UDFToDouble(hour) = 11.0) and (UDFToDouble(hr) = 11.0)) (type: boolean)
-                    Statistics: Num rows: 1 Data size: 172 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 1 Data size: 368 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: hr (type: string)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 1 Data size: 172 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 1 Data size: 368 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: _col0 (type: string)
                         sort order: +
                         Map-reduce partition columns: _col0 (type: string)
-                        Statistics: Num rows: 1 Data size: 172 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 1 Data size: 368 Basic stats: COMPLETE Column stats: NONE
                       Select Operator
                         expressions: _col0 (type: string)
                         outputColumnNames: _col0
-                        Statistics: Num rows: 1 Data size: 172 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 1 Data size: 368 Basic stats: COMPLETE Column stats: NONE
                         Group By Operator
                           keys: _col0 (type: string)
                           mode: hash
                           outputColumnNames: _col0
-                          Statistics: Num rows: 1 Data size: 172 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 1 Data size: 368 Basic stats: COMPLETE Column stats: NONE
                           Dynamic Partitioning Event Operator
                             Target column: hr (string)
                             Target Input: srcpart
                             Partition key expr: hr
-                            Statistics: Num rows: 1 Data size: 172 Basic stats: COMPLETE Column stats: NONE
+                            Statistics: Num rows: 1 Data size: 368 Basic stats: COMPLETE Column stats: NONE
                             Target Vertex: Map 1
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: []
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: true
@@ -3404,7 +3448,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -3474,6 +3517,35 @@ STAGE PLANS:
         Map 1 
             Map Operator Tree:
                 TableScan
+                  alias: srcpart_hour
+                  filterExpr: (UDFToDouble(hr) = 13.0) (type: boolean)
+                  Statistics: Num rows: 2 Data size: 368 Basic stats: COMPLETE Column stats: NONE
+                  Filter Operator
+                    predicate: (UDFToDouble(hr) = 13.0) (type: boolean)
+                    Statistics: Num rows: 1 Data size: 184 Basic stats: COMPLETE Column stats: NONE
+                    Select Operator
+                      expressions: hr (type: string)
+                      outputColumnNames: _col0
+                      Statistics: Num rows: 1 Data size: 184 Basic stats: COMPLETE Column stats: NONE
+                      Reduce Output Operator
+                        key expressions: _col0 (type: string)
+                        sort order: +
+                        Map-reduce partition columns: _col0 (type: string)
+                        Statistics: Num rows: 1 Data size: 184 Basic stats: COMPLETE Column stats: NONE
+            Execution mode: vectorized, llap
+            LLAP IO: all inputs
+            Map Vectorization:
+                enabled: true
+                enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
+                inputFormatFeatureSupport: []
+                featureSupportInUse: []
+                inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
+                allNative: true
+                usesVectorUDFAdaptor: true
+                vectorized: true
+        Map 5 
+            Map Operator Tree:
+                TableScan
                   alias: srcpart
                   filterExpr: ((UDFToDouble(hr) = 13.0) and ds is not null) (type: boolean)
                   Statistics: Num rows: 1 Data size: 368 Basic stats: COMPLETE Column stats: COMPLETE
@@ -3485,74 +3557,48 @@ STAGE PLANS:
                       outputColumnNames: _col0, _col1
                       Statistics: Num rows: 1 Data size: 368 Basic stats: COMPLETE Column stats: COMPLETE
                       Reduce Output Operator
-                        key expressions: _col0 (type: string)
+                        key expressions: _col1 (type: string)
                         sort order: +
-                        Map-reduce partition columns: _col0 (type: string)
+                        Map-reduce partition columns: _col1 (type: string)
                         Statistics: Num rows: 1 Data size: 368 Basic stats: COMPLETE Column stats: COMPLETE
-                        value expressions: _col1 (type: string)
+                        value expressions: _col0 (type: string)
             Execution mode: vectorized, llap
             LLAP IO: unknown
             Map Vectorization:
                 enabled: true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: []
+                featureSupportInUse: []
                 allNative: true
                 usesVectorUDFAdaptor: true
-                vectorized: true
-        Map 5 
-            Map Operator Tree:
-                TableScan
-                  alias: srcpart_date
-                  filterExpr: ((date = '2008-04-08') and ds is not null) (type: boolean)
-                  Statistics: Num rows: 2 Data size: 376 Basic stats: COMPLETE Column stats: NONE
-                  Filter Operator
-                    predicate: ((date = '2008-04-08') and ds is not null) (type: boolean)
-                    Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
-                    Select Operator
-                      expressions: ds (type: string)
-                      outputColumnNames: _col0
-                      Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
-                      Reduce Output Operator
-                        key expressions: _col0 (type: string)
-                        sort order: +
-                        Map-reduce partition columns: _col0 (type: string)
-                        Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
-            Execution mode: vectorized, llap
-            LLAP IO: all inputs
-            Map Vectorization:
-                enabled: true
-                enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
-                groupByVectorOutput: true
-                inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
-                allNative: true
-                usesVectorUDFAdaptor: false
                 vectorized: true
         Map 6 
             Map Operator Tree:
                 TableScan
-                  alias: srcpart_hour
-                  filterExpr: (UDFToDouble(hr) = 13.0) (type: boolean)
-                  Statistics: Num rows: 2 Data size: 344 Basic stats: COMPLETE Column stats: NONE
+                  alias: srcpart_date
+                  filterExpr: ((date = '2008-04-08') and ds is not null) (type: boolean)
+                  Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
-                    predicate: (UDFToDouble(hr) = 13.0) (type: boolean)
-                    Statistics: Num rows: 1 Data size: 172 Basic stats: COMPLETE Column stats: NONE
+                    predicate: ((date = '2008-04-08') and ds is not null) (type: boolean)
+                    Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
-                      expressions: hr (type: string)
+                      expressions: ds (type: string)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 1 Data size: 172 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: _col0 (type: string)
                         sort order: +
                         Map-reduce partition columns: _col0 (type: string)
-                        Statistics: Num rows: 1 Data size: 172 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: []
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
                 allNative: true
-                usesVectorUDFAdaptor: true
+                usesVectorUDFAdaptor: false
                 vectorized: true
         Reducer 2 
             Execution mode: llap
@@ -3562,14 +3608,14 @@ STAGE PLANS:
                      Inner Join 0 to 1
                 keys:
                   0 _col0 (type: string)
-                  1 _col0 (type: string)
+                  1 _col1 (type: string)
                 outputColumnNames: _col1
-                Statistics: Num rows: 1 Data size: 404 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 1 Data size: 202 Basic stats: COMPLETE Column stats: NONE
                 Reduce Output Operator
                   key expressions: _col1 (type: string)
                   sort order: +
                   Map-reduce partition columns: _col1 (type: string)
-                  Statistics: Num rows: 1 Data size: 404 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 1 Data size: 202 Basic stats: COMPLETE Column stats: NONE
         Reducer 3 
             Execution mode: llap
             Reduce Operator Tree:
@@ -3579,7 +3625,7 @@ STAGE PLANS:
                 keys:
                   0 _col1 (type: string)
                   1 _col0 (type: string)
-                Statistics: Num rows: 1 Data size: 444 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 2 Data size: 809 Basic stats: COMPLETE Column stats: NONE
                 Group By Operator
                   aggregations: count()
                   mode: hash
@@ -3594,7 +3640,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -3676,7 +3721,9 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: [DECIMAL_64]
+                vectorizationSupportRemovedReasons: [DECIMAL_64 disabled because LLAP is enabled]
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.mapred.TextInputFormat
                 allNative: true
                 usesVectorUDFAdaptor: false
@@ -3704,7 +3751,9 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: [DECIMAL_64]
+                vectorizationSupportRemovedReasons: [DECIMAL_64 disabled because LLAP is enabled]
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.mapred.TextInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: false
@@ -3732,7 +3781,9 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: [DECIMAL_64]
+                vectorizationSupportRemovedReasons: [DECIMAL_64 disabled because LLAP is enabled]
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.mapred.TextInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: false
@@ -3761,7 +3812,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -3783,7 +3833,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -3826,7 +3875,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -3933,7 +3981,9 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: [DECIMAL_64]
+                vectorizationSupportRemovedReasons: [DECIMAL_64 disabled because LLAP is enabled]
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.mapred.TextInputFormat
                 allNative: true
                 usesVectorUDFAdaptor: false
@@ -3961,7 +4011,9 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: [DECIMAL_64]
+                vectorizationSupportRemovedReasons: [DECIMAL_64 disabled because LLAP is enabled]
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.mapred.TextInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: false
@@ -3989,7 +4041,9 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: [DECIMAL_64]
+                vectorizationSupportRemovedReasons: [DECIMAL_64 disabled because LLAP is enabled]
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.mapred.TextInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: false
@@ -4020,7 +4074,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -4042,7 +4095,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -4085,7 +4137,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -4195,7 +4246,9 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: [DECIMAL_64]
+                vectorizationSupportRemovedReasons: [DECIMAL_64 disabled because LLAP is enabled]
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.mapred.TextInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: false
@@ -4223,7 +4276,9 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: [DECIMAL_64]
+                vectorizationSupportRemovedReasons: [DECIMAL_64 disabled because LLAP is enabled]
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.mapred.TextInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: false
@@ -4249,7 +4304,9 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: [DECIMAL_64]
+                vectorizationSupportRemovedReasons: [DECIMAL_64 disabled because LLAP is enabled]
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.mapred.TextInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: false
@@ -4277,7 +4334,9 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: [DECIMAL_64]
+                vectorizationSupportRemovedReasons: [DECIMAL_64 disabled because LLAP is enabled]
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.mapred.TextInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: false
@@ -4287,7 +4346,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -4345,7 +4403,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -4383,7 +4440,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -4403,7 +4459,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -4541,7 +4596,9 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: [DECIMAL_64]
+                vectorizationSupportRemovedReasons: [DECIMAL_64 disabled because LLAP is enabled]
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.mapred.TextInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: false
@@ -4551,40 +4608,41 @@ STAGE PLANS:
                 TableScan
                   alias: srcpart_date
                   filterExpr: ((date = '2008-04-08') and ds is not null) (type: boolean)
-                  Statistics: Num rows: 2 Data size: 376 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: ((date = '2008-04-08') and ds is not null) (type: boolean)
-                    Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: ds (type: string)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: _col0 (type: string)
                         sort order: +
                         Map-reduce partition columns: _col0 (type: string)
-                        Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                       Select Operator
                         expressions: _col0 (type: string)
                         outputColumnNames: _col0
-                        Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                         Group By Operator
                           keys: _col0 (type: string)
                           mode: hash
                           outputColumnNames: _col0
-                          Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                           Dynamic Partitioning Event Operator
                             Target column: ds (string)
                             Target Input: srcpart
                             Partition key expr: ds
-                            Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                            Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                             Target Vertex: Map 1
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: []
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: false
@@ -4594,7 +4652,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -4715,7 +4772,9 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: [DECIMAL_64]
+                vectorizationSupportRemovedReasons: [DECIMAL_64 disabled because LLAP is enabled]
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.mapred.TextInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: false
@@ -4725,40 +4784,41 @@ STAGE PLANS:
                 TableScan
                   alias: srcpart_date
                   filterExpr: ((date = '2008-04-08') and ds is not null) (type: boolean)
-                  Statistics: Num rows: 2 Data size: 376 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: ((date = '2008-04-08') and ds is not null) (type: boolean)
-                    Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: ds (type: string)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: _col0 (type: string)
                         sort order: +
                         Map-reduce partition columns: _col0 (type: string)
-                        Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                       Select Operator
                         expressions: _col0 (type: string)
                         outputColumnNames: _col0
-                        Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                         Group By Operator
                           keys: _col0 (type: string)
                           mode: hash
                           outputColumnNames: _col0
-                          Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                           Dynamic Partitioning Event Operator
                             Target column: ds (string)
                             Target Input: srcpart
                             Partition key expr: ds
-                            Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                            Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                             Target Vertex: Map 1
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: []
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: false
@@ -4768,40 +4828,41 @@ STAGE PLANS:
                 TableScan
                   alias: srcpart_hour
                   filterExpr: ((UDFToDouble(hour) = 11.0) and hr is not null) (type: boolean)
-                  Statistics: Num rows: 2 Data size: 344 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: ((UDFToDouble(hour) = 11.0) and hr is not null) (type: boolean)
-                    Statistics: Num rows: 1 Data size: 172 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 1 Data size: 368 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: hr (type: string)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 1 Data size: 172 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 1 Data size: 368 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: _col0 (type: string)
                         sort order: +
                         Map-reduce partition columns: _col0 (type: string)
-                        Statistics: Num rows: 1 Data size: 172 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 1 Data size: 368 Basic stats: COMPLETE Column stats: NONE
                       Select Operator
                         expressions: _col0 (type: string)
                         outputColumnNames: _col0
-                        Statistics: Num rows: 1 Data size: 172 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 1 Data size: 368 Basic stats: COMPLETE Column stats: NONE
                         Group By Operator
                           keys: _col0 (type: string)
                           mode: hash
                           outputColumnNames: _col0
-                          Statistics: Num rows: 1 Data size: 172 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 1 Data size: 368 Basic stats: COMPLETE Column stats: NONE
                           Dynamic Partitioning Event Operator
                             Target column: hr (string)
                             Target Input: srcpart
                             Partition key expr: hr
-                            Statistics: Num rows: 1 Data size: 172 Basic stats: COMPLETE Column stats: NONE
+                            Statistics: Num rows: 1 Data size: 368 Basic stats: COMPLETE Column stats: NONE
                             Target Vertex: Map 1
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: []
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: true
@@ -4811,7 +4872,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -4922,7 +4982,9 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: [DECIMAL_64]
+                vectorizationSupportRemovedReasons: [DECIMAL_64 disabled because LLAP is enabled]
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.mapred.TextInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: false
@@ -4932,55 +4994,56 @@ STAGE PLANS:
                 TableScan
                   alias: srcpart_date_hour
                   filterExpr: ((date = '2008-04-08') and (UDFToDouble(hour) = 11.0) and ds is not null and hr is not null) (type: boolean)
-                  Statistics: Num rows: 4 Data size: 1440 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 4 Data size: 2944 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
-                    predicate: ((date = '2008-04-08') and (UDFToDouble(hour) = 11.0) and ds is not null and hr is not null) (type: boolean)
-                    Statistics: Num rows: 1 Data size: 360 Basic stats: COMPLETE Column stats: NONE
+                    predicate: ((UDFToDouble(hour) = 11.0) and (date = '2008-04-08') and ds is not null and hr is not null) (type: boolean)
+                    Statistics: Num rows: 2 Data size: 1472 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: ds (type: string), hr (type: string)
                       outputColumnNames: _col0, _col2
-                      Statistics: Num rows: 1 Data size: 360 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 2 Data size: 1472 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: _col0 (type: string), _col2 (type: string)
                         sort order: ++
                         Map-reduce partition columns: _col0 (type: string), _col2 (type: string)
-                        Statistics: Num rows: 1 Data size: 360 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 2 Data size: 1472 Basic stats: COMPLETE Column stats: NONE
                       Select Operator
                         expressions: _col0 (type: string)
                         outputColumnNames: _col0
-                        Statistics: Num rows: 1 Data size: 360 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 2 Data size: 1472 Basic stats: COMPLETE Column stats: NONE
                         Group By Operator
                           keys: _col0 (type: string)
                           mode: hash
                           outputColumnNames: _col0
-                          Statistics: Num rows: 1 Data size: 360 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 2 Data size: 1472 Basic stats: COMPLETE Column stats: NONE
                           Dynamic Partitioning Event Operator
                             Target column: ds (string)
                             Target Input: srcpart
                             Partition key expr: ds
-                            Statistics: Num rows: 1 Data size: 360 Basic stats: COMPLETE Column stats: NONE
+                            Statistics: Num rows: 2 Data size: 1472 Basic stats: COMPLETE Column stats: NONE
                             Target Vertex: Map 1
                       Select Operator
                         expressions: _col2 (type: string)
                         outputColumnNames: _col0
-                        Statistics: Num rows: 1 Data size: 360 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 2 Data size: 1472 Basic stats: COMPLETE Column stats: NONE
                         Group By Operator
                           keys: _col0 (type: string)
                           mode: hash
                           outputColumnNames: _col0
-                          Statistics: Num rows: 1 Data size: 360 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 2 Data size: 1472 Basic stats: COMPLETE Column stats: NONE
                           Dynamic Partitioning Event Operator
                             Target column: hr (string)
                             Target Input: srcpart
                             Partition key expr: hr
-                            Statistics: Num rows: 1 Data size: 360 Basic stats: COMPLETE Column stats: NONE
+                            Statistics: Num rows: 2 Data size: 1472 Basic stats: COMPLETE Column stats: NONE
                             Target Vertex: Map 1
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: []
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: true
@@ -4990,7 +5053,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -5098,7 +5160,9 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: [DECIMAL_64]
+                vectorizationSupportRemovedReasons: [DECIMAL_64 disabled because LLAP is enabled]
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.mapred.TextInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: false
@@ -5108,40 +5172,41 @@ STAGE PLANS:
                 TableScan
                   alias: srcpart_date
                   filterExpr: ((date = 'I DONT EXIST') and ds is not null) (type: boolean)
-                  Statistics: Num rows: 2 Data size: 376 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: ((date = 'I DONT EXIST') and ds is not null) (type: boolean)
-                    Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: ds (type: string)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: _col0 (type: string)
                         sort order: +
                         Map-reduce partition columns: _col0 (type: string)
-                        Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                       Select Operator
                         expressions: _col0 (type: string)
                         outputColumnNames: _col0
-                        Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                         Group By Operator
                           keys: _col0 (type: string)
                           mode: hash
                           outputColumnNames: _col0
-                          Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                           Dynamic Partitioning Event Operator
                             Target column: ds (string)
                             Target Input: srcpart
                             Partition key expr: ds
-                            Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                            Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                             Target Vertex: Map 1
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: []
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: false
@@ -5151,7 +5216,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -5248,7 +5312,9 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: [DECIMAL_64]
+                vectorizationSupportRemovedReasons: [DECIMAL_64 disabled because LLAP is enabled]
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.mapred.TextInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: true
@@ -5258,40 +5324,41 @@ STAGE PLANS:
                 TableScan
                   alias: srcpart_double_hour
                   filterExpr: ((UDFToDouble(hour) = 11.0) and hr is not null) (type: boolean)
-                  Statistics: Num rows: 2 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 2 Data size: 384 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: ((UDFToDouble(hour) = 11.0) and hr is not null) (type: boolean)
-                    Statistics: Num rows: 1 Data size: 94 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 1 Data size: 192 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: hr (type: double)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 1 Data size: 94 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 1 Data size: 192 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: UDFToDouble(UDFToInteger((_col0 / 2.0))) (type: double)
                         sort order: +
                         Map-reduce partition columns: UDFToDouble(UDFToInteger((_col0 / 2.0))) (type: double)
-                        Statistics: Num rows: 1 Data size: 94 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 1 Data size: 192 Basic stats: COMPLETE Column stats: NONE
                       Select Operator
                         expressions: UDFToDouble(UDFToInteger((_col0 / 2.0))) (type: double)
                         outputColumnNames: _col0
-                        Statistics: Num rows: 1 Data size: 94 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 1 Data size: 192 Basic stats: COMPLETE Column stats: NONE
                         Group By Operator
                           keys: _col0 (type: double)
                           mode: hash
                           outputColumnNames: _col0
-                          Statistics: Num rows: 1 Data size: 94 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 1 Data size: 192 Basic stats: COMPLETE Column stats: NONE
                           Dynamic Partitioning Event Operator
                             Target column: hr (string)
                             Target Input: srcpart
                             Partition key expr: UDFToDouble(hr)
-                            Statistics: Num rows: 1 Data size: 94 Basic stats: COMPLETE Column stats: NONE
+                            Statistics: Num rows: 1 Data size: 192 Basic stats: COMPLETE Column stats: NONE
                             Target Vertex: Map 1
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: []
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: true
@@ -5301,7 +5368,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -5398,7 +5464,9 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: [DECIMAL_64]
+                vectorizationSupportRemovedReasons: [DECIMAL_64 disabled because LLAP is enabled]
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.mapred.TextInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: true
@@ -5408,40 +5476,41 @@ STAGE PLANS:
                 TableScan
                   alias: srcpart_double_hour
                   filterExpr: ((UDFToDouble(hour) = 11.0) and hr is not null) (type: boolean)
-                  Statistics: Num rows: 2 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 2 Data size: 384 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: ((UDFToDouble(hour) = 11.0) and hr is not null) (type: boolean)
-                    Statistics: Num rows: 1 Data size: 94 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 1 Data size: 192 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: hr (type: double)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 1 Data size: 94 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 1 Data size: 192 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: _col0 (type: double)
                         sort order: +
                         Map-reduce partition columns: _col0 (type: double)
-                        Statistics: Num rows: 1 Data size: 94 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 1 Data size: 192 Basic stats: COMPLETE Column stats: NONE
                       Select Operator
                         expressions: _col0 (type: double)
                         outputColumnNames: _col0
-                        Statistics: Num rows: 1 Data size: 94 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 1 Data size: 192 Basic stats: COMPLETE Column stats: NONE
                         Group By Operator
                           keys: _col0 (type: double)
                           mode: hash
                           outputColumnNames: _col0
-                          Statistics: Num rows: 1 Data size: 94 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 1 Data size: 192 Basic stats: COMPLETE Column stats: NONE
                           Dynamic Partitioning Event Operator
                             Target column: hr (string)
                             Target Input: srcpart
                             Partition key expr: (UDFToDouble(hr) * 2.0)
-                            Statistics: Num rows: 1 Data size: 94 Basic stats: COMPLETE Column stats: NONE
+                            Statistics: Num rows: 1 Data size: 192 Basic stats: COMPLETE Column stats: NONE
                             Target Vertex: Map 1
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: []
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: true
@@ -5451,7 +5520,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -5507,7 +5575,7 @@ POSTHOOK: Input: default@srcpart@ds=2008-04-08/hr=11
 POSTHOOK: Input: default@srcpart@ds=2008-04-09/hr=11
 #### A masked pattern was here ####
 1000
-Warning: Map Join MAPJOIN[22][bigTable=?] in task 'Reducer 3' is a cross product
+Warning: Shuffle Join MERGEJOIN[22][tables = [$hdt$_0, $hdt$_1]] in Stage 'Reducer 2' is a cross product
 PREHOOK: query: EXPLAIN VECTORIZATION select count(*) from srcpart join (select ds as ds, ds as `date` from srcpart group by ds) s on (srcpart.ds = s.ds) where s.`date` = '2008-04-08'
 PREHOOK: type: QUERY
 POSTHOOK: query: EXPLAIN VECTORIZATION select count(*) from srcpart join (select ds as ds, ds as `date` from srcpart group by ds) s on (srcpart.ds = s.ds) where s.`date` = '2008-04-08'
@@ -5525,8 +5593,9 @@ STAGE PLANS:
     Tez
 #### A masked pattern was here ####
       Edges:
-        Reducer 3 <- Map 1 (BROADCAST_EDGE), Map 2 (SIMPLE_EDGE)
-        Reducer 4 <- Reducer 3 (CUSTOM_SIMPLE_EDGE)
+        Reducer 2 <- Map 1 (XPROD_EDGE), Reducer 4 (XPROD_EDGE)
+        Reducer 3 <- Reducer 2 (CUSTOM_SIMPLE_EDGE)
+        Reducer 4 <- Map 1 (SIMPLE_EDGE)
 #### A masked pattern was here ####
       Vertices:
         Map 1 
@@ -5540,24 +5609,6 @@ STAGE PLANS:
                     Reduce Output Operator
                       sort order: 
                       Statistics: Num rows: 1000 Data size: 10624 Basic stats: COMPLETE Column stats: NONE
-            Execution mode: vectorized, llap
-            LLAP IO: no inputs
-            Map Vectorization:
-                enabled: true
-                enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
-                groupByVectorOutput: true
-                inputFileFormats: org.apache.hadoop.mapred.TextInputFormat
-                allNative: true
-                usesVectorUDFAdaptor: false
-                vectorized: true
-        Map 2 
-            Map Operator Tree:
-                TableScan
-                  alias: srcpart
-                  filterExpr: (ds = '2008-04-08') (type: boolean)
-                  Statistics: Num rows: 1000 Data size: 10624 Basic stats: COMPLETE Column stats: NONE
-                  Select Operator
-                    Statistics: Num rows: 1000 Data size: 10624 Basic stats: COMPLETE Column stats: NONE
                     Group By Operator
                       keys: '2008-04-08' (type: string)
                       mode: hash
@@ -5573,52 +5624,37 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: [DECIMAL_64]
+                vectorizationSupportRemovedReasons: [DECIMAL_64 disabled because LLAP is enabled]
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.mapred.TextInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
+        Reducer 2 
+            Execution mode: llap
+            Reduce Operator Tree:
+              Merge Join Operator
+                condition map:
+                     Inner Join 0 to 1
+                keys:
+                  0 
+                  1 
+                Statistics: Num rows: 500000 Data size: 11124000 Basic stats: COMPLETE Column stats: NONE
+                Group By Operator
+                  aggregations: count()
+                  mode: hash
+                  outputColumnNames: _col0
+                  Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: NONE
+                  Reduce Output Operator
+                    sort order: 
+                    Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: NONE
+                    value expressions: _col0 (type: bigint)
         Reducer 3 
             Execution mode: vectorized, llap
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
-                allNative: false
-                usesVectorUDFAdaptor: false
-                vectorized: true
-            Reduce Operator Tree:
-              Group By Operator
-                keys: KEY._col0 (type: string)
-                mode: mergepartial
-                outputColumnNames: _col0
-                Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
-                Select Operator
-                  Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
-                  Map Join Operator
-                    condition map:
-                         Inner Join 0 to 1
-                    keys:
-                      0 
-                      1 
-                    input vertices:
-                      0 Map 1
-                    Statistics: Num rows: 500000 Data size: 11124000 Basic stats: COMPLETE Column stats: NONE
-                    Group By Operator
-                      aggregations: count()
-                      mode: hash
-                      outputColumnNames: _col0
-                      Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: NONE
-                      Reduce Output Operator
-                        sort order: 
-                        Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: NONE
-                        value expressions: _col0 (type: bigint)
-        Reducer 4 
-            Execution mode: vectorized, llap
-            Reduce Vectorization:
-                enabled: true
-                enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -5635,6 +5671,25 @@ STAGE PLANS:
                       input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                       output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
                       serde: org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe
+        Reducer 4 
+            Execution mode: vectorized, llap
+            Reduce Vectorization:
+                enabled: true
+                enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
+                allNative: false
+                usesVectorUDFAdaptor: false
+                vectorized: true
+            Reduce Operator Tree:
+              Group By Operator
+                keys: KEY._col0 (type: string)
+                mode: mergepartial
+                outputColumnNames: _col0
+                Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
+                Select Operator
+                  Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
+                  Reduce Output Operator
+                    sort order: 
+                    Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
 
   Stage: Stage-0
     Fetch Operator
@@ -5642,7 +5697,7 @@ STAGE PLANS:
       Processor Tree:
         ListSink
 
-Warning: Map Join MAPJOIN[22][bigTable=?] in task 'Reducer 3' is a cross product
+Warning: Shuffle Join MERGEJOIN[22][tables = [$hdt$_0, $hdt$_1]] in Stage 'Reducer 2' is a cross product
 PREHOOK: query: select count(*) from srcpart join (select ds as ds, ds as `date` from srcpart group by ds) s on (srcpart.ds = s.ds) where s.`date` = '2008-04-08'
 PREHOOK: type: QUERY
 PREHOOK: Input: default@srcpart
@@ -5723,7 +5778,9 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: [DECIMAL_64]
+                vectorizationSupportRemovedReasons: [DECIMAL_64 disabled because LLAP is enabled]
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.mapred.TextInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: false
@@ -5733,40 +5790,41 @@ STAGE PLANS:
                 TableScan
                   alias: srcpart_date
                   filterExpr: ((date = '2008-04-08') and ds is not null) (type: boolean)
-                  Statistics: Num rows: 2 Data size: 376 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: ((date = '2008-04-08') and ds is not null) (type: boolean)
-                    Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: ds (type: string)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: _col0 (type: string)
                         sort order: +
                         Map-reduce partition columns: _col0 (type: string)
-                        Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                       Select Operator
                         expressions: _col0 (type: string)
                         outputColumnNames: _col0
-                        Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                         Group By Operator
                           keys: _col0 (type: string)
                           mode: hash
                           outputColumnNames: _col0
-                          Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                           Dynamic Partitioning Event Operator
                             Target column: ds (string)
                             Target Input: srcpart
                             Partition key expr: ds
-                            Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                            Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                             Target Vertex: Map 1
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: []
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: false
@@ -5776,7 +5834,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -5826,14 +5883,14 @@ STAGE PLANS:
                 TableScan
                   alias: srcpart_date
                   filterExpr: (date = '2008-04-08') (type: boolean)
-                  Statistics: Num rows: 2 Data size: 376 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: (date = '2008-04-08') (type: boolean)
-                    Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: ds (type: string)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                       Map Join Operator
                         condition map:
                              Left Outer Join 0 to 1
@@ -5857,7 +5914,8 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: []
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: false
@@ -5881,7 +5939,9 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: [DECIMAL_64]
+                vectorizationSupportRemovedReasons: [DECIMAL_64 disabled because LLAP is enabled]
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.mapred.TextInputFormat
                 allNative: true
                 usesVectorUDFAdaptor: false
@@ -5891,7 +5951,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -5955,7 +6014,9 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: [DECIMAL_64]
+                vectorizationSupportRemovedReasons: [DECIMAL_64 disabled because LLAP is enabled]
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.mapred.TextInputFormat
                 allNative: true
                 usesVectorUDFAdaptor: false
@@ -5965,14 +6026,14 @@ STAGE PLANS:
                 TableScan
                   alias: srcpart_date
                   filterExpr: (date = '2008-04-08') (type: boolean)
-                  Statistics: Num rows: 2 Data size: 376 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: (date = '2008-04-08') (type: boolean)
-                    Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: ds (type: string)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                       Map Join Operator
                         condition map:
                              Right Outer Join 0 to 1
@@ -5996,7 +6057,8 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: []
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: false
@@ -6006,7 +6068,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -6095,7 +6156,9 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: [DECIMAL_64]
+                vectorizationSupportRemovedReasons: [DECIMAL_64 disabled because LLAP is enabled]
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.mapred.TextInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: false
@@ -6105,40 +6168,41 @@ STAGE PLANS:
                 TableScan
                   alias: srcpart_date
                   filterExpr: ((date = '2008-04-08') and ds is not null) (type: boolean)
-                  Statistics: Num rows: 2 Data size: 376 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: ((date = '2008-04-08') and ds is not null) (type: boolean)
-                    Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: ds (type: string)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: _col0 (type: string)
                         sort order: +
                         Map-reduce partition columns: _col0 (type: string)
-                        Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                       Select Operator
                         expressions: _col0 (type: string)
                         outputColumnNames: _col0
-                        Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                         Group By Operator
                           keys: _col0 (type: string)
                           mode: hash
                           outputColumnNames: _col0
-                          Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                           Dynamic Partitioning Event Operator
                             Target column: ds (string)
                             Target Input: srcpart
                             Partition key expr: ds
-                            Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                            Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                             Target Vertex: Map 1
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: []
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: false
@@ -6148,40 +6212,41 @@ STAGE PLANS:
                 TableScan
                   alias: srcpart_hour
                   filterExpr: ((UDFToDouble(hour) = 11.0) and (UDFToDouble(hr) = 11.0)) (type: boolean)
-                  Statistics: Num rows: 2 Data size: 344 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: ((UDFToDouble(hour) = 11.0) and (UDFToDouble(hr) = 11.0)) (type: boolean)
-                    Statistics: Num rows: 1 Data size: 172 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 1 Data size: 368 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: hr (type: string)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 1 Data size: 172 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 1 Data size: 368 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: _col0 (type: string)
                         sort order: +
                         Map-reduce partition columns: _col0 (type: string)
-                        Statistics: Num rows: 1 Data size: 172 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 1 Data size: 368 Basic stats: COMPLETE Column stats: NONE
                       Select Operator
                         expressions: _col0 (type: string)
                         outputColumnNames: _col0
-                        Statistics: Num rows: 1 Data size: 172 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 1 Data size: 368 Basic stats: COMPLETE Column stats: NONE
                         Group By Operator
                           keys: _col0 (type: string)
                           mode: hash
                           outputColumnNames: _col0
-                          Statistics: Num rows: 1 Data size: 172 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 1 Data size: 368 Basic stats: COMPLETE Column stats: NONE
                           Dynamic Partitioning Event Operator
                             Target column: hr (string)
                             Target Input: srcpart
                             Partition key expr: hr
-                            Statistics: Num rows: 1 Data size: 172 Basic stats: COMPLETE Column stats: NONE
+                            Statistics: Num rows: 1 Data size: 368 Basic stats: COMPLETE Column stats: NONE
                             Target Vertex: Map 1
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: []
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: true
@@ -6191,7 +6256,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -6253,11 +6317,51 @@ STAGE PLANS:
     Tez
 #### A masked pattern was here ####
       Edges:
-        Map 2 <- Map 1 (BROADCAST_EDGE), Map 4 (BROADCAST_EDGE)
-        Reducer 3 <- Map 2 (CUSTOM_SIMPLE_EDGE)
+        Map 1 <- Map 2 (BROADCAST_EDGE)
+        Map 3 <- Map 1 (BROADCAST_EDGE)
+        Reducer 4 <- Map 3 (CUSTOM_SIMPLE_EDGE)
 #### A masked pattern was here ####
       Vertices:
         Map 1 
+            Map Operator Tree:
+                TableScan
+                  alias: srcpart_hour
+                  filterExpr: (UDFToDouble(hr) = 13.0) (type: boolean)
+                  Statistics: Num rows: 2 Data size: 368 Basic stats: COMPLETE Column stats: NONE
+                  Filter Operator
+                    predicate: (UDFToDouble(hr) = 13.0) (type: boolean)
+                    Statistics: Num rows: 1 Data size: 184 Basic stats: COMPLETE Column stats: NONE
+                    Select Operator
+                      expressions: hr (type: string)
+                      outputColumnNames: _col0
+                      Statistics: Num rows: 1 Data size: 184 Basic stats: COMPLETE Column stats: NONE
+                      Map Join Operator
+                        condition map:
+                             Inner Join 0 to 1
+                        keys:
+                          0 _col0 (type: string)
+                          1 _col1 (type: string)
+                        outputColumnNames: _col1
+                        input vertices:
+                          1 Map 2
+                        Statistics: Num rows: 1 Data size: 202 Basic stats: COMPLETE Column stats: NONE
+                        Reduce Output Operator
+                          key expressions: _col1 (type: string)
+                          sort order: +
+                          Map-reduce partition columns: _col1 (type: string)
+                          Statistics: Num rows: 1 Data size: 202 Basic stats: COMPLETE Column stats: NONE
+            Execution mode: vectorized, llap
+            LLAP IO: all inputs
+            Map Vectorization:
+                enabled: true
+                enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
+                inputFormatFeatureSupport: []
+                featureSupportInUse: []
+                inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
+                allNative: true
+                usesVectorUDFAdaptor: true
+                vectorized: true
+        Map 2 
             Map Operator Tree:
                 TableScan
                   alias: srcpart
@@ -6271,104 +6375,67 @@ STAGE PLANS:
                       outputColumnNames: _col0, _col1
                       Statistics: Num rows: 1 Data size: 368 Basic stats: COMPLETE Column stats: COMPLETE
                       Reduce Output Operator
-                        key expressions: _col0 (type: string)
+                        key expressions: _col1 (type: string)
                         sort order: +
-                        Map-reduce partition columns: _col0 (type: string)
+                        Map-reduce partition columns: _col1 (type: string)
                         Statistics: Num rows: 1 Data size: 368 Basic stats: COMPLETE Column stats: COMPLETE
-                        value expressions: _col1 (type: string)
+                        value expressions: _col0 (type: string)
             Execution mode: vectorized, llap
             LLAP IO: unknown
             Map Vectorization:
                 enabled: true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: []
+                featureSupportInUse: []
                 allNative: true
                 usesVectorUDFAdaptor: true
                 vectorized: true
-        Map 2 
+        Map 3 
             Map Operator Tree:
                 TableScan
                   alias: srcpart_date
                   filterExpr: ((date = '2008-04-08') and ds is not null) (type: boolean)
-                  Statistics: Num rows: 2 Data size: 376 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: ((date = '2008-04-08') and ds is not null) (type: boolean)
-                    Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: ds (type: string)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 1 Data size: 188 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                       Map Join Operator
                         condition map:
                              Inner Join 0 to 1
                         keys:
-                          0 _col0 (type: string)
+                          0 _col1 (type: string)
                           1 _col0 (type: string)
-                        outputColumnNames: _col1
                         input vertices:
                           0 Map 1
-                        Statistics: Num rows: 1 Data size: 404 Basic stats: COMPLETE Column stats: NONE
-                        Map Join Operator
-                          condition map:
-                               Inner Join 0 to 1
-                          keys:
-                            0 _col1 (type: string)
-                            1 _col0 (type: string)
-                          input vertices:
-                            1 Map 4
-                          Statistics: Num rows: 1 Data size: 444 Basic stats: COMPLETE Column stats: NONE
-                          Group By Operator
-                            aggregations: count()
-                            mode: hash
-                            outputColumnNames: _col0
+                        Statistics: Num rows: 2 Data size: 809 Basic stats: COMPLETE Column stats: NONE
+                        Group By Operator
+                          aggregations: count()
+                          mode: hash
+                          outputColumnNames: _col0
+                          Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: NONE
+                          Reduce Output Operator
+                            sort order: 
                             Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: NONE
-                            Reduce Output Operator
-                              sort order: 
-                              Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: NONE
-                              value expressions: _col0 (type: bigint)
+                            value expressions: _col0 (type: bigint)
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: []
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
-        Map 4 
-            Map Operator Tree:
-                TableScan
-                  alias: srcpart_hour
-                  filterExpr: (UDFToDouble(hr) = 13.0) (type: boolean)
-                  Statistics: Num rows: 2 Data size: 344 Basic stats: COMPLETE Column stats: NONE
-                  Filter Operator
-                    predicate: (UDFToDouble(hr) = 13.0) (type: boolean)
-                    Statistics: Num rows: 1 Data size: 172 Basic stats: COMPLETE Column stats: NONE
-                    Select Operator
-                      expressions: hr (type: string)
-                      outputColumnNames: _col0
-                      Statistics: Num rows: 1 Data size: 172 Basic stats: COMPLETE Column stats: NONE
-                      Reduce Output Operator
-                        key expressions: _col0 (type: string)
-                        sort order: +
-                        Map-reduce partition columns: _col0 (type: string)
-                        Statistics: Num rows: 1 Data size: 172 Basic stats: COMPLETE Column stats: NONE
-            Execution mode: vectorized, llap
-            LLAP IO: all inputs
-            Map Vectorization:
-                enabled: true
-                enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
-                groupByVectorOutput: true
-                inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
-                allNative: true
-                usesVectorUDFAdaptor: true
-                vectorized: true
-        Reducer 3 
+        Reducer 4 
             Execution mode: vectorized, llap
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -6465,7 +6532,9 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: [DECIMAL_64]
+                vectorizationSupportRemovedReasons: [DECIMAL_64 disabled because LLAP is enabled]
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.mapred.TextInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: false
@@ -6493,7 +6562,9 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: [DECIMAL_64]
+                vectorizationSupportRemovedReasons: [DECIMAL_64 disabled because LLAP is enabled]
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.mapred.TextInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: false
@@ -6521,7 +6592,9 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: [DECIMAL_64]
+                vectorizationSupportRemovedReasons: [DECIMAL_64 disabled because LLAP is enabled]
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.mapred.TextInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: false
@@ -6531,7 +6604,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -6553,7 +6625,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -6596,7 +6667,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -6751,48 +6821,48 @@ STAGE PLANS:
                 TableScan
                   alias: srcpart_date_hour
                   filterExpr: (((date = '2008-04-08') or (date = '2008-04-09')) and (UDFToDouble(hour) = 11.0) and ds is not null and hr is not null) (type: boolean)
-                  Statistics: Num rows: 4 Data size: 1440 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 4 Data size: 2944 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: (((date = '2008-04-08') or (date = '2008-04-09')) and (UDFToDouble(hour) = 11.0) and ds is not null and hr is not null) (type: boolean)
-                    Statistics: Num rows: 2 Data size: 720 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 2 Data size: 1472 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: ds (type: string), hr (type: string)
                       outputColumnNames: _col0, _col2
-                      Statistics: Num rows: 2 Data size: 720 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 2 Data size: 1472 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: _col0 (type: string), UDFToDouble(_col2) (type: double)
                         sort order: ++
                         Map-reduce partition columns: _col0 (type: string), UDFToDouble(_col2) (type: double)
-                        Statistics: Num rows: 2 Data size: 720 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 2 Data size: 1472 Basic stats: COMPLETE Column stats: NONE
                       Select Operator
                         expressions: _col0 (type: string)
                         outputColumnNames: _col0
-                        Statistics: Num rows: 2 Data size: 720 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 2 Data size: 1472 Basic stats: COMPLETE Column stats: NONE
                         Group By Operator
                           keys: _col0 (type: string)
                           mode: hash
                           outputColumnNames: _col0
-                          Statistics: Num rows: 2 Data size: 720 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 2 Data size: 1472 Basic stats: COMPLETE Column stats: NONE
                           Dynamic Partitioning Event Operator
                             Target column: ds (string)
                             Target Input: srcpart_orc
                             Partition key expr: ds
-                            Statistics: Num rows: 2 Data size: 720 Basic stats: COMPLETE Column stats: NONE
+                            Statistics: Num rows: 2 Data size: 1472 Basic stats: COMPLETE Column stats: NONE
                             Target Vertex: Map 1
                       Select Operator
                         expressions: UDFToDouble(_col2) (type: double)
                         outputColumnNames: _col0
-                        Statistics: Num rows: 2 Data size: 720 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 2 Data size: 1472 Basic stats: COMPLETE Column stats: NONE
                         Group By Operator
                           keys: _col0 (type: double)
                           mode: hash
                           outputColumnNames: _col0
-                          Statistics: Num rows: 2 Data size: 720 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 2 Data size: 1472 Basic stats: COMPLETE Column stats: NONE
                           Dynamic Partitioning Event Operator
                             Target column: hr (int)
                             Target Input: srcpart_orc
                             Partition key expr: UDFToDouble(hr)
-                            Statistics: Num rows: 2 Data size: 720 Basic stats: COMPLETE Column stats: NONE
+                            Statistics: Num rows: 2 Data size: 1472 Basic stats: COMPLETE Column stats: NONE
                             Target Vertex: Map 1
             Execution mode: llap
             LLAP IO: all inputs

@@ -80,6 +80,7 @@ public final class SemanticAnalyzerFactory {
     commandType.put(HiveParser.TOK_SHOWDBLOCKS, HiveOperation.SHOWLOCKS);
     commandType.put(HiveParser.TOK_SHOWCONF, HiveOperation.SHOWCONF);
     commandType.put(HiveParser.TOK_SHOWVIEWS, HiveOperation.SHOWVIEWS);
+    commandType.put(HiveParser.TOK_SHOWMATERIALIZEDVIEWS, HiveOperation.SHOWMATERIALIZEDVIEWS);
     commandType.put(HiveParser.TOK_CREATEFUNCTION, HiveOperation.CREATEFUNCTION);
     commandType.put(HiveParser.TOK_DROPFUNCTION, HiveOperation.DROPFUNCTION);
     commandType.put(HiveParser.TOK_RELOADFUNCTION, HiveOperation.RELOADFUNCTION);
@@ -99,6 +100,8 @@ public final class SemanticAnalyzerFactory {
     commandType.put(HiveParser.TOK_ALTERVIEW_DROPPARTS, HiveOperation.ALTERTABLE_DROPPARTS);
     commandType.put(HiveParser.TOK_ALTERVIEW_RENAME, HiveOperation.ALTERVIEW_RENAME);
     commandType.put(HiveParser.TOK_ALTERVIEW, HiveOperation.ALTERVIEW_AS);
+    commandType.put(HiveParser.TOK_ALTER_MATERIALIZED_VIEW_REWRITE,
+        HiveOperation.ALTER_MATERIALIZED_VIEW_REWRITE);
     commandType.put(HiveParser.TOK_QUERY, HiveOperation.QUERY);
     commandType.put(HiveParser.TOK_LOCKTABLE, HiveOperation.LOCKTABLE);
     commandType.put(HiveParser.TOK_UNLOCKTABLE, HiveOperation.UNLOCKTABLE);
@@ -133,6 +136,14 @@ public final class SemanticAnalyzerFactory {
     commandType.put(HiveParser.TOK_REPL_DUMP, HiveOperation.REPLDUMP);
     commandType.put(HiveParser.TOK_REPL_LOAD, HiveOperation.REPLLOAD);
     commandType.put(HiveParser.TOK_REPL_STATUS, HiveOperation.REPLSTATUS);
+    commandType.put(HiveParser.TOK_KILL_QUERY, HiveOperation.KILL_QUERY);
+    commandType.put(HiveParser.TOK_CREATERESOURCEPLAN, HiveOperation.CREATE_RESOURCEPLAN);
+    commandType.put(HiveParser.TOK_SHOWRESOURCEPLAN, HiveOperation.SHOW_RESOURCEPLAN);
+    commandType.put(HiveParser.TOK_ALTER_RP, HiveOperation.ALTER_RESOURCEPLAN);
+    commandType.put(HiveParser.TOK_DROP_RP, HiveOperation.DROP_RESOURCEPLAN);
+    commandType.put(HiveParser.TOK_CREATE_TRIGGER, HiveOperation.CREATE_TRIGGER);
+    commandType.put(HiveParser.TOK_ALTER_TRIGGER, HiveOperation.ALTER_TRIGGER);
+    commandType.put(HiveParser.TOK_DROP_TRIGGER, HiveOperation.DROP_TRIGGER);
   }
 
   static {
@@ -255,6 +266,18 @@ public final class SemanticAnalyzerFactory {
         queryState.setCommandType(HiveOperation.ALTERVIEW_AS);
         return new SemanticAnalyzer(queryState);
       }
+      case HiveParser.TOK_ALTER_MATERIALIZED_VIEW: {
+        Tree child = tree.getChild(1);
+        switch (child.getType()) {
+          case HiveParser.TOK_ALTER_MATERIALIZED_VIEW_REWRITE:
+            opType = commandType.get(child.getType());
+            queryState.setCommandType(opType);
+            return new DDLSemanticAnalyzer(queryState);
+        }
+        // Operation not recognized, set to null and let upper level handle this case
+        queryState.setCommandType(null);
+        return new DDLSemanticAnalyzer(queryState);
+      }
       case HiveParser.TOK_CREATEDATABASE:
       case HiveParser.TOK_DROPDATABASE:
       case HiveParser.TOK_SWITCHDATABASE:
@@ -284,6 +307,7 @@ public final class SemanticAnalyzerFactory {
       case HiveParser.TOK_ABORT_TRANSACTIONS:
       case HiveParser.TOK_SHOWCONF:
       case HiveParser.TOK_SHOWVIEWS:
+      case HiveParser.TOK_SHOWMATERIALIZEDVIEWS:
       case HiveParser.TOK_CREATEINDEX:
       case HiveParser.TOK_DROPINDEX:
       case HiveParser.TOK_ALTERTABLE_CLUSTER_SORT:
@@ -307,6 +331,14 @@ public final class SemanticAnalyzerFactory {
       case HiveParser.TOK_TRUNCATETABLE:
       case HiveParser.TOK_SHOW_SET_ROLE:
       case HiveParser.TOK_CACHE_METADATA:
+      case HiveParser.TOK_KILL_QUERY:
+      case HiveParser.TOK_CREATERESOURCEPLAN:
+      case HiveParser.TOK_SHOWRESOURCEPLAN:
+      case HiveParser.TOK_ALTER_RP:
+      case HiveParser.TOK_DROP_RP:
+      case HiveParser.TOK_CREATE_TRIGGER:
+      case HiveParser.TOK_ALTER_TRIGGER:
+      case HiveParser.TOK_DROP_TRIGGER:
         return new DDLSemanticAnalyzer(queryState);
 
       case HiveParser.TOK_CREATEFUNCTION:

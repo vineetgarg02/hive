@@ -33,10 +33,12 @@ import org.apache.hadoop.hive.ql.plan.Explain.Level;
 public class DDLWork implements Serializable {
   private static final long serialVersionUID = 1L;
 
+  // TODO: this can probably be replaced with much less code via dynamic dispatch and/or templates.
   private PreInsertTableDesc preInsertTableDesc;
   private InsertTableDesc insertTableDesc;
   private CreateIndexDesc createIndexDesc;
   private AlterIndexDesc alterIndexDesc;
+  private AlterMaterializedViewDesc alterMVDesc;
   private DropIndexDesc dropIdxDesc;
   private CreateDatabaseDesc createDatabaseDesc;
   private SwitchDatabaseDesc switchDatabaseDesc;
@@ -48,7 +50,6 @@ public class DDLWork implements Serializable {
   private CreateViewDesc createVwDesc;
   private DropTableDesc dropTblDesc;
   private AlterTableDesc alterTblDesc;
-  private AlterIndexDesc alterIdxDesc;
   private ShowDatabasesDesc showDatabasesDesc;
   private ShowTablesDesc showTblsDesc;
   private ShowColumnsDesc showColumnsDesc;
@@ -76,6 +77,7 @@ public class DDLWork implements Serializable {
   private AlterTableAlterPartDesc alterTableAlterPartDesc;
   private TruncateTableDesc truncateTblDesc;
   private AlterTableExchangePartition alterTableExchangePartition;
+  private KillQueryDesc killQueryDesc;
 
   private RoleDDLDesc roleDDLDesc;
   private GrantDesc grantDesc;
@@ -84,6 +86,15 @@ public class DDLWork implements Serializable {
   private GrantRevokeRoleDDL grantRevokeRoleDDL;
 
   private ShowConfDesc showConfDesc;
+
+  private CreateResourcePlanDesc createResourcePlanDesc;
+  private ShowResourcePlanDesc showResourcePlanDesc;
+  private DropResourcePlanDesc dropResourcePlanDesc;
+  private AlterResourcePlanDesc alterResourcePlanDesc;
+
+  private CreateWMTriggerDesc createWMTriggerDesc;
+  private AlterWMTriggerDesc alterWMTriggerDesc;
+  private DropWMTriggerDesc dropWMTriggerDesc;
 
   boolean needLock = false;
 
@@ -194,9 +205,19 @@ public class DDLWork implements Serializable {
    *          alter index descriptor
    */
   public DDLWork(HashSet<ReadEntity> inputs, HashSet<WriteEntity> outputs,
-      AlterIndexDesc alterIdxDesc) {
+      AlterIndexDesc alterIndexDesc) {
     this(inputs, outputs);
-    this.alterIdxDesc = alterIdxDesc;
+    this.alterIndexDesc = alterIndexDesc;
+  }
+
+  /**
+   * @param alterMVDesc
+   *          alter materialized view descriptor
+   */
+  public DDLWork(HashSet<ReadEntity> inputs, HashSet<WriteEntity> outputs,
+      AlterMaterializedViewDesc alterMVDesc) {
+    this(inputs, outputs);
+    this.alterMVDesc = alterMVDesc;
   }
 
   /**
@@ -540,6 +561,54 @@ public class DDLWork implements Serializable {
     this.preInsertTableDesc = preInsertTableDesc;
   }
 
+  public DDLWork(HashSet<ReadEntity> inputs, HashSet<WriteEntity> outputs,
+                 KillQueryDesc killQueryDesc) {
+    this(inputs, outputs);
+    this.killQueryDesc = killQueryDesc;
+  }
+
+  public DDLWork(HashSet<ReadEntity> inputs, HashSet<WriteEntity> outputs,
+      CreateResourcePlanDesc createResourcePlanDesc) {
+    this(inputs, outputs);
+    this.createResourcePlanDesc = createResourcePlanDesc;
+  }
+
+  public DDLWork(HashSet<ReadEntity> inputs, HashSet<WriteEntity> outputs,
+      ShowResourcePlanDesc showResourcePlanDesc) {
+    this(inputs, outputs);
+    this.showResourcePlanDesc = showResourcePlanDesc;
+  }
+
+  public DDLWork(HashSet<ReadEntity> inputs, HashSet<WriteEntity> outputs,
+      DropResourcePlanDesc dropResourcePlanDesc) {
+    this(inputs, outputs);
+    this.setDropResourcePlanDesc(dropResourcePlanDesc);
+  }
+
+  public DDLWork(HashSet<ReadEntity> inputs, HashSet<WriteEntity> outputs,
+      AlterResourcePlanDesc alterResourcePlanDesc) {
+    this(inputs, outputs);
+    this.setAlterResourcePlanDesc(alterResourcePlanDesc);
+  }
+
+  public DDLWork(HashSet<ReadEntity> inputs, HashSet<WriteEntity> outputs,
+      CreateWMTriggerDesc createWMTriggerDesc) {
+    this(inputs, outputs);
+    this.setCreateWMTriggerDesc(createWMTriggerDesc);
+  }
+
+  public DDLWork(HashSet<ReadEntity> inputs, HashSet<WriteEntity> outputs,
+      AlterWMTriggerDesc alterWMTriggerDesc) {
+    this(inputs, outputs);
+    this.setAlterWMTriggerDesc(alterWMTriggerDesc);
+  }
+
+  public DDLWork(HashSet<ReadEntity> inputs, HashSet<WriteEntity> outputs,
+      DropWMTriggerDesc dropWMTriggerDesc) {
+    this(inputs, outputs);
+    this.setDropWMTriggerDesc(dropWMTriggerDesc);
+  }
+
   /**
    * @return Create Database descriptor
    */
@@ -712,6 +781,22 @@ public class DDLWork implements Serializable {
   }
 
   /**
+   * @return the alterMVDesc
+   */
+  @Explain(displayName = "Alter Materialized View Operator", explainLevels = { Level.USER, Level.DEFAULT, Level.EXTENDED })
+  public AlterMaterializedViewDesc getAlterMaterializedViewDesc() {
+    return alterMVDesc;
+  }
+
+  /**
+   * @param alterMVDesc
+   *          the alterMVDesc to set
+   */
+  public void setAlterMVDesc(AlterMaterializedViewDesc alterMVDesc) {
+    this.alterMVDesc = alterMVDesc;
+  }
+
+  /**
    * @return the showDatabasesDesc
    */
   @Explain(displayName = "Show Databases Operator", explainLevels = { Level.USER, Level.DEFAULT, Level.EXTENDED })
@@ -814,6 +899,11 @@ public class DDLWork implements Serializable {
     return descFunctionDesc;
   }
 
+  @Explain(displayName = "Kill Query Operator", explainLevels = { Level.USER, Level.DEFAULT, Level.EXTENDED })
+  public KillQueryDesc getKillQueryDesc() {
+    return killQueryDesc;
+  }
+
   /**
    * @param showFuncsDesc
    *          the showFuncsDesc to set
@@ -840,6 +930,10 @@ public class DDLWork implements Serializable {
 
   public void setAbortTxnsDesc(AbortTxnsDesc abortTxnsDesc) {
     this.abortTxnsDesc = abortTxnsDesc;
+  }
+
+  public void setKillQueryDesc(KillQueryDesc killQueryDesc) {
+    this.killQueryDesc = killQueryDesc;
   }
 
   /**
@@ -1218,5 +1312,63 @@ public class DDLWork implements Serializable {
 
   public void setPreInsertTableDesc(PreInsertTableDesc preInsertTableDesc) {
     this.preInsertTableDesc = preInsertTableDesc;
+  }
+
+  @Explain(displayName = "Create resource plan")
+  public CreateResourcePlanDesc getCreateResourcePlanDesc() {
+    return createResourcePlanDesc;
+  }
+
+  public void setCreateResourcePlanDesc(CreateResourcePlanDesc createResourcePlanDesc) {
+    this.createResourcePlanDesc = createResourcePlanDesc;
+  }
+
+  @Explain(displayName = "Show resource plan")
+  public ShowResourcePlanDesc getShowResourcePlanDesc() {
+    return showResourcePlanDesc;
+  }
+
+  public void setShowResourcePlanDesc(ShowResourcePlanDesc showResourcePlanDesc) {
+    this.showResourcePlanDesc = showResourcePlanDesc;
+  }
+
+  public DropResourcePlanDesc getDropResourcePlanDesc() {
+    return dropResourcePlanDesc;
+  }
+
+  public void setDropResourcePlanDesc(DropResourcePlanDesc dropResourcePlanDesc) {
+    this.dropResourcePlanDesc = dropResourcePlanDesc;
+  }
+
+  public AlterResourcePlanDesc getAlterResourcePlanDesc() {
+    return alterResourcePlanDesc;
+  }
+
+  public void setAlterResourcePlanDesc(AlterResourcePlanDesc alterResourcePlanDesc) {
+    this.alterResourcePlanDesc = alterResourcePlanDesc;
+  }
+
+  public CreateWMTriggerDesc getCreateWMTriggerDesc() {
+    return createWMTriggerDesc;
+  }
+
+  public void setCreateWMTriggerDesc(CreateWMTriggerDesc createWMTriggerDesc) {
+    this.createWMTriggerDesc = createWMTriggerDesc;
+  }
+
+  public AlterWMTriggerDesc getAlterWMTriggerDesc() {
+    return alterWMTriggerDesc;
+  }
+
+  public void setAlterWMTriggerDesc(AlterWMTriggerDesc alterWMTriggerDesc) {
+    this.alterWMTriggerDesc = alterWMTriggerDesc;
+  }
+
+  public DropWMTriggerDesc getDropWMTriggerDesc() {
+    return dropWMTriggerDesc;
+  }
+
+  public void setDropWMTriggerDesc(DropWMTriggerDesc dropWMTriggerDesc) {
+    this.dropWMTriggerDesc = dropWMTriggerDesc;
   }
 }

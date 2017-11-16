@@ -29,7 +29,6 @@ hr                  	string
 	 	 
 # Partition Information	 	 
 # col_name            	data_type           	comment             
-	 	 
 ds                  	string              	                    
 hr                  	string              	                    
 	 	 
@@ -364,7 +363,8 @@ STAGE PLANS:
               name: default.nzhang_part8
 
   Stage: Stage-3
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 #### A masked pattern was here ####
 
   Stage: Stage-1
@@ -396,7 +396,8 @@ STAGE PLANS:
               name: default.nzhang_part8
 
   Stage: Stage-4
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 #### A masked pattern was here ####
 
 PREHOOK: query: from srcpart

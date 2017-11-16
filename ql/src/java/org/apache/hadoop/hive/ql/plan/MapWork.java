@@ -44,6 +44,7 @@ import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.ql.exec.FileSinkOperator;
 import org.apache.hadoop.hive.ql.exec.Operator;
 import org.apache.hadoop.hive.ql.exec.OperatorUtils;
+import org.apache.hadoop.hive.ql.exec.vector.VectorizedSupport.Support;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 import org.apache.hadoop.hive.ql.io.AcidUtils;
 import org.apache.hadoop.hive.ql.io.HiveInputFormat;
@@ -58,6 +59,7 @@ import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 import org.apache.hadoop.mapred.JobConf;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Interner;
 
 /**
@@ -156,6 +158,8 @@ public class MapWork extends BaseWork {
 
   /** Whether LLAP IO will be used for inputs. */
   private String llapIoDesc;
+
+  private boolean isMergeFromResolver;
 
   public MapWork() {}
 
@@ -374,6 +378,7 @@ public class MapWork extends BaseWork {
   }
 
   @SuppressWarnings("nls")
+  @VisibleForTesting
   public void addMapWork(Path path, String alias, Operator<?> work,
       PartitionDesc pd) {
     StringInternUtils.internUriStringsInPath(path);
@@ -722,6 +727,14 @@ public class MapWork extends BaseWork {
     return vectorizedRowBatch;
   }
 
+  public void setIsMergeFromResolver(boolean b) {
+    this.isMergeFromResolver = b;
+  }
+
+  public boolean isMergeFromResolver() {
+    return this.isMergeFromResolver;
+  }
+
   /*
    * Whether the HiveConf.ConfVars.HIVE_VECTORIZATION_USE_VECTORIZED_INPUT_FILE_FORMAT variable
    * (hive.vectorized.use.vectorized.input.format) was true when the Vectorizer class evaluated
@@ -737,6 +750,30 @@ public class MapWork extends BaseWork {
 
   public boolean getUseVectorizedInputFileFormat() {
     return useVectorizedInputFileFormat;
+  }
+
+  public void setInputFormatSupportSet(Set<Support> inputFormatSupportSet) {
+    this.inputFormatSupportSet = inputFormatSupportSet;
+  }
+
+  public Set<Support> getInputFormatSupportSet() {
+    return inputFormatSupportSet;
+  }
+
+  public void setSupportSetInUse(Set<Support> supportSetInUse) {
+    this.supportSetInUse = supportSetInUse;
+  }
+
+  public Set<Support> getSupportSetInUse() {
+    return supportSetInUse;
+  }
+
+  public void setSupportRemovedReasons(List<String> supportRemovedReasons) {
+    this.supportRemovedReasons =supportRemovedReasons;
+  }
+
+  public List<String> getSupportRemovedReasons() {
+    return supportRemovedReasons;
   }
 
   public void setNotEnabledInputFileFormatReason(VectorizerReason notEnabledInputFileFormatReason) {
@@ -783,6 +820,33 @@ public class MapWork extends BaseWork {
     @Explain(vectorization = Vectorization.SUMMARY, displayName = "inputFileFormats", explainLevels = { Level.DEFAULT, Level.EXTENDED })
     public Set<String> inputFileFormats() {
       return mapWork.getVectorizationInputFileFormatClassNameSet();
+    }
+
+    @Explain(vectorization = Vectorization.SUMMARY, displayName = "inputFormatFeatureSupport", explainLevels = { Level.DEFAULT, Level.EXTENDED })
+    public String getInputFormatSupport() {
+      Set<Support> inputFormatSupportSet = mapWork.getInputFormatSupportSet();
+      if (inputFormatSupportSet == null) {
+        return null;
+      }
+      return inputFormatSupportSet.toString();
+    }
+
+    @Explain(vectorization = Vectorization.SUMMARY, displayName = "featureSupportInUse", explainLevels = { Level.DEFAULT, Level.EXTENDED })
+    public String getVectorizationSupportInUse() {
+      Set<Support> supportSet = mapWork.getSupportSetInUse();
+      if (supportSet == null) {
+        return null;
+      }
+      return supportSet.toString();
+    }
+
+    @Explain(vectorization = Vectorization.SUMMARY, displayName = "vectorizationSupportRemovedReasons", explainLevels = { Level.DEFAULT, Level.EXTENDED })
+    public String getSupportRemovedReasons() {
+      List<String> supportRemovedReasons = mapWork.getSupportRemovedReasons();
+      if (supportRemovedReasons == null || supportRemovedReasons.isEmpty()) {
+        return null;
+      }
+      return supportRemovedReasons.toString();
     }
 
     @Explain(vectorization = Vectorization.SUMMARY, displayName = "enabledConditionsMet", explainLevels = { Level.DEFAULT, Level.EXTENDED })

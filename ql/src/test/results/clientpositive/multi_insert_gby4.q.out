@@ -61,7 +61,7 @@ STAGE PLANS:
               outputColumnNames: _col0
               Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
               Filter Operator
-                predicate: ((_col0 > 490) or ((_col0 > 500) or (_col0 > 450))) (type: boolean)
+                predicate: (((_col0 > 500) or (_col0 > 450)) or (_col0 > 490)) (type: boolean)
                 Statistics: Num rows: 498 Data size: 5290 Basic stats: COMPLETE Column stats: NONE
                 Reduce Output Operator
                   key expressions: _col0 (type: string)
@@ -146,7 +146,8 @@ STAGE PLANS:
               name: default.e1
 
   Stage: Stage-4
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 
   Stage: Stage-1
     Move Operator
@@ -159,7 +160,8 @@ STAGE PLANS:
               name: default.e2
 
   Stage: Stage-5
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 
   Stage: Stage-2
     Move Operator
@@ -172,7 +174,8 @@ STAGE PLANS:
               name: default.e3
 
   Stage: Stage-6
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 
 PREHOOK: query: FROM (SELECT key, value FROM src) a
 INSERT OVERWRITE TABLE e1

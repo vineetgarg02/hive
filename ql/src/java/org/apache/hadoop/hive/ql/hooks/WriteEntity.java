@@ -87,11 +87,12 @@ public class WriteEntity extends Entity implements Serializable {
    * Currently applicable only for function names.
    * @param db
    * @param objName
+   * @param className
    * @param type
    * @param writeType
    */
-  public WriteEntity(Database db, String objName, Type type, WriteType writeType) {
-    super(db, objName, type);
+  public WriteEntity(Database db, String objName, String className, Type type, WriteType writeType) {
+    super(db, objName, className, type);
     this.writeType = writeType;
   }
 
@@ -137,6 +138,11 @@ public class WriteEntity extends Entity implements Serializable {
     super(d, islocal, true);
     this.isTempURI = isTemp;
     this.writeType = WriteType.PATH_WRITE;
+  }
+
+  public WriteEntity(String name, Type t) {
+    super(name, t);
+    this.writeType = WriteType.DDL_NO_LOCK;
   }
 
   /**
@@ -213,7 +219,8 @@ public class WriteEntity extends Entity implements Serializable {
 
       case ADDPARTITION:
       case ADDSERDEPROPS:
-      case ADDPROPS: return WriteType.DDL_SHARED;
+      case ADDPROPS:
+        return WriteType.DDL_SHARED;
 
       case COMPACT:
       case TOUCH: return WriteType.DDL_NO_LOCK;

@@ -26,6 +26,7 @@ import org.apache.hive.service.auth.HiveAuthConstants;
 import org.apache.hive.service.auth.KerberosSaslHelper;
 import org.apache.hive.service.auth.PlainSaslHelper;
 import org.apache.hive.service.auth.SaslQOP;
+import org.apache.hive.service.cli.session.SessionUtils;
 import org.apache.hive.service.cli.thrift.EmbeddedThriftBinaryCLIService;
 import org.apache.hive.service.rpc.thrift.TCLIService;
 import org.apache.hive.service.rpc.thrift.TCancelDelegationTokenReq;
@@ -100,6 +101,7 @@ import java.sql.Savepoint;
 import java.sql.Statement;
 import java.sql.Struct;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -136,6 +138,20 @@ public class HiveConnection implements java.sql.Connection {
   private int fetchSize = HiveStatement.DEFAULT_FETCH_SIZE;
   private String initFile = null;
 
+  /**
+   * Get all direct HiveServer2 URLs from a ZooKeeper based HiveServer2 URL
+   * @param zookeeperBasedHS2Url
+   * @return
+   * @throws Exception
+   */
+  public static List<JdbcConnectionParams> getAllUrls(String zookeeperBasedHS2Url) throws Exception {
+    JdbcConnectionParams params = Utils.parseURL(zookeeperBasedHS2Url, new Properties());
+    if (params.getZooKeeperEnsemble() == null) {
+      return Collections.singletonList(params);
+    }
+    return ZooKeeperHiveClientHelper.getDirectParamsList(params);
+  }
+
   public HiveConnection(String uri, Properties info) throws SQLException {
     setupLoginTimeout();
     try {
@@ -149,7 +165,7 @@ public class HiveConnection implements java.sql.Connection {
     // sess_var_list -> sessConfMap
     // hive_conf_list -> hiveConfMap
     // hive_var_list -> hiveVarMap
-    host = ShimLoader.getHadoopThriftAuthBridge().getCanonicalHostName(connParams.getHost());
+    host = Utils.getCanonicalHostName(connParams.getHost());
     port = connParams.getPort();
     sessConfMap = connParams.getSessionVars();
     isEmbeddedMode = connParams.isEmbeddedMode();
@@ -214,7 +230,7 @@ public class HiveConnection implements java.sql.Connection {
             }
             // Update with new values
             jdbcUriString = connParams.getJdbcUriString();
-            host = ShimLoader.getHadoopThriftAuthBridge().getCanonicalHostName(connParams.getHost());
+            host = Utils.getCanonicalHostName(connParams.getHost());
             port = connParams.getPort();
           } else {
             errMsg = warnMsg;
@@ -637,7 +653,7 @@ public class HiveConnection implements java.sql.Connection {
     if (JdbcConnectionParams.AUTH_TOKEN.equalsIgnoreCase(jdbcConnConf.get(JdbcConnectionParams.AUTH_TYPE))) {
       // check delegation token in job conf if any
       try {
-        tokenStr = org.apache.hadoop.hive.shims.Utils.getTokenStrForm(HiveAuthConstants.HS2_CLIENT_TOKEN);
+        tokenStr = SessionUtils.getTokenStrForm(HiveAuthConstants.HS2_CLIENT_TOKEN);
       } catch (IOException e) {
         throw new SQLException("Error reading token ", e);
       }

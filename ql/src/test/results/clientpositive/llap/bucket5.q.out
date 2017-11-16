@@ -248,7 +248,8 @@ STAGE PLANS:
               name: default.bucketed_table
 
   Stage: Stage-4
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 #### A masked pattern was here ####
 
   Stage: Stage-1
@@ -280,7 +281,8 @@ STAGE PLANS:
               name: default.unbucketed_table
 
   Stage: Stage-5
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 #### A masked pattern was here ####
 
   Stage: Stage-10
@@ -503,7 +505,6 @@ POSTHOOK: query: DESC FORMATTED bucketed_table
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@bucketed_table
 # col_name            	data_type           	comment             
-	 	 
 key                 	int                 	                    
 value               	string              	                    
 	 	 

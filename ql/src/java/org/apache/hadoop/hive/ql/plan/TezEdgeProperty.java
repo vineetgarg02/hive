@@ -22,13 +22,14 @@ import org.apache.hadoop.hive.conf.HiveConf;
 
 public class TezEdgeProperty {
 
-  public enum EdgeType {
-    SIMPLE_EDGE,
+  public enum EdgeType {//todo: HIVE-15549
+    SIMPLE_EDGE,//SORT_PARTITION_EDGE
     BROADCAST_EDGE,
-    CONTAINS,
-    CUSTOM_EDGE,
-    CUSTOM_SIMPLE_EDGE,
-    ONE_TO_ONE_EDGE
+    CONTAINS,//used for union (all?)
+    CUSTOM_EDGE,//CO_PARTITION_EDGE
+    CUSTOM_SIMPLE_EDGE,//PARTITION_EDGE
+    ONE_TO_ONE_EDGE,
+    XPROD_EDGE
   }
 
   private HiveConf hiveConf;
@@ -107,4 +108,5 @@ public class TezEdgeProperty {
   public void setEdgeType(EdgeType type) {
     this.edgeType = type;
   }
+
 }

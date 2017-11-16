@@ -68,40 +68,34 @@ STAGE PLANS:
             Map Operator Tree:
                 TableScan
                   alias: b
-                  Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: key is not null (type: boolean)
-                    Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
             Map Operator Tree:
                 TableScan
                   alias: a
-                  Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: key is not null (type: boolean)
-                    Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                       Merge Join Operator
                         condition map:
                              Inner Join 0 to 1
                         keys:
                           0 _col0 (type: int)
                           1 _col0 (type: int)
-                        Statistics: Num rows: 11 Data size: 1023 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 11 Data size: 44 Basic stats: COMPLETE Column stats: NONE
                         Group By Operator
                           aggregations: count()
-                          Group By Vectorization:
-                              groupByMode: HASH
-                              vectorOutput: false
-                              native: false
-                              vectorProcessingMode: NONE
-                              projectedOutputColumns: null
                           mode: hash
                           outputColumnNames: _col0
                           Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: NONE
@@ -115,7 +109,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -123,13 +116,12 @@ STAGE PLANS:
               Group By Operator
                 aggregations: count(VALUE._col0)
                 Group By Vectorization:
-                    aggregators: VectorUDAFCountMerge(col 0) -> bigint
+                    aggregators: VectorUDAFCountMerge(col 0:bigint) -> bigint
                     className: VectorGroupByOperator
                     groupByMode: MERGEPARTIAL
-                    vectorOutput: true
                     native: false
                     vectorProcessingMode: GLOBAL
-                    projectedOutputColumns: [0]
+                    projectedOutputColumnNums: [0]
                 mode: mergepartial
                 outputColumnNames: _col0
                 Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: NONE
@@ -206,25 +198,25 @@ STAGE PLANS:
             Map Operator Tree:
                 TableScan
                   alias: b
-                  Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: key is not null (type: boolean)
-                    Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
             Map Operator Tree:
                 TableScan
                   alias: a
-                  Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: key is not null (type: boolean)
-                    Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                       Merge Join Operator
                         condition map:
                              Inner Join 0 to 1
@@ -232,30 +224,23 @@ STAGE PLANS:
                           0 _col0 (type: int)
                           1 _col0 (type: int)
                         outputColumnNames: _col0
-                        Statistics: Num rows: 11 Data size: 1023 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 11 Data size: 44 Basic stats: COMPLETE Column stats: NONE
                         Group By Operator
-                          Group By Vectorization:
-                              groupByMode: HASH
-                              vectorOutput: false
-                              native: false
-                              vectorProcessingMode: NONE
-                              projectedOutputColumns: null
                           keys: _col0 (type: int)
                           mode: hash
                           outputColumnNames: _col0
-                          Statistics: Num rows: 11 Data size: 1023 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 11 Data size: 44 Basic stats: COMPLETE Column stats: NONE
                           Reduce Output Operator
                             key expressions: _col0 (type: int)
                             sort order: +
                             Map-reduce partition columns: _col0 (type: int)
-                            Statistics: Num rows: 11 Data size: 1023 Basic stats: COMPLETE Column stats: NONE
+                            Statistics: Num rows: 11 Data size: 44 Basic stats: COMPLETE Column stats: NONE
             Execution mode: llap
         Reducer 2 
             Execution mode: vectorized, llap
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -264,31 +249,29 @@ STAGE PLANS:
                 Group By Vectorization:
                     className: VectorGroupByOperator
                     groupByMode: MERGEPARTIAL
-                    vectorOutput: true
-                    keyExpressions: col 0
+                    keyExpressions: col 0:int
                     native: false
                     vectorProcessingMode: MERGE_PARTIAL
-                    projectedOutputColumns: []
+                    projectedOutputColumnNums: []
                 keys: KEY._col0 (type: int)
                 mode: mergepartial
                 outputColumnNames: _col0
-                Statistics: Num rows: 5 Data size: 465 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 5 Data size: 20 Basic stats: COMPLETE Column stats: NONE
                 Select Operator
                   Select Vectorization:
                       className: VectorSelectOperator
                       native: true
-                      projectedOutputColumns: []
-                  Statistics: Num rows: 5 Data size: 465 Basic stats: COMPLETE Column stats: NONE
+                      projectedOutputColumnNums: []
+                  Statistics: Num rows: 5 Data size: 20 Basic stats: COMPLETE Column stats: NONE
                   Group By Operator
                     aggregations: count()
                     Group By Vectorization:
                         aggregators: VectorUDAFCountStar(*) -> bigint
                         className: VectorGroupByOperator
                         groupByMode: HASH
-                        vectorOutput: true
                         native: false
                         vectorProcessingMode: HASH
-                        projectedOutputColumns: [0]
+                        projectedOutputColumnNums: [0]
                     mode: hash
                     outputColumnNames: _col0
                     Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: NONE
@@ -305,7 +288,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -313,13 +295,12 @@ STAGE PLANS:
               Group By Operator
                 aggregations: count(VALUE._col0)
                 Group By Vectorization:
-                    aggregators: VectorUDAFCountMerge(col 0) -> bigint
+                    aggregators: VectorUDAFCountMerge(col 0:bigint) -> bigint
                     className: VectorGroupByOperator
                     groupByMode: MERGEPARTIAL
-                    vectorOutput: true
                     native: false
                     vectorProcessingMode: GLOBAL
-                    projectedOutputColumns: [0]
+                    projectedOutputColumnNums: [0]
                 mode: mergepartial
                 outputColumnNames: _col0
                 Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: NONE
@@ -421,25 +402,25 @@ STAGE PLANS:
             Map Operator Tree:
                 TableScan
                   alias: b
-                  Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: key is not null (type: boolean)
-                    Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
             Map Operator Tree:
                 TableScan
                   alias: a
-                  Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: key is not null (type: boolean)
-                    Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                       Merge Join Operator
                         condition map:
                              Inner Join 0 to 1
@@ -447,49 +428,43 @@ STAGE PLANS:
                           0 _col0 (type: int)
                           1 _col0 (type: int)
                         outputColumnNames: _col0
-                        Statistics: Num rows: 11 Data size: 1023 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 11 Data size: 44 Basic stats: COMPLETE Column stats: NONE
                         Group By Operator
                           aggregations: count()
-                          Group By Vectorization:
-                              groupByMode: HASH
-                              vectorOutput: false
-                              native: false
-                              vectorProcessingMode: NONE
-                              projectedOutputColumns: null
                           keys: _col0 (type: int)
                           mode: hash
                           outputColumnNames: _col0, _col1
-                          Statistics: Num rows: 11 Data size: 1023 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 11 Data size: 44 Basic stats: COMPLETE Column stats: NONE
                           Reduce Output Operator
                             key expressions: _col0 (type: int)
                             sort order: +
                             Map-reduce partition columns: _col0 (type: int)
-                            Statistics: Num rows: 11 Data size: 1023 Basic stats: COMPLETE Column stats: NONE
+                            Statistics: Num rows: 11 Data size: 44 Basic stats: COMPLETE Column stats: NONE
                             value expressions: _col1 (type: bigint)
             Execution mode: llap
         Map 5 
             Map Operator Tree:
                 TableScan
                   alias: b
-                  Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: key is not null (type: boolean)
-                    Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
             Map Operator Tree:
                 TableScan
                   alias: a
-                  Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: key is not null (type: boolean)
-                    Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                       Merge Join Operator
                         condition map:
                              Inner Join 0 to 1
@@ -497,24 +472,18 @@ STAGE PLANS:
                           0 _col0 (type: int)
                           1 _col0 (type: int)
                         outputColumnNames: _col0
-                        Statistics: Num rows: 11 Data size: 1023 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 11 Data size: 44 Basic stats: COMPLETE Column stats: NONE
                         Group By Operator
                           aggregations: count()
-                          Group By Vectorization:
-                              groupByMode: HASH
-                              vectorOutput: false
-                              native: false
-                              vectorProcessingMode: NONE
-                              projectedOutputColumns: null
                           keys: _col0 (type: int)
                           mode: hash
                           outputColumnNames: _col0, _col1
-                          Statistics: Num rows: 11 Data size: 1023 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 11 Data size: 44 Basic stats: COMPLETE Column stats: NONE
                           Reduce Output Operator
                             key expressions: _col0 (type: int)
                             sort order: +
                             Map-reduce partition columns: _col0 (type: int)
-                            Statistics: Num rows: 11 Data size: 1023 Basic stats: COMPLETE Column stats: NONE
+                            Statistics: Num rows: 11 Data size: 44 Basic stats: COMPLETE Column stats: NONE
                             value expressions: _col1 (type: bigint)
             Execution mode: llap
         Reducer 2 
@@ -522,7 +491,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -530,18 +498,17 @@ STAGE PLANS:
               Group By Operator
                 aggregations: count(VALUE._col0)
                 Group By Vectorization:
-                    aggregators: VectorUDAFCountMerge(col 1) -> bigint
+                    aggregators: VectorUDAFCountMerge(col 1:bigint) -> bigint
                     className: VectorGroupByOperator
                     groupByMode: MERGEPARTIAL
-                    vectorOutput: true
-                    keyExpressions: col 0
+                    keyExpressions: col 0:int
                     native: false
                     vectorProcessingMode: MERGE_PARTIAL
-                    projectedOutputColumns: [0]
+                    projectedOutputColumnNums: [0]
                 keys: KEY._col0 (type: int)
                 mode: mergepartial
                 outputColumnNames: _col0, _col1
-                Statistics: Num rows: 5 Data size: 465 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 5 Data size: 20 Basic stats: COMPLETE Column stats: NONE
                 Reduce Output Operator
                   key expressions: _col0 (type: int)
                   sort order: +
@@ -550,7 +517,7 @@ STAGE PLANS:
                       className: VectorReduceSinkObjectHashOperator
                       native: true
                       nativeConditionsMet: hive.vectorized.execution.reducesink.new.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true, No PTF TopN IS true, No DISTINCT columns IS true, BinarySortableSerDe for keys IS true, LazyBinarySerDe for values IS true
-                  Statistics: Num rows: 5 Data size: 465 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 5 Data size: 20 Basic stats: COMPLETE Column stats: NONE
                   value expressions: _col1 (type: bigint)
         Reducer 3 
             Execution mode: llap
@@ -562,14 +529,14 @@ STAGE PLANS:
                   0 _col0 (type: int)
                   1 _col0 (type: int)
                 outputColumnNames: _col0, _col1, _col3
-                Statistics: Num rows: 5 Data size: 511 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 5 Data size: 22 Basic stats: COMPLETE Column stats: NONE
                 Select Operator
-                  expressions: _col0 (type: int), _col1 (type: bigint), _col3 (type: bigint)
+                  expressions: _col0 (type: int), _col3 (type: bigint), _col1 (type: bigint)
                   outputColumnNames: _col0, _col1, _col2
-                  Statistics: Num rows: 5 Data size: 511 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 5 Data size: 22 Basic stats: COMPLETE Column stats: NONE
                   File Output Operator
                     compressed: false
-                    Statistics: Num rows: 5 Data size: 511 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 5 Data size: 22 Basic stats: COMPLETE Column stats: NONE
                     table:
                         input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                         output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
@@ -579,7 +546,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -587,18 +553,17 @@ STAGE PLANS:
               Group By Operator
                 aggregations: count(VALUE._col0)
                 Group By Vectorization:
-                    aggregators: VectorUDAFCountMerge(col 1) -> bigint
+                    aggregators: VectorUDAFCountMerge(col 1:bigint) -> bigint
                     className: VectorGroupByOperator
                     groupByMode: MERGEPARTIAL
-                    vectorOutput: true
-                    keyExpressions: col 0
+                    keyExpressions: col 0:int
                     native: false
                     vectorProcessingMode: MERGE_PARTIAL
-                    projectedOutputColumns: [0]
+                    projectedOutputColumnNums: [0]
                 keys: KEY._col0 (type: int)
                 mode: mergepartial
                 outputColumnNames: _col0, _col1
-                Statistics: Num rows: 5 Data size: 465 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 5 Data size: 20 Basic stats: COMPLETE Column stats: NONE
                 Reduce Output Operator
                   key expressions: _col0 (type: int)
                   sort order: +
@@ -607,7 +572,7 @@ STAGE PLANS:
                       className: VectorReduceSinkObjectHashOperator
                       native: true
                       nativeConditionsMet: hive.vectorized.execution.reducesink.new.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true, No PTF TopN IS true, No DISTINCT columns IS true, BinarySortableSerDe for keys IS true, LazyBinarySerDe for values IS true
-                  Statistics: Num rows: 5 Data size: 465 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 5 Data size: 20 Basic stats: COMPLETE Column stats: NONE
                   value expressions: _col1 (type: bigint)
 
   Stage: Stage-0
@@ -694,40 +659,34 @@ STAGE PLANS:
             Map Operator Tree:
                 TableScan
                   alias: a
-                  Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: (key < 6) (type: boolean)
-                    Statistics: Num rows: 3 Data size: 279 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 3 Data size: 279 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
             Map Operator Tree:
                 TableScan
                   alias: a
-                  Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: (key < 6) (type: boolean)
-                    Statistics: Num rows: 3 Data size: 279 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 3 Data size: 279 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                       Merge Join Operator
                         condition map:
                              Inner Join 0 to 1
                         keys:
                           0 _col0 (type: int)
                           1 _col0 (type: int)
-                        Statistics: Num rows: 3 Data size: 306 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 11 Data size: 44 Basic stats: COMPLETE Column stats: NONE
                         Group By Operator
                           aggregations: count()
-                          Group By Vectorization:
-                              groupByMode: HASH
-                              vectorOutput: false
-                              native: false
-                              vectorProcessingMode: NONE
-                              projectedOutputColumns: null
                           mode: hash
                           outputColumnNames: _col0
                           Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: NONE
@@ -741,7 +700,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -749,13 +707,12 @@ STAGE PLANS:
               Group By Operator
                 aggregations: count(VALUE._col0)
                 Group By Vectorization:
-                    aggregators: VectorUDAFCountMerge(col 0) -> bigint
+                    aggregators: VectorUDAFCountMerge(col 0:bigint) -> bigint
                     className: VectorGroupByOperator
                     groupByMode: MERGEPARTIAL
-                    vectorOutput: true
                     native: false
                     vectorProcessingMode: GLOBAL
-                    projectedOutputColumns: [0]
+                    projectedOutputColumnNums: [0]
                 mode: mergepartial
                 outputColumnNames: _col0
                 Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: NONE
@@ -839,40 +796,34 @@ STAGE PLANS:
             Map Operator Tree:
                 TableScan
                   alias: b
-                  Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: (key < 6) (type: boolean)
-                    Statistics: Num rows: 3 Data size: 279 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 3 Data size: 279 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
             Map Operator Tree:
                 TableScan
                   alias: a
-                  Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: (key < 6) (type: boolean)
-                    Statistics: Num rows: 3 Data size: 279 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 3 Data size: 279 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                       Merge Join Operator
                         condition map:
                              Inner Join 0 to 1
                         keys:
                           0 _col0 (type: int)
                           1 _col0 (type: int)
-                        Statistics: Num rows: 3 Data size: 306 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 11 Data size: 44 Basic stats: COMPLETE Column stats: NONE
                         Group By Operator
                           aggregations: count()
-                          Group By Vectorization:
-                              groupByMode: HASH
-                              vectorOutput: false
-                              native: false
-                              vectorProcessingMode: NONE
-                              projectedOutputColumns: null
                           mode: hash
                           outputColumnNames: _col0
                           Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: NONE
@@ -886,7 +837,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -894,13 +844,12 @@ STAGE PLANS:
               Group By Operator
                 aggregations: count(VALUE._col0)
                 Group By Vectorization:
-                    aggregators: VectorUDAFCountMerge(col 0) -> bigint
+                    aggregators: VectorUDAFCountMerge(col 0:bigint) -> bigint
                     className: VectorGroupByOperator
                     groupByMode: MERGEPARTIAL
-                    vectorOutput: true
                     native: false
                     vectorProcessingMode: GLOBAL
-                    projectedOutputColumns: [0]
+                    projectedOutputColumnNums: [0]
                 mode: mergepartial
                 outputColumnNames: _col0
                 Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: NONE
@@ -1008,40 +957,34 @@ STAGE PLANS:
             Map Operator Tree:
                 TableScan
                   alias: a
-                  Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: (key < 6) (type: boolean)
-                    Statistics: Num rows: 3 Data size: 279 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 3 Data size: 279 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
             Map Operator Tree:
                 TableScan
                   alias: a
-                  Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: (key < 6) (type: boolean)
-                    Statistics: Num rows: 3 Data size: 279 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 3 Data size: 279 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                       Merge Join Operator
                         condition map:
                              Inner Join 0 to 1
                         keys:
                           0 _col0 (type: int)
                           1 _col0 (type: int)
-                        Statistics: Num rows: 3 Data size: 306 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 11 Data size: 44 Basic stats: COMPLETE Column stats: NONE
                         Group By Operator
                           aggregations: count()
-                          Group By Vectorization:
-                              groupByMode: HASH
-                              vectorOutput: false
-                              native: false
-                              vectorProcessingMode: NONE
-                              projectedOutputColumns: null
                           mode: hash
                           outputColumnNames: _col0
                           Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: NONE
@@ -1055,7 +998,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -1063,13 +1005,12 @@ STAGE PLANS:
               Group By Operator
                 aggregations: count(VALUE._col0)
                 Group By Vectorization:
-                    aggregators: VectorUDAFCountMerge(col 0) -> bigint
+                    aggregators: VectorUDAFCountMerge(col 0:bigint) -> bigint
                     className: VectorGroupByOperator
                     groupByMode: MERGEPARTIAL
-                    vectorOutput: true
                     native: false
                     vectorProcessingMode: GLOBAL
-                    projectedOutputColumns: [0]
+                    projectedOutputColumnNums: [0]
                 mode: mergepartial
                 outputColumnNames: _col0
                 Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: NONE
@@ -1165,40 +1106,34 @@ STAGE PLANS:
             Map Operator Tree:
                 TableScan
                   alias: a
-                  Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: (key < 8) (type: boolean)
-                    Statistics: Num rows: 3 Data size: 279 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 3 Data size: 279 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
             Map Operator Tree:
                 TableScan
                   alias: a
-                  Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: (key < 8) (type: boolean)
-                    Statistics: Num rows: 3 Data size: 279 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 3 Data size: 279 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                       Merge Join Operator
                         condition map:
                              Inner Join 0 to 1
                         keys:
                           0 _col0 (type: int)
                           1 _col0 (type: int)
-                        Statistics: Num rows: 3 Data size: 306 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 11 Data size: 44 Basic stats: COMPLETE Column stats: NONE
                         Group By Operator
                           aggregations: count()
-                          Group By Vectorization:
-                              groupByMode: HASH
-                              vectorOutput: false
-                              native: false
-                              vectorProcessingMode: NONE
-                              projectedOutputColumns: null
                           mode: hash
                           outputColumnNames: _col0
                           Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: NONE
@@ -1212,7 +1147,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -1220,13 +1154,12 @@ STAGE PLANS:
               Group By Operator
                 aggregations: count(VALUE._col0)
                 Group By Vectorization:
-                    aggregators: VectorUDAFCountMerge(col 0) -> bigint
+                    aggregators: VectorUDAFCountMerge(col 0:bigint) -> bigint
                     className: VectorGroupByOperator
                     groupByMode: MERGEPARTIAL
-                    vectorOutput: true
                     native: false
                     vectorProcessingMode: GLOBAL
-                    projectedOutputColumns: [0]
+                    projectedOutputColumnNums: [0]
                 mode: mergepartial
                 outputColumnNames: _col0
                 Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: NONE
@@ -1301,26 +1234,25 @@ STAGE PLANS:
             Map Operator Tree:
                 TableScan
                   alias: a
-                  Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                   TableScan Vectorization:
                       native: true
-                      projectedOutputColumns: [0, 1]
                   Filter Operator
                     Filter Vectorization:
                         className: VectorFilterOperator
                         native: true
-                        predicateExpression: SelectColumnIsNotNull(col 0) -> boolean
+                        predicateExpression: SelectColumnIsNotNull(col 0:int)
                     predicate: key is not null (type: boolean)
-                    Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: (key + 1) (type: int)
                       outputColumnNames: _col0
                       Select Vectorization:
                           className: VectorSelectOperator
                           native: true
-                          projectedOutputColumns: [2]
-                          selectExpressions: LongColAddLongScalar(col 0, val 1) -> 2:long
-                      Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                          projectedOutputColumnNums: [3]
+                          selectExpressions: LongColAddLongScalar(col 0:int, val 1) -> 3:int
+                      Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: _col0 (type: int)
                         sort order: +
@@ -1329,13 +1261,14 @@ STAGE PLANS:
                             className: VectorReduceSinkLongOperator
                             native: true
                             nativeConditionsMet: hive.vectorized.execution.reducesink.new.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true, No PTF TopN IS true, No DISTINCT columns IS true, BinarySortableSerDe for keys IS true, LazyBinarySerDe for values IS true
-                        Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: []
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
                 allNative: true
                 usesVectorUDFAdaptor: false
@@ -1344,26 +1277,25 @@ STAGE PLANS:
             Map Operator Tree:
                 TableScan
                   alias: a
-                  Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                   TableScan Vectorization:
                       native: true
-                      projectedOutputColumns: [0, 1]
                   Filter Operator
                     Filter Vectorization:
                         className: VectorFilterOperator
                         native: true
-                        predicateExpression: SelectColumnIsNotNull(col 0) -> boolean
+                        predicateExpression: SelectColumnIsNotNull(col 0:int)
                     predicate: key is not null (type: boolean)
-                    Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: (key + 1) (type: int)
                       outputColumnNames: _col0
                       Select Vectorization:
                           className: VectorSelectOperator
                           native: true
-                          projectedOutputColumns: [2]
-                          selectExpressions: LongColAddLongScalar(col 0, val 1) -> 2:long
-                      Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                          projectedOutputColumnNums: [3]
+                          selectExpressions: LongColAddLongScalar(col 0:int, val 1) -> 3:int
+                      Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: _col0 (type: int)
                         sort order: +
@@ -1372,13 +1304,14 @@ STAGE PLANS:
                             className: VectorReduceSinkLongOperator
                             native: true
                             nativeConditionsMet: hive.vectorized.execution.reducesink.new.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true, No PTF TopN IS true, No DISTINCT columns IS true, BinarySortableSerDe for keys IS true, LazyBinarySerDe for values IS true
-                        Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
             Execution mode: vectorized, llap
             LLAP IO: all inputs
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: []
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
                 allNative: true
                 usesVectorUDFAdaptor: false
@@ -1392,15 +1325,9 @@ STAGE PLANS:
                 keys:
                   0 _col0 (type: int)
                   1 _col0 (type: int)
-                Statistics: Num rows: 11 Data size: 1023 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 11 Data size: 44 Basic stats: COMPLETE Column stats: NONE
                 Group By Operator
                   aggregations: count()
-                  Group By Vectorization:
-                      groupByMode: HASH
-                      vectorOutput: false
-                      native: false
-                      vectorProcessingMode: NONE
-                      projectedOutputColumns: null
                   mode: hash
                   outputColumnNames: _col0
                   Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: NONE
@@ -1413,7 +1340,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -1421,13 +1347,12 @@ STAGE PLANS:
               Group By Operator
                 aggregations: count(VALUE._col0)
                 Group By Vectorization:
-                    aggregators: VectorUDAFCountMerge(col 0) -> bigint
+                    aggregators: VectorUDAFCountMerge(col 0:bigint) -> bigint
                     className: VectorGroupByOperator
                     groupByMode: MERGEPARTIAL
-                    vectorOutput: true
                     native: false
                     vectorProcessingMode: GLOBAL
-                    projectedOutputColumns: [0]
+                    projectedOutputColumnNums: [0]
                 mode: mergepartial
                 outputColumnNames: _col0
                 Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: NONE
@@ -1497,40 +1422,34 @@ STAGE PLANS:
             Map Operator Tree:
                 TableScan
                   alias: a
-                  Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: (key < 6) (type: boolean)
-                    Statistics: Num rows: 3 Data size: 279 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 3 Data size: 279 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
             Map Operator Tree:
                 TableScan
                   alias: a
-                  Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: (key < 6) (type: boolean)
-                    Statistics: Num rows: 3 Data size: 279 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 3 Data size: 279 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                       Merge Join Operator
                         condition map:
                              Inner Join 0 to 1
                         keys:
                           0 _col0 (type: int)
                           1 _col0 (type: int)
-                        Statistics: Num rows: 3 Data size: 306 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 11 Data size: 44 Basic stats: COMPLETE Column stats: NONE
                         Group By Operator
                           aggregations: count()
-                          Group By Vectorization:
-                              groupByMode: HASH
-                              vectorOutput: false
-                              native: false
-                              vectorProcessingMode: NONE
-                              projectedOutputColumns: null
                           mode: hash
                           outputColumnNames: _col0
                           Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: NONE
@@ -1544,7 +1463,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -1552,13 +1470,12 @@ STAGE PLANS:
               Group By Operator
                 aggregations: count(VALUE._col0)
                 Group By Vectorization:
-                    aggregators: VectorUDAFCountMerge(col 0) -> bigint
+                    aggregators: VectorUDAFCountMerge(col 0:bigint) -> bigint
                     className: VectorGroupByOperator
                     groupByMode: MERGEPARTIAL
-                    vectorOutput: true
                     native: false
                     vectorProcessingMode: GLOBAL
-                    projectedOutputColumns: [0]
+                    projectedOutputColumnNums: [0]
                 mode: mergepartial
                 outputColumnNames: _col0
                 Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: NONE
@@ -1634,36 +1551,36 @@ STAGE PLANS:
             Map Operator Tree:
                 TableScan
                   alias: a
-                  Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: (key < 6) (type: boolean)
-                    Statistics: Num rows: 3 Data size: 279 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 3 Data size: 279 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
             Map Operator Tree:
                 TableScan
                   alias: a
-                  Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: (key < 6) (type: boolean)
-                    Statistics: Num rows: 3 Data size: 279 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 3 Data size: 279 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
             Map Operator Tree:
                 TableScan
                   alias: a
-                  Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: (key < 6) (type: boolean)
-                    Statistics: Num rows: 3 Data size: 279 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 3 Data size: 279 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                       Merge Join Operator
                         condition map:
                              Inner Join 0 to 1
@@ -1672,15 +1589,9 @@ STAGE PLANS:
                           0 _col0 (type: int)
                           1 _col0 (type: int)
                           2 _col0 (type: int)
-                        Statistics: Num rows: 6 Data size: 613 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 22 Data size: 88 Basic stats: COMPLETE Column stats: NONE
                         Group By Operator
                           aggregations: count()
-                          Group By Vectorization:
-                              groupByMode: HASH
-                              vectorOutput: false
-                              native: false
-                              vectorProcessingMode: NONE
-                              projectedOutputColumns: null
                           mode: hash
                           outputColumnNames: _col0
                           Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: NONE
@@ -1694,7 +1605,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -1702,13 +1612,12 @@ STAGE PLANS:
               Group By Operator
                 aggregations: count(VALUE._col0)
                 Group By Vectorization:
-                    aggregators: VectorUDAFCountMerge(col 0) -> bigint
+                    aggregators: VectorUDAFCountMerge(col 0:bigint) -> bigint
                     className: VectorGroupByOperator
                     groupByMode: MERGEPARTIAL
-                    vectorOutput: true
                     native: false
                     vectorProcessingMode: GLOBAL
-                    projectedOutputColumns: [0]
+                    projectedOutputColumnNums: [0]
                 mode: mergepartial
                 outputColumnNames: _col0
                 Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: NONE
@@ -1800,40 +1709,34 @@ STAGE PLANS:
             Map Operator Tree:
                 TableScan
                   alias: b
-                  Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: (key < 6) (type: boolean)
-                    Statistics: Num rows: 3 Data size: 279 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 3 Data size: 279 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
             Map Operator Tree:
                 TableScan
                   alias: a
-                  Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: (key < 6) (type: boolean)
-                    Statistics: Num rows: 3 Data size: 279 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 3 Data size: 279 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                       Merge Join Operator
                         condition map:
                              Inner Join 0 to 1
                         keys:
                           0 _col0 (type: int)
                           1 _col0 (type: int)
-                        Statistics: Num rows: 3 Data size: 306 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 11 Data size: 44 Basic stats: COMPLETE Column stats: NONE
                         Group By Operator
                           aggregations: count()
-                          Group By Vectorization:
-                              groupByMode: HASH
-                              vectorOutput: false
-                              native: false
-                              vectorProcessingMode: NONE
-                              projectedOutputColumns: null
                           mode: hash
                           outputColumnNames: _col0
                           Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: NONE
@@ -1847,7 +1750,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -1855,13 +1757,12 @@ STAGE PLANS:
               Group By Operator
                 aggregations: count(VALUE._col0)
                 Group By Vectorization:
-                    aggregators: VectorUDAFCountMerge(col 0) -> bigint
+                    aggregators: VectorUDAFCountMerge(col 0:bigint) -> bigint
                     className: VectorGroupByOperator
                     groupByMode: MERGEPARTIAL
-                    vectorOutput: true
                     native: false
                     vectorProcessingMode: GLOBAL
-                    projectedOutputColumns: [0]
+                    projectedOutputColumnNums: [0]
                 mode: mergepartial
                 outputColumnNames: _col0
                 Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: NONE
@@ -1964,25 +1865,25 @@ STAGE PLANS:
             Map Operator Tree:
                 TableScan
                   alias: b
-                  Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 10 Data size: 1880 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: key is not null (type: boolean)
-                    Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 10 Data size: 1880 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int), value (type: string)
                       outputColumnNames: _col0, _col1
-                      Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 10 Data size: 1880 Basic stats: COMPLETE Column stats: NONE
             Map Operator Tree:
                 TableScan
                   alias: a
-                  Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 10 Data size: 1880 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: key is not null (type: boolean)
-                    Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 10 Data size: 1880 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int), value (type: string)
                       outputColumnNames: _col0, _col1
-                      Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 10 Data size: 1880 Basic stats: COMPLETE Column stats: NONE
                       Merge Join Operator
                         condition map:
                              Inner Join 0 to 1
@@ -1990,18 +1891,18 @@ STAGE PLANS:
                           0 _col0 (type: int)
                           1 _col0 (type: int)
                         outputColumnNames: _col0, _col1, _col3
-                        Statistics: Num rows: 11 Data size: 1023 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 11 Data size: 2068 Basic stats: COMPLETE Column stats: NONE
                         Select Operator
                           expressions: _col0 (type: int), _col1 (type: string), _col3 (type: string)
                           outputColumnNames: _col0, _col1, _col2
-                          Statistics: Num rows: 11 Data size: 1023 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 11 Data size: 2068 Basic stats: COMPLETE Column stats: NONE
                           Select Operator
                             expressions: _col0 (type: int), _col1 (type: string)
                             outputColumnNames: _col0, _col1
-                            Statistics: Num rows: 11 Data size: 1023 Basic stats: COMPLETE Column stats: NONE
+                            Statistics: Num rows: 11 Data size: 2068 Basic stats: COMPLETE Column stats: NONE
                             File Output Operator
                               compressed: false
-                              Statistics: Num rows: 11 Data size: 1023 Basic stats: COMPLETE Column stats: NONE
+                              Statistics: Num rows: 11 Data size: 2068 Basic stats: COMPLETE Column stats: NONE
                               table:
                                   input format: org.apache.hadoop.mapred.TextInputFormat
                                   output format: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
@@ -2009,7 +1910,7 @@ STAGE PLANS:
                                   name: default.dest1
                           File Output Operator
                             compressed: false
-                            Statistics: Num rows: 11 Data size: 1023 Basic stats: COMPLETE Column stats: NONE
+                            Statistics: Num rows: 11 Data size: 2068 Basic stats: COMPLETE Column stats: NONE
                             table:
                                 input format: org.apache.hadoop.mapred.TextInputFormat
                                 output format: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
@@ -2031,7 +1932,8 @@ STAGE PLANS:
               name: default.dest1
 
   Stage: Stage-4
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 
   Stage: Stage-1
     Move Operator
@@ -2044,7 +1946,8 @@ STAGE PLANS:
               name: default.dest2
 
   Stage: Stage-5
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 
 PREHOOK: query: from (
   select a.key as key, a.value as val1, b.value as val2 from tbl1 a join tbl2 b on a.key = b.key
@@ -2185,25 +2088,25 @@ STAGE PLANS:
             Map Operator Tree:
                 TableScan
                   alias: b
-                  Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: key is not null (type: boolean)
-                    Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int)
                       outputColumnNames: _col0
-                      Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 10 Data size: 40 Basic stats: COMPLETE Column stats: NONE
             Map Operator Tree:
                 TableScan
                   alias: a
-                  Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                  Statistics: Num rows: 10 Data size: 1880 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: key is not null (type: boolean)
-                    Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 10 Data size: 1880 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: key (type: int), value (type: string)
                       outputColumnNames: _col0, _col1
-                      Statistics: Num rows: 10 Data size: 930 Basic stats: COMPLETE Column stats: NONE
+                      Statistics: Num rows: 10 Data size: 1880 Basic stats: COMPLETE Column stats: NONE
                       Merge Join Operator
                         condition map:
                              Inner Join 0 to 1
@@ -2211,10 +2114,10 @@ STAGE PLANS:
                           0 _col0 (type: int)
                           1 _col0 (type: int)
                         outputColumnNames: _col0, _col1
-                        Statistics: Num rows: 11 Data size: 1023 Basic stats: COMPLETE Column stats: NONE
+                        Statistics: Num rows: 11 Data size: 2068 Basic stats: COMPLETE Column stats: NONE
                         File Output Operator
                           compressed: false
-                          Statistics: Num rows: 11 Data size: 1023 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 11 Data size: 2068 Basic stats: COMPLETE Column stats: NONE
                           table:
                               input format: org.apache.hadoop.mapred.TextInputFormat
                               output format: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
@@ -2223,24 +2126,18 @@ STAGE PLANS:
                         Select Operator
                           expressions: _col0 (type: int)
                           outputColumnNames: _col0
-                          Statistics: Num rows: 11 Data size: 1023 Basic stats: COMPLETE Column stats: NONE
+                          Statistics: Num rows: 11 Data size: 2068 Basic stats: COMPLETE Column stats: NONE
                           Group By Operator
                             aggregations: count()
-                            Group By Vectorization:
-                                groupByMode: HASH
-                                vectorOutput: false
-                                native: false
-                                vectorProcessingMode: NONE
-                                projectedOutputColumns: null
                             keys: _col0 (type: int)
                             mode: hash
                             outputColumnNames: _col0, _col1
-                            Statistics: Num rows: 11 Data size: 1023 Basic stats: COMPLETE Column stats: NONE
+                            Statistics: Num rows: 11 Data size: 2068 Basic stats: COMPLETE Column stats: NONE
                             Reduce Output Operator
                               key expressions: _col0 (type: int)
                               sort order: +
                               Map-reduce partition columns: _col0 (type: int)
-                              Statistics: Num rows: 11 Data size: 1023 Basic stats: COMPLETE Column stats: NONE
+                              Statistics: Num rows: 11 Data size: 2068 Basic stats: COMPLETE Column stats: NONE
                               value expressions: _col1 (type: bigint)
             Execution mode: llap
         Reducer 2 
@@ -2248,7 +2145,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine tez IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true
@@ -2256,32 +2152,31 @@ STAGE PLANS:
               Group By Operator
                 aggregations: count(VALUE._col0)
                 Group By Vectorization:
-                    aggregators: VectorUDAFCountMerge(col 1) -> bigint
+                    aggregators: VectorUDAFCountMerge(col 1:bigint) -> bigint
                     className: VectorGroupByOperator
                     groupByMode: MERGEPARTIAL
-                    vectorOutput: true
-                    keyExpressions: col 0
+                    keyExpressions: col 0:int
                     native: false
                     vectorProcessingMode: MERGE_PARTIAL
-                    projectedOutputColumns: [0]
+                    projectedOutputColumnNums: [0]
                 keys: KEY._col0 (type: int)
                 mode: mergepartial
                 outputColumnNames: _col0, _col1
-                Statistics: Num rows: 5 Data size: 465 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 5 Data size: 940 Basic stats: COMPLETE Column stats: NONE
                 Select Operator
                   expressions: _col0 (type: int), UDFToInteger(_col1) (type: int)
                   outputColumnNames: _col0, _col1
                   Select Vectorization:
                       className: VectorSelectOperator
                       native: true
-                      projectedOutputColumns: [0, 1]
-                  Statistics: Num rows: 5 Data size: 465 Basic stats: COMPLETE Column stats: NONE
+                      projectedOutputColumnNums: [0, 1]
+                  Statistics: Num rows: 5 Data size: 940 Basic stats: COMPLETE Column stats: NONE
                   File Output Operator
                     compressed: false
                     File Sink Vectorization:
                         className: VectorFileSinkOperator
                         native: false
-                    Statistics: Num rows: 5 Data size: 465 Basic stats: COMPLETE Column stats: NONE
+                    Statistics: Num rows: 5 Data size: 940 Basic stats: COMPLETE Column stats: NONE
                     table:
                         input format: org.apache.hadoop.mapred.TextInputFormat
                         output format: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
@@ -2302,7 +2197,8 @@ STAGE PLANS:
               name: default.dest1
 
   Stage: Stage-4
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 
   Stage: Stage-1
     Move Operator
@@ -2315,7 +2211,8 @@ STAGE PLANS:
               name: default.dest2
 
   Stage: Stage-5
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 
 PREHOOK: query: from (
   select a.key as key, a.value as val1, b.value as val2 from tbl1 a join tbl2 b on a.key = b.key

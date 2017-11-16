@@ -60,6 +60,8 @@ public class OperationManager extends AbstractService {
   private final Logger LOG = LoggerFactory.getLogger(OperationManager.class.getName());
   private final ConcurrentHashMap<OperationHandle, Operation> handleToOperation =
       new ConcurrentHashMap<OperationHandle, Operation>();
+  private final ConcurrentHashMap<String, Operation> queryIdOperation =
+      new ConcurrentHashMap<String, Operation>();
 
   //Following fields for displaying queries on WebUI
   private Object webuiLock = new Object();
@@ -183,8 +185,13 @@ public class OperationManager extends AbstractService {
     return handleToOperation.get(operationHandle);
   }
 
+  private String getQueryId(Operation operation) {
+    return operation.getParentSession().getHiveConf().getVar(ConfVars.HIVEQUERYID);
+  }
+
   private void addOperation(Operation operation) {
     LOG.info("Adding operation: " + operation.getHandle());
+    queryIdOperation.put(getQueryId(operation), operation);
     handleToOperation.put(operation.getHandle(), operation);
     if (operation instanceof SQLOperation) {
       synchronized (webuiLock) {
@@ -196,6 +203,9 @@ public class OperationManager extends AbstractService {
 
   private Operation removeOperation(OperationHandle opHandle) {
     Operation operation = handleToOperation.remove(opHandle);
+    String queryId = getQueryId(operation);
+    queryIdOperation.remove(queryId);
+    LOG.info("Removed queryId: {} corresponding to operation: {}", queryId, opHandle);
     if (operation instanceof SQLOperation) {
       removeSafeQueryInfo(opHandle);
     }
@@ -215,11 +225,7 @@ public class OperationManager extends AbstractService {
         }
       }
 
-      handleToOperation.remove(operationHandle, operation);
-      if (operation instanceof SQLOperation) {
-        removeSafeQueryInfo(operationHandle);
-      }
-      return operation;
+      return removeOperation(operationHandle);
     }
     return null;
   }
@@ -246,10 +252,11 @@ public class OperationManager extends AbstractService {
 
   /**
    * Cancel the running operation unless it is already in a terminal state
-   * @param opHandle
+   * @param opHandle operation handle
+   * @param errMsg error message
    * @throws HiveSQLException
    */
-  public void cancelOperation(OperationHandle opHandle) throws HiveSQLException {
+  public void cancelOperation(OperationHandle opHandle, String errMsg) throws HiveSQLException {
     Operation operation = getOperation(opHandle);
     OperationState opState = operation.getStatus().getState();
     if (opState.isTerminal()) {
@@ -257,11 +264,22 @@ public class OperationManager extends AbstractService {
       LOG.debug(opHandle + ": Operation is already aborted in state - " + opState);
     } else {
       LOG.debug(opHandle + ": Attempting to cancel from state - " + opState);
-      operation.cancel(OperationState.CANCELED);
+      OperationState operationState = OperationState.CANCELED;
+      operationState.setErrorMessage(errMsg);
+      operation.cancel(operationState);
       if (operation instanceof SQLOperation) {
         removeSafeQueryInfo(opHandle);
       }
     }
+  }
+
+  /**
+   * Cancel the running operation unless it is already in a terminal state
+   * @param opHandle
+   * @throws HiveSQLException
+   */
+  public void cancelOperation(OperationHandle opHandle) throws HiveSQLException {
+    cancelOperation(opHandle, "");
   }
 
   public void closeOperation(OperationHandle opHandle) throws HiveSQLException {
@@ -399,5 +417,9 @@ public class OperationManager extends AbstractService {
       }
       return historicalQueryInfos.get(handle);
     }
+  }
+
+  public Operation getOperationByQueryId(String queryId) {
+    return queryIdOperation.get(queryId);
   }
 }

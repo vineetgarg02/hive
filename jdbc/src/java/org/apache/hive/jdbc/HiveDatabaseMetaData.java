@@ -579,11 +579,13 @@ public class HiveDatabaseMetaData implements DatabaseMetaData {
   public RowIdLifetime getRowIdLifetime() throws SQLException {
     throw new SQLFeatureNotSupportedException("Method not supported");
   }
-
   public String getSQLKeywords() throws SQLException {
-    throw new SQLFeatureNotSupportedException("Method not supported");
+    // Note: the definitions of what ODBC and JDBC keywords exclude are different in different
+    //       places. For now, just return the ODBC version here; that excludes Hive keywords 
+    //       that are also ODBC reserved keywords. We could also exclude SQL:2003.
+    TGetInfoResp resp = getServerInfo(GetInfoType.CLI_ODBC_KEYWORDS.toTGetInfoType());
+    return resp.getInfoValue().getStringValue();
   }
-
   public int getSQLStateType() throws SQLException {
     return DatabaseMetaData.sqlStateSQL99;
   }
@@ -760,7 +762,7 @@ public class HiveDatabaseMetaData implements DatabaseMetaData {
   public ResultSet getUDTs(String catalog, String schemaPattern,
       String typeNamePattern, int[] types) throws SQLException {
 
-    return new HiveMetaDataResultSet(
+    return new HiveMetaDataResultSet<Object>(
             Arrays.asList("TYPE_CAT", "TYPE_SCHEM", "TYPE_NAME", "CLASS_NAME", "DATA_TYPE"
                     , "REMARKS", "BASE_TYPE")
             , Arrays.asList("STRING", "STRING", "STRING", "STRING", "INT", "STRING", "INT")

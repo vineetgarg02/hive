@@ -22,7 +22,7 @@ STAGE PLANS:
                   alias: v1
                   Statistics: Num rows: 12288 Data size: 2641964 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
-                    predicate: (ctinyint is not null and csmallint is not null) (type: boolean)
+                    predicate: (csmallint is not null and ctinyint is not null) (type: boolean)
                     Statistics: Num rows: 12288 Data size: 2641964 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: ctinyint (type: tinyint), csmallint (type: smallint), cdouble (type: double)
@@ -36,7 +36,8 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: []
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
                 allNative: true
                 usesVectorUDFAdaptor: false
@@ -63,7 +64,8 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: []
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
                 allNative: true
                 usesVectorUDFAdaptor: false
@@ -126,7 +128,8 @@ STAGE PLANS:
             Map Vectorization:
                 enabled: true
                 enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
-                groupByVectorOutput: true
+                inputFormatFeatureSupport: []
+                featureSupportInUse: []
                 inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
                 allNative: false
                 usesVectorUDFAdaptor: false
@@ -138,7 +141,6 @@ STAGE PLANS:
             Reduce Vectorization:
                 enabled: true
                 enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true, hive.execution.engine spark IN [tez, spark] IS true
-                groupByVectorOutput: true
                 allNative: false
                 usesVectorUDFAdaptor: false
                 vectorized: true

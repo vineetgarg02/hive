@@ -178,12 +178,26 @@ const char* _kFileMetadataExprTypeNames[] = {
 const std::map<int, const char*> _FileMetadataExprType_VALUES_TO_NAMES(::apache::thrift::TEnumIterator(1, _kFileMetadataExprTypeValues, _kFileMetadataExprTypeNames), ::apache::thrift::TEnumIterator(-1, NULL, NULL));
 
 int _kClientCapabilityValues[] = {
-  ClientCapability::TEST_CAPABILITY
+  ClientCapability::TEST_CAPABILITY,
+  ClientCapability::INSERT_ONLY_TABLES
 };
 const char* _kClientCapabilityNames[] = {
-  "TEST_CAPABILITY"
+  "TEST_CAPABILITY",
+  "INSERT_ONLY_TABLES"
 };
-const std::map<int, const char*> _ClientCapability_VALUES_TO_NAMES(::apache::thrift::TEnumIterator(1, _kClientCapabilityValues, _kClientCapabilityNames), ::apache::thrift::TEnumIterator(-1, NULL, NULL));
+const std::map<int, const char*> _ClientCapability_VALUES_TO_NAMES(::apache::thrift::TEnumIterator(2, _kClientCapabilityValues, _kClientCapabilityNames), ::apache::thrift::TEnumIterator(-1, NULL, NULL));
+
+int _kWMResourcePlanStatusValues[] = {
+  WMResourcePlanStatus::ACTIVE,
+  WMResourcePlanStatus::ENABLED,
+  WMResourcePlanStatus::DISABLED
+};
+const char* _kWMResourcePlanStatusNames[] = {
+  "ACTIVE",
+  "ENABLED",
+  "DISABLED"
+};
+const std::map<int, const char*> _WMResourcePlanStatus_VALUES_TO_NAMES(::apache::thrift::TEnumIterator(3, _kWMResourcePlanStatusValues, _kWMResourcePlanStatusNames), ::apache::thrift::TEnumIterator(-1, NULL, NULL));
 
 
 Version::~Version() throw() {
@@ -12290,6 +12304,503 @@ void DropPartitionsRequest::printTo(std::ostream& out) const {
 }
 
 
+PartitionValuesRequest::~PartitionValuesRequest() throw() {
+}
+
+
+void PartitionValuesRequest::__set_dbName(const std::string& val) {
+  this->dbName = val;
+}
+
+void PartitionValuesRequest::__set_tblName(const std::string& val) {
+  this->tblName = val;
+}
+
+void PartitionValuesRequest::__set_partitionKeys(const std::vector<FieldSchema> & val) {
+  this->partitionKeys = val;
+}
+
+void PartitionValuesRequest::__set_applyDistinct(const bool val) {
+  this->applyDistinct = val;
+__isset.applyDistinct = true;
+}
+
+void PartitionValuesRequest::__set_filter(const std::string& val) {
+  this->filter = val;
+__isset.filter = true;
+}
+
+void PartitionValuesRequest::__set_partitionOrder(const std::vector<FieldSchema> & val) {
+  this->partitionOrder = val;
+__isset.partitionOrder = true;
+}
+
+void PartitionValuesRequest::__set_ascending(const bool val) {
+  this->ascending = val;
+__isset.ascending = true;
+}
+
+void PartitionValuesRequest::__set_maxParts(const int64_t val) {
+  this->maxParts = val;
+__isset.maxParts = true;
+}
+
+uint32_t PartitionValuesRequest::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  apache::thrift::protocol::TInputRecursionTracker tracker(*iprot);
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+  bool isset_dbName = false;
+  bool isset_tblName = false;
+  bool isset_partitionKeys = false;
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->dbName);
+          isset_dbName = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 2:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->tblName);
+          isset_tblName = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 3:
+        if (ftype == ::apache::thrift::protocol::T_LIST) {
+          {
+            this->partitionKeys.clear();
+            uint32_t _size533;
+            ::apache::thrift::protocol::TType _etype536;
+            xfer += iprot->readListBegin(_etype536, _size533);
+            this->partitionKeys.resize(_size533);
+            uint32_t _i537;
+            for (_i537 = 0; _i537 < _size533; ++_i537)
+            {
+              xfer += this->partitionKeys[_i537].read(iprot);
+            }
+            xfer += iprot->readListEnd();
+          }
+          isset_partitionKeys = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 4:
+        if (ftype == ::apache::thrift::protocol::T_BOOL) {
+          xfer += iprot->readBool(this->applyDistinct);
+          this->__isset.applyDistinct = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 5:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->filter);
+          this->__isset.filter = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 6:
+        if (ftype == ::apache::thrift::protocol::T_LIST) {
+          {
+            this->partitionOrder.clear();
+            uint32_t _size538;
+            ::apache::thrift::protocol::TType _etype541;
+            xfer += iprot->readListBegin(_etype541, _size538);
+            this->partitionOrder.resize(_size538);
+            uint32_t _i542;
+            for (_i542 = 0; _i542 < _size538; ++_i542)
+            {
+              xfer += this->partitionOrder[_i542].read(iprot);
+            }
+            xfer += iprot->readListEnd();
+          }
+          this->__isset.partitionOrder = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 7:
+        if (ftype == ::apache::thrift::protocol::T_BOOL) {
+          xfer += iprot->readBool(this->ascending);
+          this->__isset.ascending = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 8:
+        if (ftype == ::apache::thrift::protocol::T_I64) {
+          xfer += iprot->readI64(this->maxParts);
+          this->__isset.maxParts = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  if (!isset_dbName)
+    throw TProtocolException(TProtocolException::INVALID_DATA);
+  if (!isset_tblName)
+    throw TProtocolException(TProtocolException::INVALID_DATA);
+  if (!isset_partitionKeys)
+    throw TProtocolException(TProtocolException::INVALID_DATA);
+  return xfer;
+}
+
+uint32_t PartitionValuesRequest::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
+  xfer += oprot->writeStructBegin("PartitionValuesRequest");
+
+  xfer += oprot->writeFieldBegin("dbName", ::apache::thrift::protocol::T_STRING, 1);
+  xfer += oprot->writeString(this->dbName);
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("tblName", ::apache::thrift::protocol::T_STRING, 2);
+  xfer += oprot->writeString(this->tblName);
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("partitionKeys", ::apache::thrift::protocol::T_LIST, 3);
+  {
+    xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->partitionKeys.size()));
+    std::vector<FieldSchema> ::const_iterator _iter543;
+    for (_iter543 = this->partitionKeys.begin(); _iter543 != this->partitionKeys.end(); ++_iter543)
+    {
+      xfer += (*_iter543).write(oprot);
+    }
+    xfer += oprot->writeListEnd();
+  }
+  xfer += oprot->writeFieldEnd();
+
+  if (this->__isset.applyDistinct) {
+    xfer += oprot->writeFieldBegin("applyDistinct", ::apache::thrift::protocol::T_BOOL, 4);
+    xfer += oprot->writeBool(this->applyDistinct);
+    xfer += oprot->writeFieldEnd();
+  }
+  if (this->__isset.filter) {
+    xfer += oprot->writeFieldBegin("filter", ::apache::thrift::protocol::T_STRING, 5);
+    xfer += oprot->writeString(this->filter);
+    xfer += oprot->writeFieldEnd();
+  }
+  if (this->__isset.partitionOrder) {
+    xfer += oprot->writeFieldBegin("partitionOrder", ::apache::thrift::protocol::T_LIST, 6);
+    {
+      xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->partitionOrder.size()));
+      std::vector<FieldSchema> ::const_iterator _iter544;
+      for (_iter544 = this->partitionOrder.begin(); _iter544 != this->partitionOrder.end(); ++_iter544)
+      {
+        xfer += (*_iter544).write(oprot);
+      }
+      xfer += oprot->writeListEnd();
+    }
+    xfer += oprot->writeFieldEnd();
+  }
+  if (this->__isset.ascending) {
+    xfer += oprot->writeFieldBegin("ascending", ::apache::thrift::protocol::T_BOOL, 7);
+    xfer += oprot->writeBool(this->ascending);
+    xfer += oprot->writeFieldEnd();
+  }
+  if (this->__isset.maxParts) {
+    xfer += oprot->writeFieldBegin("maxParts", ::apache::thrift::protocol::T_I64, 8);
+    xfer += oprot->writeI64(this->maxParts);
+    xfer += oprot->writeFieldEnd();
+  }
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+void swap(PartitionValuesRequest &a, PartitionValuesRequest &b) {
+  using ::std::swap;
+  swap(a.dbName, b.dbName);
+  swap(a.tblName, b.tblName);
+  swap(a.partitionKeys, b.partitionKeys);
+  swap(a.applyDistinct, b.applyDistinct);
+  swap(a.filter, b.filter);
+  swap(a.partitionOrder, b.partitionOrder);
+  swap(a.ascending, b.ascending);
+  swap(a.maxParts, b.maxParts);
+  swap(a.__isset, b.__isset);
+}
+
+PartitionValuesRequest::PartitionValuesRequest(const PartitionValuesRequest& other545) {
+  dbName = other545.dbName;
+  tblName = other545.tblName;
+  partitionKeys = other545.partitionKeys;
+  applyDistinct = other545.applyDistinct;
+  filter = other545.filter;
+  partitionOrder = other545.partitionOrder;
+  ascending = other545.ascending;
+  maxParts = other545.maxParts;
+  __isset = other545.__isset;
+}
+PartitionValuesRequest& PartitionValuesRequest::operator=(const PartitionValuesRequest& other546) {
+  dbName = other546.dbName;
+  tblName = other546.tblName;
+  partitionKeys = other546.partitionKeys;
+  applyDistinct = other546.applyDistinct;
+  filter = other546.filter;
+  partitionOrder = other546.partitionOrder;
+  ascending = other546.ascending;
+  maxParts = other546.maxParts;
+  __isset = other546.__isset;
+  return *this;
+}
+void PartitionValuesRequest::printTo(std::ostream& out) const {
+  using ::apache::thrift::to_string;
+  out << "PartitionValuesRequest(";
+  out << "dbName=" << to_string(dbName);
+  out << ", " << "tblName=" << to_string(tblName);
+  out << ", " << "partitionKeys=" << to_string(partitionKeys);
+  out << ", " << "applyDistinct="; (__isset.applyDistinct ? (out << to_string(applyDistinct)) : (out << "<null>"));
+  out << ", " << "filter="; (__isset.filter ? (out << to_string(filter)) : (out << "<null>"));
+  out << ", " << "partitionOrder="; (__isset.partitionOrder ? (out << to_string(partitionOrder)) : (out << "<null>"));
+  out << ", " << "ascending="; (__isset.ascending ? (out << to_string(ascending)) : (out << "<null>"));
+  out << ", " << "maxParts="; (__isset.maxParts ? (out << to_string(maxParts)) : (out << "<null>"));
+  out << ")";
+}
+
+
+PartitionValuesRow::~PartitionValuesRow() throw() {
+}
+
+
+void PartitionValuesRow::__set_row(const std::vector<std::string> & val) {
+  this->row = val;
+}
+
+uint32_t PartitionValuesRow::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  apache::thrift::protocol::TInputRecursionTracker tracker(*iprot);
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+  bool isset_row = false;
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_LIST) {
+          {
+            this->row.clear();
+            uint32_t _size547;
+            ::apache::thrift::protocol::TType _etype550;
+            xfer += iprot->readListBegin(_etype550, _size547);
+            this->row.resize(_size547);
+            uint32_t _i551;
+            for (_i551 = 0; _i551 < _size547; ++_i551)
+            {
+              xfer += iprot->readString(this->row[_i551]);
+            }
+            xfer += iprot->readListEnd();
+          }
+          isset_row = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  if (!isset_row)
+    throw TProtocolException(TProtocolException::INVALID_DATA);
+  return xfer;
+}
+
+uint32_t PartitionValuesRow::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
+  xfer += oprot->writeStructBegin("PartitionValuesRow");
+
+  xfer += oprot->writeFieldBegin("row", ::apache::thrift::protocol::T_LIST, 1);
+  {
+    xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRING, static_cast<uint32_t>(this->row.size()));
+    std::vector<std::string> ::const_iterator _iter552;
+    for (_iter552 = this->row.begin(); _iter552 != this->row.end(); ++_iter552)
+    {
+      xfer += oprot->writeString((*_iter552));
+    }
+    xfer += oprot->writeListEnd();
+  }
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+void swap(PartitionValuesRow &a, PartitionValuesRow &b) {
+  using ::std::swap;
+  swap(a.row, b.row);
+}
+
+PartitionValuesRow::PartitionValuesRow(const PartitionValuesRow& other553) {
+  row = other553.row;
+}
+PartitionValuesRow& PartitionValuesRow::operator=(const PartitionValuesRow& other554) {
+  row = other554.row;
+  return *this;
+}
+void PartitionValuesRow::printTo(std::ostream& out) const {
+  using ::apache::thrift::to_string;
+  out << "PartitionValuesRow(";
+  out << "row=" << to_string(row);
+  out << ")";
+}
+
+
+PartitionValuesResponse::~PartitionValuesResponse() throw() {
+}
+
+
+void PartitionValuesResponse::__set_partitionValues(const std::vector<PartitionValuesRow> & val) {
+  this->partitionValues = val;
+}
+
+uint32_t PartitionValuesResponse::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  apache::thrift::protocol::TInputRecursionTracker tracker(*iprot);
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+  bool isset_partitionValues = false;
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_LIST) {
+          {
+            this->partitionValues.clear();
+            uint32_t _size555;
+            ::apache::thrift::protocol::TType _etype558;
+            xfer += iprot->readListBegin(_etype558, _size555);
+            this->partitionValues.resize(_size555);
+            uint32_t _i559;
+            for (_i559 = 0; _i559 < _size555; ++_i559)
+            {
+              xfer += this->partitionValues[_i559].read(iprot);
+            }
+            xfer += iprot->readListEnd();
+          }
+          isset_partitionValues = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  if (!isset_partitionValues)
+    throw TProtocolException(TProtocolException::INVALID_DATA);
+  return xfer;
+}
+
+uint32_t PartitionValuesResponse::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
+  xfer += oprot->writeStructBegin("PartitionValuesResponse");
+
+  xfer += oprot->writeFieldBegin("partitionValues", ::apache::thrift::protocol::T_LIST, 1);
+  {
+    xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->partitionValues.size()));
+    std::vector<PartitionValuesRow> ::const_iterator _iter560;
+    for (_iter560 = this->partitionValues.begin(); _iter560 != this->partitionValues.end(); ++_iter560)
+    {
+      xfer += (*_iter560).write(oprot);
+    }
+    xfer += oprot->writeListEnd();
+  }
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+void swap(PartitionValuesResponse &a, PartitionValuesResponse &b) {
+  using ::std::swap;
+  swap(a.partitionValues, b.partitionValues);
+}
+
+PartitionValuesResponse::PartitionValuesResponse(const PartitionValuesResponse& other561) {
+  partitionValues = other561.partitionValues;
+}
+PartitionValuesResponse& PartitionValuesResponse::operator=(const PartitionValuesResponse& other562) {
+  partitionValues = other562.partitionValues;
+  return *this;
+}
+void PartitionValuesResponse::printTo(std::ostream& out) const {
+  using ::apache::thrift::to_string;
+  out << "PartitionValuesResponse(";
+  out << "partitionValues=" << to_string(partitionValues);
+  out << ")";
+}
+
+
 ResourceUri::~ResourceUri() throw() {
 }
 
@@ -12325,9 +12836,9 @@ uint32_t ResourceUri::read(::apache::thrift::protocol::TProtocol* iprot) {
     {
       case 1:
         if (ftype == ::apache::thrift::protocol::T_I32) {
-          int32_t ecast533;
-          xfer += iprot->readI32(ecast533);
-          this->resourceType = (ResourceType::type)ecast533;
+          int32_t ecast563;
+          xfer += iprot->readI32(ecast563);
+          this->resourceType = (ResourceType::type)ecast563;
           this->__isset.resourceType = true;
         } else {
           xfer += iprot->skip(ftype);
@@ -12378,15 +12889,15 @@ void swap(ResourceUri &a, ResourceUri &b) {
   swap(a.__isset, b.__isset);
 }
 
-ResourceUri::ResourceUri(const ResourceUri& other534) {
-  resourceType = other534.resourceType;
-  uri = other534.uri;
-  __isset = other534.__isset;
+ResourceUri::ResourceUri(const ResourceUri& other564) {
+  resourceType = other564.resourceType;
+  uri = other564.uri;
+  __isset = other564.__isset;
 }
-ResourceUri& ResourceUri::operator=(const ResourceUri& other535) {
-  resourceType = other535.resourceType;
-  uri = other535.uri;
-  __isset = other535.__isset;
+ResourceUri& ResourceUri::operator=(const ResourceUri& other565) {
+  resourceType = other565.resourceType;
+  uri = other565.uri;
+  __isset = other565.__isset;
   return *this;
 }
 void ResourceUri::printTo(std::ostream& out) const {
@@ -12489,9 +13000,9 @@ uint32_t Function::read(::apache::thrift::protocol::TProtocol* iprot) {
         break;
       case 5:
         if (ftype == ::apache::thrift::protocol::T_I32) {
-          int32_t ecast536;
-          xfer += iprot->readI32(ecast536);
-          this->ownerType = (PrincipalType::type)ecast536;
+          int32_t ecast566;
+          xfer += iprot->readI32(ecast566);
+          this->ownerType = (PrincipalType::type)ecast566;
           this->__isset.ownerType = true;
         } else {
           xfer += iprot->skip(ftype);
@@ -12507,9 +13018,9 @@ uint32_t Function::read(::apache::thrift::protocol::TProtocol* iprot) {
         break;
       case 7:
         if (ftype == ::apache::thrift::protocol::T_I32) {
-          int32_t ecast537;
-          xfer += iprot->readI32(ecast537);
-          this->functionType = (FunctionType::type)ecast537;
+          int32_t ecast567;
+          xfer += iprot->readI32(ecast567);
+          this->functionType = (FunctionType::type)ecast567;
           this->__isset.functionType = true;
         } else {
           xfer += iprot->skip(ftype);
@@ -12519,14 +13030,14 @@ uint32_t Function::read(::apache::thrift::protocol::TProtocol* iprot) {
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->resourceUris.clear();
-            uint32_t _size538;
-            ::apache::thrift::protocol::TType _etype541;
-            xfer += iprot->readListBegin(_etype541, _size538);
-            this->resourceUris.resize(_size538);
-            uint32_t _i542;
-            for (_i542 = 0; _i542 < _size538; ++_i542)
+            uint32_t _size568;
+            ::apache::thrift::protocol::TType _etype571;
+            xfer += iprot->readListBegin(_etype571, _size568);
+            this->resourceUris.resize(_size568);
+            uint32_t _i572;
+            for (_i572 = 0; _i572 < _size568; ++_i572)
             {
-              xfer += this->resourceUris[_i542].read(iprot);
+              xfer += this->resourceUris[_i572].read(iprot);
             }
             xfer += iprot->readListEnd();
           }
@@ -12583,10 +13094,10 @@ uint32_t Function::write(::apache::thrift::protocol::TProtocol* oprot) const {
   xfer += oprot->writeFieldBegin("resourceUris", ::apache::thrift::protocol::T_LIST, 8);
   {
     xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->resourceUris.size()));
-    std::vector<ResourceUri> ::const_iterator _iter543;
-    for (_iter543 = this->resourceUris.begin(); _iter543 != this->resourceUris.end(); ++_iter543)
+    std::vector<ResourceUri> ::const_iterator _iter573;
+    for (_iter573 = this->resourceUris.begin(); _iter573 != this->resourceUris.end(); ++_iter573)
     {
-      xfer += (*_iter543).write(oprot);
+      xfer += (*_iter573).write(oprot);
     }
     xfer += oprot->writeListEnd();
   }
@@ -12610,27 +13121,27 @@ void swap(Function &a, Function &b) {
   swap(a.__isset, b.__isset);
 }
 
-Function::Function(const Function& other544) {
-  functionName = other544.functionName;
-  dbName = other544.dbName;
-  className = other544.className;
-  ownerName = other544.ownerName;
-  ownerType = other544.ownerType;
-  createTime = other544.createTime;
-  functionType = other544.functionType;
-  resourceUris = other544.resourceUris;
-  __isset = other544.__isset;
+Function::Function(const Function& other574) {
+  functionName = other574.functionName;
+  dbName = other574.dbName;
+  className = other574.className;
+  ownerName = other574.ownerName;
+  ownerType = other574.ownerType;
+  createTime = other574.createTime;
+  functionType = other574.functionType;
+  resourceUris = other574.resourceUris;
+  __isset = other574.__isset;
 }
-Function& Function::operator=(const Function& other545) {
-  functionName = other545.functionName;
-  dbName = other545.dbName;
-  className = other545.className;
-  ownerName = other545.ownerName;
-  ownerType = other545.ownerType;
-  createTime = other545.createTime;
-  functionType = other545.functionType;
-  resourceUris = other545.resourceUris;
-  __isset = other545.__isset;
+Function& Function::operator=(const Function& other575) {
+  functionName = other575.functionName;
+  dbName = other575.dbName;
+  className = other575.className;
+  ownerName = other575.ownerName;
+  ownerType = other575.ownerType;
+  createTime = other575.createTime;
+  functionType = other575.functionType;
+  resourceUris = other575.resourceUris;
+  __isset = other575.__isset;
   return *this;
 }
 void Function::printTo(std::ostream& out) const {
@@ -12728,9 +13239,9 @@ uint32_t TxnInfo::read(::apache::thrift::protocol::TProtocol* iprot) {
         break;
       case 2:
         if (ftype == ::apache::thrift::protocol::T_I32) {
-          int32_t ecast546;
-          xfer += iprot->readI32(ecast546);
-          this->state = (TxnState::type)ecast546;
+          int32_t ecast576;
+          xfer += iprot->readI32(ecast576);
+          this->state = (TxnState::type)ecast576;
           isset_state = true;
         } else {
           xfer += iprot->skip(ftype);
@@ -12877,29 +13388,29 @@ void swap(TxnInfo &a, TxnInfo &b) {
   swap(a.__isset, b.__isset);
 }
 
-TxnInfo::TxnInfo(const TxnInfo& other547) {
-  id = other547.id;
-  state = other547.state;
-  user = other547.user;
-  hostname = other547.hostname;
-  agentInfo = other547.agentInfo;
-  heartbeatCount = other547.heartbeatCount;
-  metaInfo = other547.metaInfo;
-  startedTime = other547.startedTime;
-  lastHeartbeatTime = other547.lastHeartbeatTime;
-  __isset = other547.__isset;
+TxnInfo::TxnInfo(const TxnInfo& other577) {
+  id = other577.id;
+  state = other577.state;
+  user = other577.user;
+  hostname = other577.hostname;
+  agentInfo = other577.agentInfo;
+  heartbeatCount = other577.heartbeatCount;
+  metaInfo = other577.metaInfo;
+  startedTime = other577.startedTime;
+  lastHeartbeatTime = other577.lastHeartbeatTime;
+  __isset = other577.__isset;
 }
-TxnInfo& TxnInfo::operator=(const TxnInfo& other548) {
-  id = other548.id;
-  state = other548.state;
-  user = other548.user;
-  hostname = other548.hostname;
-  agentInfo = other548.agentInfo;
-  heartbeatCount = other548.heartbeatCount;
-  metaInfo = other548.metaInfo;
-  startedTime = other548.startedTime;
-  lastHeartbeatTime = other548.lastHeartbeatTime;
-  __isset = other548.__isset;
+TxnInfo& TxnInfo::operator=(const TxnInfo& other578) {
+  id = other578.id;
+  state = other578.state;
+  user = other578.user;
+  hostname = other578.hostname;
+  agentInfo = other578.agentInfo;
+  heartbeatCount = other578.heartbeatCount;
+  metaInfo = other578.metaInfo;
+  startedTime = other578.startedTime;
+  lastHeartbeatTime = other578.lastHeartbeatTime;
+  __isset = other578.__isset;
   return *this;
 }
 void TxnInfo::printTo(std::ostream& out) const {
@@ -12965,14 +13476,14 @@ uint32_t GetOpenTxnsInfoResponse::read(::apache::thrift::protocol::TProtocol* ip
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->open_txns.clear();
-            uint32_t _size549;
-            ::apache::thrift::protocol::TType _etype552;
-            xfer += iprot->readListBegin(_etype552, _size549);
-            this->open_txns.resize(_size549);
-            uint32_t _i553;
-            for (_i553 = 0; _i553 < _size549; ++_i553)
+            uint32_t _size579;
+            ::apache::thrift::protocol::TType _etype582;
+            xfer += iprot->readListBegin(_etype582, _size579);
+            this->open_txns.resize(_size579);
+            uint32_t _i583;
+            for (_i583 = 0; _i583 < _size579; ++_i583)
             {
-              xfer += this->open_txns[_i553].read(iprot);
+              xfer += this->open_txns[_i583].read(iprot);
             }
             xfer += iprot->readListEnd();
           }
@@ -13009,10 +13520,10 @@ uint32_t GetOpenTxnsInfoResponse::write(::apache::thrift::protocol::TProtocol* o
   xfer += oprot->writeFieldBegin("open_txns", ::apache::thrift::protocol::T_LIST, 2);
   {
     xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->open_txns.size()));
-    std::vector<TxnInfo> ::const_iterator _iter554;
-    for (_iter554 = this->open_txns.begin(); _iter554 != this->open_txns.end(); ++_iter554)
+    std::vector<TxnInfo> ::const_iterator _iter584;
+    for (_iter584 = this->open_txns.begin(); _iter584 != this->open_txns.end(); ++_iter584)
     {
-      xfer += (*_iter554).write(oprot);
+      xfer += (*_iter584).write(oprot);
     }
     xfer += oprot->writeListEnd();
   }
@@ -13029,13 +13540,13 @@ void swap(GetOpenTxnsInfoResponse &a, GetOpenTxnsInfoResponse &b) {
   swap(a.open_txns, b.open_txns);
 }
 
-GetOpenTxnsInfoResponse::GetOpenTxnsInfoResponse(const GetOpenTxnsInfoResponse& other555) {
-  txn_high_water_mark = other555.txn_high_water_mark;
-  open_txns = other555.open_txns;
+GetOpenTxnsInfoResponse::GetOpenTxnsInfoResponse(const GetOpenTxnsInfoResponse& other585) {
+  txn_high_water_mark = other585.txn_high_water_mark;
+  open_txns = other585.open_txns;
 }
-GetOpenTxnsInfoResponse& GetOpenTxnsInfoResponse::operator=(const GetOpenTxnsInfoResponse& other556) {
-  txn_high_water_mark = other556.txn_high_water_mark;
-  open_txns = other556.open_txns;
+GetOpenTxnsInfoResponse& GetOpenTxnsInfoResponse::operator=(const GetOpenTxnsInfoResponse& other586) {
+  txn_high_water_mark = other586.txn_high_water_mark;
+  open_txns = other586.open_txns;
   return *this;
 }
 void GetOpenTxnsInfoResponse::printTo(std::ostream& out) const {
@@ -13104,14 +13615,14 @@ uint32_t GetOpenTxnsResponse::read(::apache::thrift::protocol::TProtocol* iprot)
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->open_txns.clear();
-            uint32_t _size557;
-            ::apache::thrift::protocol::TType _etype560;
-            xfer += iprot->readListBegin(_etype560, _size557);
-            this->open_txns.resize(_size557);
-            uint32_t _i561;
-            for (_i561 = 0; _i561 < _size557; ++_i561)
+            uint32_t _size587;
+            ::apache::thrift::protocol::TType _etype590;
+            xfer += iprot->readListBegin(_etype590, _size587);
+            this->open_txns.resize(_size587);
+            uint32_t _i591;
+            for (_i591 = 0; _i591 < _size587; ++_i591)
             {
-              xfer += iprot->readI64(this->open_txns[_i561]);
+              xfer += iprot->readI64(this->open_txns[_i591]);
             }
             xfer += iprot->readListEnd();
           }
@@ -13166,10 +13677,10 @@ uint32_t GetOpenTxnsResponse::write(::apache::thrift::protocol::TProtocol* oprot
   xfer += oprot->writeFieldBegin("open_txns", ::apache::thrift::protocol::T_LIST, 2);
   {
     xfer += oprot->writeListBegin(::apache::thrift::protocol::T_I64, static_cast<uint32_t>(this->open_txns.size()));
-    std::vector<int64_t> ::const_iterator _iter562;
-    for (_iter562 = this->open_txns.begin(); _iter562 != this->open_txns.end(); ++_iter562)
+    std::vector<int64_t> ::const_iterator _iter592;
+    for (_iter592 = this->open_txns.begin(); _iter592 != this->open_txns.end(); ++_iter592)
     {
-      xfer += oprot->writeI64((*_iter562));
+      xfer += oprot->writeI64((*_iter592));
     }
     xfer += oprot->writeListEnd();
   }
@@ -13198,19 +13709,19 @@ void swap(GetOpenTxnsResponse &a, GetOpenTxnsResponse &b) {
   swap(a.__isset, b.__isset);
 }
 
-GetOpenTxnsResponse::GetOpenTxnsResponse(const GetOpenTxnsResponse& other563) {
-  txn_high_water_mark = other563.txn_high_water_mark;
-  open_txns = other563.open_txns;
-  min_open_txn = other563.min_open_txn;
-  abortedBits = other563.abortedBits;
-  __isset = other563.__isset;
+GetOpenTxnsResponse::GetOpenTxnsResponse(const GetOpenTxnsResponse& other593) {
+  txn_high_water_mark = other593.txn_high_water_mark;
+  open_txns = other593.open_txns;
+  min_open_txn = other593.min_open_txn;
+  abortedBits = other593.abortedBits;
+  __isset = other593.__isset;
 }
-GetOpenTxnsResponse& GetOpenTxnsResponse::operator=(const GetOpenTxnsResponse& other564) {
-  txn_high_water_mark = other564.txn_high_water_mark;
-  open_txns = other564.open_txns;
-  min_open_txn = other564.min_open_txn;
-  abortedBits = other564.abortedBits;
-  __isset = other564.__isset;
+GetOpenTxnsResponse& GetOpenTxnsResponse::operator=(const GetOpenTxnsResponse& other594) {
+  txn_high_water_mark = other594.txn_high_water_mark;
+  open_txns = other594.open_txns;
+  min_open_txn = other594.min_open_txn;
+  abortedBits = other594.abortedBits;
+  __isset = other594.__isset;
   return *this;
 }
 void GetOpenTxnsResponse::printTo(std::ostream& out) const {
@@ -13355,19 +13866,19 @@ void swap(OpenTxnRequest &a, OpenTxnRequest &b) {
   swap(a.__isset, b.__isset);
 }
 
-OpenTxnRequest::OpenTxnRequest(const OpenTxnRequest& other565) {
-  num_txns = other565.num_txns;
-  user = other565.user;
-  hostname = other565.hostname;
-  agentInfo = other565.agentInfo;
-  __isset = other565.__isset;
+OpenTxnRequest::OpenTxnRequest(const OpenTxnRequest& other595) {
+  num_txns = other595.num_txns;
+  user = other595.user;
+  hostname = other595.hostname;
+  agentInfo = other595.agentInfo;
+  __isset = other595.__isset;
 }
-OpenTxnRequest& OpenTxnRequest::operator=(const OpenTxnRequest& other566) {
-  num_txns = other566.num_txns;
-  user = other566.user;
-  hostname = other566.hostname;
-  agentInfo = other566.agentInfo;
-  __isset = other566.__isset;
+OpenTxnRequest& OpenTxnRequest::operator=(const OpenTxnRequest& other596) {
+  num_txns = other596.num_txns;
+  user = other596.user;
+  hostname = other596.hostname;
+  agentInfo = other596.agentInfo;
+  __isset = other596.__isset;
   return *this;
 }
 void OpenTxnRequest::printTo(std::ostream& out) const {
@@ -13415,14 +13926,14 @@ uint32_t OpenTxnsResponse::read(::apache::thrift::protocol::TProtocol* iprot) {
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->txn_ids.clear();
-            uint32_t _size567;
-            ::apache::thrift::protocol::TType _etype570;
-            xfer += iprot->readListBegin(_etype570, _size567);
-            this->txn_ids.resize(_size567);
-            uint32_t _i571;
-            for (_i571 = 0; _i571 < _size567; ++_i571)
+            uint32_t _size597;
+            ::apache::thrift::protocol::TType _etype600;
+            xfer += iprot->readListBegin(_etype600, _size597);
+            this->txn_ids.resize(_size597);
+            uint32_t _i601;
+            for (_i601 = 0; _i601 < _size597; ++_i601)
             {
-              xfer += iprot->readI64(this->txn_ids[_i571]);
+              xfer += iprot->readI64(this->txn_ids[_i601]);
             }
             xfer += iprot->readListEnd();
           }
@@ -13453,10 +13964,10 @@ uint32_t OpenTxnsResponse::write(::apache::thrift::protocol::TProtocol* oprot) c
   xfer += oprot->writeFieldBegin("txn_ids", ::apache::thrift::protocol::T_LIST, 1);
   {
     xfer += oprot->writeListBegin(::apache::thrift::protocol::T_I64, static_cast<uint32_t>(this->txn_ids.size()));
-    std::vector<int64_t> ::const_iterator _iter572;
-    for (_iter572 = this->txn_ids.begin(); _iter572 != this->txn_ids.end(); ++_iter572)
+    std::vector<int64_t> ::const_iterator _iter602;
+    for (_iter602 = this->txn_ids.begin(); _iter602 != this->txn_ids.end(); ++_iter602)
     {
-      xfer += oprot->writeI64((*_iter572));
+      xfer += oprot->writeI64((*_iter602));
     }
     xfer += oprot->writeListEnd();
   }
@@ -13472,11 +13983,11 @@ void swap(OpenTxnsResponse &a, OpenTxnsResponse &b) {
   swap(a.txn_ids, b.txn_ids);
 }
 
-OpenTxnsResponse::OpenTxnsResponse(const OpenTxnsResponse& other573) {
-  txn_ids = other573.txn_ids;
+OpenTxnsResponse::OpenTxnsResponse(const OpenTxnsResponse& other603) {
+  txn_ids = other603.txn_ids;
 }
-OpenTxnsResponse& OpenTxnsResponse::operator=(const OpenTxnsResponse& other574) {
-  txn_ids = other574.txn_ids;
+OpenTxnsResponse& OpenTxnsResponse::operator=(const OpenTxnsResponse& other604) {
+  txn_ids = other604.txn_ids;
   return *this;
 }
 void OpenTxnsResponse::printTo(std::ostream& out) const {
@@ -13558,11 +14069,11 @@ void swap(AbortTxnRequest &a, AbortTxnRequest &b) {
   swap(a.txnid, b.txnid);
 }
 
-AbortTxnRequest::AbortTxnRequest(const AbortTxnRequest& other575) {
-  txnid = other575.txnid;
+AbortTxnRequest::AbortTxnRequest(const AbortTxnRequest& other605) {
+  txnid = other605.txnid;
 }
-AbortTxnRequest& AbortTxnRequest::operator=(const AbortTxnRequest& other576) {
-  txnid = other576.txnid;
+AbortTxnRequest& AbortTxnRequest::operator=(const AbortTxnRequest& other606) {
+  txnid = other606.txnid;
   return *this;
 }
 void AbortTxnRequest::printTo(std::ostream& out) const {
@@ -13607,14 +14118,14 @@ uint32_t AbortTxnsRequest::read(::apache::thrift::protocol::TProtocol* iprot) {
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->txn_ids.clear();
-            uint32_t _size577;
-            ::apache::thrift::protocol::TType _etype580;
-            xfer += iprot->readListBegin(_etype580, _size577);
-            this->txn_ids.resize(_size577);
-            uint32_t _i581;
-            for (_i581 = 0; _i581 < _size577; ++_i581)
+            uint32_t _size607;
+            ::apache::thrift::protocol::TType _etype610;
+            xfer += iprot->readListBegin(_etype610, _size607);
+            this->txn_ids.resize(_size607);
+            uint32_t _i611;
+            for (_i611 = 0; _i611 < _size607; ++_i611)
             {
-              xfer += iprot->readI64(this->txn_ids[_i581]);
+              xfer += iprot->readI64(this->txn_ids[_i611]);
             }
             xfer += iprot->readListEnd();
           }
@@ -13645,10 +14156,10 @@ uint32_t AbortTxnsRequest::write(::apache::thrift::protocol::TProtocol* oprot) c
   xfer += oprot->writeFieldBegin("txn_ids", ::apache::thrift::protocol::T_LIST, 1);
   {
     xfer += oprot->writeListBegin(::apache::thrift::protocol::T_I64, static_cast<uint32_t>(this->txn_ids.size()));
-    std::vector<int64_t> ::const_iterator _iter582;
-    for (_iter582 = this->txn_ids.begin(); _iter582 != this->txn_ids.end(); ++_iter582)
+    std::vector<int64_t> ::const_iterator _iter612;
+    for (_iter612 = this->txn_ids.begin(); _iter612 != this->txn_ids.end(); ++_iter612)
     {
-      xfer += oprot->writeI64((*_iter582));
+      xfer += oprot->writeI64((*_iter612));
     }
     xfer += oprot->writeListEnd();
   }
@@ -13664,11 +14175,11 @@ void swap(AbortTxnsRequest &a, AbortTxnsRequest &b) {
   swap(a.txn_ids, b.txn_ids);
 }
 
-AbortTxnsRequest::AbortTxnsRequest(const AbortTxnsRequest& other583) {
-  txn_ids = other583.txn_ids;
+AbortTxnsRequest::AbortTxnsRequest(const AbortTxnsRequest& other613) {
+  txn_ids = other613.txn_ids;
 }
-AbortTxnsRequest& AbortTxnsRequest::operator=(const AbortTxnsRequest& other584) {
-  txn_ids = other584.txn_ids;
+AbortTxnsRequest& AbortTxnsRequest::operator=(const AbortTxnsRequest& other614) {
+  txn_ids = other614.txn_ids;
   return *this;
 }
 void AbortTxnsRequest::printTo(std::ostream& out) const {
@@ -13750,11 +14261,11 @@ void swap(CommitTxnRequest &a, CommitTxnRequest &b) {
   swap(a.txnid, b.txnid);
 }
 
-CommitTxnRequest::CommitTxnRequest(const CommitTxnRequest& other585) {
-  txnid = other585.txnid;
+CommitTxnRequest::CommitTxnRequest(const CommitTxnRequest& other615) {
+  txnid = other615.txnid;
 }
-CommitTxnRequest& CommitTxnRequest::operator=(const CommitTxnRequest& other586) {
-  txnid = other586.txnid;
+CommitTxnRequest& CommitTxnRequest::operator=(const CommitTxnRequest& other616) {
+  txnid = other616.txnid;
   return *this;
 }
 void CommitTxnRequest::printTo(std::ostream& out) const {
@@ -13832,9 +14343,9 @@ uint32_t LockComponent::read(::apache::thrift::protocol::TProtocol* iprot) {
     {
       case 1:
         if (ftype == ::apache::thrift::protocol::T_I32) {
-          int32_t ecast587;
-          xfer += iprot->readI32(ecast587);
-          this->type = (LockType::type)ecast587;
+          int32_t ecast617;
+          xfer += iprot->readI32(ecast617);
+          this->type = (LockType::type)ecast617;
           isset_type = true;
         } else {
           xfer += iprot->skip(ftype);
@@ -13842,9 +14353,9 @@ uint32_t LockComponent::read(::apache::thrift::protocol::TProtocol* iprot) {
         break;
       case 2:
         if (ftype == ::apache::thrift::protocol::T_I32) {
-          int32_t ecast588;
-          xfer += iprot->readI32(ecast588);
-          this->level = (LockLevel::type)ecast588;
+          int32_t ecast618;
+          xfer += iprot->readI32(ecast618);
+          this->level = (LockLevel::type)ecast618;
           isset_level = true;
         } else {
           xfer += iprot->skip(ftype);
@@ -13876,9 +14387,9 @@ uint32_t LockComponent::read(::apache::thrift::protocol::TProtocol* iprot) {
         break;
       case 6:
         if (ftype == ::apache::thrift::protocol::T_I32) {
-          int32_t ecast589;
-          xfer += iprot->readI32(ecast589);
-          this->operationType = (DataOperationType::type)ecast589;
+          int32_t ecast619;
+          xfer += iprot->readI32(ecast619);
+          this->operationType = (DataOperationType::type)ecast619;
           this->__isset.operationType = true;
         } else {
           xfer += iprot->skip(ftype);
@@ -13978,27 +14489,27 @@ void swap(LockComponent &a, LockComponent &b) {
   swap(a.__isset, b.__isset);
 }
 
-LockComponent::LockComponent(const LockComponent& other590) {
-  type = other590.type;
-  level = other590.level;
-  dbname = other590.dbname;
-  tablename = other590.tablename;
-  partitionname = other590.partitionname;
-  operationType = other590.operationType;
-  isAcid = other590.isAcid;
-  isDynamicPartitionWrite = other590.isDynamicPartitionWrite;
-  __isset = other590.__isset;
+LockComponent::LockComponent(const LockComponent& other620) {
+  type = other620.type;
+  level = other620.level;
+  dbname = other620.dbname;
+  tablename = other620.tablename;
+  partitionname = other620.partitionname;
+  operationType = other620.operationType;
+  isAcid = other620.isAcid;
+  isDynamicPartitionWrite = other620.isDynamicPartitionWrite;
+  __isset = other620.__isset;
 }
-LockComponent& LockComponent::operator=(const LockComponent& other591) {
-  type = other591.type;
-  level = other591.level;
-  dbname = other591.dbname;
-  tablename = other591.tablename;
-  partitionname = other591.partitionname;
-  operationType = other591.operationType;
-  isAcid = other591.isAcid;
-  isDynamicPartitionWrite = other591.isDynamicPartitionWrite;
-  __isset = other591.__isset;
+LockComponent& LockComponent::operator=(const LockComponent& other621) {
+  type = other621.type;
+  level = other621.level;
+  dbname = other621.dbname;
+  tablename = other621.tablename;
+  partitionname = other621.partitionname;
+  operationType = other621.operationType;
+  isAcid = other621.isAcid;
+  isDynamicPartitionWrite = other621.isDynamicPartitionWrite;
+  __isset = other621.__isset;
   return *this;
 }
 void LockComponent::printTo(std::ostream& out) const {
@@ -14070,14 +14581,14 @@ uint32_t LockRequest::read(::apache::thrift::protocol::TProtocol* iprot) {
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->component.clear();
-            uint32_t _size592;
-            ::apache::thrift::protocol::TType _etype595;
-            xfer += iprot->readListBegin(_etype595, _size592);
-            this->component.resize(_size592);
-            uint32_t _i596;
-            for (_i596 = 0; _i596 < _size592; ++_i596)
+            uint32_t _size622;
+            ::apache::thrift::protocol::TType _etype625;
+            xfer += iprot->readListBegin(_etype625, _size622);
+            this->component.resize(_size622);
+            uint32_t _i626;
+            for (_i626 = 0; _i626 < _size622; ++_i626)
             {
-              xfer += this->component[_i596].read(iprot);
+              xfer += this->component[_i626].read(iprot);
             }
             xfer += iprot->readListEnd();
           }
@@ -14144,10 +14655,10 @@ uint32_t LockRequest::write(::apache::thrift::protocol::TProtocol* oprot) const 
   xfer += oprot->writeFieldBegin("component", ::apache::thrift::protocol::T_LIST, 1);
   {
     xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->component.size()));
-    std::vector<LockComponent> ::const_iterator _iter597;
-    for (_iter597 = this->component.begin(); _iter597 != this->component.end(); ++_iter597)
+    std::vector<LockComponent> ::const_iterator _iter627;
+    for (_iter627 = this->component.begin(); _iter627 != this->component.end(); ++_iter627)
     {
-      xfer += (*_iter597).write(oprot);
+      xfer += (*_iter627).write(oprot);
     }
     xfer += oprot->writeListEnd();
   }
@@ -14186,21 +14697,21 @@ void swap(LockRequest &a, LockRequest &b) {
   swap(a.__isset, b.__isset);
 }
 
-LockRequest::LockRequest(const LockRequest& other598) {
-  component = other598.component;
-  txnid = other598.txnid;
-  user = other598.user;
-  hostname = other598.hostname;
-  agentInfo = other598.agentInfo;
-  __isset = other598.__isset;
+LockRequest::LockRequest(const LockRequest& other628) {
+  component = other628.component;
+  txnid = other628.txnid;
+  user = other628.user;
+  hostname = other628.hostname;
+  agentInfo = other628.agentInfo;
+  __isset = other628.__isset;
 }
-LockRequest& LockRequest::operator=(const LockRequest& other599) {
-  component = other599.component;
-  txnid = other599.txnid;
-  user = other599.user;
-  hostname = other599.hostname;
-  agentInfo = other599.agentInfo;
-  __isset = other599.__isset;
+LockRequest& LockRequest::operator=(const LockRequest& other629) {
+  component = other629.component;
+  txnid = other629.txnid;
+  user = other629.user;
+  hostname = other629.hostname;
+  agentInfo = other629.agentInfo;
+  __isset = other629.__isset;
   return *this;
 }
 void LockRequest::printTo(std::ostream& out) const {
@@ -14260,9 +14771,9 @@ uint32_t LockResponse::read(::apache::thrift::protocol::TProtocol* iprot) {
         break;
       case 2:
         if (ftype == ::apache::thrift::protocol::T_I32) {
-          int32_t ecast600;
-          xfer += iprot->readI32(ecast600);
-          this->state = (LockState::type)ecast600;
+          int32_t ecast630;
+          xfer += iprot->readI32(ecast630);
+          this->state = (LockState::type)ecast630;
           isset_state = true;
         } else {
           xfer += iprot->skip(ftype);
@@ -14308,13 +14819,13 @@ void swap(LockResponse &a, LockResponse &b) {
   swap(a.state, b.state);
 }
 
-LockResponse::LockResponse(const LockResponse& other601) {
-  lockid = other601.lockid;
-  state = other601.state;
+LockResponse::LockResponse(const LockResponse& other631) {
+  lockid = other631.lockid;
+  state = other631.state;
 }
-LockResponse& LockResponse::operator=(const LockResponse& other602) {
-  lockid = other602.lockid;
-  state = other602.state;
+LockResponse& LockResponse::operator=(const LockResponse& other632) {
+  lockid = other632.lockid;
+  state = other632.state;
   return *this;
 }
 void LockResponse::printTo(std::ostream& out) const {
@@ -14436,17 +14947,17 @@ void swap(CheckLockRequest &a, CheckLockRequest &b) {
   swap(a.__isset, b.__isset);
 }
 
-CheckLockRequest::CheckLockRequest(const CheckLockRequest& other603) {
-  lockid = other603.lockid;
-  txnid = other603.txnid;
-  elapsed_ms = other603.elapsed_ms;
-  __isset = other603.__isset;
+CheckLockRequest::CheckLockRequest(const CheckLockRequest& other633) {
+  lockid = other633.lockid;
+  txnid = other633.txnid;
+  elapsed_ms = other633.elapsed_ms;
+  __isset = other633.__isset;
 }
-CheckLockRequest& CheckLockRequest::operator=(const CheckLockRequest& other604) {
-  lockid = other604.lockid;
-  txnid = other604.txnid;
-  elapsed_ms = other604.elapsed_ms;
-  __isset = other604.__isset;
+CheckLockRequest& CheckLockRequest::operator=(const CheckLockRequest& other634) {
+  lockid = other634.lockid;
+  txnid = other634.txnid;
+  elapsed_ms = other634.elapsed_ms;
+  __isset = other634.__isset;
   return *this;
 }
 void CheckLockRequest::printTo(std::ostream& out) const {
@@ -14530,11 +15041,11 @@ void swap(UnlockRequest &a, UnlockRequest &b) {
   swap(a.lockid, b.lockid);
 }
 
-UnlockRequest::UnlockRequest(const UnlockRequest& other605) {
-  lockid = other605.lockid;
+UnlockRequest::UnlockRequest(const UnlockRequest& other635) {
+  lockid = other635.lockid;
 }
-UnlockRequest& UnlockRequest::operator=(const UnlockRequest& other606) {
-  lockid = other606.lockid;
+UnlockRequest& UnlockRequest::operator=(const UnlockRequest& other636) {
+  lockid = other636.lockid;
   return *this;
 }
 void UnlockRequest::printTo(std::ostream& out) const {
@@ -14673,19 +15184,19 @@ void swap(ShowLocksRequest &a, ShowLocksRequest &b) {
   swap(a.__isset, b.__isset);
 }
 
-ShowLocksRequest::ShowLocksRequest(const ShowLocksRequest& other607) {
-  dbname = other607.dbname;
-  tablename = other607.tablename;
-  partname = other607.partname;
-  isExtended = other607.isExtended;
-  __isset = other607.__isset;
+ShowLocksRequest::ShowLocksRequest(const ShowLocksRequest& other637) {
+  dbname = other637.dbname;
+  tablename = other637.tablename;
+  partname = other637.partname;
+  isExtended = other637.isExtended;
+  __isset = other637.__isset;
 }
-ShowLocksRequest& ShowLocksRequest::operator=(const ShowLocksRequest& other608) {
-  dbname = other608.dbname;
-  tablename = other608.tablename;
-  partname = other608.partname;
-  isExtended = other608.isExtended;
-  __isset = other608.__isset;
+ShowLocksRequest& ShowLocksRequest::operator=(const ShowLocksRequest& other638) {
+  dbname = other638.dbname;
+  tablename = other638.tablename;
+  partname = other638.partname;
+  isExtended = other638.isExtended;
+  __isset = other638.__isset;
   return *this;
 }
 void ShowLocksRequest::printTo(std::ostream& out) const {
@@ -14838,9 +15349,9 @@ uint32_t ShowLocksResponseElement::read(::apache::thrift::protocol::TProtocol* i
         break;
       case 5:
         if (ftype == ::apache::thrift::protocol::T_I32) {
-          int32_t ecast609;
-          xfer += iprot->readI32(ecast609);
-          this->state = (LockState::type)ecast609;
+          int32_t ecast639;
+          xfer += iprot->readI32(ecast639);
+          this->state = (LockState::type)ecast639;
           isset_state = true;
         } else {
           xfer += iprot->skip(ftype);
@@ -14848,9 +15359,9 @@ uint32_t ShowLocksResponseElement::read(::apache::thrift::protocol::TProtocol* i
         break;
       case 6:
         if (ftype == ::apache::thrift::protocol::T_I32) {
-          int32_t ecast610;
-          xfer += iprot->readI32(ecast610);
-          this->type = (LockType::type)ecast610;
+          int32_t ecast640;
+          xfer += iprot->readI32(ecast640);
+          this->type = (LockType::type)ecast640;
           isset_type = true;
         } else {
           xfer += iprot->skip(ftype);
@@ -15066,43 +15577,43 @@ void swap(ShowLocksResponseElement &a, ShowLocksResponseElement &b) {
   swap(a.__isset, b.__isset);
 }
 
-ShowLocksResponseElement::ShowLocksResponseElement(const ShowLocksResponseElement& other611) {
-  lockid = other611.lockid;
-  dbname = other611.dbname;
-  tablename = other611.tablename;
-  partname = other611.partname;
-  state = other611.state;
-  type = other611.type;
-  txnid = other611.txnid;
-  lastheartbeat = other611.lastheartbeat;
-  acquiredat = other611.acquiredat;
-  user = other611.user;
-  hostname = other611.hostname;
-  heartbeatCount = other611.heartbeatCount;
-  agentInfo = other611.agentInfo;
-  blockedByExtId = other611.blockedByExtId;
-  blockedByIntId = other611.blockedByIntId;
-  lockIdInternal = other611.lockIdInternal;
-  __isset = other611.__isset;
+ShowLocksResponseElement::ShowLocksResponseElement(const ShowLocksResponseElement& other641) {
+  lockid = other641.lockid;
+  dbname = other641.dbname;
+  tablename = other641.tablename;
+  partname = other641.partname;
+  state = other641.state;
+  type = other641.type;
+  txnid = other641.txnid;
+  lastheartbeat = other641.lastheartbeat;
+  acquiredat = other641.acquiredat;
+  user = other641.user;
+  hostname = other641.hostname;
+  heartbeatCount = other641.heartbeatCount;
+  agentInfo = other641.agentInfo;
+  blockedByExtId = other641.blockedByExtId;
+  blockedByIntId = other641.blockedByIntId;
+  lockIdInternal = other641.lockIdInternal;
+  __isset = other641.__isset;
 }
-ShowLocksResponseElement& ShowLocksResponseElement::operator=(const ShowLocksResponseElement& other612) {
-  lockid = other612.lockid;
-  dbname = other612.dbname;
-  tablename = other612.tablename;
-  partname = other612.partname;
-  state = other612.state;
-  type = other612.type;
-  txnid = other612.txnid;
-  lastheartbeat = other612.lastheartbeat;
-  acquiredat = other612.acquiredat;
-  user = other612.user;
-  hostname = other612.hostname;
-  heartbeatCount = other612.heartbeatCount;
-  agentInfo = other612.agentInfo;
-  blockedByExtId = other612.blockedByExtId;
-  blockedByIntId = other612.blockedByIntId;
-  lockIdInternal = other612.lockIdInternal;
-  __isset = other612.__isset;
+ShowLocksResponseElement& ShowLocksResponseElement::operator=(const ShowLocksResponseElement& other642) {
+  lockid = other642.lockid;
+  dbname = other642.dbname;
+  tablename = other642.tablename;
+  partname = other642.partname;
+  state = other642.state;
+  type = other642.type;
+  txnid = other642.txnid;
+  lastheartbeat = other642.lastheartbeat;
+  acquiredat = other642.acquiredat;
+  user = other642.user;
+  hostname = other642.hostname;
+  heartbeatCount = other642.heartbeatCount;
+  agentInfo = other642.agentInfo;
+  blockedByExtId = other642.blockedByExtId;
+  blockedByIntId = other642.blockedByIntId;
+  lockIdInternal = other642.lockIdInternal;
+  __isset = other642.__isset;
   return *this;
 }
 void ShowLocksResponseElement::printTo(std::ostream& out) const {
@@ -15161,14 +15672,14 @@ uint32_t ShowLocksResponse::read(::apache::thrift::protocol::TProtocol* iprot) {
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->locks.clear();
-            uint32_t _size613;
-            ::apache::thrift::protocol::TType _etype616;
-            xfer += iprot->readListBegin(_etype616, _size613);
-            this->locks.resize(_size613);
-            uint32_t _i617;
-            for (_i617 = 0; _i617 < _size613; ++_i617)
+            uint32_t _size643;
+            ::apache::thrift::protocol::TType _etype646;
+            xfer += iprot->readListBegin(_etype646, _size643);
+            this->locks.resize(_size643);
+            uint32_t _i647;
+            for (_i647 = 0; _i647 < _size643; ++_i647)
             {
-              xfer += this->locks[_i617].read(iprot);
+              xfer += this->locks[_i647].read(iprot);
             }
             xfer += iprot->readListEnd();
           }
@@ -15197,10 +15708,10 @@ uint32_t ShowLocksResponse::write(::apache::thrift::protocol::TProtocol* oprot) 
   xfer += oprot->writeFieldBegin("locks", ::apache::thrift::protocol::T_LIST, 1);
   {
     xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->locks.size()));
-    std::vector<ShowLocksResponseElement> ::const_iterator _iter618;
-    for (_iter618 = this->locks.begin(); _iter618 != this->locks.end(); ++_iter618)
+    std::vector<ShowLocksResponseElement> ::const_iterator _iter648;
+    for (_iter648 = this->locks.begin(); _iter648 != this->locks.end(); ++_iter648)
     {
-      xfer += (*_iter618).write(oprot);
+      xfer += (*_iter648).write(oprot);
     }
     xfer += oprot->writeListEnd();
   }
@@ -15217,13 +15728,13 @@ void swap(ShowLocksResponse &a, ShowLocksResponse &b) {
   swap(a.__isset, b.__isset);
 }
 
-ShowLocksResponse::ShowLocksResponse(const ShowLocksResponse& other619) {
-  locks = other619.locks;
-  __isset = other619.__isset;
+ShowLocksResponse::ShowLocksResponse(const ShowLocksResponse& other649) {
+  locks = other649.locks;
+  __isset = other649.__isset;
 }
-ShowLocksResponse& ShowLocksResponse::operator=(const ShowLocksResponse& other620) {
-  locks = other620.locks;
-  __isset = other620.__isset;
+ShowLocksResponse& ShowLocksResponse::operator=(const ShowLocksResponse& other650) {
+  locks = other650.locks;
+  __isset = other650.__isset;
   return *this;
 }
 void ShowLocksResponse::printTo(std::ostream& out) const {
@@ -15324,15 +15835,15 @@ void swap(HeartbeatRequest &a, HeartbeatRequest &b) {
   swap(a.__isset, b.__isset);
 }
 
-HeartbeatRequest::HeartbeatRequest(const HeartbeatRequest& other621) {
-  lockid = other621.lockid;
-  txnid = other621.txnid;
-  __isset = other621.__isset;
+HeartbeatRequest::HeartbeatRequest(const HeartbeatRequest& other651) {
+  lockid = other651.lockid;
+  txnid = other651.txnid;
+  __isset = other651.__isset;
 }
-HeartbeatRequest& HeartbeatRequest::operator=(const HeartbeatRequest& other622) {
-  lockid = other622.lockid;
-  txnid = other622.txnid;
-  __isset = other622.__isset;
+HeartbeatRequest& HeartbeatRequest::operator=(const HeartbeatRequest& other652) {
+  lockid = other652.lockid;
+  txnid = other652.txnid;
+  __isset = other652.__isset;
   return *this;
 }
 void HeartbeatRequest::printTo(std::ostream& out) const {
@@ -15435,13 +15946,13 @@ void swap(HeartbeatTxnRangeRequest &a, HeartbeatTxnRangeRequest &b) {
   swap(a.max, b.max);
 }
 
-HeartbeatTxnRangeRequest::HeartbeatTxnRangeRequest(const HeartbeatTxnRangeRequest& other623) {
-  min = other623.min;
-  max = other623.max;
+HeartbeatTxnRangeRequest::HeartbeatTxnRangeRequest(const HeartbeatTxnRangeRequest& other653) {
+  min = other653.min;
+  max = other653.max;
 }
-HeartbeatTxnRangeRequest& HeartbeatTxnRangeRequest::operator=(const HeartbeatTxnRangeRequest& other624) {
-  min = other624.min;
-  max = other624.max;
+HeartbeatTxnRangeRequest& HeartbeatTxnRangeRequest::operator=(const HeartbeatTxnRangeRequest& other654) {
+  min = other654.min;
+  max = other654.max;
   return *this;
 }
 void HeartbeatTxnRangeRequest::printTo(std::ostream& out) const {
@@ -15492,15 +16003,15 @@ uint32_t HeartbeatTxnRangeResponse::read(::apache::thrift::protocol::TProtocol* 
         if (ftype == ::apache::thrift::protocol::T_SET) {
           {
             this->aborted.clear();
-            uint32_t _size625;
-            ::apache::thrift::protocol::TType _etype628;
-            xfer += iprot->readSetBegin(_etype628, _size625);
-            uint32_t _i629;
-            for (_i629 = 0; _i629 < _size625; ++_i629)
+            uint32_t _size655;
+            ::apache::thrift::protocol::TType _etype658;
+            xfer += iprot->readSetBegin(_etype658, _size655);
+            uint32_t _i659;
+            for (_i659 = 0; _i659 < _size655; ++_i659)
             {
-              int64_t _elem630;
-              xfer += iprot->readI64(_elem630);
-              this->aborted.insert(_elem630);
+              int64_t _elem660;
+              xfer += iprot->readI64(_elem660);
+              this->aborted.insert(_elem660);
             }
             xfer += iprot->readSetEnd();
           }
@@ -15513,15 +16024,15 @@ uint32_t HeartbeatTxnRangeResponse::read(::apache::thrift::protocol::TProtocol* 
         if (ftype == ::apache::thrift::protocol::T_SET) {
           {
             this->nosuch.clear();
-            uint32_t _size631;
-            ::apache::thrift::protocol::TType _etype634;
-            xfer += iprot->readSetBegin(_etype634, _size631);
-            uint32_t _i635;
-            for (_i635 = 0; _i635 < _size631; ++_i635)
+            uint32_t _size661;
+            ::apache::thrift::protocol::TType _etype664;
+            xfer += iprot->readSetBegin(_etype664, _size661);
+            uint32_t _i665;
+            for (_i665 = 0; _i665 < _size661; ++_i665)
             {
-              int64_t _elem636;
-              xfer += iprot->readI64(_elem636);
-              this->nosuch.insert(_elem636);
+              int64_t _elem666;
+              xfer += iprot->readI64(_elem666);
+              this->nosuch.insert(_elem666);
             }
             xfer += iprot->readSetEnd();
           }
@@ -15554,10 +16065,10 @@ uint32_t HeartbeatTxnRangeResponse::write(::apache::thrift::protocol::TProtocol*
   xfer += oprot->writeFieldBegin("aborted", ::apache::thrift::protocol::T_SET, 1);
   {
     xfer += oprot->writeSetBegin(::apache::thrift::protocol::T_I64, static_cast<uint32_t>(this->aborted.size()));
-    std::set<int64_t> ::const_iterator _iter637;
-    for (_iter637 = this->aborted.begin(); _iter637 != this->aborted.end(); ++_iter637)
+    std::set<int64_t> ::const_iterator _iter667;
+    for (_iter667 = this->aborted.begin(); _iter667 != this->aborted.end(); ++_iter667)
     {
-      xfer += oprot->writeI64((*_iter637));
+      xfer += oprot->writeI64((*_iter667));
     }
     xfer += oprot->writeSetEnd();
   }
@@ -15566,10 +16077,10 @@ uint32_t HeartbeatTxnRangeResponse::write(::apache::thrift::protocol::TProtocol*
   xfer += oprot->writeFieldBegin("nosuch", ::apache::thrift::protocol::T_SET, 2);
   {
     xfer += oprot->writeSetBegin(::apache::thrift::protocol::T_I64, static_cast<uint32_t>(this->nosuch.size()));
-    std::set<int64_t> ::const_iterator _iter638;
-    for (_iter638 = this->nosuch.begin(); _iter638 != this->nosuch.end(); ++_iter638)
+    std::set<int64_t> ::const_iterator _iter668;
+    for (_iter668 = this->nosuch.begin(); _iter668 != this->nosuch.end(); ++_iter668)
     {
-      xfer += oprot->writeI64((*_iter638));
+      xfer += oprot->writeI64((*_iter668));
     }
     xfer += oprot->writeSetEnd();
   }
@@ -15586,13 +16097,13 @@ void swap(HeartbeatTxnRangeResponse &a, HeartbeatTxnRangeResponse &b) {
   swap(a.nosuch, b.nosuch);
 }
 
-HeartbeatTxnRangeResponse::HeartbeatTxnRangeResponse(const HeartbeatTxnRangeResponse& other639) {
-  aborted = other639.aborted;
-  nosuch = other639.nosuch;
+HeartbeatTxnRangeResponse::HeartbeatTxnRangeResponse(const HeartbeatTxnRangeResponse& other669) {
+  aborted = other669.aborted;
+  nosuch = other669.nosuch;
 }
-HeartbeatTxnRangeResponse& HeartbeatTxnRangeResponse::operator=(const HeartbeatTxnRangeResponse& other640) {
-  aborted = other640.aborted;
-  nosuch = other640.nosuch;
+HeartbeatTxnRangeResponse& HeartbeatTxnRangeResponse::operator=(const HeartbeatTxnRangeResponse& other670) {
+  aborted = other670.aborted;
+  nosuch = other670.nosuch;
   return *this;
 }
 void HeartbeatTxnRangeResponse::printTo(std::ostream& out) const {
@@ -15685,9 +16196,9 @@ uint32_t CompactionRequest::read(::apache::thrift::protocol::TProtocol* iprot) {
         break;
       case 4:
         if (ftype == ::apache::thrift::protocol::T_I32) {
-          int32_t ecast641;
-          xfer += iprot->readI32(ecast641);
-          this->type = (CompactionType::type)ecast641;
+          int32_t ecast671;
+          xfer += iprot->readI32(ecast671);
+          this->type = (CompactionType::type)ecast671;
           isset_type = true;
         } else {
           xfer += iprot->skip(ftype);
@@ -15705,17 +16216,17 @@ uint32_t CompactionRequest::read(::apache::thrift::protocol::TProtocol* iprot) {
         if (ftype == ::apache::thrift::protocol::T_MAP) {
           {
             this->properties.clear();
-            uint32_t _size642;
-            ::apache::thrift::protocol::TType _ktype643;
-            ::apache::thrift::protocol::TType _vtype644;
-            xfer += iprot->readMapBegin(_ktype643, _vtype644, _size642);
-            uint32_t _i646;
-            for (_i646 = 0; _i646 < _size642; ++_i646)
+            uint32_t _size672;
+            ::apache::thrift::protocol::TType _ktype673;
+            ::apache::thrift::protocol::TType _vtype674;
+            xfer += iprot->readMapBegin(_ktype673, _vtype674, _size672);
+            uint32_t _i676;
+            for (_i676 = 0; _i676 < _size672; ++_i676)
             {
-              std::string _key647;
-              xfer += iprot->readString(_key647);
-              std::string& _val648 = this->properties[_key647];
-              xfer += iprot->readString(_val648);
+              std::string _key677;
+              xfer += iprot->readString(_key677);
+              std::string& _val678 = this->properties[_key677];
+              xfer += iprot->readString(_val678);
             }
             xfer += iprot->readMapEnd();
           }
@@ -15773,11 +16284,11 @@ uint32_t CompactionRequest::write(::apache::thrift::protocol::TProtocol* oprot) 
     xfer += oprot->writeFieldBegin("properties", ::apache::thrift::protocol::T_MAP, 6);
     {
       xfer += oprot->writeMapBegin(::apache::thrift::protocol::T_STRING, ::apache::thrift::protocol::T_STRING, static_cast<uint32_t>(this->properties.size()));
-      std::map<std::string, std::string> ::const_iterator _iter649;
-      for (_iter649 = this->properties.begin(); _iter649 != this->properties.end(); ++_iter649)
+      std::map<std::string, std::string> ::const_iterator _iter679;
+      for (_iter679 = this->properties.begin(); _iter679 != this->properties.end(); ++_iter679)
       {
-        xfer += oprot->writeString(_iter649->first);
-        xfer += oprot->writeString(_iter649->second);
+        xfer += oprot->writeString(_iter679->first);
+        xfer += oprot->writeString(_iter679->second);
       }
       xfer += oprot->writeMapEnd();
     }
@@ -15799,23 +16310,23 @@ void swap(CompactionRequest &a, CompactionRequest &b) {
   swap(a.__isset, b.__isset);
 }
 
-CompactionRequest::CompactionRequest(const CompactionRequest& other650) {
-  dbname = other650.dbname;
-  tablename = other650.tablename;
-  partitionname = other650.partitionname;
-  type = other650.type;
-  runas = other650.runas;
-  properties = other650.properties;
-  __isset = other650.__isset;
+CompactionRequest::CompactionRequest(const CompactionRequest& other680) {
+  dbname = other680.dbname;
+  tablename = other680.tablename;
+  partitionname = other680.partitionname;
+  type = other680.type;
+  runas = other680.runas;
+  properties = other680.properties;
+  __isset = other680.__isset;
 }
-CompactionRequest& CompactionRequest::operator=(const CompactionRequest& other651) {
-  dbname = other651.dbname;
-  tablename = other651.tablename;
-  partitionname = other651.partitionname;
-  type = other651.type;
-  runas = other651.runas;
-  properties = other651.properties;
-  __isset = other651.__isset;
+CompactionRequest& CompactionRequest::operator=(const CompactionRequest& other681) {
+  dbname = other681.dbname;
+  tablename = other681.tablename;
+  partitionname = other681.partitionname;
+  type = other681.type;
+  runas = other681.runas;
+  properties = other681.properties;
+  __isset = other681.__isset;
   return *this;
 }
 void CompactionRequest::printTo(std::ostream& out) const {
@@ -15942,15 +16453,15 @@ void swap(CompactionResponse &a, CompactionResponse &b) {
   swap(a.accepted, b.accepted);
 }
 
-CompactionResponse::CompactionResponse(const CompactionResponse& other652) {
-  id = other652.id;
-  state = other652.state;
-  accepted = other652.accepted;
+CompactionResponse::CompactionResponse(const CompactionResponse& other682) {
+  id = other682.id;
+  state = other682.state;
+  accepted = other682.accepted;
 }
-CompactionResponse& CompactionResponse::operator=(const CompactionResponse& other653) {
-  id = other653.id;
-  state = other653.state;
-  accepted = other653.accepted;
+CompactionResponse& CompactionResponse::operator=(const CompactionResponse& other683) {
+  id = other683.id;
+  state = other683.state;
+  accepted = other683.accepted;
   return *this;
 }
 void CompactionResponse::printTo(std::ostream& out) const {
@@ -16011,11 +16522,11 @@ void swap(ShowCompactRequest &a, ShowCompactRequest &b) {
   (void) b;
 }
 
-ShowCompactRequest::ShowCompactRequest(const ShowCompactRequest& other654) {
-  (void) other654;
+ShowCompactRequest::ShowCompactRequest(const ShowCompactRequest& other684) {
+  (void) other684;
 }
-ShowCompactRequest& ShowCompactRequest::operator=(const ShowCompactRequest& other655) {
-  (void) other655;
+ShowCompactRequest& ShowCompactRequest::operator=(const ShowCompactRequest& other685) {
+  (void) other685;
   return *this;
 }
 void ShowCompactRequest::printTo(std::ostream& out) const {
@@ -16141,9 +16652,9 @@ uint32_t ShowCompactResponseElement::read(::apache::thrift::protocol::TProtocol*
         break;
       case 4:
         if (ftype == ::apache::thrift::protocol::T_I32) {
-          int32_t ecast656;
-          xfer += iprot->readI32(ecast656);
-          this->type = (CompactionType::type)ecast656;
+          int32_t ecast686;
+          xfer += iprot->readI32(ecast686);
+          this->type = (CompactionType::type)ecast686;
           isset_type = true;
         } else {
           xfer += iprot->skip(ftype);
@@ -16330,37 +16841,37 @@ void swap(ShowCompactResponseElement &a, ShowCompactResponseElement &b) {
   swap(a.__isset, b.__isset);
 }
 
-ShowCompactResponseElement::ShowCompactResponseElement(const ShowCompactResponseElement& other657) {
-  dbname = other657.dbname;
-  tablename = other657.tablename;
-  partitionname = other657.partitionname;
-  type = other657.type;
-  state = other657.state;
-  workerid = other657.workerid;
-  start = other657.start;
-  runAs = other657.runAs;
-  hightestTxnId = other657.hightestTxnId;
-  metaInfo = other657.metaInfo;
-  endTime = other657.endTime;
-  hadoopJobId = other657.hadoopJobId;
-  id = other657.id;
-  __isset = other657.__isset;
+ShowCompactResponseElement::ShowCompactResponseElement(const ShowCompactResponseElement& other687) {
+  dbname = other687.dbname;
+  tablename = other687.tablename;
+  partitionname = other687.partitionname;
+  type = other687.type;
+  state = other687.state;
+  workerid = other687.workerid;
+  start = other687.start;
+  runAs = other687.runAs;
+  hightestTxnId = other687.hightestTxnId;
+  metaInfo = other687.metaInfo;
+  endTime = other687.endTime;
+  hadoopJobId = other687.hadoopJobId;
+  id = other687.id;
+  __isset = other687.__isset;
 }
-ShowCompactResponseElement& ShowCompactResponseElement::operator=(const ShowCompactResponseElement& other658) {
-  dbname = other658.dbname;
-  tablename = other658.tablename;
-  partitionname = other658.partitionname;
-  type = other658.type;
-  state = other658.state;
-  workerid = other658.workerid;
-  start = other658.start;
-  runAs = other658.runAs;
-  hightestTxnId = other658.hightestTxnId;
-  metaInfo = other658.metaInfo;
-  endTime = other658.endTime;
-  hadoopJobId = other658.hadoopJobId;
-  id = other658.id;
-  __isset = other658.__isset;
+ShowCompactResponseElement& ShowCompactResponseElement::operator=(const ShowCompactResponseElement& other688) {
+  dbname = other688.dbname;
+  tablename = other688.tablename;
+  partitionname = other688.partitionname;
+  type = other688.type;
+  state = other688.state;
+  workerid = other688.workerid;
+  start = other688.start;
+  runAs = other688.runAs;
+  hightestTxnId = other688.hightestTxnId;
+  metaInfo = other688.metaInfo;
+  endTime = other688.endTime;
+  hadoopJobId = other688.hadoopJobId;
+  id = other688.id;
+  __isset = other688.__isset;
   return *this;
 }
 void ShowCompactResponseElement::printTo(std::ostream& out) const {
@@ -16417,14 +16928,14 @@ uint32_t ShowCompactResponse::read(::apache::thrift::protocol::TProtocol* iprot)
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->compacts.clear();
-            uint32_t _size659;
-            ::apache::thrift::protocol::TType _etype662;
-            xfer += iprot->readListBegin(_etype662, _size659);
-            this->compacts.resize(_size659);
-            uint32_t _i663;
-            for (_i663 = 0; _i663 < _size659; ++_i663)
+            uint32_t _size689;
+            ::apache::thrift::protocol::TType _etype692;
+            xfer += iprot->readListBegin(_etype692, _size689);
+            this->compacts.resize(_size689);
+            uint32_t _i693;
+            for (_i693 = 0; _i693 < _size689; ++_i693)
             {
-              xfer += this->compacts[_i663].read(iprot);
+              xfer += this->compacts[_i693].read(iprot);
             }
             xfer += iprot->readListEnd();
           }
@@ -16455,10 +16966,10 @@ uint32_t ShowCompactResponse::write(::apache::thrift::protocol::TProtocol* oprot
   xfer += oprot->writeFieldBegin("compacts", ::apache::thrift::protocol::T_LIST, 1);
   {
     xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->compacts.size()));
-    std::vector<ShowCompactResponseElement> ::const_iterator _iter664;
-    for (_iter664 = this->compacts.begin(); _iter664 != this->compacts.end(); ++_iter664)
+    std::vector<ShowCompactResponseElement> ::const_iterator _iter694;
+    for (_iter694 = this->compacts.begin(); _iter694 != this->compacts.end(); ++_iter694)
     {
-      xfer += (*_iter664).write(oprot);
+      xfer += (*_iter694).write(oprot);
     }
     xfer += oprot->writeListEnd();
   }
@@ -16474,11 +16985,11 @@ void swap(ShowCompactResponse &a, ShowCompactResponse &b) {
   swap(a.compacts, b.compacts);
 }
 
-ShowCompactResponse::ShowCompactResponse(const ShowCompactResponse& other665) {
-  compacts = other665.compacts;
+ShowCompactResponse::ShowCompactResponse(const ShowCompactResponse& other695) {
+  compacts = other695.compacts;
 }
-ShowCompactResponse& ShowCompactResponse::operator=(const ShowCompactResponse& other666) {
-  compacts = other666.compacts;
+ShowCompactResponse& ShowCompactResponse::operator=(const ShowCompactResponse& other696) {
+  compacts = other696.compacts;
   return *this;
 }
 void ShowCompactResponse::printTo(std::ostream& out) const {
@@ -16567,14 +17078,14 @@ uint32_t AddDynamicPartitions::read(::apache::thrift::protocol::TProtocol* iprot
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->partitionnames.clear();
-            uint32_t _size667;
-            ::apache::thrift::protocol::TType _etype670;
-            xfer += iprot->readListBegin(_etype670, _size667);
-            this->partitionnames.resize(_size667);
-            uint32_t _i671;
-            for (_i671 = 0; _i671 < _size667; ++_i671)
+            uint32_t _size697;
+            ::apache::thrift::protocol::TType _etype700;
+            xfer += iprot->readListBegin(_etype700, _size697);
+            this->partitionnames.resize(_size697);
+            uint32_t _i701;
+            for (_i701 = 0; _i701 < _size697; ++_i701)
             {
-              xfer += iprot->readString(this->partitionnames[_i671]);
+              xfer += iprot->readString(this->partitionnames[_i701]);
             }
             xfer += iprot->readListEnd();
           }
@@ -16585,9 +17096,9 @@ uint32_t AddDynamicPartitions::read(::apache::thrift::protocol::TProtocol* iprot
         break;
       case 5:
         if (ftype == ::apache::thrift::protocol::T_I32) {
-          int32_t ecast672;
-          xfer += iprot->readI32(ecast672);
-          this->operationType = (DataOperationType::type)ecast672;
+          int32_t ecast702;
+          xfer += iprot->readI32(ecast702);
+          this->operationType = (DataOperationType::type)ecast702;
           this->__isset.operationType = true;
         } else {
           xfer += iprot->skip(ftype);
@@ -16633,10 +17144,10 @@ uint32_t AddDynamicPartitions::write(::apache::thrift::protocol::TProtocol* opro
   xfer += oprot->writeFieldBegin("partitionnames", ::apache::thrift::protocol::T_LIST, 4);
   {
     xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRING, static_cast<uint32_t>(this->partitionnames.size()));
-    std::vector<std::string> ::const_iterator _iter673;
-    for (_iter673 = this->partitionnames.begin(); _iter673 != this->partitionnames.end(); ++_iter673)
+    std::vector<std::string> ::const_iterator _iter703;
+    for (_iter703 = this->partitionnames.begin(); _iter703 != this->partitionnames.end(); ++_iter703)
     {
-      xfer += oprot->writeString((*_iter673));
+      xfer += oprot->writeString((*_iter703));
     }
     xfer += oprot->writeListEnd();
   }
@@ -16662,21 +17173,21 @@ void swap(AddDynamicPartitions &a, AddDynamicPartitions &b) {
   swap(a.__isset, b.__isset);
 }
 
-AddDynamicPartitions::AddDynamicPartitions(const AddDynamicPartitions& other674) {
-  txnid = other674.txnid;
-  dbname = other674.dbname;
-  tablename = other674.tablename;
-  partitionnames = other674.partitionnames;
-  operationType = other674.operationType;
-  __isset = other674.__isset;
+AddDynamicPartitions::AddDynamicPartitions(const AddDynamicPartitions& other704) {
+  txnid = other704.txnid;
+  dbname = other704.dbname;
+  tablename = other704.tablename;
+  partitionnames = other704.partitionnames;
+  operationType = other704.operationType;
+  __isset = other704.__isset;
 }
-AddDynamicPartitions& AddDynamicPartitions::operator=(const AddDynamicPartitions& other675) {
-  txnid = other675.txnid;
-  dbname = other675.dbname;
-  tablename = other675.tablename;
-  partitionnames = other675.partitionnames;
-  operationType = other675.operationType;
-  __isset = other675.__isset;
+AddDynamicPartitions& AddDynamicPartitions::operator=(const AddDynamicPartitions& other705) {
+  txnid = other705.txnid;
+  dbname = other705.dbname;
+  tablename = other705.tablename;
+  partitionnames = other705.partitionnames;
+  operationType = other705.operationType;
+  __isset = other705.__isset;
   return *this;
 }
 void AddDynamicPartitions::printTo(std::ostream& out) const {
@@ -16782,15 +17293,15 @@ void swap(NotificationEventRequest &a, NotificationEventRequest &b) {
   swap(a.__isset, b.__isset);
 }
 
-NotificationEventRequest::NotificationEventRequest(const NotificationEventRequest& other676) {
-  lastEvent = other676.lastEvent;
-  maxEvents = other676.maxEvents;
-  __isset = other676.__isset;
+NotificationEventRequest::NotificationEventRequest(const NotificationEventRequest& other706) {
+  lastEvent = other706.lastEvent;
+  maxEvents = other706.maxEvents;
+  __isset = other706.__isset;
 }
-NotificationEventRequest& NotificationEventRequest::operator=(const NotificationEventRequest& other677) {
-  lastEvent = other677.lastEvent;
-  maxEvents = other677.maxEvents;
-  __isset = other677.__isset;
+NotificationEventRequest& NotificationEventRequest::operator=(const NotificationEventRequest& other707) {
+  lastEvent = other707.lastEvent;
+  maxEvents = other707.maxEvents;
+  __isset = other707.__isset;
   return *this;
 }
 void NotificationEventRequest::printTo(std::ostream& out) const {
@@ -16991,25 +17502,25 @@ void swap(NotificationEvent &a, NotificationEvent &b) {
   swap(a.__isset, b.__isset);
 }
 
-NotificationEvent::NotificationEvent(const NotificationEvent& other678) {
-  eventId = other678.eventId;
-  eventTime = other678.eventTime;
-  eventType = other678.eventType;
-  dbName = other678.dbName;
-  tableName = other678.tableName;
-  message = other678.message;
-  messageFormat = other678.messageFormat;
-  __isset = other678.__isset;
+NotificationEvent::NotificationEvent(const NotificationEvent& other708) {
+  eventId = other708.eventId;
+  eventTime = other708.eventTime;
+  eventType = other708.eventType;
+  dbName = other708.dbName;
+  tableName = other708.tableName;
+  message = other708.message;
+  messageFormat = other708.messageFormat;
+  __isset = other708.__isset;
 }
-NotificationEvent& NotificationEvent::operator=(const NotificationEvent& other679) {
-  eventId = other679.eventId;
-  eventTime = other679.eventTime;
-  eventType = other679.eventType;
-  dbName = other679.dbName;
-  tableName = other679.tableName;
-  message = other679.message;
-  messageFormat = other679.messageFormat;
-  __isset = other679.__isset;
+NotificationEvent& NotificationEvent::operator=(const NotificationEvent& other709) {
+  eventId = other709.eventId;
+  eventTime = other709.eventTime;
+  eventType = other709.eventType;
+  dbName = other709.dbName;
+  tableName = other709.tableName;
+  message = other709.message;
+  messageFormat = other709.messageFormat;
+  __isset = other709.__isset;
   return *this;
 }
 void NotificationEvent::printTo(std::ostream& out) const {
@@ -17060,14 +17571,14 @@ uint32_t NotificationEventResponse::read(::apache::thrift::protocol::TProtocol* 
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->events.clear();
-            uint32_t _size680;
-            ::apache::thrift::protocol::TType _etype683;
-            xfer += iprot->readListBegin(_etype683, _size680);
-            this->events.resize(_size680);
-            uint32_t _i684;
-            for (_i684 = 0; _i684 < _size680; ++_i684)
+            uint32_t _size710;
+            ::apache::thrift::protocol::TType _etype713;
+            xfer += iprot->readListBegin(_etype713, _size710);
+            this->events.resize(_size710);
+            uint32_t _i714;
+            for (_i714 = 0; _i714 < _size710; ++_i714)
             {
-              xfer += this->events[_i684].read(iprot);
+              xfer += this->events[_i714].read(iprot);
             }
             xfer += iprot->readListEnd();
           }
@@ -17098,10 +17609,10 @@ uint32_t NotificationEventResponse::write(::apache::thrift::protocol::TProtocol*
   xfer += oprot->writeFieldBegin("events", ::apache::thrift::protocol::T_LIST, 1);
   {
     xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->events.size()));
-    std::vector<NotificationEvent> ::const_iterator _iter685;
-    for (_iter685 = this->events.begin(); _iter685 != this->events.end(); ++_iter685)
+    std::vector<NotificationEvent> ::const_iterator _iter715;
+    for (_iter715 = this->events.begin(); _iter715 != this->events.end(); ++_iter715)
     {
-      xfer += (*_iter685).write(oprot);
+      xfer += (*_iter715).write(oprot);
     }
     xfer += oprot->writeListEnd();
   }
@@ -17117,11 +17628,11 @@ void swap(NotificationEventResponse &a, NotificationEventResponse &b) {
   swap(a.events, b.events);
 }
 
-NotificationEventResponse::NotificationEventResponse(const NotificationEventResponse& other686) {
-  events = other686.events;
+NotificationEventResponse::NotificationEventResponse(const NotificationEventResponse& other716) {
+  events = other716.events;
 }
-NotificationEventResponse& NotificationEventResponse::operator=(const NotificationEventResponse& other687) {
-  events = other687.events;
+NotificationEventResponse& NotificationEventResponse::operator=(const NotificationEventResponse& other717) {
+  events = other717.events;
   return *this;
 }
 void NotificationEventResponse::printTo(std::ostream& out) const {
@@ -17203,11 +17714,11 @@ void swap(CurrentNotificationEventId &a, CurrentNotificationEventId &b) {
   swap(a.eventId, b.eventId);
 }
 
-CurrentNotificationEventId::CurrentNotificationEventId(const CurrentNotificationEventId& other688) {
-  eventId = other688.eventId;
+CurrentNotificationEventId::CurrentNotificationEventId(const CurrentNotificationEventId& other718) {
+  eventId = other718.eventId;
 }
-CurrentNotificationEventId& CurrentNotificationEventId::operator=(const CurrentNotificationEventId& other689) {
-  eventId = other689.eventId;
+CurrentNotificationEventId& CurrentNotificationEventId::operator=(const CurrentNotificationEventId& other719) {
+  eventId = other719.eventId;
   return *this;
 }
 void CurrentNotificationEventId::printTo(std::ostream& out) const {
@@ -17309,13 +17820,13 @@ void swap(NotificationEventsCountRequest &a, NotificationEventsCountRequest &b) 
   swap(a.dbName, b.dbName);
 }
 
-NotificationEventsCountRequest::NotificationEventsCountRequest(const NotificationEventsCountRequest& other690) {
-  fromEventId = other690.fromEventId;
-  dbName = other690.dbName;
+NotificationEventsCountRequest::NotificationEventsCountRequest(const NotificationEventsCountRequest& other720) {
+  fromEventId = other720.fromEventId;
+  dbName = other720.dbName;
 }
-NotificationEventsCountRequest& NotificationEventsCountRequest::operator=(const NotificationEventsCountRequest& other691) {
-  fromEventId = other691.fromEventId;
-  dbName = other691.dbName;
+NotificationEventsCountRequest& NotificationEventsCountRequest::operator=(const NotificationEventsCountRequest& other721) {
+  fromEventId = other721.fromEventId;
+  dbName = other721.dbName;
   return *this;
 }
 void NotificationEventsCountRequest::printTo(std::ostream& out) const {
@@ -17398,11 +17909,11 @@ void swap(NotificationEventsCountResponse &a, NotificationEventsCountResponse &b
   swap(a.eventsCount, b.eventsCount);
 }
 
-NotificationEventsCountResponse::NotificationEventsCountResponse(const NotificationEventsCountResponse& other692) {
-  eventsCount = other692.eventsCount;
+NotificationEventsCountResponse::NotificationEventsCountResponse(const NotificationEventsCountResponse& other722) {
+  eventsCount = other722.eventsCount;
 }
-NotificationEventsCountResponse& NotificationEventsCountResponse::operator=(const NotificationEventsCountResponse& other693) {
-  eventsCount = other693.eventsCount;
+NotificationEventsCountResponse& NotificationEventsCountResponse::operator=(const NotificationEventsCountResponse& other723) {
+  eventsCount = other723.eventsCount;
   return *this;
 }
 void NotificationEventsCountResponse::printTo(std::ostream& out) const {
@@ -17465,14 +17976,14 @@ uint32_t InsertEventRequestData::read(::apache::thrift::protocol::TProtocol* ipr
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->filesAdded.clear();
-            uint32_t _size694;
-            ::apache::thrift::protocol::TType _etype697;
-            xfer += iprot->readListBegin(_etype697, _size694);
-            this->filesAdded.resize(_size694);
-            uint32_t _i698;
-            for (_i698 = 0; _i698 < _size694; ++_i698)
+            uint32_t _size724;
+            ::apache::thrift::protocol::TType _etype727;
+            xfer += iprot->readListBegin(_etype727, _size724);
+            this->filesAdded.resize(_size724);
+            uint32_t _i728;
+            for (_i728 = 0; _i728 < _size724; ++_i728)
             {
-              xfer += iprot->readString(this->filesAdded[_i698]);
+              xfer += iprot->readString(this->filesAdded[_i728]);
             }
             xfer += iprot->readListEnd();
           }
@@ -17485,14 +17996,14 @@ uint32_t InsertEventRequestData::read(::apache::thrift::protocol::TProtocol* ipr
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->filesAddedChecksum.clear();
-            uint32_t _size699;
-            ::apache::thrift::protocol::TType _etype702;
-            xfer += iprot->readListBegin(_etype702, _size699);
-            this->filesAddedChecksum.resize(_size699);
-            uint32_t _i703;
-            for (_i703 = 0; _i703 < _size699; ++_i703)
+            uint32_t _size729;
+            ::apache::thrift::protocol::TType _etype732;
+            xfer += iprot->readListBegin(_etype732, _size729);
+            this->filesAddedChecksum.resize(_size729);
+            uint32_t _i733;
+            for (_i733 = 0; _i733 < _size729; ++_i733)
             {
-              xfer += iprot->readString(this->filesAddedChecksum[_i703]);
+              xfer += iprot->readString(this->filesAddedChecksum[_i733]);
             }
             xfer += iprot->readListEnd();
           }
@@ -17528,10 +18039,10 @@ uint32_t InsertEventRequestData::write(::apache::thrift::protocol::TProtocol* op
   xfer += oprot->writeFieldBegin("filesAdded", ::apache::thrift::protocol::T_LIST, 2);
   {
     xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRING, static_cast<uint32_t>(this->filesAdded.size()));
-    std::vector<std::string> ::const_iterator _iter704;
-    for (_iter704 = this->filesAdded.begin(); _iter704 != this->filesAdded.end(); ++_iter704)
+    std::vector<std::string> ::const_iterator _iter734;
+    for (_iter734 = this->filesAdded.begin(); _iter734 != this->filesAdded.end(); ++_iter734)
     {
-      xfer += oprot->writeString((*_iter704));
+      xfer += oprot->writeString((*_iter734));
     }
     xfer += oprot->writeListEnd();
   }
@@ -17541,10 +18052,10 @@ uint32_t InsertEventRequestData::write(::apache::thrift::protocol::TProtocol* op
     xfer += oprot->writeFieldBegin("filesAddedChecksum", ::apache::thrift::protocol::T_LIST, 3);
     {
       xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRING, static_cast<uint32_t>(this->filesAddedChecksum.size()));
-      std::vector<std::string> ::const_iterator _iter705;
-      for (_iter705 = this->filesAddedChecksum.begin(); _iter705 != this->filesAddedChecksum.end(); ++_iter705)
+      std::vector<std::string> ::const_iterator _iter735;
+      for (_iter735 = this->filesAddedChecksum.begin(); _iter735 != this->filesAddedChecksum.end(); ++_iter735)
       {
-        xfer += oprot->writeString((*_iter705));
+        xfer += oprot->writeString((*_iter735));
       }
       xfer += oprot->writeListEnd();
     }
@@ -17563,17 +18074,17 @@ void swap(InsertEventRequestData &a, InsertEventRequestData &b) {
   swap(a.__isset, b.__isset);
 }
 
-InsertEventRequestData::InsertEventRequestData(const InsertEventRequestData& other706) {
-  replace = other706.replace;
-  filesAdded = other706.filesAdded;
-  filesAddedChecksum = other706.filesAddedChecksum;
-  __isset = other706.__isset;
+InsertEventRequestData::InsertEventRequestData(const InsertEventRequestData& other736) {
+  replace = other736.replace;
+  filesAdded = other736.filesAdded;
+  filesAddedChecksum = other736.filesAddedChecksum;
+  __isset = other736.__isset;
 }
-InsertEventRequestData& InsertEventRequestData::operator=(const InsertEventRequestData& other707) {
-  replace = other707.replace;
-  filesAdded = other707.filesAdded;
-  filesAddedChecksum = other707.filesAddedChecksum;
-  __isset = other707.__isset;
+InsertEventRequestData& InsertEventRequestData::operator=(const InsertEventRequestData& other737) {
+  replace = other737.replace;
+  filesAdded = other737.filesAdded;
+  filesAddedChecksum = other737.filesAddedChecksum;
+  __isset = other737.__isset;
   return *this;
 }
 void InsertEventRequestData::printTo(std::ostream& out) const {
@@ -17655,13 +18166,13 @@ void swap(FireEventRequestData &a, FireEventRequestData &b) {
   swap(a.__isset, b.__isset);
 }
 
-FireEventRequestData::FireEventRequestData(const FireEventRequestData& other708) {
-  insertData = other708.insertData;
-  __isset = other708.__isset;
+FireEventRequestData::FireEventRequestData(const FireEventRequestData& other738) {
+  insertData = other738.insertData;
+  __isset = other738.__isset;
 }
-FireEventRequestData& FireEventRequestData::operator=(const FireEventRequestData& other709) {
-  insertData = other709.insertData;
-  __isset = other709.__isset;
+FireEventRequestData& FireEventRequestData::operator=(const FireEventRequestData& other739) {
+  insertData = other739.insertData;
+  __isset = other739.__isset;
   return *this;
 }
 void FireEventRequestData::printTo(std::ostream& out) const {
@@ -17758,14 +18269,14 @@ uint32_t FireEventRequest::read(::apache::thrift::protocol::TProtocol* iprot) {
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->partitionVals.clear();
-            uint32_t _size710;
-            ::apache::thrift::protocol::TType _etype713;
-            xfer += iprot->readListBegin(_etype713, _size710);
-            this->partitionVals.resize(_size710);
-            uint32_t _i714;
-            for (_i714 = 0; _i714 < _size710; ++_i714)
+            uint32_t _size740;
+            ::apache::thrift::protocol::TType _etype743;
+            xfer += iprot->readListBegin(_etype743, _size740);
+            this->partitionVals.resize(_size740);
+            uint32_t _i744;
+            for (_i744 = 0; _i744 < _size740; ++_i744)
             {
-              xfer += iprot->readString(this->partitionVals[_i714]);
+              xfer += iprot->readString(this->partitionVals[_i744]);
             }
             xfer += iprot->readListEnd();
           }
@@ -17817,10 +18328,10 @@ uint32_t FireEventRequest::write(::apache::thrift::protocol::TProtocol* oprot) c
     xfer += oprot->writeFieldBegin("partitionVals", ::apache::thrift::protocol::T_LIST, 5);
     {
       xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRING, static_cast<uint32_t>(this->partitionVals.size()));
-      std::vector<std::string> ::const_iterator _iter715;
-      for (_iter715 = this->partitionVals.begin(); _iter715 != this->partitionVals.end(); ++_iter715)
+      std::vector<std::string> ::const_iterator _iter745;
+      for (_iter745 = this->partitionVals.begin(); _iter745 != this->partitionVals.end(); ++_iter745)
       {
-        xfer += oprot->writeString((*_iter715));
+        xfer += oprot->writeString((*_iter745));
       }
       xfer += oprot->writeListEnd();
     }
@@ -17841,21 +18352,21 @@ void swap(FireEventRequest &a, FireEventRequest &b) {
   swap(a.__isset, b.__isset);
 }
 
-FireEventRequest::FireEventRequest(const FireEventRequest& other716) {
-  successful = other716.successful;
-  data = other716.data;
-  dbName = other716.dbName;
-  tableName = other716.tableName;
-  partitionVals = other716.partitionVals;
-  __isset = other716.__isset;
+FireEventRequest::FireEventRequest(const FireEventRequest& other746) {
+  successful = other746.successful;
+  data = other746.data;
+  dbName = other746.dbName;
+  tableName = other746.tableName;
+  partitionVals = other746.partitionVals;
+  __isset = other746.__isset;
 }
-FireEventRequest& FireEventRequest::operator=(const FireEventRequest& other717) {
-  successful = other717.successful;
-  data = other717.data;
-  dbName = other717.dbName;
-  tableName = other717.tableName;
-  partitionVals = other717.partitionVals;
-  __isset = other717.__isset;
+FireEventRequest& FireEventRequest::operator=(const FireEventRequest& other747) {
+  successful = other747.successful;
+  data = other747.data;
+  dbName = other747.dbName;
+  tableName = other747.tableName;
+  partitionVals = other747.partitionVals;
+  __isset = other747.__isset;
   return *this;
 }
 void FireEventRequest::printTo(std::ostream& out) const {
@@ -17918,11 +18429,11 @@ void swap(FireEventResponse &a, FireEventResponse &b) {
   (void) b;
 }
 
-FireEventResponse::FireEventResponse(const FireEventResponse& other718) {
-  (void) other718;
+FireEventResponse::FireEventResponse(const FireEventResponse& other748) {
+  (void) other748;
 }
-FireEventResponse& FireEventResponse::operator=(const FireEventResponse& other719) {
-  (void) other719;
+FireEventResponse& FireEventResponse::operator=(const FireEventResponse& other749) {
+  (void) other749;
   return *this;
 }
 void FireEventResponse::printTo(std::ostream& out) const {
@@ -18022,15 +18533,15 @@ void swap(MetadataPpdResult &a, MetadataPpdResult &b) {
   swap(a.__isset, b.__isset);
 }
 
-MetadataPpdResult::MetadataPpdResult(const MetadataPpdResult& other720) {
-  metadata = other720.metadata;
-  includeBitset = other720.includeBitset;
-  __isset = other720.__isset;
+MetadataPpdResult::MetadataPpdResult(const MetadataPpdResult& other750) {
+  metadata = other750.metadata;
+  includeBitset = other750.includeBitset;
+  __isset = other750.__isset;
 }
-MetadataPpdResult& MetadataPpdResult::operator=(const MetadataPpdResult& other721) {
-  metadata = other721.metadata;
-  includeBitset = other721.includeBitset;
-  __isset = other721.__isset;
+MetadataPpdResult& MetadataPpdResult::operator=(const MetadataPpdResult& other751) {
+  metadata = other751.metadata;
+  includeBitset = other751.includeBitset;
+  __isset = other751.__isset;
   return *this;
 }
 void MetadataPpdResult::printTo(std::ostream& out) const {
@@ -18081,17 +18592,17 @@ uint32_t GetFileMetadataByExprResult::read(::apache::thrift::protocol::TProtocol
         if (ftype == ::apache::thrift::protocol::T_MAP) {
           {
             this->metadata.clear();
-            uint32_t _size722;
-            ::apache::thrift::protocol::TType _ktype723;
-            ::apache::thrift::protocol::TType _vtype724;
-            xfer += iprot->readMapBegin(_ktype723, _vtype724, _size722);
-            uint32_t _i726;
-            for (_i726 = 0; _i726 < _size722; ++_i726)
+            uint32_t _size752;
+            ::apache::thrift::protocol::TType _ktype753;
+            ::apache::thrift::protocol::TType _vtype754;
+            xfer += iprot->readMapBegin(_ktype753, _vtype754, _size752);
+            uint32_t _i756;
+            for (_i756 = 0; _i756 < _size752; ++_i756)
             {
-              int64_t _key727;
-              xfer += iprot->readI64(_key727);
-              MetadataPpdResult& _val728 = this->metadata[_key727];
-              xfer += _val728.read(iprot);
+              int64_t _key757;
+              xfer += iprot->readI64(_key757);
+              MetadataPpdResult& _val758 = this->metadata[_key757];
+              xfer += _val758.read(iprot);
             }
             xfer += iprot->readMapEnd();
           }
@@ -18132,11 +18643,11 @@ uint32_t GetFileMetadataByExprResult::write(::apache::thrift::protocol::TProtoco
   xfer += oprot->writeFieldBegin("metadata", ::apache::thrift::protocol::T_MAP, 1);
   {
     xfer += oprot->writeMapBegin(::apache::thrift::protocol::T_I64, ::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->metadata.size()));
-    std::map<int64_t, MetadataPpdResult> ::const_iterator _iter729;
-    for (_iter729 = this->metadata.begin(); _iter729 != this->metadata.end(); ++_iter729)
+    std::map<int64_t, MetadataPpdResult> ::const_iterator _iter759;
+    for (_iter759 = this->metadata.begin(); _iter759 != this->metadata.end(); ++_iter759)
     {
-      xfer += oprot->writeI64(_iter729->first);
-      xfer += _iter729->second.write(oprot);
+      xfer += oprot->writeI64(_iter759->first);
+      xfer += _iter759->second.write(oprot);
     }
     xfer += oprot->writeMapEnd();
   }
@@ -18157,13 +18668,13 @@ void swap(GetFileMetadataByExprResult &a, GetFileMetadataByExprResult &b) {
   swap(a.isSupported, b.isSupported);
 }
 
-GetFileMetadataByExprResult::GetFileMetadataByExprResult(const GetFileMetadataByExprResult& other730) {
-  metadata = other730.metadata;
-  isSupported = other730.isSupported;
+GetFileMetadataByExprResult::GetFileMetadataByExprResult(const GetFileMetadataByExprResult& other760) {
+  metadata = other760.metadata;
+  isSupported = other760.isSupported;
 }
-GetFileMetadataByExprResult& GetFileMetadataByExprResult::operator=(const GetFileMetadataByExprResult& other731) {
-  metadata = other731.metadata;
-  isSupported = other731.isSupported;
+GetFileMetadataByExprResult& GetFileMetadataByExprResult::operator=(const GetFileMetadataByExprResult& other761) {
+  metadata = other761.metadata;
+  isSupported = other761.isSupported;
   return *this;
 }
 void GetFileMetadataByExprResult::printTo(std::ostream& out) const {
@@ -18224,14 +18735,14 @@ uint32_t GetFileMetadataByExprRequest::read(::apache::thrift::protocol::TProtoco
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->fileIds.clear();
-            uint32_t _size732;
-            ::apache::thrift::protocol::TType _etype735;
-            xfer += iprot->readListBegin(_etype735, _size732);
-            this->fileIds.resize(_size732);
-            uint32_t _i736;
-            for (_i736 = 0; _i736 < _size732; ++_i736)
+            uint32_t _size762;
+            ::apache::thrift::protocol::TType _etype765;
+            xfer += iprot->readListBegin(_etype765, _size762);
+            this->fileIds.resize(_size762);
+            uint32_t _i766;
+            for (_i766 = 0; _i766 < _size762; ++_i766)
             {
-              xfer += iprot->readI64(this->fileIds[_i736]);
+              xfer += iprot->readI64(this->fileIds[_i766]);
             }
             xfer += iprot->readListEnd();
           }
@@ -18258,9 +18769,9 @@ uint32_t GetFileMetadataByExprRequest::read(::apache::thrift::protocol::TProtoco
         break;
       case 4:
         if (ftype == ::apache::thrift::protocol::T_I32) {
-          int32_t ecast737;
-          xfer += iprot->readI32(ecast737);
-          this->type = (FileMetadataExprType::type)ecast737;
+          int32_t ecast767;
+          xfer += iprot->readI32(ecast767);
+          this->type = (FileMetadataExprType::type)ecast767;
           this->__isset.type = true;
         } else {
           xfer += iprot->skip(ftype);
@@ -18290,10 +18801,10 @@ uint32_t GetFileMetadataByExprRequest::write(::apache::thrift::protocol::TProtoc
   xfer += oprot->writeFieldBegin("fileIds", ::apache::thrift::protocol::T_LIST, 1);
   {
     xfer += oprot->writeListBegin(::apache::thrift::protocol::T_I64, static_cast<uint32_t>(this->fileIds.size()));
-    std::vector<int64_t> ::const_iterator _iter738;
-    for (_iter738 = this->fileIds.begin(); _iter738 != this->fileIds.end(); ++_iter738)
+    std::vector<int64_t> ::const_iterator _iter768;
+    for (_iter768 = this->fileIds.begin(); _iter768 != this->fileIds.end(); ++_iter768)
     {
-      xfer += oprot->writeI64((*_iter738));
+      xfer += oprot->writeI64((*_iter768));
     }
     xfer += oprot->writeListEnd();
   }
@@ -18327,19 +18838,19 @@ void swap(GetFileMetadataByExprRequest &a, GetFileMetadataByExprRequest &b) {
   swap(a.__isset, b.__isset);
 }
 
-GetFileMetadataByExprRequest::GetFileMetadataByExprRequest(const GetFileMetadataByExprRequest& other739) {
-  fileIds = other739.fileIds;
-  expr = other739.expr;
-  doGetFooters = other739.doGetFooters;
-  type = other739.type;
-  __isset = other739.__isset;
+GetFileMetadataByExprRequest::GetFileMetadataByExprRequest(const GetFileMetadataByExprRequest& other769) {
+  fileIds = other769.fileIds;
+  expr = other769.expr;
+  doGetFooters = other769.doGetFooters;
+  type = other769.type;
+  __isset = other769.__isset;
 }
-GetFileMetadataByExprRequest& GetFileMetadataByExprRequest::operator=(const GetFileMetadataByExprRequest& other740) {
-  fileIds = other740.fileIds;
-  expr = other740.expr;
-  doGetFooters = other740.doGetFooters;
-  type = other740.type;
-  __isset = other740.__isset;
+GetFileMetadataByExprRequest& GetFileMetadataByExprRequest::operator=(const GetFileMetadataByExprRequest& other770) {
+  fileIds = other770.fileIds;
+  expr = other770.expr;
+  doGetFooters = other770.doGetFooters;
+  type = other770.type;
+  __isset = other770.__isset;
   return *this;
 }
 void GetFileMetadataByExprRequest::printTo(std::ostream& out) const {
@@ -18392,17 +18903,17 @@ uint32_t GetFileMetadataResult::read(::apache::thrift::protocol::TProtocol* ipro
         if (ftype == ::apache::thrift::protocol::T_MAP) {
           {
             this->metadata.clear();
-            uint32_t _size741;
-            ::apache::thrift::protocol::TType _ktype742;
-            ::apache::thrift::protocol::TType _vtype743;
-            xfer += iprot->readMapBegin(_ktype742, _vtype743, _size741);
-            uint32_t _i745;
-            for (_i745 = 0; _i745 < _size741; ++_i745)
+            uint32_t _size771;
+            ::apache::thrift::protocol::TType _ktype772;
+            ::apache::thrift::protocol::TType _vtype773;
+            xfer += iprot->readMapBegin(_ktype772, _vtype773, _size771);
+            uint32_t _i775;
+            for (_i775 = 0; _i775 < _size771; ++_i775)
             {
-              int64_t _key746;
-              xfer += iprot->readI64(_key746);
-              std::string& _val747 = this->metadata[_key746];
-              xfer += iprot->readBinary(_val747);
+              int64_t _key776;
+              xfer += iprot->readI64(_key776);
+              std::string& _val777 = this->metadata[_key776];
+              xfer += iprot->readBinary(_val777);
             }
             xfer += iprot->readMapEnd();
           }
@@ -18443,11 +18954,11 @@ uint32_t GetFileMetadataResult::write(::apache::thrift::protocol::TProtocol* opr
   xfer += oprot->writeFieldBegin("metadata", ::apache::thrift::protocol::T_MAP, 1);
   {
     xfer += oprot->writeMapBegin(::apache::thrift::protocol::T_I64, ::apache::thrift::protocol::T_STRING, static_cast<uint32_t>(this->metadata.size()));
-    std::map<int64_t, std::string> ::const_iterator _iter748;
-    for (_iter748 = this->metadata.begin(); _iter748 != this->metadata.end(); ++_iter748)
+    std::map<int64_t, std::string> ::const_iterator _iter778;
+    for (_iter778 = this->metadata.begin(); _iter778 != this->metadata.end(); ++_iter778)
     {
-      xfer += oprot->writeI64(_iter748->first);
-      xfer += oprot->writeBinary(_iter748->second);
+      xfer += oprot->writeI64(_iter778->first);
+      xfer += oprot->writeBinary(_iter778->second);
     }
     xfer += oprot->writeMapEnd();
   }
@@ -18468,13 +18979,13 @@ void swap(GetFileMetadataResult &a, GetFileMetadataResult &b) {
   swap(a.isSupported, b.isSupported);
 }
 
-GetFileMetadataResult::GetFileMetadataResult(const GetFileMetadataResult& other749) {
-  metadata = other749.metadata;
-  isSupported = other749.isSupported;
+GetFileMetadataResult::GetFileMetadataResult(const GetFileMetadataResult& other779) {
+  metadata = other779.metadata;
+  isSupported = other779.isSupported;
 }
-GetFileMetadataResult& GetFileMetadataResult::operator=(const GetFileMetadataResult& other750) {
-  metadata = other750.metadata;
-  isSupported = other750.isSupported;
+GetFileMetadataResult& GetFileMetadataResult::operator=(const GetFileMetadataResult& other780) {
+  metadata = other780.metadata;
+  isSupported = other780.isSupported;
   return *this;
 }
 void GetFileMetadataResult::printTo(std::ostream& out) const {
@@ -18520,14 +19031,14 @@ uint32_t GetFileMetadataRequest::read(::apache::thrift::protocol::TProtocol* ipr
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->fileIds.clear();
-            uint32_t _size751;
-            ::apache::thrift::protocol::TType _etype754;
-            xfer += iprot->readListBegin(_etype754, _size751);
-            this->fileIds.resize(_size751);
-            uint32_t _i755;
-            for (_i755 = 0; _i755 < _size751; ++_i755)
+            uint32_t _size781;
+            ::apache::thrift::protocol::TType _etype784;
+            xfer += iprot->readListBegin(_etype784, _size781);
+            this->fileIds.resize(_size781);
+            uint32_t _i785;
+            for (_i785 = 0; _i785 < _size781; ++_i785)
             {
-              xfer += iprot->readI64(this->fileIds[_i755]);
+              xfer += iprot->readI64(this->fileIds[_i785]);
             }
             xfer += iprot->readListEnd();
           }
@@ -18558,10 +19069,10 @@ uint32_t GetFileMetadataRequest::write(::apache::thrift::protocol::TProtocol* op
   xfer += oprot->writeFieldBegin("fileIds", ::apache::thrift::protocol::T_LIST, 1);
   {
     xfer += oprot->writeListBegin(::apache::thrift::protocol::T_I64, static_cast<uint32_t>(this->fileIds.size()));
-    std::vector<int64_t> ::const_iterator _iter756;
-    for (_iter756 = this->fileIds.begin(); _iter756 != this->fileIds.end(); ++_iter756)
+    std::vector<int64_t> ::const_iterator _iter786;
+    for (_iter786 = this->fileIds.begin(); _iter786 != this->fileIds.end(); ++_iter786)
     {
-      xfer += oprot->writeI64((*_iter756));
+      xfer += oprot->writeI64((*_iter786));
     }
     xfer += oprot->writeListEnd();
   }
@@ -18577,11 +19088,11 @@ void swap(GetFileMetadataRequest &a, GetFileMetadataRequest &b) {
   swap(a.fileIds, b.fileIds);
 }
 
-GetFileMetadataRequest::GetFileMetadataRequest(const GetFileMetadataRequest& other757) {
-  fileIds = other757.fileIds;
+GetFileMetadataRequest::GetFileMetadataRequest(const GetFileMetadataRequest& other787) {
+  fileIds = other787.fileIds;
 }
-GetFileMetadataRequest& GetFileMetadataRequest::operator=(const GetFileMetadataRequest& other758) {
-  fileIds = other758.fileIds;
+GetFileMetadataRequest& GetFileMetadataRequest::operator=(const GetFileMetadataRequest& other788) {
+  fileIds = other788.fileIds;
   return *this;
 }
 void GetFileMetadataRequest::printTo(std::ostream& out) const {
@@ -18640,11 +19151,11 @@ void swap(PutFileMetadataResult &a, PutFileMetadataResult &b) {
   (void) b;
 }
 
-PutFileMetadataResult::PutFileMetadataResult(const PutFileMetadataResult& other759) {
-  (void) other759;
+PutFileMetadataResult::PutFileMetadataResult(const PutFileMetadataResult& other789) {
+  (void) other789;
 }
-PutFileMetadataResult& PutFileMetadataResult::operator=(const PutFileMetadataResult& other760) {
-  (void) other760;
+PutFileMetadataResult& PutFileMetadataResult::operator=(const PutFileMetadataResult& other790) {
+  (void) other790;
   return *this;
 }
 void PutFileMetadataResult::printTo(std::ostream& out) const {
@@ -18698,14 +19209,14 @@ uint32_t PutFileMetadataRequest::read(::apache::thrift::protocol::TProtocol* ipr
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->fileIds.clear();
-            uint32_t _size761;
-            ::apache::thrift::protocol::TType _etype764;
-            xfer += iprot->readListBegin(_etype764, _size761);
-            this->fileIds.resize(_size761);
-            uint32_t _i765;
-            for (_i765 = 0; _i765 < _size761; ++_i765)
+            uint32_t _size791;
+            ::apache::thrift::protocol::TType _etype794;
+            xfer += iprot->readListBegin(_etype794, _size791);
+            this->fileIds.resize(_size791);
+            uint32_t _i795;
+            for (_i795 = 0; _i795 < _size791; ++_i795)
             {
-              xfer += iprot->readI64(this->fileIds[_i765]);
+              xfer += iprot->readI64(this->fileIds[_i795]);
             }
             xfer += iprot->readListEnd();
           }
@@ -18718,14 +19229,14 @@ uint32_t PutFileMetadataRequest::read(::apache::thrift::protocol::TProtocol* ipr
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->metadata.clear();
-            uint32_t _size766;
-            ::apache::thrift::protocol::TType _etype769;
-            xfer += iprot->readListBegin(_etype769, _size766);
-            this->metadata.resize(_size766);
-            uint32_t _i770;
-            for (_i770 = 0; _i770 < _size766; ++_i770)
+            uint32_t _size796;
+            ::apache::thrift::protocol::TType _etype799;
+            xfer += iprot->readListBegin(_etype799, _size796);
+            this->metadata.resize(_size796);
+            uint32_t _i800;
+            for (_i800 = 0; _i800 < _size796; ++_i800)
             {
-              xfer += iprot->readBinary(this->metadata[_i770]);
+              xfer += iprot->readBinary(this->metadata[_i800]);
             }
             xfer += iprot->readListEnd();
           }
@@ -18736,9 +19247,9 @@ uint32_t PutFileMetadataRequest::read(::apache::thrift::protocol::TProtocol* ipr
         break;
       case 3:
         if (ftype == ::apache::thrift::protocol::T_I32) {
-          int32_t ecast771;
-          xfer += iprot->readI32(ecast771);
-          this->type = (FileMetadataExprType::type)ecast771;
+          int32_t ecast801;
+          xfer += iprot->readI32(ecast801);
+          this->type = (FileMetadataExprType::type)ecast801;
           this->__isset.type = true;
         } else {
           xfer += iprot->skip(ftype);
@@ -18768,10 +19279,10 @@ uint32_t PutFileMetadataRequest::write(::apache::thrift::protocol::TProtocol* op
   xfer += oprot->writeFieldBegin("fileIds", ::apache::thrift::protocol::T_LIST, 1);
   {
     xfer += oprot->writeListBegin(::apache::thrift::protocol::T_I64, static_cast<uint32_t>(this->fileIds.size()));
-    std::vector<int64_t> ::const_iterator _iter772;
-    for (_iter772 = this->fileIds.begin(); _iter772 != this->fileIds.end(); ++_iter772)
+    std::vector<int64_t> ::const_iterator _iter802;
+    for (_iter802 = this->fileIds.begin(); _iter802 != this->fileIds.end(); ++_iter802)
     {
-      xfer += oprot->writeI64((*_iter772));
+      xfer += oprot->writeI64((*_iter802));
     }
     xfer += oprot->writeListEnd();
   }
@@ -18780,10 +19291,10 @@ uint32_t PutFileMetadataRequest::write(::apache::thrift::protocol::TProtocol* op
   xfer += oprot->writeFieldBegin("metadata", ::apache::thrift::protocol::T_LIST, 2);
   {
     xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRING, static_cast<uint32_t>(this->metadata.size()));
-    std::vector<std::string> ::const_iterator _iter773;
-    for (_iter773 = this->metadata.begin(); _iter773 != this->metadata.end(); ++_iter773)
+    std::vector<std::string> ::const_iterator _iter803;
+    for (_iter803 = this->metadata.begin(); _iter803 != this->metadata.end(); ++_iter803)
     {
-      xfer += oprot->writeBinary((*_iter773));
+      xfer += oprot->writeBinary((*_iter803));
     }
     xfer += oprot->writeListEnd();
   }
@@ -18807,17 +19318,17 @@ void swap(PutFileMetadataRequest &a, PutFileMetadataRequest &b) {
   swap(a.__isset, b.__isset);
 }
 
-PutFileMetadataRequest::PutFileMetadataRequest(const PutFileMetadataRequest& other774) {
-  fileIds = other774.fileIds;
-  metadata = other774.metadata;
-  type = other774.type;
-  __isset = other774.__isset;
+PutFileMetadataRequest::PutFileMetadataRequest(const PutFileMetadataRequest& other804) {
+  fileIds = other804.fileIds;
+  metadata = other804.metadata;
+  type = other804.type;
+  __isset = other804.__isset;
 }
-PutFileMetadataRequest& PutFileMetadataRequest::operator=(const PutFileMetadataRequest& other775) {
-  fileIds = other775.fileIds;
-  metadata = other775.metadata;
-  type = other775.type;
-  __isset = other775.__isset;
+PutFileMetadataRequest& PutFileMetadataRequest::operator=(const PutFileMetadataRequest& other805) {
+  fileIds = other805.fileIds;
+  metadata = other805.metadata;
+  type = other805.type;
+  __isset = other805.__isset;
   return *this;
 }
 void PutFileMetadataRequest::printTo(std::ostream& out) const {
@@ -18878,11 +19389,11 @@ void swap(ClearFileMetadataResult &a, ClearFileMetadataResult &b) {
   (void) b;
 }
 
-ClearFileMetadataResult::ClearFileMetadataResult(const ClearFileMetadataResult& other776) {
-  (void) other776;
+ClearFileMetadataResult::ClearFileMetadataResult(const ClearFileMetadataResult& other806) {
+  (void) other806;
 }
-ClearFileMetadataResult& ClearFileMetadataResult::operator=(const ClearFileMetadataResult& other777) {
-  (void) other777;
+ClearFileMetadataResult& ClearFileMetadataResult::operator=(const ClearFileMetadataResult& other807) {
+  (void) other807;
   return *this;
 }
 void ClearFileMetadataResult::printTo(std::ostream& out) const {
@@ -18926,14 +19437,14 @@ uint32_t ClearFileMetadataRequest::read(::apache::thrift::protocol::TProtocol* i
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->fileIds.clear();
-            uint32_t _size778;
-            ::apache::thrift::protocol::TType _etype781;
-            xfer += iprot->readListBegin(_etype781, _size778);
-            this->fileIds.resize(_size778);
-            uint32_t _i782;
-            for (_i782 = 0; _i782 < _size778; ++_i782)
+            uint32_t _size808;
+            ::apache::thrift::protocol::TType _etype811;
+            xfer += iprot->readListBegin(_etype811, _size808);
+            this->fileIds.resize(_size808);
+            uint32_t _i812;
+            for (_i812 = 0; _i812 < _size808; ++_i812)
             {
-              xfer += iprot->readI64(this->fileIds[_i782]);
+              xfer += iprot->readI64(this->fileIds[_i812]);
             }
             xfer += iprot->readListEnd();
           }
@@ -18964,10 +19475,10 @@ uint32_t ClearFileMetadataRequest::write(::apache::thrift::protocol::TProtocol* 
   xfer += oprot->writeFieldBegin("fileIds", ::apache::thrift::protocol::T_LIST, 1);
   {
     xfer += oprot->writeListBegin(::apache::thrift::protocol::T_I64, static_cast<uint32_t>(this->fileIds.size()));
-    std::vector<int64_t> ::const_iterator _iter783;
-    for (_iter783 = this->fileIds.begin(); _iter783 != this->fileIds.end(); ++_iter783)
+    std::vector<int64_t> ::const_iterator _iter813;
+    for (_iter813 = this->fileIds.begin(); _iter813 != this->fileIds.end(); ++_iter813)
     {
-      xfer += oprot->writeI64((*_iter783));
+      xfer += oprot->writeI64((*_iter813));
     }
     xfer += oprot->writeListEnd();
   }
@@ -18983,11 +19494,11 @@ void swap(ClearFileMetadataRequest &a, ClearFileMetadataRequest &b) {
   swap(a.fileIds, b.fileIds);
 }
 
-ClearFileMetadataRequest::ClearFileMetadataRequest(const ClearFileMetadataRequest& other784) {
-  fileIds = other784.fileIds;
+ClearFileMetadataRequest::ClearFileMetadataRequest(const ClearFileMetadataRequest& other814) {
+  fileIds = other814.fileIds;
 }
-ClearFileMetadataRequest& ClearFileMetadataRequest::operator=(const ClearFileMetadataRequest& other785) {
-  fileIds = other785.fileIds;
+ClearFileMetadataRequest& ClearFileMetadataRequest::operator=(const ClearFileMetadataRequest& other815) {
+  fileIds = other815.fileIds;
   return *this;
 }
 void ClearFileMetadataRequest::printTo(std::ostream& out) const {
@@ -19069,11 +19580,11 @@ void swap(CacheFileMetadataResult &a, CacheFileMetadataResult &b) {
   swap(a.isSupported, b.isSupported);
 }
 
-CacheFileMetadataResult::CacheFileMetadataResult(const CacheFileMetadataResult& other786) {
-  isSupported = other786.isSupported;
+CacheFileMetadataResult::CacheFileMetadataResult(const CacheFileMetadataResult& other816) {
+  isSupported = other816.isSupported;
 }
-CacheFileMetadataResult& CacheFileMetadataResult::operator=(const CacheFileMetadataResult& other787) {
-  isSupported = other787.isSupported;
+CacheFileMetadataResult& CacheFileMetadataResult::operator=(const CacheFileMetadataResult& other817) {
+  isSupported = other817.isSupported;
   return *this;
 }
 void CacheFileMetadataResult::printTo(std::ostream& out) const {
@@ -19214,19 +19725,19 @@ void swap(CacheFileMetadataRequest &a, CacheFileMetadataRequest &b) {
   swap(a.__isset, b.__isset);
 }
 
-CacheFileMetadataRequest::CacheFileMetadataRequest(const CacheFileMetadataRequest& other788) {
-  dbName = other788.dbName;
-  tblName = other788.tblName;
-  partName = other788.partName;
-  isAllParts = other788.isAllParts;
-  __isset = other788.__isset;
+CacheFileMetadataRequest::CacheFileMetadataRequest(const CacheFileMetadataRequest& other818) {
+  dbName = other818.dbName;
+  tblName = other818.tblName;
+  partName = other818.partName;
+  isAllParts = other818.isAllParts;
+  __isset = other818.__isset;
 }
-CacheFileMetadataRequest& CacheFileMetadataRequest::operator=(const CacheFileMetadataRequest& other789) {
-  dbName = other789.dbName;
-  tblName = other789.tblName;
-  partName = other789.partName;
-  isAllParts = other789.isAllParts;
-  __isset = other789.__isset;
+CacheFileMetadataRequest& CacheFileMetadataRequest::operator=(const CacheFileMetadataRequest& other819) {
+  dbName = other819.dbName;
+  tblName = other819.tblName;
+  partName = other819.partName;
+  isAllParts = other819.isAllParts;
+  __isset = other819.__isset;
   return *this;
 }
 void CacheFileMetadataRequest::printTo(std::ostream& out) const {
@@ -19274,14 +19785,14 @@ uint32_t GetAllFunctionsResponse::read(::apache::thrift::protocol::TProtocol* ip
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->functions.clear();
-            uint32_t _size790;
-            ::apache::thrift::protocol::TType _etype793;
-            xfer += iprot->readListBegin(_etype793, _size790);
-            this->functions.resize(_size790);
-            uint32_t _i794;
-            for (_i794 = 0; _i794 < _size790; ++_i794)
+            uint32_t _size820;
+            ::apache::thrift::protocol::TType _etype823;
+            xfer += iprot->readListBegin(_etype823, _size820);
+            this->functions.resize(_size820);
+            uint32_t _i824;
+            for (_i824 = 0; _i824 < _size820; ++_i824)
             {
-              xfer += this->functions[_i794].read(iprot);
+              xfer += this->functions[_i824].read(iprot);
             }
             xfer += iprot->readListEnd();
           }
@@ -19311,10 +19822,10 @@ uint32_t GetAllFunctionsResponse::write(::apache::thrift::protocol::TProtocol* o
     xfer += oprot->writeFieldBegin("functions", ::apache::thrift::protocol::T_LIST, 1);
     {
       xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->functions.size()));
-      std::vector<Function> ::const_iterator _iter795;
-      for (_iter795 = this->functions.begin(); _iter795 != this->functions.end(); ++_iter795)
+      std::vector<Function> ::const_iterator _iter825;
+      for (_iter825 = this->functions.begin(); _iter825 != this->functions.end(); ++_iter825)
       {
-        xfer += (*_iter795).write(oprot);
+        xfer += (*_iter825).write(oprot);
       }
       xfer += oprot->writeListEnd();
     }
@@ -19331,13 +19842,13 @@ void swap(GetAllFunctionsResponse &a, GetAllFunctionsResponse &b) {
   swap(a.__isset, b.__isset);
 }
 
-GetAllFunctionsResponse::GetAllFunctionsResponse(const GetAllFunctionsResponse& other796) {
-  functions = other796.functions;
-  __isset = other796.__isset;
+GetAllFunctionsResponse::GetAllFunctionsResponse(const GetAllFunctionsResponse& other826) {
+  functions = other826.functions;
+  __isset = other826.__isset;
 }
-GetAllFunctionsResponse& GetAllFunctionsResponse::operator=(const GetAllFunctionsResponse& other797) {
-  functions = other797.functions;
-  __isset = other797.__isset;
+GetAllFunctionsResponse& GetAllFunctionsResponse::operator=(const GetAllFunctionsResponse& other827) {
+  functions = other827.functions;
+  __isset = other827.__isset;
   return *this;
 }
 void GetAllFunctionsResponse::printTo(std::ostream& out) const {
@@ -19382,16 +19893,16 @@ uint32_t ClientCapabilities::read(::apache::thrift::protocol::TProtocol* iprot) 
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->values.clear();
-            uint32_t _size798;
-            ::apache::thrift::protocol::TType _etype801;
-            xfer += iprot->readListBegin(_etype801, _size798);
-            this->values.resize(_size798);
-            uint32_t _i802;
-            for (_i802 = 0; _i802 < _size798; ++_i802)
+            uint32_t _size828;
+            ::apache::thrift::protocol::TType _etype831;
+            xfer += iprot->readListBegin(_etype831, _size828);
+            this->values.resize(_size828);
+            uint32_t _i832;
+            for (_i832 = 0; _i832 < _size828; ++_i832)
             {
-              int32_t ecast803;
-              xfer += iprot->readI32(ecast803);
-              this->values[_i802] = (ClientCapability::type)ecast803;
+              int32_t ecast833;
+              xfer += iprot->readI32(ecast833);
+              this->values[_i832] = (ClientCapability::type)ecast833;
             }
             xfer += iprot->readListEnd();
           }
@@ -19422,10 +19933,10 @@ uint32_t ClientCapabilities::write(::apache::thrift::protocol::TProtocol* oprot)
   xfer += oprot->writeFieldBegin("values", ::apache::thrift::protocol::T_LIST, 1);
   {
     xfer += oprot->writeListBegin(::apache::thrift::protocol::T_I32, static_cast<uint32_t>(this->values.size()));
-    std::vector<ClientCapability::type> ::const_iterator _iter804;
-    for (_iter804 = this->values.begin(); _iter804 != this->values.end(); ++_iter804)
+    std::vector<ClientCapability::type> ::const_iterator _iter834;
+    for (_iter834 = this->values.begin(); _iter834 != this->values.end(); ++_iter834)
     {
-      xfer += oprot->writeI32((int32_t)(*_iter804));
+      xfer += oprot->writeI32((int32_t)(*_iter834));
     }
     xfer += oprot->writeListEnd();
   }
@@ -19441,11 +19952,11 @@ void swap(ClientCapabilities &a, ClientCapabilities &b) {
   swap(a.values, b.values);
 }
 
-ClientCapabilities::ClientCapabilities(const ClientCapabilities& other805) {
-  values = other805.values;
+ClientCapabilities::ClientCapabilities(const ClientCapabilities& other835) {
+  values = other835.values;
 }
-ClientCapabilities& ClientCapabilities::operator=(const ClientCapabilities& other806) {
-  values = other806.values;
+ClientCapabilities& ClientCapabilities::operator=(const ClientCapabilities& other836) {
+  values = other836.values;
   return *this;
 }
 void ClientCapabilities::printTo(std::ostream& out) const {
@@ -19567,17 +20078,17 @@ void swap(GetTableRequest &a, GetTableRequest &b) {
   swap(a.__isset, b.__isset);
 }
 
-GetTableRequest::GetTableRequest(const GetTableRequest& other807) {
-  dbName = other807.dbName;
-  tblName = other807.tblName;
-  capabilities = other807.capabilities;
-  __isset = other807.__isset;
+GetTableRequest::GetTableRequest(const GetTableRequest& other837) {
+  dbName = other837.dbName;
+  tblName = other837.tblName;
+  capabilities = other837.capabilities;
+  __isset = other837.__isset;
 }
-GetTableRequest& GetTableRequest::operator=(const GetTableRequest& other808) {
-  dbName = other808.dbName;
-  tblName = other808.tblName;
-  capabilities = other808.capabilities;
-  __isset = other808.__isset;
+GetTableRequest& GetTableRequest::operator=(const GetTableRequest& other838) {
+  dbName = other838.dbName;
+  tblName = other838.tblName;
+  capabilities = other838.capabilities;
+  __isset = other838.__isset;
   return *this;
 }
 void GetTableRequest::printTo(std::ostream& out) const {
@@ -19661,11 +20172,11 @@ void swap(GetTableResult &a, GetTableResult &b) {
   swap(a.table, b.table);
 }
 
-GetTableResult::GetTableResult(const GetTableResult& other809) {
-  table = other809.table;
+GetTableResult::GetTableResult(const GetTableResult& other839) {
+  table = other839.table;
 }
-GetTableResult& GetTableResult::operator=(const GetTableResult& other810) {
-  table = other810.table;
+GetTableResult& GetTableResult::operator=(const GetTableResult& other840) {
+  table = other840.table;
   return *this;
 }
 void GetTableResult::printTo(std::ostream& out) const {
@@ -19728,14 +20239,14 @@ uint32_t GetTablesRequest::read(::apache::thrift::protocol::TProtocol* iprot) {
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->tblNames.clear();
-            uint32_t _size811;
-            ::apache::thrift::protocol::TType _etype814;
-            xfer += iprot->readListBegin(_etype814, _size811);
-            this->tblNames.resize(_size811);
-            uint32_t _i815;
-            for (_i815 = 0; _i815 < _size811; ++_i815)
+            uint32_t _size841;
+            ::apache::thrift::protocol::TType _etype844;
+            xfer += iprot->readListBegin(_etype844, _size841);
+            this->tblNames.resize(_size841);
+            uint32_t _i845;
+            for (_i845 = 0; _i845 < _size841; ++_i845)
             {
-              xfer += iprot->readString(this->tblNames[_i815]);
+              xfer += iprot->readString(this->tblNames[_i845]);
             }
             xfer += iprot->readListEnd();
           }
@@ -19779,10 +20290,10 @@ uint32_t GetTablesRequest::write(::apache::thrift::protocol::TProtocol* oprot) c
     xfer += oprot->writeFieldBegin("tblNames", ::apache::thrift::protocol::T_LIST, 2);
     {
       xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRING, static_cast<uint32_t>(this->tblNames.size()));
-      std::vector<std::string> ::const_iterator _iter816;
-      for (_iter816 = this->tblNames.begin(); _iter816 != this->tblNames.end(); ++_iter816)
+      std::vector<std::string> ::const_iterator _iter846;
+      for (_iter846 = this->tblNames.begin(); _iter846 != this->tblNames.end(); ++_iter846)
       {
-        xfer += oprot->writeString((*_iter816));
+        xfer += oprot->writeString((*_iter846));
       }
       xfer += oprot->writeListEnd();
     }
@@ -19806,17 +20317,17 @@ void swap(GetTablesRequest &a, GetTablesRequest &b) {
   swap(a.__isset, b.__isset);
 }
 
-GetTablesRequest::GetTablesRequest(const GetTablesRequest& other817) {
-  dbName = other817.dbName;
-  tblNames = other817.tblNames;
-  capabilities = other817.capabilities;
-  __isset = other817.__isset;
+GetTablesRequest::GetTablesRequest(const GetTablesRequest& other847) {
+  dbName = other847.dbName;
+  tblNames = other847.tblNames;
+  capabilities = other847.capabilities;
+  __isset = other847.__isset;
 }
-GetTablesRequest& GetTablesRequest::operator=(const GetTablesRequest& other818) {
-  dbName = other818.dbName;
-  tblNames = other818.tblNames;
-  capabilities = other818.capabilities;
-  __isset = other818.__isset;
+GetTablesRequest& GetTablesRequest::operator=(const GetTablesRequest& other848) {
+  dbName = other848.dbName;
+  tblNames = other848.tblNames;
+  capabilities = other848.capabilities;
+  __isset = other848.__isset;
   return *this;
 }
 void GetTablesRequest::printTo(std::ostream& out) const {
@@ -19863,14 +20374,14 @@ uint32_t GetTablesResult::read(::apache::thrift::protocol::TProtocol* iprot) {
         if (ftype == ::apache::thrift::protocol::T_LIST) {
           {
             this->tables.clear();
-            uint32_t _size819;
-            ::apache::thrift::protocol::TType _etype822;
-            xfer += iprot->readListBegin(_etype822, _size819);
-            this->tables.resize(_size819);
-            uint32_t _i823;
-            for (_i823 = 0; _i823 < _size819; ++_i823)
+            uint32_t _size849;
+            ::apache::thrift::protocol::TType _etype852;
+            xfer += iprot->readListBegin(_etype852, _size849);
+            this->tables.resize(_size849);
+            uint32_t _i853;
+            for (_i853 = 0; _i853 < _size849; ++_i853)
             {
-              xfer += this->tables[_i823].read(iprot);
+              xfer += this->tables[_i853].read(iprot);
             }
             xfer += iprot->readListEnd();
           }
@@ -19901,10 +20412,10 @@ uint32_t GetTablesResult::write(::apache::thrift::protocol::TProtocol* oprot) co
   xfer += oprot->writeFieldBegin("tables", ::apache::thrift::protocol::T_LIST, 1);
   {
     xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->tables.size()));
-    std::vector<Table> ::const_iterator _iter824;
-    for (_iter824 = this->tables.begin(); _iter824 != this->tables.end(); ++_iter824)
+    std::vector<Table> ::const_iterator _iter854;
+    for (_iter854 = this->tables.begin(); _iter854 != this->tables.end(); ++_iter854)
     {
-      xfer += (*_iter824).write(oprot);
+      xfer += (*_iter854).write(oprot);
     }
     xfer += oprot->writeListEnd();
   }
@@ -19920,11 +20431,11 @@ void swap(GetTablesResult &a, GetTablesResult &b) {
   swap(a.tables, b.tables);
 }
 
-GetTablesResult::GetTablesResult(const GetTablesResult& other825) {
-  tables = other825.tables;
+GetTablesResult::GetTablesResult(const GetTablesResult& other855) {
+  tables = other855.tables;
 }
-GetTablesResult& GetTablesResult::operator=(const GetTablesResult& other826) {
-  tables = other826.tables;
+GetTablesResult& GetTablesResult::operator=(const GetTablesResult& other856) {
+  tables = other856.tables;
   return *this;
 }
 void GetTablesResult::printTo(std::ostream& out) const {
@@ -20026,13 +20537,13 @@ void swap(CmRecycleRequest &a, CmRecycleRequest &b) {
   swap(a.purge, b.purge);
 }
 
-CmRecycleRequest::CmRecycleRequest(const CmRecycleRequest& other827) {
-  dataPath = other827.dataPath;
-  purge = other827.purge;
+CmRecycleRequest::CmRecycleRequest(const CmRecycleRequest& other857) {
+  dataPath = other857.dataPath;
+  purge = other857.purge;
 }
-CmRecycleRequest& CmRecycleRequest::operator=(const CmRecycleRequest& other828) {
-  dataPath = other828.dataPath;
-  purge = other828.purge;
+CmRecycleRequest& CmRecycleRequest::operator=(const CmRecycleRequest& other858) {
+  dataPath = other858.dataPath;
+  purge = other858.purge;
   return *this;
 }
 void CmRecycleRequest::printTo(std::ostream& out) const {
@@ -20092,11 +20603,11 @@ void swap(CmRecycleResponse &a, CmRecycleResponse &b) {
   (void) b;
 }
 
-CmRecycleResponse::CmRecycleResponse(const CmRecycleResponse& other829) {
-  (void) other829;
+CmRecycleResponse::CmRecycleResponse(const CmRecycleResponse& other859) {
+  (void) other859;
 }
-CmRecycleResponse& CmRecycleResponse::operator=(const CmRecycleResponse& other830) {
-  (void) other830;
+CmRecycleResponse& CmRecycleResponse::operator=(const CmRecycleResponse& other860) {
+  (void) other860;
   return *this;
 }
 void CmRecycleResponse::printTo(std::ostream& out) const {
@@ -20237,19 +20748,19 @@ void swap(TableMeta &a, TableMeta &b) {
   swap(a.__isset, b.__isset);
 }
 
-TableMeta::TableMeta(const TableMeta& other831) {
-  dbName = other831.dbName;
-  tableName = other831.tableName;
-  tableType = other831.tableType;
-  comments = other831.comments;
-  __isset = other831.__isset;
+TableMeta::TableMeta(const TableMeta& other861) {
+  dbName = other861.dbName;
+  tableName = other861.tableName;
+  tableType = other861.tableType;
+  comments = other861.comments;
+  __isset = other861.__isset;
 }
-TableMeta& TableMeta::operator=(const TableMeta& other832) {
-  dbName = other832.dbName;
-  tableName = other832.tableName;
-  tableType = other832.tableType;
-  comments = other832.comments;
-  __isset = other832.__isset;
+TableMeta& TableMeta::operator=(const TableMeta& other862) {
+  dbName = other862.dbName;
+  tableName = other862.tableName;
+  tableType = other862.tableType;
+  comments = other862.comments;
+  __isset = other862.__isset;
   return *this;
 }
 void TableMeta::printTo(std::ostream& out) const {
@@ -20259,6 +20770,2903 @@ void TableMeta::printTo(std::ostream& out) const {
   out << ", " << "tableName=" << to_string(tableName);
   out << ", " << "tableType=" << to_string(tableType);
   out << ", " << "comments="; (__isset.comments ? (out << to_string(comments)) : (out << "<null>"));
+  out << ")";
+}
+
+
+WMResourcePlan::~WMResourcePlan() throw() {
+}
+
+
+void WMResourcePlan::__set_name(const std::string& val) {
+  this->name = val;
+}
+
+void WMResourcePlan::__set_status(const WMResourcePlanStatus::type val) {
+  this->status = val;
+__isset.status = true;
+}
+
+void WMResourcePlan::__set_queryParallelism(const int32_t val) {
+  this->queryParallelism = val;
+__isset.queryParallelism = true;
+}
+
+void WMResourcePlan::__set_defaultPoolPath(const std::string& val) {
+  this->defaultPoolPath = val;
+__isset.defaultPoolPath = true;
+}
+
+uint32_t WMResourcePlan::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  apache::thrift::protocol::TInputRecursionTracker tracker(*iprot);
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+  bool isset_name = false;
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->name);
+          isset_name = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 2:
+        if (ftype == ::apache::thrift::protocol::T_I32) {
+          int32_t ecast863;
+          xfer += iprot->readI32(ecast863);
+          this->status = (WMResourcePlanStatus::type)ecast863;
+          this->__isset.status = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 3:
+        if (ftype == ::apache::thrift::protocol::T_I32) {
+          xfer += iprot->readI32(this->queryParallelism);
+          this->__isset.queryParallelism = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 4:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->defaultPoolPath);
+          this->__isset.defaultPoolPath = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  if (!isset_name)
+    throw TProtocolException(TProtocolException::INVALID_DATA);
+  return xfer;
+}
+
+uint32_t WMResourcePlan::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
+  xfer += oprot->writeStructBegin("WMResourcePlan");
+
+  xfer += oprot->writeFieldBegin("name", ::apache::thrift::protocol::T_STRING, 1);
+  xfer += oprot->writeString(this->name);
+  xfer += oprot->writeFieldEnd();
+
+  if (this->__isset.status) {
+    xfer += oprot->writeFieldBegin("status", ::apache::thrift::protocol::T_I32, 2);
+    xfer += oprot->writeI32((int32_t)this->status);
+    xfer += oprot->writeFieldEnd();
+  }
+  if (this->__isset.queryParallelism) {
+    xfer += oprot->writeFieldBegin("queryParallelism", ::apache::thrift::protocol::T_I32, 3);
+    xfer += oprot->writeI32(this->queryParallelism);
+    xfer += oprot->writeFieldEnd();
+  }
+  if (this->__isset.defaultPoolPath) {
+    xfer += oprot->writeFieldBegin("defaultPoolPath", ::apache::thrift::protocol::T_STRING, 4);
+    xfer += oprot->writeString(this->defaultPoolPath);
+    xfer += oprot->writeFieldEnd();
+  }
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+void swap(WMResourcePlan &a, WMResourcePlan &b) {
+  using ::std::swap;
+  swap(a.name, b.name);
+  swap(a.status, b.status);
+  swap(a.queryParallelism, b.queryParallelism);
+  swap(a.defaultPoolPath, b.defaultPoolPath);
+  swap(a.__isset, b.__isset);
+}
+
+WMResourcePlan::WMResourcePlan(const WMResourcePlan& other864) {
+  name = other864.name;
+  status = other864.status;
+  queryParallelism = other864.queryParallelism;
+  defaultPoolPath = other864.defaultPoolPath;
+  __isset = other864.__isset;
+}
+WMResourcePlan& WMResourcePlan::operator=(const WMResourcePlan& other865) {
+  name = other865.name;
+  status = other865.status;
+  queryParallelism = other865.queryParallelism;
+  defaultPoolPath = other865.defaultPoolPath;
+  __isset = other865.__isset;
+  return *this;
+}
+void WMResourcePlan::printTo(std::ostream& out) const {
+  using ::apache::thrift::to_string;
+  out << "WMResourcePlan(";
+  out << "name=" << to_string(name);
+  out << ", " << "status="; (__isset.status ? (out << to_string(status)) : (out << "<null>"));
+  out << ", " << "queryParallelism="; (__isset.queryParallelism ? (out << to_string(queryParallelism)) : (out << "<null>"));
+  out << ", " << "defaultPoolPath="; (__isset.defaultPoolPath ? (out << to_string(defaultPoolPath)) : (out << "<null>"));
+  out << ")";
+}
+
+
+WMPool::~WMPool() throw() {
+}
+
+
+void WMPool::__set_resourcePlanName(const std::string& val) {
+  this->resourcePlanName = val;
+}
+
+void WMPool::__set_poolPath(const std::string& val) {
+  this->poolPath = val;
+}
+
+void WMPool::__set_allocFraction(const double val) {
+  this->allocFraction = val;
+__isset.allocFraction = true;
+}
+
+void WMPool::__set_queryParallelism(const int32_t val) {
+  this->queryParallelism = val;
+__isset.queryParallelism = true;
+}
+
+void WMPool::__set_schedulingPolicy(const std::string& val) {
+  this->schedulingPolicy = val;
+__isset.schedulingPolicy = true;
+}
+
+uint32_t WMPool::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  apache::thrift::protocol::TInputRecursionTracker tracker(*iprot);
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+  bool isset_resourcePlanName = false;
+  bool isset_poolPath = false;
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->resourcePlanName);
+          isset_resourcePlanName = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 2:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->poolPath);
+          isset_poolPath = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 3:
+        if (ftype == ::apache::thrift::protocol::T_DOUBLE) {
+          xfer += iprot->readDouble(this->allocFraction);
+          this->__isset.allocFraction = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 4:
+        if (ftype == ::apache::thrift::protocol::T_I32) {
+          xfer += iprot->readI32(this->queryParallelism);
+          this->__isset.queryParallelism = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 5:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->schedulingPolicy);
+          this->__isset.schedulingPolicy = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  if (!isset_resourcePlanName)
+    throw TProtocolException(TProtocolException::INVALID_DATA);
+  if (!isset_poolPath)
+    throw TProtocolException(TProtocolException::INVALID_DATA);
+  return xfer;
+}
+
+uint32_t WMPool::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
+  xfer += oprot->writeStructBegin("WMPool");
+
+  xfer += oprot->writeFieldBegin("resourcePlanName", ::apache::thrift::protocol::T_STRING, 1);
+  xfer += oprot->writeString(this->resourcePlanName);
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("poolPath", ::apache::thrift::protocol::T_STRING, 2);
+  xfer += oprot->writeString(this->poolPath);
+  xfer += oprot->writeFieldEnd();
+
+  if (this->__isset.allocFraction) {
+    xfer += oprot->writeFieldBegin("allocFraction", ::apache::thrift::protocol::T_DOUBLE, 3);
+    xfer += oprot->writeDouble(this->allocFraction);
+    xfer += oprot->writeFieldEnd();
+  }
+  if (this->__isset.queryParallelism) {
+    xfer += oprot->writeFieldBegin("queryParallelism", ::apache::thrift::protocol::T_I32, 4);
+    xfer += oprot->writeI32(this->queryParallelism);
+    xfer += oprot->writeFieldEnd();
+  }
+  if (this->__isset.schedulingPolicy) {
+    xfer += oprot->writeFieldBegin("schedulingPolicy", ::apache::thrift::protocol::T_STRING, 5);
+    xfer += oprot->writeString(this->schedulingPolicy);
+    xfer += oprot->writeFieldEnd();
+  }
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+void swap(WMPool &a, WMPool &b) {
+  using ::std::swap;
+  swap(a.resourcePlanName, b.resourcePlanName);
+  swap(a.poolPath, b.poolPath);
+  swap(a.allocFraction, b.allocFraction);
+  swap(a.queryParallelism, b.queryParallelism);
+  swap(a.schedulingPolicy, b.schedulingPolicy);
+  swap(a.__isset, b.__isset);
+}
+
+WMPool::WMPool(const WMPool& other866) {
+  resourcePlanName = other866.resourcePlanName;
+  poolPath = other866.poolPath;
+  allocFraction = other866.allocFraction;
+  queryParallelism = other866.queryParallelism;
+  schedulingPolicy = other866.schedulingPolicy;
+  __isset = other866.__isset;
+}
+WMPool& WMPool::operator=(const WMPool& other867) {
+  resourcePlanName = other867.resourcePlanName;
+  poolPath = other867.poolPath;
+  allocFraction = other867.allocFraction;
+  queryParallelism = other867.queryParallelism;
+  schedulingPolicy = other867.schedulingPolicy;
+  __isset = other867.__isset;
+  return *this;
+}
+void WMPool::printTo(std::ostream& out) const {
+  using ::apache::thrift::to_string;
+  out << "WMPool(";
+  out << "resourcePlanName=" << to_string(resourcePlanName);
+  out << ", " << "poolPath=" << to_string(poolPath);
+  out << ", " << "allocFraction="; (__isset.allocFraction ? (out << to_string(allocFraction)) : (out << "<null>"));
+  out << ", " << "queryParallelism="; (__isset.queryParallelism ? (out << to_string(queryParallelism)) : (out << "<null>"));
+  out << ", " << "schedulingPolicy="; (__isset.schedulingPolicy ? (out << to_string(schedulingPolicy)) : (out << "<null>"));
+  out << ")";
+}
+
+
+WMTrigger::~WMTrigger() throw() {
+}
+
+
+void WMTrigger::__set_resourcePlanName(const std::string& val) {
+  this->resourcePlanName = val;
+}
+
+void WMTrigger::__set_triggerName(const std::string& val) {
+  this->triggerName = val;
+}
+
+void WMTrigger::__set_triggerExpression(const std::string& val) {
+  this->triggerExpression = val;
+__isset.triggerExpression = true;
+}
+
+void WMTrigger::__set_actionExpression(const std::string& val) {
+  this->actionExpression = val;
+__isset.actionExpression = true;
+}
+
+uint32_t WMTrigger::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  apache::thrift::protocol::TInputRecursionTracker tracker(*iprot);
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+  bool isset_resourcePlanName = false;
+  bool isset_triggerName = false;
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->resourcePlanName);
+          isset_resourcePlanName = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 2:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->triggerName);
+          isset_triggerName = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 3:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->triggerExpression);
+          this->__isset.triggerExpression = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 4:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->actionExpression);
+          this->__isset.actionExpression = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  if (!isset_resourcePlanName)
+    throw TProtocolException(TProtocolException::INVALID_DATA);
+  if (!isset_triggerName)
+    throw TProtocolException(TProtocolException::INVALID_DATA);
+  return xfer;
+}
+
+uint32_t WMTrigger::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
+  xfer += oprot->writeStructBegin("WMTrigger");
+
+  xfer += oprot->writeFieldBegin("resourcePlanName", ::apache::thrift::protocol::T_STRING, 1);
+  xfer += oprot->writeString(this->resourcePlanName);
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("triggerName", ::apache::thrift::protocol::T_STRING, 2);
+  xfer += oprot->writeString(this->triggerName);
+  xfer += oprot->writeFieldEnd();
+
+  if (this->__isset.triggerExpression) {
+    xfer += oprot->writeFieldBegin("triggerExpression", ::apache::thrift::protocol::T_STRING, 3);
+    xfer += oprot->writeString(this->triggerExpression);
+    xfer += oprot->writeFieldEnd();
+  }
+  if (this->__isset.actionExpression) {
+    xfer += oprot->writeFieldBegin("actionExpression", ::apache::thrift::protocol::T_STRING, 4);
+    xfer += oprot->writeString(this->actionExpression);
+    xfer += oprot->writeFieldEnd();
+  }
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+void swap(WMTrigger &a, WMTrigger &b) {
+  using ::std::swap;
+  swap(a.resourcePlanName, b.resourcePlanName);
+  swap(a.triggerName, b.triggerName);
+  swap(a.triggerExpression, b.triggerExpression);
+  swap(a.actionExpression, b.actionExpression);
+  swap(a.__isset, b.__isset);
+}
+
+WMTrigger::WMTrigger(const WMTrigger& other868) {
+  resourcePlanName = other868.resourcePlanName;
+  triggerName = other868.triggerName;
+  triggerExpression = other868.triggerExpression;
+  actionExpression = other868.actionExpression;
+  __isset = other868.__isset;
+}
+WMTrigger& WMTrigger::operator=(const WMTrigger& other869) {
+  resourcePlanName = other869.resourcePlanName;
+  triggerName = other869.triggerName;
+  triggerExpression = other869.triggerExpression;
+  actionExpression = other869.actionExpression;
+  __isset = other869.__isset;
+  return *this;
+}
+void WMTrigger::printTo(std::ostream& out) const {
+  using ::apache::thrift::to_string;
+  out << "WMTrigger(";
+  out << "resourcePlanName=" << to_string(resourcePlanName);
+  out << ", " << "triggerName=" << to_string(triggerName);
+  out << ", " << "triggerExpression="; (__isset.triggerExpression ? (out << to_string(triggerExpression)) : (out << "<null>"));
+  out << ", " << "actionExpression="; (__isset.actionExpression ? (out << to_string(actionExpression)) : (out << "<null>"));
+  out << ")";
+}
+
+
+WMMapping::~WMMapping() throw() {
+}
+
+
+void WMMapping::__set_resourcePlanName(const std::string& val) {
+  this->resourcePlanName = val;
+}
+
+void WMMapping::__set_entityType(const std::string& val) {
+  this->entityType = val;
+}
+
+void WMMapping::__set_entityName(const std::string& val) {
+  this->entityName = val;
+}
+
+void WMMapping::__set_poolName(const std::string& val) {
+  this->poolName = val;
+__isset.poolName = true;
+}
+
+void WMMapping::__set_ordering(const int32_t val) {
+  this->ordering = val;
+__isset.ordering = true;
+}
+
+uint32_t WMMapping::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  apache::thrift::protocol::TInputRecursionTracker tracker(*iprot);
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+  bool isset_resourcePlanName = false;
+  bool isset_entityType = false;
+  bool isset_entityName = false;
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->resourcePlanName);
+          isset_resourcePlanName = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 2:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->entityType);
+          isset_entityType = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 3:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->entityName);
+          isset_entityName = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 4:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->poolName);
+          this->__isset.poolName = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 5:
+        if (ftype == ::apache::thrift::protocol::T_I32) {
+          xfer += iprot->readI32(this->ordering);
+          this->__isset.ordering = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  if (!isset_resourcePlanName)
+    throw TProtocolException(TProtocolException::INVALID_DATA);
+  if (!isset_entityType)
+    throw TProtocolException(TProtocolException::INVALID_DATA);
+  if (!isset_entityName)
+    throw TProtocolException(TProtocolException::INVALID_DATA);
+  return xfer;
+}
+
+uint32_t WMMapping::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
+  xfer += oprot->writeStructBegin("WMMapping");
+
+  xfer += oprot->writeFieldBegin("resourcePlanName", ::apache::thrift::protocol::T_STRING, 1);
+  xfer += oprot->writeString(this->resourcePlanName);
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("entityType", ::apache::thrift::protocol::T_STRING, 2);
+  xfer += oprot->writeString(this->entityType);
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("entityName", ::apache::thrift::protocol::T_STRING, 3);
+  xfer += oprot->writeString(this->entityName);
+  xfer += oprot->writeFieldEnd();
+
+  if (this->__isset.poolName) {
+    xfer += oprot->writeFieldBegin("poolName", ::apache::thrift::protocol::T_STRING, 4);
+    xfer += oprot->writeString(this->poolName);
+    xfer += oprot->writeFieldEnd();
+  }
+  if (this->__isset.ordering) {
+    xfer += oprot->writeFieldBegin("ordering", ::apache::thrift::protocol::T_I32, 5);
+    xfer += oprot->writeI32(this->ordering);
+    xfer += oprot->writeFieldEnd();
+  }
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+void swap(WMMapping &a, WMMapping &b) {
+  using ::std::swap;
+  swap(a.resourcePlanName, b.resourcePlanName);
+  swap(a.entityType, b.entityType);
+  swap(a.entityName, b.entityName);
+  swap(a.poolName, b.poolName);
+  swap(a.ordering, b.ordering);
+  swap(a.__isset, b.__isset);
+}
+
+WMMapping::WMMapping(const WMMapping& other870) {
+  resourcePlanName = other870.resourcePlanName;
+  entityType = other870.entityType;
+  entityName = other870.entityName;
+  poolName = other870.poolName;
+  ordering = other870.ordering;
+  __isset = other870.__isset;
+}
+WMMapping& WMMapping::operator=(const WMMapping& other871) {
+  resourcePlanName = other871.resourcePlanName;
+  entityType = other871.entityType;
+  entityName = other871.entityName;
+  poolName = other871.poolName;
+  ordering = other871.ordering;
+  __isset = other871.__isset;
+  return *this;
+}
+void WMMapping::printTo(std::ostream& out) const {
+  using ::apache::thrift::to_string;
+  out << "WMMapping(";
+  out << "resourcePlanName=" << to_string(resourcePlanName);
+  out << ", " << "entityType=" << to_string(entityType);
+  out << ", " << "entityName=" << to_string(entityName);
+  out << ", " << "poolName="; (__isset.poolName ? (out << to_string(poolName)) : (out << "<null>"));
+  out << ", " << "ordering="; (__isset.ordering ? (out << to_string(ordering)) : (out << "<null>"));
+  out << ")";
+}
+
+
+WMPoolTrigger::~WMPoolTrigger() throw() {
+}
+
+
+void WMPoolTrigger::__set_pool(const std::string& val) {
+  this->pool = val;
+}
+
+void WMPoolTrigger::__set_trigger(const std::string& val) {
+  this->trigger = val;
+}
+
+uint32_t WMPoolTrigger::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  apache::thrift::protocol::TInputRecursionTracker tracker(*iprot);
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+  bool isset_pool = false;
+  bool isset_trigger = false;
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->pool);
+          isset_pool = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 2:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->trigger);
+          isset_trigger = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  if (!isset_pool)
+    throw TProtocolException(TProtocolException::INVALID_DATA);
+  if (!isset_trigger)
+    throw TProtocolException(TProtocolException::INVALID_DATA);
+  return xfer;
+}
+
+uint32_t WMPoolTrigger::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
+  xfer += oprot->writeStructBegin("WMPoolTrigger");
+
+  xfer += oprot->writeFieldBegin("pool", ::apache::thrift::protocol::T_STRING, 1);
+  xfer += oprot->writeString(this->pool);
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("trigger", ::apache::thrift::protocol::T_STRING, 2);
+  xfer += oprot->writeString(this->trigger);
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+void swap(WMPoolTrigger &a, WMPoolTrigger &b) {
+  using ::std::swap;
+  swap(a.pool, b.pool);
+  swap(a.trigger, b.trigger);
+}
+
+WMPoolTrigger::WMPoolTrigger(const WMPoolTrigger& other872) {
+  pool = other872.pool;
+  trigger = other872.trigger;
+}
+WMPoolTrigger& WMPoolTrigger::operator=(const WMPoolTrigger& other873) {
+  pool = other873.pool;
+  trigger = other873.trigger;
+  return *this;
+}
+void WMPoolTrigger::printTo(std::ostream& out) const {
+  using ::apache::thrift::to_string;
+  out << "WMPoolTrigger(";
+  out << "pool=" << to_string(pool);
+  out << ", " << "trigger=" << to_string(trigger);
+  out << ")";
+}
+
+
+WMFullResourcePlan::~WMFullResourcePlan() throw() {
+}
+
+
+void WMFullResourcePlan::__set_plan(const WMResourcePlan& val) {
+  this->plan = val;
+}
+
+void WMFullResourcePlan::__set_pools(const std::vector<WMPool> & val) {
+  this->pools = val;
+}
+
+void WMFullResourcePlan::__set_mappings(const std::vector<WMMapping> & val) {
+  this->mappings = val;
+__isset.mappings = true;
+}
+
+void WMFullResourcePlan::__set_triggers(const std::vector<WMTrigger> & val) {
+  this->triggers = val;
+__isset.triggers = true;
+}
+
+void WMFullResourcePlan::__set_poolTriggers(const std::vector<WMPoolTrigger> & val) {
+  this->poolTriggers = val;
+__isset.poolTriggers = true;
+}
+
+uint32_t WMFullResourcePlan::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  apache::thrift::protocol::TInputRecursionTracker tracker(*iprot);
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+  bool isset_plan = false;
+  bool isset_pools = false;
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->plan.read(iprot);
+          isset_plan = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 2:
+        if (ftype == ::apache::thrift::protocol::T_LIST) {
+          {
+            this->pools.clear();
+            uint32_t _size874;
+            ::apache::thrift::protocol::TType _etype877;
+            xfer += iprot->readListBegin(_etype877, _size874);
+            this->pools.resize(_size874);
+            uint32_t _i878;
+            for (_i878 = 0; _i878 < _size874; ++_i878)
+            {
+              xfer += this->pools[_i878].read(iprot);
+            }
+            xfer += iprot->readListEnd();
+          }
+          isset_pools = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 3:
+        if (ftype == ::apache::thrift::protocol::T_LIST) {
+          {
+            this->mappings.clear();
+            uint32_t _size879;
+            ::apache::thrift::protocol::TType _etype882;
+            xfer += iprot->readListBegin(_etype882, _size879);
+            this->mappings.resize(_size879);
+            uint32_t _i883;
+            for (_i883 = 0; _i883 < _size879; ++_i883)
+            {
+              xfer += this->mappings[_i883].read(iprot);
+            }
+            xfer += iprot->readListEnd();
+          }
+          this->__isset.mappings = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 4:
+        if (ftype == ::apache::thrift::protocol::T_LIST) {
+          {
+            this->triggers.clear();
+            uint32_t _size884;
+            ::apache::thrift::protocol::TType _etype887;
+            xfer += iprot->readListBegin(_etype887, _size884);
+            this->triggers.resize(_size884);
+            uint32_t _i888;
+            for (_i888 = 0; _i888 < _size884; ++_i888)
+            {
+              xfer += this->triggers[_i888].read(iprot);
+            }
+            xfer += iprot->readListEnd();
+          }
+          this->__isset.triggers = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 5:
+        if (ftype == ::apache::thrift::protocol::T_LIST) {
+          {
+            this->poolTriggers.clear();
+            uint32_t _size889;
+            ::apache::thrift::protocol::TType _etype892;
+            xfer += iprot->readListBegin(_etype892, _size889);
+            this->poolTriggers.resize(_size889);
+            uint32_t _i893;
+            for (_i893 = 0; _i893 < _size889; ++_i893)
+            {
+              xfer += this->poolTriggers[_i893].read(iprot);
+            }
+            xfer += iprot->readListEnd();
+          }
+          this->__isset.poolTriggers = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  if (!isset_plan)
+    throw TProtocolException(TProtocolException::INVALID_DATA);
+  if (!isset_pools)
+    throw TProtocolException(TProtocolException::INVALID_DATA);
+  return xfer;
+}
+
+uint32_t WMFullResourcePlan::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
+  xfer += oprot->writeStructBegin("WMFullResourcePlan");
+
+  xfer += oprot->writeFieldBegin("plan", ::apache::thrift::protocol::T_STRUCT, 1);
+  xfer += this->plan.write(oprot);
+  xfer += oprot->writeFieldEnd();
+
+  xfer += oprot->writeFieldBegin("pools", ::apache::thrift::protocol::T_LIST, 2);
+  {
+    xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->pools.size()));
+    std::vector<WMPool> ::const_iterator _iter894;
+    for (_iter894 = this->pools.begin(); _iter894 != this->pools.end(); ++_iter894)
+    {
+      xfer += (*_iter894).write(oprot);
+    }
+    xfer += oprot->writeListEnd();
+  }
+  xfer += oprot->writeFieldEnd();
+
+  if (this->__isset.mappings) {
+    xfer += oprot->writeFieldBegin("mappings", ::apache::thrift::protocol::T_LIST, 3);
+    {
+      xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->mappings.size()));
+      std::vector<WMMapping> ::const_iterator _iter895;
+      for (_iter895 = this->mappings.begin(); _iter895 != this->mappings.end(); ++_iter895)
+      {
+        xfer += (*_iter895).write(oprot);
+      }
+      xfer += oprot->writeListEnd();
+    }
+    xfer += oprot->writeFieldEnd();
+  }
+  if (this->__isset.triggers) {
+    xfer += oprot->writeFieldBegin("triggers", ::apache::thrift::protocol::T_LIST, 4);
+    {
+      xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->triggers.size()));
+      std::vector<WMTrigger> ::const_iterator _iter896;
+      for (_iter896 = this->triggers.begin(); _iter896 != this->triggers.end(); ++_iter896)
+      {
+        xfer += (*_iter896).write(oprot);
+      }
+      xfer += oprot->writeListEnd();
+    }
+    xfer += oprot->writeFieldEnd();
+  }
+  if (this->__isset.poolTriggers) {
+    xfer += oprot->writeFieldBegin("poolTriggers", ::apache::thrift::protocol::T_LIST, 5);
+    {
+      xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->poolTriggers.size()));
+      std::vector<WMPoolTrigger> ::const_iterator _iter897;
+      for (_iter897 = this->poolTriggers.begin(); _iter897 != this->poolTriggers.end(); ++_iter897)
+      {
+        xfer += (*_iter897).write(oprot);
+      }
+      xfer += oprot->writeListEnd();
+    }
+    xfer += oprot->writeFieldEnd();
+  }
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+void swap(WMFullResourcePlan &a, WMFullResourcePlan &b) {
+  using ::std::swap;
+  swap(a.plan, b.plan);
+  swap(a.pools, b.pools);
+  swap(a.mappings, b.mappings);
+  swap(a.triggers, b.triggers);
+  swap(a.poolTriggers, b.poolTriggers);
+  swap(a.__isset, b.__isset);
+}
+
+WMFullResourcePlan::WMFullResourcePlan(const WMFullResourcePlan& other898) {
+  plan = other898.plan;
+  pools = other898.pools;
+  mappings = other898.mappings;
+  triggers = other898.triggers;
+  poolTriggers = other898.poolTriggers;
+  __isset = other898.__isset;
+}
+WMFullResourcePlan& WMFullResourcePlan::operator=(const WMFullResourcePlan& other899) {
+  plan = other899.plan;
+  pools = other899.pools;
+  mappings = other899.mappings;
+  triggers = other899.triggers;
+  poolTriggers = other899.poolTriggers;
+  __isset = other899.__isset;
+  return *this;
+}
+void WMFullResourcePlan::printTo(std::ostream& out) const {
+  using ::apache::thrift::to_string;
+  out << "WMFullResourcePlan(";
+  out << "plan=" << to_string(plan);
+  out << ", " << "pools=" << to_string(pools);
+  out << ", " << "mappings="; (__isset.mappings ? (out << to_string(mappings)) : (out << "<null>"));
+  out << ", " << "triggers="; (__isset.triggers ? (out << to_string(triggers)) : (out << "<null>"));
+  out << ", " << "poolTriggers="; (__isset.poolTriggers ? (out << to_string(poolTriggers)) : (out << "<null>"));
+  out << ")";
+}
+
+
+WMCreateResourcePlanRequest::~WMCreateResourcePlanRequest() throw() {
+}
+
+
+void WMCreateResourcePlanRequest::__set_resourcePlan(const WMResourcePlan& val) {
+  this->resourcePlan = val;
+__isset.resourcePlan = true;
+}
+
+uint32_t WMCreateResourcePlanRequest::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  apache::thrift::protocol::TInputRecursionTracker tracker(*iprot);
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->resourcePlan.read(iprot);
+          this->__isset.resourcePlan = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  return xfer;
+}
+
+uint32_t WMCreateResourcePlanRequest::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
+  xfer += oprot->writeStructBegin("WMCreateResourcePlanRequest");
+
+  if (this->__isset.resourcePlan) {
+    xfer += oprot->writeFieldBegin("resourcePlan", ::apache::thrift::protocol::T_STRUCT, 1);
+    xfer += this->resourcePlan.write(oprot);
+    xfer += oprot->writeFieldEnd();
+  }
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+void swap(WMCreateResourcePlanRequest &a, WMCreateResourcePlanRequest &b) {
+  using ::std::swap;
+  swap(a.resourcePlan, b.resourcePlan);
+  swap(a.__isset, b.__isset);
+}
+
+WMCreateResourcePlanRequest::WMCreateResourcePlanRequest(const WMCreateResourcePlanRequest& other900) {
+  resourcePlan = other900.resourcePlan;
+  __isset = other900.__isset;
+}
+WMCreateResourcePlanRequest& WMCreateResourcePlanRequest::operator=(const WMCreateResourcePlanRequest& other901) {
+  resourcePlan = other901.resourcePlan;
+  __isset = other901.__isset;
+  return *this;
+}
+void WMCreateResourcePlanRequest::printTo(std::ostream& out) const {
+  using ::apache::thrift::to_string;
+  out << "WMCreateResourcePlanRequest(";
+  out << "resourcePlan="; (__isset.resourcePlan ? (out << to_string(resourcePlan)) : (out << "<null>"));
+  out << ")";
+}
+
+
+WMCreateResourcePlanResponse::~WMCreateResourcePlanResponse() throw() {
+}
+
+
+uint32_t WMCreateResourcePlanResponse::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  apache::thrift::protocol::TInputRecursionTracker tracker(*iprot);
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    xfer += iprot->skip(ftype);
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  return xfer;
+}
+
+uint32_t WMCreateResourcePlanResponse::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
+  xfer += oprot->writeStructBegin("WMCreateResourcePlanResponse");
+
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+void swap(WMCreateResourcePlanResponse &a, WMCreateResourcePlanResponse &b) {
+  using ::std::swap;
+  (void) a;
+  (void) b;
+}
+
+WMCreateResourcePlanResponse::WMCreateResourcePlanResponse(const WMCreateResourcePlanResponse& other902) {
+  (void) other902;
+}
+WMCreateResourcePlanResponse& WMCreateResourcePlanResponse::operator=(const WMCreateResourcePlanResponse& other903) {
+  (void) other903;
+  return *this;
+}
+void WMCreateResourcePlanResponse::printTo(std::ostream& out) const {
+  using ::apache::thrift::to_string;
+  out << "WMCreateResourcePlanResponse(";
+  out << ")";
+}
+
+
+WMGetActiveResourcePlanRequest::~WMGetActiveResourcePlanRequest() throw() {
+}
+
+
+uint32_t WMGetActiveResourcePlanRequest::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  apache::thrift::protocol::TInputRecursionTracker tracker(*iprot);
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    xfer += iprot->skip(ftype);
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  return xfer;
+}
+
+uint32_t WMGetActiveResourcePlanRequest::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
+  xfer += oprot->writeStructBegin("WMGetActiveResourcePlanRequest");
+
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+void swap(WMGetActiveResourcePlanRequest &a, WMGetActiveResourcePlanRequest &b) {
+  using ::std::swap;
+  (void) a;
+  (void) b;
+}
+
+WMGetActiveResourcePlanRequest::WMGetActiveResourcePlanRequest(const WMGetActiveResourcePlanRequest& other904) {
+  (void) other904;
+}
+WMGetActiveResourcePlanRequest& WMGetActiveResourcePlanRequest::operator=(const WMGetActiveResourcePlanRequest& other905) {
+  (void) other905;
+  return *this;
+}
+void WMGetActiveResourcePlanRequest::printTo(std::ostream& out) const {
+  using ::apache::thrift::to_string;
+  out << "WMGetActiveResourcePlanRequest(";
+  out << ")";
+}
+
+
+WMGetActiveResourcePlanResponse::~WMGetActiveResourcePlanResponse() throw() {
+}
+
+
+void WMGetActiveResourcePlanResponse::__set_resourcePlan(const WMFullResourcePlan& val) {
+  this->resourcePlan = val;
+__isset.resourcePlan = true;
+}
+
+uint32_t WMGetActiveResourcePlanResponse::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  apache::thrift::protocol::TInputRecursionTracker tracker(*iprot);
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->resourcePlan.read(iprot);
+          this->__isset.resourcePlan = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  return xfer;
+}
+
+uint32_t WMGetActiveResourcePlanResponse::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
+  xfer += oprot->writeStructBegin("WMGetActiveResourcePlanResponse");
+
+  if (this->__isset.resourcePlan) {
+    xfer += oprot->writeFieldBegin("resourcePlan", ::apache::thrift::protocol::T_STRUCT, 1);
+    xfer += this->resourcePlan.write(oprot);
+    xfer += oprot->writeFieldEnd();
+  }
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+void swap(WMGetActiveResourcePlanResponse &a, WMGetActiveResourcePlanResponse &b) {
+  using ::std::swap;
+  swap(a.resourcePlan, b.resourcePlan);
+  swap(a.__isset, b.__isset);
+}
+
+WMGetActiveResourcePlanResponse::WMGetActiveResourcePlanResponse(const WMGetActiveResourcePlanResponse& other906) {
+  resourcePlan = other906.resourcePlan;
+  __isset = other906.__isset;
+}
+WMGetActiveResourcePlanResponse& WMGetActiveResourcePlanResponse::operator=(const WMGetActiveResourcePlanResponse& other907) {
+  resourcePlan = other907.resourcePlan;
+  __isset = other907.__isset;
+  return *this;
+}
+void WMGetActiveResourcePlanResponse::printTo(std::ostream& out) const {
+  using ::apache::thrift::to_string;
+  out << "WMGetActiveResourcePlanResponse(";
+  out << "resourcePlan="; (__isset.resourcePlan ? (out << to_string(resourcePlan)) : (out << "<null>"));
+  out << ")";
+}
+
+
+WMGetResourcePlanRequest::~WMGetResourcePlanRequest() throw() {
+}
+
+
+void WMGetResourcePlanRequest::__set_resourcePlanName(const std::string& val) {
+  this->resourcePlanName = val;
+__isset.resourcePlanName = true;
+}
+
+uint32_t WMGetResourcePlanRequest::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  apache::thrift::protocol::TInputRecursionTracker tracker(*iprot);
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->resourcePlanName);
+          this->__isset.resourcePlanName = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  return xfer;
+}
+
+uint32_t WMGetResourcePlanRequest::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
+  xfer += oprot->writeStructBegin("WMGetResourcePlanRequest");
+
+  if (this->__isset.resourcePlanName) {
+    xfer += oprot->writeFieldBegin("resourcePlanName", ::apache::thrift::protocol::T_STRING, 1);
+    xfer += oprot->writeString(this->resourcePlanName);
+    xfer += oprot->writeFieldEnd();
+  }
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+void swap(WMGetResourcePlanRequest &a, WMGetResourcePlanRequest &b) {
+  using ::std::swap;
+  swap(a.resourcePlanName, b.resourcePlanName);
+  swap(a.__isset, b.__isset);
+}
+
+WMGetResourcePlanRequest::WMGetResourcePlanRequest(const WMGetResourcePlanRequest& other908) {
+  resourcePlanName = other908.resourcePlanName;
+  __isset = other908.__isset;
+}
+WMGetResourcePlanRequest& WMGetResourcePlanRequest::operator=(const WMGetResourcePlanRequest& other909) {
+  resourcePlanName = other909.resourcePlanName;
+  __isset = other909.__isset;
+  return *this;
+}
+void WMGetResourcePlanRequest::printTo(std::ostream& out) const {
+  using ::apache::thrift::to_string;
+  out << "WMGetResourcePlanRequest(";
+  out << "resourcePlanName="; (__isset.resourcePlanName ? (out << to_string(resourcePlanName)) : (out << "<null>"));
+  out << ")";
+}
+
+
+WMGetResourcePlanResponse::~WMGetResourcePlanResponse() throw() {
+}
+
+
+void WMGetResourcePlanResponse::__set_resourcePlan(const WMResourcePlan& val) {
+  this->resourcePlan = val;
+__isset.resourcePlan = true;
+}
+
+uint32_t WMGetResourcePlanResponse::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  apache::thrift::protocol::TInputRecursionTracker tracker(*iprot);
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->resourcePlan.read(iprot);
+          this->__isset.resourcePlan = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  return xfer;
+}
+
+uint32_t WMGetResourcePlanResponse::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
+  xfer += oprot->writeStructBegin("WMGetResourcePlanResponse");
+
+  if (this->__isset.resourcePlan) {
+    xfer += oprot->writeFieldBegin("resourcePlan", ::apache::thrift::protocol::T_STRUCT, 1);
+    xfer += this->resourcePlan.write(oprot);
+    xfer += oprot->writeFieldEnd();
+  }
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+void swap(WMGetResourcePlanResponse &a, WMGetResourcePlanResponse &b) {
+  using ::std::swap;
+  swap(a.resourcePlan, b.resourcePlan);
+  swap(a.__isset, b.__isset);
+}
+
+WMGetResourcePlanResponse::WMGetResourcePlanResponse(const WMGetResourcePlanResponse& other910) {
+  resourcePlan = other910.resourcePlan;
+  __isset = other910.__isset;
+}
+WMGetResourcePlanResponse& WMGetResourcePlanResponse::operator=(const WMGetResourcePlanResponse& other911) {
+  resourcePlan = other911.resourcePlan;
+  __isset = other911.__isset;
+  return *this;
+}
+void WMGetResourcePlanResponse::printTo(std::ostream& out) const {
+  using ::apache::thrift::to_string;
+  out << "WMGetResourcePlanResponse(";
+  out << "resourcePlan="; (__isset.resourcePlan ? (out << to_string(resourcePlan)) : (out << "<null>"));
+  out << ")";
+}
+
+
+WMGetAllResourcePlanRequest::~WMGetAllResourcePlanRequest() throw() {
+}
+
+
+uint32_t WMGetAllResourcePlanRequest::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  apache::thrift::protocol::TInputRecursionTracker tracker(*iprot);
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    xfer += iprot->skip(ftype);
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  return xfer;
+}
+
+uint32_t WMGetAllResourcePlanRequest::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
+  xfer += oprot->writeStructBegin("WMGetAllResourcePlanRequest");
+
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+void swap(WMGetAllResourcePlanRequest &a, WMGetAllResourcePlanRequest &b) {
+  using ::std::swap;
+  (void) a;
+  (void) b;
+}
+
+WMGetAllResourcePlanRequest::WMGetAllResourcePlanRequest(const WMGetAllResourcePlanRequest& other912) {
+  (void) other912;
+}
+WMGetAllResourcePlanRequest& WMGetAllResourcePlanRequest::operator=(const WMGetAllResourcePlanRequest& other913) {
+  (void) other913;
+  return *this;
+}
+void WMGetAllResourcePlanRequest::printTo(std::ostream& out) const {
+  using ::apache::thrift::to_string;
+  out << "WMGetAllResourcePlanRequest(";
+  out << ")";
+}
+
+
+WMGetAllResourcePlanResponse::~WMGetAllResourcePlanResponse() throw() {
+}
+
+
+void WMGetAllResourcePlanResponse::__set_resourcePlans(const std::vector<WMResourcePlan> & val) {
+  this->resourcePlans = val;
+__isset.resourcePlans = true;
+}
+
+uint32_t WMGetAllResourcePlanResponse::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  apache::thrift::protocol::TInputRecursionTracker tracker(*iprot);
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_LIST) {
+          {
+            this->resourcePlans.clear();
+            uint32_t _size914;
+            ::apache::thrift::protocol::TType _etype917;
+            xfer += iprot->readListBegin(_etype917, _size914);
+            this->resourcePlans.resize(_size914);
+            uint32_t _i918;
+            for (_i918 = 0; _i918 < _size914; ++_i918)
+            {
+              xfer += this->resourcePlans[_i918].read(iprot);
+            }
+            xfer += iprot->readListEnd();
+          }
+          this->__isset.resourcePlans = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  return xfer;
+}
+
+uint32_t WMGetAllResourcePlanResponse::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
+  xfer += oprot->writeStructBegin("WMGetAllResourcePlanResponse");
+
+  if (this->__isset.resourcePlans) {
+    xfer += oprot->writeFieldBegin("resourcePlans", ::apache::thrift::protocol::T_LIST, 1);
+    {
+      xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->resourcePlans.size()));
+      std::vector<WMResourcePlan> ::const_iterator _iter919;
+      for (_iter919 = this->resourcePlans.begin(); _iter919 != this->resourcePlans.end(); ++_iter919)
+      {
+        xfer += (*_iter919).write(oprot);
+      }
+      xfer += oprot->writeListEnd();
+    }
+    xfer += oprot->writeFieldEnd();
+  }
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+void swap(WMGetAllResourcePlanResponse &a, WMGetAllResourcePlanResponse &b) {
+  using ::std::swap;
+  swap(a.resourcePlans, b.resourcePlans);
+  swap(a.__isset, b.__isset);
+}
+
+WMGetAllResourcePlanResponse::WMGetAllResourcePlanResponse(const WMGetAllResourcePlanResponse& other920) {
+  resourcePlans = other920.resourcePlans;
+  __isset = other920.__isset;
+}
+WMGetAllResourcePlanResponse& WMGetAllResourcePlanResponse::operator=(const WMGetAllResourcePlanResponse& other921) {
+  resourcePlans = other921.resourcePlans;
+  __isset = other921.__isset;
+  return *this;
+}
+void WMGetAllResourcePlanResponse::printTo(std::ostream& out) const {
+  using ::apache::thrift::to_string;
+  out << "WMGetAllResourcePlanResponse(";
+  out << "resourcePlans="; (__isset.resourcePlans ? (out << to_string(resourcePlans)) : (out << "<null>"));
+  out << ")";
+}
+
+
+WMAlterResourcePlanRequest::~WMAlterResourcePlanRequest() throw() {
+}
+
+
+void WMAlterResourcePlanRequest::__set_resourcePlanName(const std::string& val) {
+  this->resourcePlanName = val;
+__isset.resourcePlanName = true;
+}
+
+void WMAlterResourcePlanRequest::__set_resourcePlan(const WMResourcePlan& val) {
+  this->resourcePlan = val;
+__isset.resourcePlan = true;
+}
+
+void WMAlterResourcePlanRequest::__set_isEnableAndActivate(const bool val) {
+  this->isEnableAndActivate = val;
+__isset.isEnableAndActivate = true;
+}
+
+uint32_t WMAlterResourcePlanRequest::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  apache::thrift::protocol::TInputRecursionTracker tracker(*iprot);
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->resourcePlanName);
+          this->__isset.resourcePlanName = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 2:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->resourcePlan.read(iprot);
+          this->__isset.resourcePlan = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 3:
+        if (ftype == ::apache::thrift::protocol::T_BOOL) {
+          xfer += iprot->readBool(this->isEnableAndActivate);
+          this->__isset.isEnableAndActivate = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  return xfer;
+}
+
+uint32_t WMAlterResourcePlanRequest::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
+  xfer += oprot->writeStructBegin("WMAlterResourcePlanRequest");
+
+  if (this->__isset.resourcePlanName) {
+    xfer += oprot->writeFieldBegin("resourcePlanName", ::apache::thrift::protocol::T_STRING, 1);
+    xfer += oprot->writeString(this->resourcePlanName);
+    xfer += oprot->writeFieldEnd();
+  }
+  if (this->__isset.resourcePlan) {
+    xfer += oprot->writeFieldBegin("resourcePlan", ::apache::thrift::protocol::T_STRUCT, 2);
+    xfer += this->resourcePlan.write(oprot);
+    xfer += oprot->writeFieldEnd();
+  }
+  if (this->__isset.isEnableAndActivate) {
+    xfer += oprot->writeFieldBegin("isEnableAndActivate", ::apache::thrift::protocol::T_BOOL, 3);
+    xfer += oprot->writeBool(this->isEnableAndActivate);
+    xfer += oprot->writeFieldEnd();
+  }
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+void swap(WMAlterResourcePlanRequest &a, WMAlterResourcePlanRequest &b) {
+  using ::std::swap;
+  swap(a.resourcePlanName, b.resourcePlanName);
+  swap(a.resourcePlan, b.resourcePlan);
+  swap(a.isEnableAndActivate, b.isEnableAndActivate);
+  swap(a.__isset, b.__isset);
+}
+
+WMAlterResourcePlanRequest::WMAlterResourcePlanRequest(const WMAlterResourcePlanRequest& other922) {
+  resourcePlanName = other922.resourcePlanName;
+  resourcePlan = other922.resourcePlan;
+  isEnableAndActivate = other922.isEnableAndActivate;
+  __isset = other922.__isset;
+}
+WMAlterResourcePlanRequest& WMAlterResourcePlanRequest::operator=(const WMAlterResourcePlanRequest& other923) {
+  resourcePlanName = other923.resourcePlanName;
+  resourcePlan = other923.resourcePlan;
+  isEnableAndActivate = other923.isEnableAndActivate;
+  __isset = other923.__isset;
+  return *this;
+}
+void WMAlterResourcePlanRequest::printTo(std::ostream& out) const {
+  using ::apache::thrift::to_string;
+  out << "WMAlterResourcePlanRequest(";
+  out << "resourcePlanName="; (__isset.resourcePlanName ? (out << to_string(resourcePlanName)) : (out << "<null>"));
+  out << ", " << "resourcePlan="; (__isset.resourcePlan ? (out << to_string(resourcePlan)) : (out << "<null>"));
+  out << ", " << "isEnableAndActivate="; (__isset.isEnableAndActivate ? (out << to_string(isEnableAndActivate)) : (out << "<null>"));
+  out << ")";
+}
+
+
+WMAlterResourcePlanResponse::~WMAlterResourcePlanResponse() throw() {
+}
+
+
+void WMAlterResourcePlanResponse::__set_fullResourcePlan(const WMFullResourcePlan& val) {
+  this->fullResourcePlan = val;
+__isset.fullResourcePlan = true;
+}
+
+uint32_t WMAlterResourcePlanResponse::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  apache::thrift::protocol::TInputRecursionTracker tracker(*iprot);
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->fullResourcePlan.read(iprot);
+          this->__isset.fullResourcePlan = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  return xfer;
+}
+
+uint32_t WMAlterResourcePlanResponse::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
+  xfer += oprot->writeStructBegin("WMAlterResourcePlanResponse");
+
+  if (this->__isset.fullResourcePlan) {
+    xfer += oprot->writeFieldBegin("fullResourcePlan", ::apache::thrift::protocol::T_STRUCT, 1);
+    xfer += this->fullResourcePlan.write(oprot);
+    xfer += oprot->writeFieldEnd();
+  }
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+void swap(WMAlterResourcePlanResponse &a, WMAlterResourcePlanResponse &b) {
+  using ::std::swap;
+  swap(a.fullResourcePlan, b.fullResourcePlan);
+  swap(a.__isset, b.__isset);
+}
+
+WMAlterResourcePlanResponse::WMAlterResourcePlanResponse(const WMAlterResourcePlanResponse& other924) {
+  fullResourcePlan = other924.fullResourcePlan;
+  __isset = other924.__isset;
+}
+WMAlterResourcePlanResponse& WMAlterResourcePlanResponse::operator=(const WMAlterResourcePlanResponse& other925) {
+  fullResourcePlan = other925.fullResourcePlan;
+  __isset = other925.__isset;
+  return *this;
+}
+void WMAlterResourcePlanResponse::printTo(std::ostream& out) const {
+  using ::apache::thrift::to_string;
+  out << "WMAlterResourcePlanResponse(";
+  out << "fullResourcePlan="; (__isset.fullResourcePlan ? (out << to_string(fullResourcePlan)) : (out << "<null>"));
+  out << ")";
+}
+
+
+WMValidateResourcePlanRequest::~WMValidateResourcePlanRequest() throw() {
+}
+
+
+void WMValidateResourcePlanRequest::__set_resourcePlanName(const std::string& val) {
+  this->resourcePlanName = val;
+__isset.resourcePlanName = true;
+}
+
+uint32_t WMValidateResourcePlanRequest::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  apache::thrift::protocol::TInputRecursionTracker tracker(*iprot);
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->resourcePlanName);
+          this->__isset.resourcePlanName = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  return xfer;
+}
+
+uint32_t WMValidateResourcePlanRequest::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
+  xfer += oprot->writeStructBegin("WMValidateResourcePlanRequest");
+
+  if (this->__isset.resourcePlanName) {
+    xfer += oprot->writeFieldBegin("resourcePlanName", ::apache::thrift::protocol::T_STRING, 1);
+    xfer += oprot->writeString(this->resourcePlanName);
+    xfer += oprot->writeFieldEnd();
+  }
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+void swap(WMValidateResourcePlanRequest &a, WMValidateResourcePlanRequest &b) {
+  using ::std::swap;
+  swap(a.resourcePlanName, b.resourcePlanName);
+  swap(a.__isset, b.__isset);
+}
+
+WMValidateResourcePlanRequest::WMValidateResourcePlanRequest(const WMValidateResourcePlanRequest& other926) {
+  resourcePlanName = other926.resourcePlanName;
+  __isset = other926.__isset;
+}
+WMValidateResourcePlanRequest& WMValidateResourcePlanRequest::operator=(const WMValidateResourcePlanRequest& other927) {
+  resourcePlanName = other927.resourcePlanName;
+  __isset = other927.__isset;
+  return *this;
+}
+void WMValidateResourcePlanRequest::printTo(std::ostream& out) const {
+  using ::apache::thrift::to_string;
+  out << "WMValidateResourcePlanRequest(";
+  out << "resourcePlanName="; (__isset.resourcePlanName ? (out << to_string(resourcePlanName)) : (out << "<null>"));
+  out << ")";
+}
+
+
+WMValidateResourcePlanResponse::~WMValidateResourcePlanResponse() throw() {
+}
+
+
+void WMValidateResourcePlanResponse::__set_isValid(const bool val) {
+  this->isValid = val;
+__isset.isValid = true;
+}
+
+uint32_t WMValidateResourcePlanResponse::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  apache::thrift::protocol::TInputRecursionTracker tracker(*iprot);
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_BOOL) {
+          xfer += iprot->readBool(this->isValid);
+          this->__isset.isValid = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  return xfer;
+}
+
+uint32_t WMValidateResourcePlanResponse::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
+  xfer += oprot->writeStructBegin("WMValidateResourcePlanResponse");
+
+  if (this->__isset.isValid) {
+    xfer += oprot->writeFieldBegin("isValid", ::apache::thrift::protocol::T_BOOL, 1);
+    xfer += oprot->writeBool(this->isValid);
+    xfer += oprot->writeFieldEnd();
+  }
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+void swap(WMValidateResourcePlanResponse &a, WMValidateResourcePlanResponse &b) {
+  using ::std::swap;
+  swap(a.isValid, b.isValid);
+  swap(a.__isset, b.__isset);
+}
+
+WMValidateResourcePlanResponse::WMValidateResourcePlanResponse(const WMValidateResourcePlanResponse& other928) {
+  isValid = other928.isValid;
+  __isset = other928.__isset;
+}
+WMValidateResourcePlanResponse& WMValidateResourcePlanResponse::operator=(const WMValidateResourcePlanResponse& other929) {
+  isValid = other929.isValid;
+  __isset = other929.__isset;
+  return *this;
+}
+void WMValidateResourcePlanResponse::printTo(std::ostream& out) const {
+  using ::apache::thrift::to_string;
+  out << "WMValidateResourcePlanResponse(";
+  out << "isValid="; (__isset.isValid ? (out << to_string(isValid)) : (out << "<null>"));
+  out << ")";
+}
+
+
+WMDropResourcePlanRequest::~WMDropResourcePlanRequest() throw() {
+}
+
+
+void WMDropResourcePlanRequest::__set_resourcePlanName(const std::string& val) {
+  this->resourcePlanName = val;
+__isset.resourcePlanName = true;
+}
+
+uint32_t WMDropResourcePlanRequest::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  apache::thrift::protocol::TInputRecursionTracker tracker(*iprot);
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->resourcePlanName);
+          this->__isset.resourcePlanName = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  return xfer;
+}
+
+uint32_t WMDropResourcePlanRequest::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
+  xfer += oprot->writeStructBegin("WMDropResourcePlanRequest");
+
+  if (this->__isset.resourcePlanName) {
+    xfer += oprot->writeFieldBegin("resourcePlanName", ::apache::thrift::protocol::T_STRING, 1);
+    xfer += oprot->writeString(this->resourcePlanName);
+    xfer += oprot->writeFieldEnd();
+  }
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+void swap(WMDropResourcePlanRequest &a, WMDropResourcePlanRequest &b) {
+  using ::std::swap;
+  swap(a.resourcePlanName, b.resourcePlanName);
+  swap(a.__isset, b.__isset);
+}
+
+WMDropResourcePlanRequest::WMDropResourcePlanRequest(const WMDropResourcePlanRequest& other930) {
+  resourcePlanName = other930.resourcePlanName;
+  __isset = other930.__isset;
+}
+WMDropResourcePlanRequest& WMDropResourcePlanRequest::operator=(const WMDropResourcePlanRequest& other931) {
+  resourcePlanName = other931.resourcePlanName;
+  __isset = other931.__isset;
+  return *this;
+}
+void WMDropResourcePlanRequest::printTo(std::ostream& out) const {
+  using ::apache::thrift::to_string;
+  out << "WMDropResourcePlanRequest(";
+  out << "resourcePlanName="; (__isset.resourcePlanName ? (out << to_string(resourcePlanName)) : (out << "<null>"));
+  out << ")";
+}
+
+
+WMDropResourcePlanResponse::~WMDropResourcePlanResponse() throw() {
+}
+
+
+uint32_t WMDropResourcePlanResponse::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  apache::thrift::protocol::TInputRecursionTracker tracker(*iprot);
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    xfer += iprot->skip(ftype);
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  return xfer;
+}
+
+uint32_t WMDropResourcePlanResponse::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
+  xfer += oprot->writeStructBegin("WMDropResourcePlanResponse");
+
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+void swap(WMDropResourcePlanResponse &a, WMDropResourcePlanResponse &b) {
+  using ::std::swap;
+  (void) a;
+  (void) b;
+}
+
+WMDropResourcePlanResponse::WMDropResourcePlanResponse(const WMDropResourcePlanResponse& other932) {
+  (void) other932;
+}
+WMDropResourcePlanResponse& WMDropResourcePlanResponse::operator=(const WMDropResourcePlanResponse& other933) {
+  (void) other933;
+  return *this;
+}
+void WMDropResourcePlanResponse::printTo(std::ostream& out) const {
+  using ::apache::thrift::to_string;
+  out << "WMDropResourcePlanResponse(";
+  out << ")";
+}
+
+
+WMCreateTriggerRequest::~WMCreateTriggerRequest() throw() {
+}
+
+
+void WMCreateTriggerRequest::__set_trigger(const WMTrigger& val) {
+  this->trigger = val;
+__isset.trigger = true;
+}
+
+uint32_t WMCreateTriggerRequest::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  apache::thrift::protocol::TInputRecursionTracker tracker(*iprot);
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->trigger.read(iprot);
+          this->__isset.trigger = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  return xfer;
+}
+
+uint32_t WMCreateTriggerRequest::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
+  xfer += oprot->writeStructBegin("WMCreateTriggerRequest");
+
+  if (this->__isset.trigger) {
+    xfer += oprot->writeFieldBegin("trigger", ::apache::thrift::protocol::T_STRUCT, 1);
+    xfer += this->trigger.write(oprot);
+    xfer += oprot->writeFieldEnd();
+  }
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+void swap(WMCreateTriggerRequest &a, WMCreateTriggerRequest &b) {
+  using ::std::swap;
+  swap(a.trigger, b.trigger);
+  swap(a.__isset, b.__isset);
+}
+
+WMCreateTriggerRequest::WMCreateTriggerRequest(const WMCreateTriggerRequest& other934) {
+  trigger = other934.trigger;
+  __isset = other934.__isset;
+}
+WMCreateTriggerRequest& WMCreateTriggerRequest::operator=(const WMCreateTriggerRequest& other935) {
+  trigger = other935.trigger;
+  __isset = other935.__isset;
+  return *this;
+}
+void WMCreateTriggerRequest::printTo(std::ostream& out) const {
+  using ::apache::thrift::to_string;
+  out << "WMCreateTriggerRequest(";
+  out << "trigger="; (__isset.trigger ? (out << to_string(trigger)) : (out << "<null>"));
+  out << ")";
+}
+
+
+WMCreateTriggerResponse::~WMCreateTriggerResponse() throw() {
+}
+
+
+uint32_t WMCreateTriggerResponse::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  apache::thrift::protocol::TInputRecursionTracker tracker(*iprot);
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    xfer += iprot->skip(ftype);
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  return xfer;
+}
+
+uint32_t WMCreateTriggerResponse::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
+  xfer += oprot->writeStructBegin("WMCreateTriggerResponse");
+
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+void swap(WMCreateTriggerResponse &a, WMCreateTriggerResponse &b) {
+  using ::std::swap;
+  (void) a;
+  (void) b;
+}
+
+WMCreateTriggerResponse::WMCreateTriggerResponse(const WMCreateTriggerResponse& other936) {
+  (void) other936;
+}
+WMCreateTriggerResponse& WMCreateTriggerResponse::operator=(const WMCreateTriggerResponse& other937) {
+  (void) other937;
+  return *this;
+}
+void WMCreateTriggerResponse::printTo(std::ostream& out) const {
+  using ::apache::thrift::to_string;
+  out << "WMCreateTriggerResponse(";
+  out << ")";
+}
+
+
+WMAlterTriggerRequest::~WMAlterTriggerRequest() throw() {
+}
+
+
+void WMAlterTriggerRequest::__set_trigger(const WMTrigger& val) {
+  this->trigger = val;
+__isset.trigger = true;
+}
+
+uint32_t WMAlterTriggerRequest::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  apache::thrift::protocol::TInputRecursionTracker tracker(*iprot);
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->trigger.read(iprot);
+          this->__isset.trigger = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  return xfer;
+}
+
+uint32_t WMAlterTriggerRequest::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
+  xfer += oprot->writeStructBegin("WMAlterTriggerRequest");
+
+  if (this->__isset.trigger) {
+    xfer += oprot->writeFieldBegin("trigger", ::apache::thrift::protocol::T_STRUCT, 1);
+    xfer += this->trigger.write(oprot);
+    xfer += oprot->writeFieldEnd();
+  }
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+void swap(WMAlterTriggerRequest &a, WMAlterTriggerRequest &b) {
+  using ::std::swap;
+  swap(a.trigger, b.trigger);
+  swap(a.__isset, b.__isset);
+}
+
+WMAlterTriggerRequest::WMAlterTriggerRequest(const WMAlterTriggerRequest& other938) {
+  trigger = other938.trigger;
+  __isset = other938.__isset;
+}
+WMAlterTriggerRequest& WMAlterTriggerRequest::operator=(const WMAlterTriggerRequest& other939) {
+  trigger = other939.trigger;
+  __isset = other939.__isset;
+  return *this;
+}
+void WMAlterTriggerRequest::printTo(std::ostream& out) const {
+  using ::apache::thrift::to_string;
+  out << "WMAlterTriggerRequest(";
+  out << "trigger="; (__isset.trigger ? (out << to_string(trigger)) : (out << "<null>"));
+  out << ")";
+}
+
+
+WMAlterTriggerResponse::~WMAlterTriggerResponse() throw() {
+}
+
+
+uint32_t WMAlterTriggerResponse::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  apache::thrift::protocol::TInputRecursionTracker tracker(*iprot);
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    xfer += iprot->skip(ftype);
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  return xfer;
+}
+
+uint32_t WMAlterTriggerResponse::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
+  xfer += oprot->writeStructBegin("WMAlterTriggerResponse");
+
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+void swap(WMAlterTriggerResponse &a, WMAlterTriggerResponse &b) {
+  using ::std::swap;
+  (void) a;
+  (void) b;
+}
+
+WMAlterTriggerResponse::WMAlterTriggerResponse(const WMAlterTriggerResponse& other940) {
+  (void) other940;
+}
+WMAlterTriggerResponse& WMAlterTriggerResponse::operator=(const WMAlterTriggerResponse& other941) {
+  (void) other941;
+  return *this;
+}
+void WMAlterTriggerResponse::printTo(std::ostream& out) const {
+  using ::apache::thrift::to_string;
+  out << "WMAlterTriggerResponse(";
+  out << ")";
+}
+
+
+WMDropTriggerRequest::~WMDropTriggerRequest() throw() {
+}
+
+
+void WMDropTriggerRequest::__set_resourcePlanName(const std::string& val) {
+  this->resourcePlanName = val;
+__isset.resourcePlanName = true;
+}
+
+void WMDropTriggerRequest::__set_triggerName(const std::string& val) {
+  this->triggerName = val;
+__isset.triggerName = true;
+}
+
+uint32_t WMDropTriggerRequest::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  apache::thrift::protocol::TInputRecursionTracker tracker(*iprot);
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->resourcePlanName);
+          this->__isset.resourcePlanName = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 2:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->triggerName);
+          this->__isset.triggerName = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  return xfer;
+}
+
+uint32_t WMDropTriggerRequest::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
+  xfer += oprot->writeStructBegin("WMDropTriggerRequest");
+
+  if (this->__isset.resourcePlanName) {
+    xfer += oprot->writeFieldBegin("resourcePlanName", ::apache::thrift::protocol::T_STRING, 1);
+    xfer += oprot->writeString(this->resourcePlanName);
+    xfer += oprot->writeFieldEnd();
+  }
+  if (this->__isset.triggerName) {
+    xfer += oprot->writeFieldBegin("triggerName", ::apache::thrift::protocol::T_STRING, 2);
+    xfer += oprot->writeString(this->triggerName);
+    xfer += oprot->writeFieldEnd();
+  }
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+void swap(WMDropTriggerRequest &a, WMDropTriggerRequest &b) {
+  using ::std::swap;
+  swap(a.resourcePlanName, b.resourcePlanName);
+  swap(a.triggerName, b.triggerName);
+  swap(a.__isset, b.__isset);
+}
+
+WMDropTriggerRequest::WMDropTriggerRequest(const WMDropTriggerRequest& other942) {
+  resourcePlanName = other942.resourcePlanName;
+  triggerName = other942.triggerName;
+  __isset = other942.__isset;
+}
+WMDropTriggerRequest& WMDropTriggerRequest::operator=(const WMDropTriggerRequest& other943) {
+  resourcePlanName = other943.resourcePlanName;
+  triggerName = other943.triggerName;
+  __isset = other943.__isset;
+  return *this;
+}
+void WMDropTriggerRequest::printTo(std::ostream& out) const {
+  using ::apache::thrift::to_string;
+  out << "WMDropTriggerRequest(";
+  out << "resourcePlanName="; (__isset.resourcePlanName ? (out << to_string(resourcePlanName)) : (out << "<null>"));
+  out << ", " << "triggerName="; (__isset.triggerName ? (out << to_string(triggerName)) : (out << "<null>"));
+  out << ")";
+}
+
+
+WMDropTriggerResponse::~WMDropTriggerResponse() throw() {
+}
+
+
+uint32_t WMDropTriggerResponse::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  apache::thrift::protocol::TInputRecursionTracker tracker(*iprot);
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    xfer += iprot->skip(ftype);
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  return xfer;
+}
+
+uint32_t WMDropTriggerResponse::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
+  xfer += oprot->writeStructBegin("WMDropTriggerResponse");
+
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+void swap(WMDropTriggerResponse &a, WMDropTriggerResponse &b) {
+  using ::std::swap;
+  (void) a;
+  (void) b;
+}
+
+WMDropTriggerResponse::WMDropTriggerResponse(const WMDropTriggerResponse& other944) {
+  (void) other944;
+}
+WMDropTriggerResponse& WMDropTriggerResponse::operator=(const WMDropTriggerResponse& other945) {
+  (void) other945;
+  return *this;
+}
+void WMDropTriggerResponse::printTo(std::ostream& out) const {
+  using ::apache::thrift::to_string;
+  out << "WMDropTriggerResponse(";
+  out << ")";
+}
+
+
+WMGetTriggersForResourePlanRequest::~WMGetTriggersForResourePlanRequest() throw() {
+}
+
+
+void WMGetTriggersForResourePlanRequest::__set_resourcePlanName(const std::string& val) {
+  this->resourcePlanName = val;
+__isset.resourcePlanName = true;
+}
+
+uint32_t WMGetTriggersForResourePlanRequest::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  apache::thrift::protocol::TInputRecursionTracker tracker(*iprot);
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->resourcePlanName);
+          this->__isset.resourcePlanName = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  return xfer;
+}
+
+uint32_t WMGetTriggersForResourePlanRequest::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
+  xfer += oprot->writeStructBegin("WMGetTriggersForResourePlanRequest");
+
+  if (this->__isset.resourcePlanName) {
+    xfer += oprot->writeFieldBegin("resourcePlanName", ::apache::thrift::protocol::T_STRING, 1);
+    xfer += oprot->writeString(this->resourcePlanName);
+    xfer += oprot->writeFieldEnd();
+  }
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+void swap(WMGetTriggersForResourePlanRequest &a, WMGetTriggersForResourePlanRequest &b) {
+  using ::std::swap;
+  swap(a.resourcePlanName, b.resourcePlanName);
+  swap(a.__isset, b.__isset);
+}
+
+WMGetTriggersForResourePlanRequest::WMGetTriggersForResourePlanRequest(const WMGetTriggersForResourePlanRequest& other946) {
+  resourcePlanName = other946.resourcePlanName;
+  __isset = other946.__isset;
+}
+WMGetTriggersForResourePlanRequest& WMGetTriggersForResourePlanRequest::operator=(const WMGetTriggersForResourePlanRequest& other947) {
+  resourcePlanName = other947.resourcePlanName;
+  __isset = other947.__isset;
+  return *this;
+}
+void WMGetTriggersForResourePlanRequest::printTo(std::ostream& out) const {
+  using ::apache::thrift::to_string;
+  out << "WMGetTriggersForResourePlanRequest(";
+  out << "resourcePlanName="; (__isset.resourcePlanName ? (out << to_string(resourcePlanName)) : (out << "<null>"));
+  out << ")";
+}
+
+
+WMGetTriggersForResourePlanResponse::~WMGetTriggersForResourePlanResponse() throw() {
+}
+
+
+void WMGetTriggersForResourePlanResponse::__set_triggers(const std::vector<WMTrigger> & val) {
+  this->triggers = val;
+__isset.triggers = true;
+}
+
+uint32_t WMGetTriggersForResourePlanResponse::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  apache::thrift::protocol::TInputRecursionTracker tracker(*iprot);
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_LIST) {
+          {
+            this->triggers.clear();
+            uint32_t _size948;
+            ::apache::thrift::protocol::TType _etype951;
+            xfer += iprot->readListBegin(_etype951, _size948);
+            this->triggers.resize(_size948);
+            uint32_t _i952;
+            for (_i952 = 0; _i952 < _size948; ++_i952)
+            {
+              xfer += this->triggers[_i952].read(iprot);
+            }
+            xfer += iprot->readListEnd();
+          }
+          this->__isset.triggers = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  return xfer;
+}
+
+uint32_t WMGetTriggersForResourePlanResponse::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
+  xfer += oprot->writeStructBegin("WMGetTriggersForResourePlanResponse");
+
+  if (this->__isset.triggers) {
+    xfer += oprot->writeFieldBegin("triggers", ::apache::thrift::protocol::T_LIST, 1);
+    {
+      xfer += oprot->writeListBegin(::apache::thrift::protocol::T_STRUCT, static_cast<uint32_t>(this->triggers.size()));
+      std::vector<WMTrigger> ::const_iterator _iter953;
+      for (_iter953 = this->triggers.begin(); _iter953 != this->triggers.end(); ++_iter953)
+      {
+        xfer += (*_iter953).write(oprot);
+      }
+      xfer += oprot->writeListEnd();
+    }
+    xfer += oprot->writeFieldEnd();
+  }
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+void swap(WMGetTriggersForResourePlanResponse &a, WMGetTriggersForResourePlanResponse &b) {
+  using ::std::swap;
+  swap(a.triggers, b.triggers);
+  swap(a.__isset, b.__isset);
+}
+
+WMGetTriggersForResourePlanResponse::WMGetTriggersForResourePlanResponse(const WMGetTriggersForResourePlanResponse& other954) {
+  triggers = other954.triggers;
+  __isset = other954.__isset;
+}
+WMGetTriggersForResourePlanResponse& WMGetTriggersForResourePlanResponse::operator=(const WMGetTriggersForResourePlanResponse& other955) {
+  triggers = other955.triggers;
+  __isset = other955.__isset;
+  return *this;
+}
+void WMGetTriggersForResourePlanResponse::printTo(std::ostream& out) const {
+  using ::apache::thrift::to_string;
+  out << "WMGetTriggersForResourePlanResponse(";
+  out << "triggers="; (__isset.triggers ? (out << to_string(triggers)) : (out << "<null>"));
   out << ")";
 }
 
@@ -20332,13 +23740,13 @@ void swap(MetaException &a, MetaException &b) {
   swap(a.__isset, b.__isset);
 }
 
-MetaException::MetaException(const MetaException& other833) : TException() {
-  message = other833.message;
-  __isset = other833.__isset;
+MetaException::MetaException(const MetaException& other956) : TException() {
+  message = other956.message;
+  __isset = other956.__isset;
 }
-MetaException& MetaException::operator=(const MetaException& other834) {
-  message = other834.message;
-  __isset = other834.__isset;
+MetaException& MetaException::operator=(const MetaException& other957) {
+  message = other957.message;
+  __isset = other957.__isset;
   return *this;
 }
 void MetaException::printTo(std::ostream& out) const {
@@ -20429,13 +23837,13 @@ void swap(UnknownTableException &a, UnknownTableException &b) {
   swap(a.__isset, b.__isset);
 }
 
-UnknownTableException::UnknownTableException(const UnknownTableException& other835) : TException() {
-  message = other835.message;
-  __isset = other835.__isset;
+UnknownTableException::UnknownTableException(const UnknownTableException& other958) : TException() {
+  message = other958.message;
+  __isset = other958.__isset;
 }
-UnknownTableException& UnknownTableException::operator=(const UnknownTableException& other836) {
-  message = other836.message;
-  __isset = other836.__isset;
+UnknownTableException& UnknownTableException::operator=(const UnknownTableException& other959) {
+  message = other959.message;
+  __isset = other959.__isset;
   return *this;
 }
 void UnknownTableException::printTo(std::ostream& out) const {
@@ -20526,13 +23934,13 @@ void swap(UnknownDBException &a, UnknownDBException &b) {
   swap(a.__isset, b.__isset);
 }
 
-UnknownDBException::UnknownDBException(const UnknownDBException& other837) : TException() {
-  message = other837.message;
-  __isset = other837.__isset;
+UnknownDBException::UnknownDBException(const UnknownDBException& other960) : TException() {
+  message = other960.message;
+  __isset = other960.__isset;
 }
-UnknownDBException& UnknownDBException::operator=(const UnknownDBException& other838) {
-  message = other838.message;
-  __isset = other838.__isset;
+UnknownDBException& UnknownDBException::operator=(const UnknownDBException& other961) {
+  message = other961.message;
+  __isset = other961.__isset;
   return *this;
 }
 void UnknownDBException::printTo(std::ostream& out) const {
@@ -20623,13 +24031,13 @@ void swap(AlreadyExistsException &a, AlreadyExistsException &b) {
   swap(a.__isset, b.__isset);
 }
 
-AlreadyExistsException::AlreadyExistsException(const AlreadyExistsException& other839) : TException() {
-  message = other839.message;
-  __isset = other839.__isset;
+AlreadyExistsException::AlreadyExistsException(const AlreadyExistsException& other962) : TException() {
+  message = other962.message;
+  __isset = other962.__isset;
 }
-AlreadyExistsException& AlreadyExistsException::operator=(const AlreadyExistsException& other840) {
-  message = other840.message;
-  __isset = other840.__isset;
+AlreadyExistsException& AlreadyExistsException::operator=(const AlreadyExistsException& other963) {
+  message = other963.message;
+  __isset = other963.__isset;
   return *this;
 }
 void AlreadyExistsException::printTo(std::ostream& out) const {
@@ -20720,13 +24128,13 @@ void swap(InvalidPartitionException &a, InvalidPartitionException &b) {
   swap(a.__isset, b.__isset);
 }
 
-InvalidPartitionException::InvalidPartitionException(const InvalidPartitionException& other841) : TException() {
-  message = other841.message;
-  __isset = other841.__isset;
+InvalidPartitionException::InvalidPartitionException(const InvalidPartitionException& other964) : TException() {
+  message = other964.message;
+  __isset = other964.__isset;
 }
-InvalidPartitionException& InvalidPartitionException::operator=(const InvalidPartitionException& other842) {
-  message = other842.message;
-  __isset = other842.__isset;
+InvalidPartitionException& InvalidPartitionException::operator=(const InvalidPartitionException& other965) {
+  message = other965.message;
+  __isset = other965.__isset;
   return *this;
 }
 void InvalidPartitionException::printTo(std::ostream& out) const {
@@ -20817,13 +24225,13 @@ void swap(UnknownPartitionException &a, UnknownPartitionException &b) {
   swap(a.__isset, b.__isset);
 }
 
-UnknownPartitionException::UnknownPartitionException(const UnknownPartitionException& other843) : TException() {
-  message = other843.message;
-  __isset = other843.__isset;
+UnknownPartitionException::UnknownPartitionException(const UnknownPartitionException& other966) : TException() {
+  message = other966.message;
+  __isset = other966.__isset;
 }
-UnknownPartitionException& UnknownPartitionException::operator=(const UnknownPartitionException& other844) {
-  message = other844.message;
-  __isset = other844.__isset;
+UnknownPartitionException& UnknownPartitionException::operator=(const UnknownPartitionException& other967) {
+  message = other967.message;
+  __isset = other967.__isset;
   return *this;
 }
 void UnknownPartitionException::printTo(std::ostream& out) const {
@@ -20914,13 +24322,13 @@ void swap(InvalidObjectException &a, InvalidObjectException &b) {
   swap(a.__isset, b.__isset);
 }
 
-InvalidObjectException::InvalidObjectException(const InvalidObjectException& other845) : TException() {
-  message = other845.message;
-  __isset = other845.__isset;
+InvalidObjectException::InvalidObjectException(const InvalidObjectException& other968) : TException() {
+  message = other968.message;
+  __isset = other968.__isset;
 }
-InvalidObjectException& InvalidObjectException::operator=(const InvalidObjectException& other846) {
-  message = other846.message;
-  __isset = other846.__isset;
+InvalidObjectException& InvalidObjectException::operator=(const InvalidObjectException& other969) {
+  message = other969.message;
+  __isset = other969.__isset;
   return *this;
 }
 void InvalidObjectException::printTo(std::ostream& out) const {
@@ -21011,13 +24419,13 @@ void swap(NoSuchObjectException &a, NoSuchObjectException &b) {
   swap(a.__isset, b.__isset);
 }
 
-NoSuchObjectException::NoSuchObjectException(const NoSuchObjectException& other847) : TException() {
-  message = other847.message;
-  __isset = other847.__isset;
+NoSuchObjectException::NoSuchObjectException(const NoSuchObjectException& other970) : TException() {
+  message = other970.message;
+  __isset = other970.__isset;
 }
-NoSuchObjectException& NoSuchObjectException::operator=(const NoSuchObjectException& other848) {
-  message = other848.message;
-  __isset = other848.__isset;
+NoSuchObjectException& NoSuchObjectException::operator=(const NoSuchObjectException& other971) {
+  message = other971.message;
+  __isset = other971.__isset;
   return *this;
 }
 void NoSuchObjectException::printTo(std::ostream& out) const {
@@ -21108,13 +24516,13 @@ void swap(IndexAlreadyExistsException &a, IndexAlreadyExistsException &b) {
   swap(a.__isset, b.__isset);
 }
 
-IndexAlreadyExistsException::IndexAlreadyExistsException(const IndexAlreadyExistsException& other849) : TException() {
-  message = other849.message;
-  __isset = other849.__isset;
+IndexAlreadyExistsException::IndexAlreadyExistsException(const IndexAlreadyExistsException& other972) : TException() {
+  message = other972.message;
+  __isset = other972.__isset;
 }
-IndexAlreadyExistsException& IndexAlreadyExistsException::operator=(const IndexAlreadyExistsException& other850) {
-  message = other850.message;
-  __isset = other850.__isset;
+IndexAlreadyExistsException& IndexAlreadyExistsException::operator=(const IndexAlreadyExistsException& other973) {
+  message = other973.message;
+  __isset = other973.__isset;
   return *this;
 }
 void IndexAlreadyExistsException::printTo(std::ostream& out) const {
@@ -21205,13 +24613,13 @@ void swap(InvalidOperationException &a, InvalidOperationException &b) {
   swap(a.__isset, b.__isset);
 }
 
-InvalidOperationException::InvalidOperationException(const InvalidOperationException& other851) : TException() {
-  message = other851.message;
-  __isset = other851.__isset;
+InvalidOperationException::InvalidOperationException(const InvalidOperationException& other974) : TException() {
+  message = other974.message;
+  __isset = other974.__isset;
 }
-InvalidOperationException& InvalidOperationException::operator=(const InvalidOperationException& other852) {
-  message = other852.message;
-  __isset = other852.__isset;
+InvalidOperationException& InvalidOperationException::operator=(const InvalidOperationException& other975) {
+  message = other975.message;
+  __isset = other975.__isset;
   return *this;
 }
 void InvalidOperationException::printTo(std::ostream& out) const {
@@ -21302,13 +24710,13 @@ void swap(ConfigValSecurityException &a, ConfigValSecurityException &b) {
   swap(a.__isset, b.__isset);
 }
 
-ConfigValSecurityException::ConfigValSecurityException(const ConfigValSecurityException& other853) : TException() {
-  message = other853.message;
-  __isset = other853.__isset;
+ConfigValSecurityException::ConfigValSecurityException(const ConfigValSecurityException& other976) : TException() {
+  message = other976.message;
+  __isset = other976.__isset;
 }
-ConfigValSecurityException& ConfigValSecurityException::operator=(const ConfigValSecurityException& other854) {
-  message = other854.message;
-  __isset = other854.__isset;
+ConfigValSecurityException& ConfigValSecurityException::operator=(const ConfigValSecurityException& other977) {
+  message = other977.message;
+  __isset = other977.__isset;
   return *this;
 }
 void ConfigValSecurityException::printTo(std::ostream& out) const {
@@ -21399,13 +24807,13 @@ void swap(InvalidInputException &a, InvalidInputException &b) {
   swap(a.__isset, b.__isset);
 }
 
-InvalidInputException::InvalidInputException(const InvalidInputException& other855) : TException() {
-  message = other855.message;
-  __isset = other855.__isset;
+InvalidInputException::InvalidInputException(const InvalidInputException& other978) : TException() {
+  message = other978.message;
+  __isset = other978.__isset;
 }
-InvalidInputException& InvalidInputException::operator=(const InvalidInputException& other856) {
-  message = other856.message;
-  __isset = other856.__isset;
+InvalidInputException& InvalidInputException::operator=(const InvalidInputException& other979) {
+  message = other979.message;
+  __isset = other979.__isset;
   return *this;
 }
 void InvalidInputException::printTo(std::ostream& out) const {
@@ -21496,13 +24904,13 @@ void swap(NoSuchTxnException &a, NoSuchTxnException &b) {
   swap(a.__isset, b.__isset);
 }
 
-NoSuchTxnException::NoSuchTxnException(const NoSuchTxnException& other857) : TException() {
-  message = other857.message;
-  __isset = other857.__isset;
+NoSuchTxnException::NoSuchTxnException(const NoSuchTxnException& other980) : TException() {
+  message = other980.message;
+  __isset = other980.__isset;
 }
-NoSuchTxnException& NoSuchTxnException::operator=(const NoSuchTxnException& other858) {
-  message = other858.message;
-  __isset = other858.__isset;
+NoSuchTxnException& NoSuchTxnException::operator=(const NoSuchTxnException& other981) {
+  message = other981.message;
+  __isset = other981.__isset;
   return *this;
 }
 void NoSuchTxnException::printTo(std::ostream& out) const {
@@ -21593,13 +25001,13 @@ void swap(TxnAbortedException &a, TxnAbortedException &b) {
   swap(a.__isset, b.__isset);
 }
 
-TxnAbortedException::TxnAbortedException(const TxnAbortedException& other859) : TException() {
-  message = other859.message;
-  __isset = other859.__isset;
+TxnAbortedException::TxnAbortedException(const TxnAbortedException& other982) : TException() {
+  message = other982.message;
+  __isset = other982.__isset;
 }
-TxnAbortedException& TxnAbortedException::operator=(const TxnAbortedException& other860) {
-  message = other860.message;
-  __isset = other860.__isset;
+TxnAbortedException& TxnAbortedException::operator=(const TxnAbortedException& other983) {
+  message = other983.message;
+  __isset = other983.__isset;
   return *this;
 }
 void TxnAbortedException::printTo(std::ostream& out) const {
@@ -21690,13 +25098,13 @@ void swap(TxnOpenException &a, TxnOpenException &b) {
   swap(a.__isset, b.__isset);
 }
 
-TxnOpenException::TxnOpenException(const TxnOpenException& other861) : TException() {
-  message = other861.message;
-  __isset = other861.__isset;
+TxnOpenException::TxnOpenException(const TxnOpenException& other984) : TException() {
+  message = other984.message;
+  __isset = other984.__isset;
 }
-TxnOpenException& TxnOpenException::operator=(const TxnOpenException& other862) {
-  message = other862.message;
-  __isset = other862.__isset;
+TxnOpenException& TxnOpenException::operator=(const TxnOpenException& other985) {
+  message = other985.message;
+  __isset = other985.__isset;
   return *this;
 }
 void TxnOpenException::printTo(std::ostream& out) const {
@@ -21787,13 +25195,13 @@ void swap(NoSuchLockException &a, NoSuchLockException &b) {
   swap(a.__isset, b.__isset);
 }
 
-NoSuchLockException::NoSuchLockException(const NoSuchLockException& other863) : TException() {
-  message = other863.message;
-  __isset = other863.__isset;
+NoSuchLockException::NoSuchLockException(const NoSuchLockException& other986) : TException() {
+  message = other986.message;
+  __isset = other986.__isset;
 }
-NoSuchLockException& NoSuchLockException::operator=(const NoSuchLockException& other864) {
-  message = other864.message;
-  __isset = other864.__isset;
+NoSuchLockException& NoSuchLockException::operator=(const NoSuchLockException& other987) {
+  message = other987.message;
+  __isset = other987.__isset;
   return *this;
 }
 void NoSuchLockException::printTo(std::ostream& out) const {

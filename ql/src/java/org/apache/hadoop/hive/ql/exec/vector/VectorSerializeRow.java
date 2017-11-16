@@ -111,6 +111,22 @@ public final class VectorSerializeRow<T extends SerializeWrite> {
     vectorExtractRow.init(typeInfos);
   }
 
+  public void init(TypeInfo[] typeInfos)
+      throws HiveException {
+
+    final int size = typeInfos.length;
+    this.typeInfos = Arrays.copyOf(typeInfos, size);
+    outputColumnNums = new int[size];
+    objectInspectors = new ObjectInspector[size];
+    for (int i = 0; i < size; i++) {
+      objectInspectors[i] =
+          TypeInfoUtils.getStandardJavaObjectInspectorFromTypeInfo(typeInfos[i]);
+      outputColumnNums[i] = i;
+    }
+
+    vectorExtractRow.init(this.typeInfos, outputColumnNums);
+  }
+
   public void init(TypeInfo[] typeInfos, int[] columnMap)
       throws HiveException {
 
@@ -360,8 +376,13 @@ public final class VectorSerializeRow<T extends SerializeWrite> {
       break;
     case DECIMAL:
       {
-        final DecimalColumnVector decimalColVector = (DecimalColumnVector) colVector;
-        serializeWrite.writeHiveDecimal(decimalColVector.vector[adjustedBatchIndex], decimalColVector.scale);
+        if (colVector instanceof Decimal64ColumnVector) {
+          final Decimal64ColumnVector decimal64ColVector = (Decimal64ColumnVector) colVector;
+          serializeWrite.writeDecimal64(decimal64ColVector.vector[adjustedBatchIndex], decimal64ColVector.scale);
+        } else {
+          final DecimalColumnVector decimalColVector = (DecimalColumnVector) colVector;
+          serializeWrite.writeHiveDecimal(decimalColVector.vector[adjustedBatchIndex], decimalColVector.scale);
+        }
       }
       break;
     case INTERVAL_YEAR_MONTH:

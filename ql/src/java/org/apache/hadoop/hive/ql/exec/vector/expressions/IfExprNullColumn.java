@@ -22,30 +22,28 @@ import org.apache.hadoop.hive.ql.exec.vector.LongColumnVector;
 import org.apache.hadoop.hive.ql.exec.vector.VectorExpressionDescriptor;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatch;
 
-public class IfExprNullColumn extends VectorExpression {
+public class IfExprNullColumn extends IfExprConditionalFilter {
 
   private static final long serialVersionUID = 1L;
 
-  private final int arg1Column;
-  private final int arg2Column;
-  private final int outputColumn;
-
   public IfExprNullColumn(int arg1Column, int arg2Column, int outputColumn) {
-    this.arg1Column = arg1Column;
-    this.arg2Column = arg2Column;
-    this.outputColumn = outputColumn;
+    super(arg1Column, -1, arg2Column, outputColumn);
+  }
+
+  public IfExprNullColumn() {
+    super();
   }
 
   @Override
   public void evaluate(VectorizedRowBatch batch) {
 
     if (childExpressions != null) {
-      super.evaluateChildren(batch);
+      super.evaluateIfConditionalExpr(batch, childExpressions);
     }
 
     final LongColumnVector arg1ColVector = (LongColumnVector) batch.cols[arg1Column];
     final ColumnVector arg2ColVector = batch.cols[arg2Column];
-    final ColumnVector outputColVector = batch.cols[outputColumn];
+    final ColumnVector outputColVector = batch.cols[outputColumnNum];
 
     final int[] sel = batch.selected;
     final int n = batch.size;
@@ -93,17 +91,8 @@ public class IfExprNullColumn extends VectorExpression {
   }
 
   @Override
-  public int getOutputColumn() {
-    return outputColumn;
-  }
-
-  @Override
   public String vectorExpressionParameters() {
-    return "col " + arg1Column + ", null, col "+ arg2Column;
+    return getColumnParamString(0, arg1Column) + ", null, col "+ arg2Column;
   }
 
-  @Override
-  public VectorExpressionDescriptor.Descriptor getDescriptor() {
-    throw new UnsupportedOperationException("Undefined descriptor");
-  }
 }

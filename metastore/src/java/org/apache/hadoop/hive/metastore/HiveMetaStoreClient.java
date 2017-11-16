@@ -18,7 +18,7 @@
 
 package org.apache.hadoop.hive.metastore;
 
-import static org.apache.hadoop.hive.metastore.MetaStoreUtils.DEFAULT_DATABASE_NAME;
+import static org.apache.hadoop.hive.metastore.Warehouse.DEFAULT_DATABASE_NAME;
 import static org.apache.hadoop.hive.metastore.MetaStoreUtils.isIndexTable;
 
 import java.io.IOException;
@@ -49,6 +49,7 @@ import java.security.PrivilegedExceptionAction;
 
 import javax.security.auth.login.LoginException;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.common.ObjectPair;
 import org.apache.hadoop.hive.common.StatsSetupConst;
 import org.apache.hadoop.hive.common.ValidTxnList;
@@ -60,10 +61,12 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.conf.HiveConfUtil;
 import org.apache.hadoop.hive.metastore.api.*;
+import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.conf.MetastoreConf;
 import org.apache.hadoop.hive.metastore.partition.spec.PartitionSpecProxy;
 import org.apache.hadoop.hive.metastore.security.HadoopThriftAuthBridge;
 import org.apache.hadoop.hive.metastore.txn.TxnUtils;
+import org.apache.hadoop.hive.metastore.utils.SecurityUtils;
 import org.apache.hadoop.hive.shims.Utils;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.StringUtils;
@@ -98,9 +101,11 @@ public class HiveMetaStoreClient implements IMetaStoreClient, AutoCloseable {
    * doesn't have (e.g. a getting a table of a new type), it will get back failures when the
    * capability checking is enabled (the default).
    */
-  public final static ClientCapabilities VERSION = null; // No capabilities.
+  public final static ClientCapabilities VERSION = new ClientCapabilities(
+      Lists.newArrayList(ClientCapability.INSERT_ONLY_TABLES));
+  // Test capability for tests.
   public final static ClientCapabilities TEST_VERSION = new ClientCapabilities(
-      Lists.newArrayList(ClientCapability.TEST_CAPABILITY)); // Test capability for tests.
+      Lists.newArrayList(ClientCapability.INSERT_ONLY_TABLES, ClientCapability.TEST_CAPABILITY));
 
   ThriftHiveMetastore.Iface client = null;
   private TTransport transport = null;
@@ -203,7 +208,7 @@ public class HiveMetaStoreClient implements IMetaStoreClient, AutoCloseable {
 
         }
         // make metastore URIS random
-        List uriList = Arrays.asList(metastoreUris);
+        List<?> uriList = Arrays.asList(metastoreUris);
         Collections.shuffle(uriList);
         metastoreUris = (URI[]) uriList.toArray();
       } catch (IllegalArgumentException e) {
@@ -238,7 +243,7 @@ public class HiveMetaStoreClient implements IMetaStoreClient, AutoCloseable {
             });
         String delegationTokenPropString = "DelegationTokenForHiveMetaStoreServer";
         String delegationTokenStr = getDelegationToken(proxyUser, proxyUser);
-        Utils.setTokenStr(UserGroupInformation.getCurrentUser(), delegationTokenStr,
+        SecurityUtils.setTokenStr(UserGroupInformation.getCurrentUser(), delegationTokenStr,
             delegationTokenPropString);
         this.conf.setVar(ConfVars.METASTORE_TOKEN_SIGNATURE, delegationTokenPropString);
         close();
@@ -263,7 +268,7 @@ public class HiveMetaStoreClient implements IMetaStoreClient, AutoCloseable {
     String msg = "Unable to create instance of " + authProviderClass.getName() + ": ";
     try {
       Constructor<? extends MetaStoreFilterHook> constructor =
-          authProviderClass.getConstructor(HiveConf.class);
+          authProviderClass.getConstructor(Configuration.class);
       return constructor.newInstance(conf);
     } catch (NoSuchMethodException e) {
       throw new IllegalStateException(msg + e.getMessage(), e);
@@ -451,14 +456,16 @@ public class HiveMetaStoreClient implements IMetaStoreClient, AutoCloseable {
               // submission.
               String tokenSig = conf.getVar(ConfVars.METASTORE_TOKEN_SIGNATURE);
               // tokenSig could be null
-              tokenStrForm = Utils.getTokenStrForm(tokenSig);
+              tokenStrForm = SecurityUtils.getTokenStrForm(tokenSig);
 
               if(tokenStrForm != null) {
+                LOG.info("HMSC::open(): Found delegation token. Creating DIGEST-based thrift connection.");
                 // authenticate using delegation tokens via the "DIGEST" mechanism
                 transport = authBridge.createClientTransport(null, store.getHost(),
                     "DIGEST", tokenStrForm, transport,
                         MetaStoreUtils.getMetaStoreSaslProperties(conf, useSSL));
               } else {
+                LOG.info("HMSC::open(): Could not find delegation token. Creating KERBEROS-based thrift connection.");
                 String principalConfig =
                     conf.getVar(HiveConf.ConfVars.METASTORE_KERBEROS_PRINCIPAL);
                 transport = authBridge.createClientTransport(
@@ -1367,6 +1374,12 @@ public class HiveMetaStoreClient implements IMetaStoreClient, AutoCloseable {
   }
 
   @Override
+  public PartitionValuesResponse listPartitionValues(PartitionValuesRequest request)
+      throws MetaException, TException, NoSuchObjectException {
+    return client.get_partition_values(request);
+  }
+
+  @Override
   public Partition getPartitionWithAuthInfo(String db_name, String tbl_name,
       List<String> part_vals, String user_name, List<String> group_names)
       throws MetaException, UnknownTableException, NoSuchObjectException,
@@ -1522,7 +1535,7 @@ public class HiveMetaStoreClient implements IMetaStoreClient, AutoCloseable {
 
   @Override
   public List<String> listPartitionNames(String dbName, String tblName,
-      short max) throws MetaException, TException {
+      short max) throws NoSuchObjectException, MetaException, TException {
     return filterHook.filterPartitionNames(dbName, tblName,
         client.get_partition_names(dbName, tblName, max));
   }
@@ -2621,5 +2634,94 @@ public class HiveMetaStoreClient implements IMetaStoreClient, AutoCloseable {
   @Override
   public String getMetastoreDbUuid() throws TException {
     return client.get_metastore_db_uuid();
+  }
+
+  @Override
+  public void createResourcePlan(WMResourcePlan resourcePlan)
+      throws InvalidObjectException, MetaException, TException {
+    WMCreateResourcePlanRequest request = new WMCreateResourcePlanRequest();
+    request.setResourcePlan(resourcePlan);
+    client.create_resource_plan(request);
+  }
+
+  @Override
+  public WMResourcePlan getResourcePlan(String resourcePlanName)
+      throws NoSuchObjectException, MetaException, TException {
+    WMGetResourcePlanRequest request = new WMGetResourcePlanRequest();
+    request.setResourcePlanName(resourcePlanName);
+    return client.get_resource_plan(request).getResourcePlan();
+  }
+
+  @Override
+  public List<WMResourcePlan> getAllResourcePlans()
+      throws NoSuchObjectException, MetaException, TException {
+    WMGetAllResourcePlanRequest request = new WMGetAllResourcePlanRequest();
+    return client.get_all_resource_plans(request).getResourcePlans();
+  }
+
+  @Override
+  public void dropResourcePlan(String resourcePlanName)
+      throws NoSuchObjectException, MetaException, TException {
+    WMDropResourcePlanRequest request = new WMDropResourcePlanRequest();
+    request.setResourcePlanName(resourcePlanName);
+    client.drop_resource_plan(request);
+  }
+
+  @Override
+  public WMFullResourcePlan alterResourcePlan(String resourcePlanName, WMResourcePlan resourcePlan,
+      boolean canActivateDisabled)
+      throws NoSuchObjectException, InvalidObjectException, MetaException, TException {
+    WMAlterResourcePlanRequest request = new WMAlterResourcePlanRequest();
+    request.setResourcePlanName(resourcePlanName);
+    request.setResourcePlan(resourcePlan);
+    request.setIsEnableAndActivate(canActivateDisabled);
+    WMAlterResourcePlanResponse resp = client.alter_resource_plan(request);
+    return resp.isSetFullResourcePlan() ? resp.getFullResourcePlan() : null;
+  }
+
+  @Override
+  public WMFullResourcePlan getActiveResourcePlan() throws MetaException, TException {
+    return client.get_active_resource_plan(new WMGetActiveResourcePlanRequest()).getResourcePlan();
+  }
+
+  @Override
+  public boolean validateResourcePlan(String resourcePlanName)
+      throws NoSuchObjectException, InvalidObjectException, MetaException, TException {
+    WMValidateResourcePlanRequest request = new WMValidateResourcePlanRequest();
+    request.setResourcePlanName(resourcePlanName);
+    return client.validate_resource_plan(request).isIsValid();
+  }
+
+  @Override
+  public void createWMTrigger(WMTrigger trigger)
+      throws InvalidObjectException, MetaException, TException {
+    WMCreateTriggerRequest request = new WMCreateTriggerRequest();
+    request.setTrigger(trigger);
+    client.create_wm_trigger(request);
+  }
+
+  @Override
+  public void alterWMTrigger(WMTrigger trigger)
+      throws NoSuchObjectException, InvalidObjectException, MetaException, TException {
+    WMAlterTriggerRequest request = new WMAlterTriggerRequest();
+    request.setTrigger(trigger);
+    client.alter_wm_trigger(request);
+  }
+
+  @Override
+  public void dropWMTrigger(String resourcePlanName, String triggerName)
+      throws NoSuchObjectException, MetaException, TException {
+    WMDropTriggerRequest request = new WMDropTriggerRequest();
+    request.setResourcePlanName(resourcePlanName);
+    request.setTriggerName(triggerName);
+    client.drop_wm_trigger(request);
+  }
+
+  @Override
+  public List<WMTrigger> getTriggersForResourcePlan(String resourcePlan)
+      throws NoSuchObjectException, MetaException, TException {
+    WMGetTriggersForResourePlanRequest request = new WMGetTriggersForResourePlanRequest();
+    request.setResourcePlanName(resourcePlan);
+    return client.get_triggers_for_resourceplan(request).getTriggers();
   }
 }

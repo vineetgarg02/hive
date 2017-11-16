@@ -20,6 +20,8 @@ package org.apache.hadoop.hive.ql.parse;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.shims.Utils;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -30,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.HashMap;
 
 public class TestExportImport {
 
@@ -46,10 +49,15 @@ public class TestExportImport {
   public static void classLevelSetup() throws Exception {
     Configuration conf = new Configuration();
     conf.set("dfs.client.use.datanode.hostname", "true");
+    conf.set("hadoop.proxyuser." + Utils.getUGI().getShortUserName() + ".hosts", "*");
     MiniDFSCluster miniDFSCluster =
         new MiniDFSCluster.Builder(conf).numDataNodes(1).format(true).build();
-    srcHiveWarehouse = new WarehouseInstance(LOG, miniDFSCluster, false);
-    destHiveWarehouse = new WarehouseInstance(LOG, miniDFSCluster, false);
+    HashMap<String, String> overridesForHiveConf = new HashMap<String, String>() {{
+      put(HiveConf.ConfVars.HIVE_IN_TEST.varname, "false");
+    }};
+    srcHiveWarehouse =
+        new WarehouseInstance(LOG, miniDFSCluster, overridesForHiveConf);
+    destHiveWarehouse = new WarehouseInstance(LOG, miniDFSCluster, overridesForHiveConf);
   }
 
   @AfterClass

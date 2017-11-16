@@ -281,6 +281,7 @@ public class VectorMapOperator extends AbstractMapOperator {
           LazySimpleDeserializeRead lazySimpleDeserializeRead =
               new LazySimpleDeserializeRead(
                   minimalDataTypeInfos,
+                  batchContext.getRowdataTypePhysicalVariations(),
                   /* useExternalBuffer */ true,
                   simpleSerdeParams);
 
@@ -512,18 +513,8 @@ public class VectorMapOperator extends AbstractMapOperator {
     partitionColumnCount = batchContext.getPartitionColumnCount();
     partitionValues = new Object[partitionColumnCount];
     virtualColumnCount = batchContext.getVirtualColumnCount();
-    rowIdentifierColumnNum = -1;
-    if (virtualColumnCount > 0) {
-      final int firstVirtualColumnNum = dataColumnCount + partitionColumnCount;
-      VirtualColumn[] neededVirtualColumns = batchContext.getNeededVirtualColumns();
-      hasRowIdentifier = (neededVirtualColumns[0] == VirtualColumn.ROWID);
-      if (hasRowIdentifier) {
-        rowIdentifierColumnNum = firstVirtualColumnNum;
-      }
-    } else {
-      hasRowIdentifier = false;
-    }
-    
+    rowIdentifierColumnNum = batchContext.findVirtualColumnNum(VirtualColumn.ROWID);
+    hasRowIdentifier = (rowIdentifierColumnNum != -1);
 
     dataColumnNums = batchContext.getDataColumnNums();
     Preconditions.checkState(dataColumnNums != null);
@@ -818,12 +809,11 @@ public class VectorMapOperator extends AbstractMapOperator {
             VectorizedRowBatch batch = (VectorizedRowBatch) value;
             numRows += batch.size;
             if (hasRowIdentifier) {
-
-              // UNDONE: Pass ROW__ID STRUCT column through IO Context to get filled in by ACID reader
-              // UNDONE: Or, perhaps tell it to do it before calling us, ...
-              // UNDONE: For now, set column to NULL.
-
-              setRowIdentiferToNull(batch);
+              if (batchContext.getRecordIdColumnVector() == null) {
+                setRowIdentiferToNull(batch);
+              } else {
+                batch.cols[rowIdentifierColumnNum] = batchContext.getRecordIdColumnVector();
+              }
             }
           }
           oneRootOperator.process(value, 0);

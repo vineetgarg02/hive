@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -44,6 +45,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
@@ -99,7 +101,6 @@ public class TestJdbcWithMiniLlap {
   private static String dataFileDir;
   private static Path kvDataFilePath;
   private static Path dataTypesFilePath;
-  private static final String tmpDir = System.getProperty("test.tmp.dir");
 
   private static HiveConf conf = null;
   private Connection hs2Conn = null;
@@ -116,6 +117,7 @@ public class TestJdbcWithMiniLlap {
 
     conf = new HiveConf();
     conf.setBoolVar(ConfVars.HIVE_SUPPORT_CONCURRENCY, false);
+    conf.setBoolVar(ConfVars.HIVE_SERVER2_ENABLE_DOAS, false);
 
     conf.addResource(new URL("file://" + new File(confDir).toURI().getPath()
         + "/tez-site.xml"));
@@ -135,7 +137,7 @@ public class TestJdbcWithMiniLlap {
     hs2Conn = getConnection(miniHS2.getJdbcURL(), System.getProperty("user.name"), "bar");
   }
 
-  private Connection getConnection(String jdbcURL, String user, String pwd) throws SQLException {
+  public static Connection getConnection(String jdbcURL, String user, String pwd) throws SQLException {
     Connection conn = DriverManager.getConnection(jdbcURL, user, pwd);
     conn.createStatement().execute("set hive.support.concurrency = false");
     return conn;
@@ -143,6 +145,7 @@ public class TestJdbcWithMiniLlap {
 
   @After
   public void tearDown() throws Exception {
+    LlapBaseInputFormat.closeAll();
     hs2Conn.close();
   }
 
@@ -154,7 +157,17 @@ public class TestJdbcWithMiniLlap {
   }
 
   private void createTestTable(String tableName) throws Exception {
-    Statement stmt = hs2Conn.createStatement();
+    createTestTable(hs2Conn, null, tableName, kvDataFilePath.toString());
+  }
+
+  public static void createTestTable(Connection connection, String database, String tableName, String srcFile) throws
+    Exception {
+    Statement stmt = connection.createStatement();
+
+    if (database != null) {
+      stmt.execute("CREATE DATABASE IF NOT EXISTS " + database);
+      stmt.execute("USE " + database);
+    }
 
     // create table
     stmt.execute("DROP TABLE IF EXISTS " + tableName);
@@ -162,8 +175,7 @@ public class TestJdbcWithMiniLlap {
         + " (under_col INT COMMENT 'the under column', value STRING) COMMENT ' test table'");
 
     // load data
-    stmt.execute("load data local inpath '"
-        + kvDataFilePath.toString() + "' into table " + tableName);
+    stmt.execute("load data local inpath '" + srcFile + "' into table " + tableName);
 
     ResultSet res = stmt.executeQuery("SELECT * FROM " + tableName);
     assertTrue(res.next());
@@ -223,12 +235,12 @@ public class TestJdbcWithMiniLlap {
 
   @Test(timeout = 60000)
   public void testNonAsciiStrings() throws Exception {
-    createTestTable("testtab1");
+    createTestTable(hs2Conn, "nonascii", "testtab_nonascii", kvDataFilePath.toString());
 
     RowCollector rowCollector = new RowCollector();
     String nonAscii = "À côté du garçon";
-    String query = "select value, '" + nonAscii + "' from testtab1 where under_col=0";
-    int rowCount = processQuery(query, 1, rowCollector);
+    String query = "select value, '" + nonAscii + "' from testtab_nonascii where under_col=0";
+    int rowCount = processQuery("nonascii", query, 1, rowCollector);
     assertEquals(3, rowCount);
 
     assertArrayEquals(new String[] {"val_0", nonAscii}, rowCollector.rows.get(0));
@@ -472,9 +484,14 @@ public class TestJdbcWithMiniLlap {
   }
 
   private int processQuery(String query, int numSplits, RowProcessor rowProcessor) throws Exception {
+    return processQuery(null, query, numSplits, rowProcessor);
+  }
+
+  private int processQuery(String currentDatabase, String query, int numSplits, RowProcessor rowProcessor) throws Exception {
     String url = miniHS2.getJdbcURL();
     String user = System.getProperty("user.name");
     String pwd = user;
+    String handleId = UUID.randomUUID().toString();
 
     LlapRowInputFormat inputFormat = new LlapRowInputFormat();
 
@@ -484,6 +501,10 @@ public class TestJdbcWithMiniLlap {
     job.set(LlapBaseInputFormat.USER_KEY, user);
     job.set(LlapBaseInputFormat.PWD_KEY, pwd);
     job.set(LlapBaseInputFormat.QUERY_KEY, query);
+    job.set(LlapBaseInputFormat.HANDLE_ID, handleId);
+    if (currentDatabase != null) {
+      job.set(LlapBaseInputFormat.DB_KEY, currentDatabase);
+    }
 
     InputSplit[] splits = inputFormat.getSplits(job, numSplits);
     assertTrue(splits.length > 0);
@@ -503,7 +524,80 @@ public class TestJdbcWithMiniLlap {
       }
       reader.close();
     }
+    LlapBaseInputFormat.close(handleId);
 
     return rowCount;
+  }
+
+  /**
+   * Test CLI kill command of a query that is running.
+   * We spawn 2 threads - one running the query and
+   * the other attempting to cancel.
+   * We're using a dummy udf to simulate a query,
+   * that runs for a sufficiently long time.
+   * @throws Exception
+   */
+  @Test
+  public void testKillQuery() throws Exception {
+    String tableName = "testtab1";
+    createTestTable(tableName);
+    Connection con = hs2Conn;
+    Connection con2 = getConnection(miniHS2.getJdbcURL(), System.getProperty("user.name"), "bar");
+
+    String udfName = TestJdbcWithMiniHS2.SleepMsUDF.class.getName();
+    Statement stmt1 = con.createStatement();
+    Statement stmt2 = con2.createStatement();
+    stmt1.execute("create temporary function sleepMsUDF as '" + udfName + "'");
+    stmt1.close();
+    final Statement stmt = con.createStatement();
+
+    ExceptionHolder tExecuteHolder = new ExceptionHolder();
+    ExceptionHolder tKillHolder = new ExceptionHolder();
+
+    // Thread executing the query
+    Thread tExecute = new Thread(new Runnable() {
+      @Override
+      public void run() {
+        try {
+          System.out.println("Executing query: ");
+          // The test table has 500 rows, so total query time should be ~ 500*500ms
+          stmt.executeQuery("select sleepMsUDF(t1.under_col, 100), t1.under_col, t2.under_col " +
+              "from " + tableName + " t1 join " + tableName + " t2 on t1.under_col = t2.under_col");
+          fail("Expecting SQLException");
+        } catch (SQLException e) {
+          tExecuteHolder.throwable = e;
+        }
+      }
+    });
+    // Thread killing the query
+    Thread tKill = new Thread(new Runnable() {
+      @Override
+      public void run() {
+        try {
+          Thread.sleep(2000);
+          String queryId = ((HiveStatement) stmt).getQueryId();
+          System.out.println("Killing query: " + queryId);
+
+          stmt2.execute("kill query '" + queryId + "'");
+          stmt2.close();
+        } catch (Exception e) {
+          tKillHolder.throwable = e;
+        }
+      }
+    });
+
+    tExecute.start();
+    tKill.start();
+    tExecute.join();
+    tKill.join();
+    stmt.close();
+    con2.close();
+
+    assertNotNull("tExecute", tExecuteHolder.throwable);
+    assertNull("tCancel", tKillHolder.throwable);
+  }
+
+  private static class ExceptionHolder {
+    Throwable throwable;
   }
 }

@@ -44,6 +44,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RawLocalFileSystem;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hive.cli.CliSessionState;
+import org.apache.hadoop.hive.common.JavaUtils;
 import org.apache.hadoop.hive.common.ValidTxnList;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.conf.Validator;
@@ -63,6 +64,7 @@ import org.apache.hadoop.hive.metastore.api.TxnAbortedException;
 import org.apache.hadoop.hive.metastore.api.TxnInfo;
 import org.apache.hadoop.hive.metastore.api.TxnState;
 import org.apache.hadoop.hive.metastore.api.hive_metastoreConstants;
+import org.apache.hadoop.hive.metastore.txn.AcidHouseKeeperService;
 import org.apache.hadoop.hive.metastore.txn.TxnDbUtil;
 import org.apache.hadoop.hive.ql.CommandNeedRetryException;
 import org.apache.hadoop.hive.ql.Driver;
@@ -76,7 +78,6 @@ import org.apache.hadoop.hive.ql.io.orc.Reader;
 import org.apache.hadoop.hive.ql.io.orc.RecordReader;
 import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
 import org.apache.hadoop.hive.ql.session.SessionState;
-import org.apache.hadoop.hive.ql.txn.AcidHouseKeeperService;
 import org.apache.hadoop.hive.ql.txn.compactor.Worker;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.hive.serde2.objectinspector.StructField;
@@ -210,8 +211,8 @@ public class TestStreaming {
 
 
     //1) Start from a clean slate (metastore)
-    TxnDbUtil.cleanDb();
-    TxnDbUtil.prepDb();
+    TxnDbUtil.cleanDb(conf);
+    TxnDbUtil.prepDb(conf);
 
     //2) obtain metastore clients
     msClient = new HiveMetaStoreClient(conf);
@@ -414,7 +415,7 @@ public class TestStreaming {
     AtomicBoolean stop = new AtomicBoolean(true);
     Worker t = new Worker();
     t.setThreadId((int) t.getId());
-    t.setHiveConf(hiveConf);
+    t.setConf(hiveConf);
     AtomicBoolean looped = new AtomicBoolean();
     t.init(stop, looped);
     t.run();
@@ -739,11 +740,8 @@ public class TestStreaming {
     //ensure txn timesout
     conf.setTimeVar(HiveConf.ConfVars.HIVE_TXN_TIMEOUT, 1, TimeUnit.MILLISECONDS);
     AcidHouseKeeperService houseKeeperService = new AcidHouseKeeperService();
-    houseKeeperService.start(conf);
-    while(houseKeeperService.getIsAliveCounter() <= Integer.MIN_VALUE) {
-      Thread.sleep(100);//make sure it has run at least once
-    }
-    houseKeeperService.stop();
+    houseKeeperService.setConf(conf);
+    houseKeeperService.run();
     try {
       //should fail because the TransactionBatch timed out
       txnBatch.commit();
@@ -756,12 +754,7 @@ public class TestStreaming {
     txnBatch.beginNextTransaction();
     txnBatch.commit();
     txnBatch.beginNextTransaction();
-    int lastCount = houseKeeperService.getIsAliveCounter();
-    houseKeeperService.start(conf);
-    while(houseKeeperService.getIsAliveCounter() <= lastCount) {
-      Thread.sleep(100);//make sure it has run at least once
-    }
-    houseKeeperService.stop();
+    houseKeeperService.run();
     try {
       //should fail because the TransactionBatch timed out
       txnBatch.commit();
@@ -1974,7 +1967,12 @@ public class TestStreaming {
     txnBatch.write("name4,2,more Streaming unlimited".getBytes());
     txnBatch.write("name5,2,even more Streaming unlimited".getBytes());
     txnBatch.commit();
-    
+
+    //test toString()
+    String s = txnBatch.toString();
+    Assert.assertTrue("Actual: " + s, s.contains("LastUsed " + JavaUtils.txnIdToString(txnBatch.getCurrentTxnId())));
+    Assert.assertTrue("Actual: " + s, s.contains("TxnStatus[CO]"));
+
     expectedEx = null;
     txnBatch.beginNextTransaction();
     writer.enableErrors();
@@ -1997,6 +1995,11 @@ public class TestStreaming {
     }
     Assert.assertTrue("commit() should have failed",
       expectedEx != null && expectedEx.getMessage().contains("has been closed()"));
+
+    //test toString()
+    s = txnBatch.toString();
+    Assert.assertTrue("Actual: " + s, s.contains("LastUsed " + JavaUtils.txnIdToString(txnBatch.getCurrentTxnId())));
+    Assert.assertTrue("Actual: " + s, s.contains("TxnStatus[CA]"));
 
     r = msClient.showTxns();
     Assert.assertEquals("HWM didn't match", 19, r.getTxn_high_water_mark());

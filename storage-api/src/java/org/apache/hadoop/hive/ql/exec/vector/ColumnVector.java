@@ -41,6 +41,7 @@ public abstract class ColumnVector {
     DOUBLE,
     BYTES,
     DECIMAL,
+    DECIMAL_64,
     TIMESTAMP,
     INTERVAL_DAY_TIME,
     STRUCT,
@@ -48,6 +49,8 @@ public abstract class ColumnVector {
     MAP,
     UNION
   }
+
+  public final Type type;
 
   /*
    * If hasNulls is true, then this array contains true if the value
@@ -75,7 +78,8 @@ public abstract class ColumnVector {
    *
    * @param len Vector length
    */
-  public ColumnVector(int len) {
+  public ColumnVector(Type type, int len) {
+    this.type = type;
     isNull = new boolean[len];
     noNulls = true;
     isRepeating = false;

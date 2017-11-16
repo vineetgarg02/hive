@@ -25,6 +25,7 @@ import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.parse.repl.PathBuilder;
 import org.apache.hadoop.hive.ql.util.DependencyResolver;
+import org.apache.hadoop.hive.shims.Utils;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -63,6 +64,7 @@ public class TestReplicationScenariosAcrossInstances {
   public static void classLevelSetup() throws Exception {
     Configuration conf = new Configuration();
     conf.set("dfs.client.use.datanode.hostname", "true");
+    conf.set("hadoop.proxyuser." + Utils.getUGI().getShortUserName() + ".hosts", "*");
     MiniDFSCluster miniDFSCluster =
         new MiniDFSCluster.Builder(conf).numDataNodes(1).format(true).build();
     primary = new WarehouseInstance(LOG, miniDFSCluster);
@@ -232,8 +234,8 @@ public class TestReplicationScenariosAcrossInstances {
         .run("create table t1 (id int)")
         .run("create table t2 (place string) partitioned by (country string)")
         .run("insert into table t2 partition(country='india') values ('bangalore')")
-        .run("insert into table t2 partition(country='india') values ('mumbai')")
-        .run("insert into table t2 partition(country='india') values ('delhi')")
+        .run("insert into table t2 partition(country='us') values ('austin')")
+        .run("insert into table t2 partition(country='france') values ('paris')")
         .run("create table t3 (rank int)")
         .dump(primaryDbName, null);
 
@@ -244,7 +246,37 @@ public class TestReplicationScenariosAcrossInstances {
         .run("show tables")
         .verifyResults(new String[] { "t1", "t2", "t3" })
         .run("repl status " + replicatedDbName)
-        .verifyResult(tuple.lastReplicationId);
+        .verifyResult(tuple.lastReplicationId)
+        .run("select country from t2 order by country")
+        .verifyResults(new String[] { "france", "india", "us" });
+  }
 
+  @Test
+  public void parallelExecutionOfReplicationBootStrapLoad() throws Throwable {
+    WarehouseInstance.Tuple tuple = primary
+        .run("use " + primaryDbName)
+        .run("create table t1 (id int)")
+        .run("create table t2 (place string) partitioned by (country string)")
+        .run("insert into table t2 partition(country='india') values ('bangalore')")
+        .run("insert into table t2 partition(country='australia') values ('sydney')")
+        .run("insert into table t2 partition(country='russia') values ('moscow')")
+        .run("insert into table t2 partition(country='uk') values ('london')")
+        .run("insert into table t2 partition(country='us') values ('sfo')")
+        .run("insert into table t2 partition(country='france') values ('paris')")
+        .run("insert into table t2 partition(country='japan') values ('tokyo')")
+        .run("insert into table t2 partition(country='china') values ('hkg')")
+        .run("create table t3 (rank int)")
+        .dump(primaryDbName, null);
+
+    replica.hiveConf.setBoolVar(HiveConf.ConfVars.EXECPARALLEL, true);
+    replica.load(replicatedDbName, tuple.dumpLocation)
+        .run("use " + replicatedDbName)
+        .run("repl status " + replicatedDbName)
+        .verifyResult(tuple.lastReplicationId)
+        .run("show tables")
+        .verifyResults(new String[] { "t1", "t2", "t3" })
+        .run("select country from t2")
+        .verifyResults(Arrays.asList("india", "australia", "russia", "uk", "us", "france", "japan",
+            "china"));
   }
 }

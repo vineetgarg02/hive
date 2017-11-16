@@ -42,8 +42,10 @@ import org.apache.hadoop.hive.ql.exec.vector.expressions.VectorExpression;
 import org.apache.hadoop.hive.ql.exec.vector.mapjoin.hashtable.VectorMapJoinHashTableResult;
 import org.apache.hadoop.hive.ql.exec.vector.mapjoin.hashtable.VectorMapJoinHashMapResult;
 import org.apache.hadoop.hive.ql.exec.vector.mapjoin.optimized.VectorMapJoinOptimizedCreateHashTable;
+import org.apache.hadoop.hive.ql.exec.vector.rowbytescontainer.VectorRowBytesContainer;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.plan.OperatorDesc;
+import org.apache.hadoop.hive.ql.plan.VectorDesc;
 import org.apache.hadoop.hive.serde2.SerDeException;
 import org.apache.hadoop.hive.serde2.WriteBuffers.ByteSegmentRef;
 import org.apache.hadoop.hive.serde2.lazybinary.fast.LazyBinaryDeserializeRead;
@@ -103,9 +105,9 @@ public abstract class VectorMapJoinGenerateResultOperator extends VectorMapJoinC
     super(ctx);
   }
 
-  public VectorMapJoinGenerateResultOperator(CompilationOpContext ctx,
-      VectorizationContext vContext, OperatorDesc conf) throws HiveException {
-    super(ctx, vContext, conf);
+  public VectorMapJoinGenerateResultOperator(CompilationOpContext ctx, OperatorDesc conf,
+      VectorizationContext vContext, VectorDesc vectorDesc) throws HiveException {
+    super(ctx, conf, vContext, vectorDesc);
   }
 
   @Override
@@ -481,7 +483,7 @@ public abstract class VectorMapJoinGenerateResultOperator extends VectorMapJoinC
     HybridHashTableContainer ht = (HybridHashTableContainer) mapJoinTables[posSingleVectorMapJoinSmallTable];
     HashPartition hp = ht.getHashPartitions()[partitionId];
 
-    VectorMapJoinRowBytesContainer rowBytesContainer = hp.getMatchfileRowBytesContainer();
+    VectorRowBytesContainer rowBytesContainer = hp.getMatchfileRowBytesContainer();
     Output output = rowBytesContainer.getOuputForRowBytes();
 //  int offset = output.getLength();
     bigTableVectorSerializeRow.setOutputAppend(output);
@@ -568,7 +570,7 @@ public abstract class VectorMapJoinGenerateResultOperator extends VectorMapJoinC
     int batchCount = 0;
 
     try {
-      VectorMapJoinRowBytesContainer bigTable = partition.getMatchfileRowBytesContainer();
+      VectorRowBytesContainer bigTable = partition.getMatchfileRowBytesContainer();
       bigTable.prepareForReading();
 
       while (bigTable.readNext()) {

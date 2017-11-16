@@ -18,11 +18,11 @@
 
 package org.apache.hadoop.hive.ql;
 
+import org.apache.hadoop.hive.ql.exec.StatsTask;
 import org.apache.hadoop.hive.ql.exec.FileSinkOperator;
 import org.apache.hadoop.hive.ql.exec.NodeUtils;
 import org.apache.hadoop.hive.ql.exec.NodeUtils.Function;
 import org.apache.hadoop.hive.ql.exec.Operator;
-import org.apache.hadoop.hive.ql.exec.StatsTask;
 import org.apache.hadoop.hive.ql.exec.Task;
 import org.apache.hadoop.hive.ql.exec.TaskRunner;
 import org.apache.hadoop.hive.ql.exec.mr.MapRedTask;
@@ -64,7 +64,7 @@ public class DriverContext {
   private Context ctx;
   private boolean shutdown;
 
-  final Map<String, StatsTask> statsTasks = new HashMap<String, StatsTask>(1);
+  final Map<String, StatsTask> statsTasks = new HashMap<>(1);
 
   public DriverContext() {
   }
@@ -160,7 +160,7 @@ public class DriverContext {
   public static boolean isLaunchable(Task<? extends Serializable> tsk) {
     // A launchable task is one that hasn't been queued, hasn't been
     // initialized, and is runnable.
-    return !tsk.getQueued() && !tsk.getInitialized() && tsk.isRunnable();
+    return tsk.isNotInitialized() && tsk.isRunnable();
   }
 
   public synchronized boolean addToRunnable(Task<? extends Serializable> tsk) throws HiveException {
@@ -191,7 +191,9 @@ public class DriverContext {
     NodeUtils.iterateTask(rootTasks, StatsTask.class, new Function<StatsTask>() {
       @Override
       public void apply(StatsTask statsTask) {
-        statsTasks.put(statsTask.getWork().getAggKey(), statsTask);
+        if (statsTask.getWork().isAggregating()) {
+          statsTasks.put(statsTask.getWork().getAggKey(), statsTask);
+        }
       }
     });
   }

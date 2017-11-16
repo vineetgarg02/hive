@@ -76,6 +76,7 @@ public enum HiveOperation {
   SHOWLOCKS("SHOWLOCKS", null, null, true, false),
   SHOWCONF("SHOWCONF", null, null),
   SHOWVIEWS("SHOWVIEWS", null, null, true, false),
+  SHOWMATERIALIZEDVIEWS("SHOWMATERIALIZEDVIEWS", null, null, true, false),
   CREATEFUNCTION("CREATEFUNCTION", null, null),
   DROPFUNCTION("DROPFUNCTION", null, null),
   RELOADFUNCTION("RELOADFUNCTION", null, null),
@@ -86,6 +87,8 @@ public enum HiveOperation {
       Privilege[]{Privilege.CREATE}),
   DROPVIEW("DROPVIEW", null, new Privilege[]{Privilege.DROP}),
   DROP_MATERIALIZED_VIEW("DROP_MATERIALIZED_VIEW", null, new Privilege[]{Privilege.DROP}),
+  ALTER_MATERIALIZED_VIEW_REWRITE("ALTER_MATERIALIZED_VIEW_REWRITE",
+      new Privilege[]{Privilege.ALTER_METADATA}, null),
   CREATEINDEX("CREATEINDEX", null, null),
   DROPINDEX("DROPINDEX", null, null),
   ALTERINDEX_REBUILD("ALTERINDEX_REBUILD", null, null),
@@ -138,7 +141,15 @@ public enum HiveOperation {
   COMMIT("COMMIT", null, null, true, true),
   ROLLBACK("ROLLBACK", null, null, true, true),
   SET_AUTOCOMMIT("SET AUTOCOMMIT", null, null, true, false),
-  ABORT_TRANSACTIONS("ABORT TRANSACTIONS", null, null, false, false);
+  ABORT_TRANSACTIONS("ABORT TRANSACTIONS", null, null, false, false),
+  KILL_QUERY("KILL QUERY", null, null),
+  CREATE_RESOURCEPLAN("CREATE RESOURCEPLAN", null, null, false, false),
+  SHOW_RESOURCEPLAN("SHOW RESOURCEPLAN", null, null, false, false),
+  ALTER_RESOURCEPLAN("ALTER RESOURCEPLAN", null, null, false, false),
+  DROP_RESOURCEPLAN("DROP RESOURCEPLAN", null, null, false, false),
+  CREATE_TRIGGER("CREATE TRIGGER", null, null, false, false),
+  ALTER_TRIGGER("ALTER TRIGGER", null, null, false, false),
+  DROP_TRIGGER("DROP TRIGGER", null, null, false, false);
 
   private String operationName;
 

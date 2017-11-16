@@ -96,7 +96,8 @@ STAGE PLANS:
               name: default.tmptable
 
   Stage: Stage-2
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 
 PREHOOK: query: INSERT OVERWRITE TABLE tmptable
 SELECT unionsrc.key, unionsrc.value 
@@ -159,7 +160,6 @@ POSTHOOK: query: DESCRIBE FORMATTED tmptable
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@tmptable
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	                    
 value               	string              	                    
 	 	 
@@ -202,7 +202,6 @@ POSTHOOK: query: DESCRIBE FORMATTED tmptable
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@tmptable
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	                    
 value               	string              	                    
 	 	 

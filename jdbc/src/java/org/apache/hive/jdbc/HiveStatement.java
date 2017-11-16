@@ -18,6 +18,7 @@
 
 package org.apache.hive.jdbc;
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.hive.jdbc.logs.InPlaceUpdateStream;
 import org.apache.hive.service.cli.RowSet;
@@ -34,7 +35,9 @@ import org.apache.hive.service.rpc.thrift.TFetchResultsReq;
 import org.apache.hive.service.rpc.thrift.TFetchResultsResp;
 import org.apache.hive.service.rpc.thrift.TGetOperationStatusReq;
 import org.apache.hive.service.rpc.thrift.TGetOperationStatusResp;
+import org.apache.hive.service.rpc.thrift.TGetQueryIdReq;
 import org.apache.hive.service.rpc.thrift.TOperationHandle;
+import org.apache.hive.service.rpc.thrift.TOperationState;
 import org.apache.hive.service.rpc.thrift.TSessionHandle;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
@@ -263,7 +266,7 @@ public class HiveStatement implements java.sql.Statement {
     TGetOperationStatusResp status = waitForOperationToComplete();
 
     // The query should be completed by now
-    if (!status.isHasResultSet()) {
+    if (!status.isHasResultSet() && !stmtHandle.isHasResultSet()) {
       return false;
     }
     resultSet =  new HiveQueryResultSet.Builder(this).setClient(client).setSessionHandle(sessHandle)
@@ -384,7 +387,12 @@ public class HiveStatement implements java.sql.Statement {
             break;
           case CANCELED_STATE:
             // 01000 -> warning
-            throw new SQLException("Query was cancelled", "01000");
+            String errMsg = statusResp.getErrorMessage();
+            if (errMsg != null && !errMsg.isEmpty()) {
+              throw new SQLException("Query was cancelled. " + errMsg, "01000");
+            } else {
+              throw new SQLException("Query was cancelled", "01000");
+            }
           case TIMEDOUT_STATE:
             throw new SQLTimeoutException("Query timed out after " + queryTimeout + " seconds");
           case ERROR_STATE:
@@ -985,5 +993,14 @@ public class HiveStatement implements java.sql.Statement {
    */
   public void setInPlaceUpdateStream(InPlaceUpdateStream stream) {
     this.inPlaceUpdateStream = stream;
+  }
+
+  @VisibleForTesting
+  public String getQueryId() throws SQLException {
+    try {
+      return client.GetQueryId(new TGetQueryIdReq(stmtHandle)).getQueryId();
+    } catch (TException e) {
+      throw new SQLException(e);
+    }
   }
 }

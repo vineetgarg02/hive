@@ -102,7 +102,7 @@ STAGE PLANS:
                   GatherStats: false
                   Filter Operator
                     isSamplingPred: false
-                    predicate: (date is not null and dealid is not null and cityid is not null and userid is not null) (type: boolean)
+                    predicate: (cityid is not null and date is not null and dealid is not null and userid is not null) (type: boolean)
                     Statistics: Num rows: 1 Data size: 36 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: dealid (type: int), date (type: string), cityid (type: int), userid (type: int)
@@ -167,7 +167,7 @@ STAGE PLANS:
                     name: default.orderpayment_small
                   name: default.orderpayment_small
             Truncated Path -> Alias:
-              /orderpayment_small [$hdt$_0:orderpayment]
+              /orderpayment_small [$hdt$_1:orderpayment]
         Map 6 
             Map Operator Tree:
                 TableScan
@@ -240,7 +240,7 @@ STAGE PLANS:
                     name: default.orderpayment_small
                   name: default.orderpayment_small
             Truncated Path -> Alias:
-              /orderpayment_small [$hdt$_1:dim_pay_date]
+              /orderpayment_small [$hdt$_2:dim_pay_date]
         Map 7 
             Map Operator Tree:
                 TableScan
@@ -313,7 +313,7 @@ STAGE PLANS:
                     name: default.orderpayment_small
                   name: default.orderpayment_small
             Truncated Path -> Alias:
-              /orderpayment_small [$hdt$_2:deal]
+              /orderpayment_small [$hdt$_3:deal]
         Map 8 
             Map Operator Tree:
                 TableScan
@@ -386,7 +386,7 @@ STAGE PLANS:
                     name: default.orderpayment_small
                   name: default.orderpayment_small
             Truncated Path -> Alias:
-              /orderpayment_small [$hdt$_3:order_city]
+              /orderpayment_small [$hdt$_4:order_city]
         Map 9 
             Map Operator Tree:
                 TableScan
@@ -459,7 +459,7 @@ STAGE PLANS:
                     name: default.user_small
                   name: default.user_small
             Truncated Path -> Alias:
-              /user_small [$hdt$_4:user]
+              /user_small [$hdt$_0:user]
         Reducer 2 
             Needs Tagging: true
             Reduce Operator Tree:

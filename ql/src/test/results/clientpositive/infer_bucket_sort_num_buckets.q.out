@@ -71,7 +71,8 @@ STAGE PLANS:
               name: default.test_table
 
   Stage: Stage-2
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 
 PREHOOK: query: INSERT OVERWRITE TABLE test_table PARTITION (ds = '2008-04-08', hr)
 SELECT key2, value, cast(hr as int) FROM
@@ -107,13 +108,11 @@ POSTHOOK: query: DESCRIBE FORMATTED test_table PARTITION (ds='2008-04-08', hr='0
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@test_table
 # col_name            	data_type           	comment             
-	 	 
 key                 	int                 	                    
 value               	string              	                    
 	 	 
 # Partition Information	 	 
 # col_name            	data_type           	comment             
-	 	 
 ds                  	string              	                    
 hr                  	string              	                    
 	 	 
@@ -147,13 +146,11 @@ POSTHOOK: query: DESCRIBE FORMATTED test_table PARTITION (ds='2008-04-08', hr='1
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@test_table
 # col_name            	data_type           	comment             
-	 	 
 key                 	int                 	                    
 value               	string              	                    
 	 	 
 # Partition Information	 	 
 # col_name            	data_type           	comment             
-	 	 
 ds                  	string              	                    
 hr                  	string              	                    
 	 	 

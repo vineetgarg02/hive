@@ -103,7 +103,8 @@ STAGE PLANS:
               name: default.test_table_out
 
   Stage: Stage-2
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 
 PREHOOK: query: INSERT OVERWRITE TABLE test_table_out PARTITION (part = '1') 
 SELECT key, count(*) FROM test_table1 GROUP BY key
@@ -124,13 +125,11 @@ POSTHOOK: query: DESCRIBE FORMATTED test_table_out PARTITION (part = '1')
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@test_table_out
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	                    
 value               	string              	                    
 	 	 
 # Partition Information	 	 
 # col_name            	data_type           	comment             
-	 	 
 part                	string              	                    
 	 	 
 # Detailed Partition Information	 	 
@@ -262,7 +261,8 @@ STAGE PLANS:
               name: default.test_table_out
 
   Stage: Stage-2
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 
 PREHOOK: query: INSERT OVERWRITE TABLE test_table_out PARTITION (part = '1') 
 SELECT a.key, a.value FROM (
@@ -295,13 +295,11 @@ POSTHOOK: query: DESCRIBE FORMATTED test_table_out PARTITION (part = '1')
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@test_table_out
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	                    
 value               	string              	                    
 	 	 
 # Partition Information	 	 
 # col_name            	data_type           	comment             
-	 	 
 part                	string              	                    
 	 	 
 # Detailed Partition Information	 	 
@@ -385,7 +383,8 @@ STAGE PLANS:
               name: default.test_table_out
 
   Stage: Stage-2
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 
 PREHOOK: query: INSERT OVERWRITE TABLE test_table_out PARTITION (part = '1')
 SELECT /*+ MAPJOIN(a) */ a.key, b.value FROM test_table1 a JOIN test_table2 b ON a.key = b.key
@@ -408,13 +407,11 @@ POSTHOOK: query: DESCRIBE FORMATTED test_table_out PARTITION (part = '1')
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@test_table_out
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	                    
 value               	string              	                    
 	 	 
 # Partition Information	 	 
 # col_name            	data_type           	comment             
-	 	 
 part                	string              	                    
 	 	 
 # Detailed Partition Information	 	 
@@ -522,7 +519,8 @@ STAGE PLANS:
               name: default.test_table_out
 
   Stage: Stage-2
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 
 PREHOOK: query: INSERT OVERWRITE TABLE test_table_out PARTITION (part = '1')
 SELECT /*+ MAPJOIN(a) */ b.value, count(*) FROM test_table1 a JOIN test_table2 b ON a.key = b.key
@@ -547,13 +545,11 @@ POSTHOOK: query: DESCRIBE FORMATTED test_table_out PARTITION (part = '1')
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@test_table_out
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	                    
 value               	string              	                    
 	 	 
 # Partition Information	 	 
 # col_name            	data_type           	comment             
-	 	 
 part                	string              	                    
 	 	 
 # Detailed Partition Information	 	 

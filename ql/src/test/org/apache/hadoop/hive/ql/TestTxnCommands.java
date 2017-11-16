@@ -17,10 +17,9 @@
  */
 package org.apache.hadoop.hive.ql;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.metastore.RunnableConfigurable;
 import org.apache.hadoop.hive.metastore.api.GetOpenTxnsInfoResponse;
 import org.apache.hadoop.hive.metastore.api.LockState;
 import org.apache.hadoop.hive.metastore.api.LockType;
@@ -28,33 +27,25 @@ import org.apache.hadoop.hive.metastore.api.ShowLocksRequest;
 import org.apache.hadoop.hive.metastore.api.ShowLocksResponse;
 import org.apache.hadoop.hive.metastore.api.TxnInfo;
 import org.apache.hadoop.hive.metastore.api.TxnState;
+import org.apache.hadoop.hive.metastore.txn.AcidHouseKeeperService;
 import org.apache.hadoop.hive.metastore.txn.TxnDbUtil;
 import org.apache.hadoop.hive.metastore.txn.TxnStore;
 import org.apache.hadoop.hive.metastore.txn.TxnUtils;
 import org.apache.hadoop.hive.ql.io.AcidOutputFormat;
 import org.apache.hadoop.hive.ql.io.AcidUtils;
 import org.apache.hadoop.hive.ql.io.BucketCodec;
-import org.apache.hadoop.hive.ql.io.HiveInputFormat;
 import org.apache.hadoop.hive.ql.lockmgr.TestDbTxnManager2;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
-import org.apache.hadoop.hive.ql.session.SessionState;
-import org.apache.hadoop.hive.ql.txn.AcidHouseKeeperService;
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Ignore;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TestName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -65,11 +56,11 @@ import java.util.concurrent.TimeUnit;
  * test AC=true, and AC=false with commit/rollback/exception and test resulting data.
  *
  * Can also test, calling commit in AC=true mode, etc, toggling AC...
- * 
- * Tests here are for multi-statement transactions (WIP) and those that don't need to
- * run with Acid 2.0 (see subclasses of TestTxnCommands2)
+ *
+ * Tests here are for multi-statement transactions (WIP) and others
+ * Mostly uses bucketed tables
  */
-public class TestTxnCommands extends TestTxnCommandsBase {
+public class TestTxnCommands extends TxnCommandsBaseForTests {
   static final private Logger LOG = LoggerFactory.getLogger(TestTxnCommands.class);
   private static final String TEST_DATA_DIR = new File(System.getProperty("java.io.tmpdir") +
     File.separator + TestTxnCommands.class.getCanonicalName()
@@ -80,25 +71,6 @@ public class TestTxnCommands extends TestTxnCommandsBase {
     return TEST_DATA_DIR;
   }
 
-  private void dropTables() throws Exception {
-    for(Table t : Table.values()) {
-      runStatementOnDriver("drop table if exists " + t);
-    }
-  }
-  @After
-  public void tearDown() throws Exception {
-    try {
-      if (d != null) {
-        dropTables();
-        d.destroy();
-        d.close();
-        d = null;
-      }
-    } finally {
-      TxnDbUtil.cleanDb();
-      FileUtils.deleteDirectory(new File(TEST_DATA_DIR));
-    }
-  }
   @Test//todo: what is this for?
   public void testInsertOverwrite() throws Exception {
     runStatementOnDriver("insert overwrite table " + Table.NONACIDORCTBL + " select a,b from " + Table.NONACIDORCTBL2);
@@ -365,11 +337,11 @@ public class TestTxnCommands extends TestTxnCommandsBase {
     runStatementOnDriver("start transaction");
     runStatementOnDriver("delete from " + Table.ACIDTBL + " where a = 5");
     //make sure currently running txn is considered aborted by housekeeper
-    hiveConf.setTimeVar(HiveConf.ConfVars.HIVE_TIMEDOUT_TXN_REAPER_START, 0, TimeUnit.SECONDS);
     hiveConf.setTimeVar(HiveConf.ConfVars.HIVE_TXN_TIMEOUT, 2, TimeUnit.MILLISECONDS);
-    AcidHouseKeeperService houseKeeperService = new AcidHouseKeeperService();
+    RunnableConfigurable houseKeeperService = new AcidHouseKeeperService();
+    houseKeeperService.setConf(hiveConf);
     //this will abort the txn
-    TestTxnCommands2.runHouseKeeperService(houseKeeperService, hiveConf);
+    houseKeeperService.run();
     //this should fail because txn aborted due to timeout
     CommandProcessorResponse cpr = runStatementOnDriverNegative("delete from " + Table.ACIDTBL + " where a = 5");
     Assert.assertTrue("Actual: " + cpr.getErrorMessage(), cpr.getErrorMessage().contains("Transaction manager has aborted the transaction txnid:1"));
@@ -377,6 +349,8 @@ public class TestTxnCommands extends TestTxnCommandsBase {
     //now test that we don't timeout locks we should not
     //heartbeater should be running in the background every 1/2 second
     hiveConf.setTimeVar(HiveConf.ConfVars.HIVE_TXN_TIMEOUT, 1, TimeUnit.SECONDS);
+    // Have to reset the conf when we change it so that the change takes affect
+    houseKeeperService.setConf(hiveConf);
     //hiveConf.setBoolVar(HiveConf.ConfVars.HIVETESTMODEFAILHEARTBEATER, true);
     runStatementOnDriver("start transaction");
     runStatementOnDriver("select count(*) from " + Table.ACIDTBL + " where a = 17");
@@ -397,7 +371,7 @@ public class TestTxnCommands extends TestTxnCommandsBase {
     Assert.assertNotNull(txnInfo);
     Assert.assertEquals(14, txnInfo.getId());
     Assert.assertEquals(TxnState.OPEN, txnInfo.getState());
-    String s =TxnDbUtil.queryToString("select TXN_STARTED, TXN_LAST_HEARTBEAT from TXNS where TXN_ID = " + txnInfo.getId(), false);
+    String s =TxnDbUtil.queryToString(hiveConf, "select TXN_STARTED, TXN_LAST_HEARTBEAT from TXNS where TXN_ID = " + txnInfo.getId(), false);
     String[] vals = s.split("\\s+");
     Assert.assertEquals("Didn't get expected timestamps", 2, vals.length);
     long lastHeartbeat = Long.parseLong(vals[1]);
@@ -408,20 +382,20 @@ public class TestTxnCommands extends TestTxnCommandsBase {
     ShowLocksResponse slr = txnHandler.showLocks(new ShowLocksRequest());
     TestDbTxnManager2.checkLock(LockType.SHARED_READ, LockState.ACQUIRED, "default", Table.ACIDTBL.name, null, slr.getLocks());
     pause(750);
-    TestTxnCommands2.runHouseKeeperService(houseKeeperService, hiveConf);
+    houseKeeperService.run();
     pause(750);
     slr = txnHandler.showLocks(new ShowLocksRequest());
     Assert.assertEquals("Unexpected lock count: " + slr, 1, slr.getLocks().size());
     TestDbTxnManager2.checkLock(LockType.SHARED_READ, LockState.ACQUIRED, "default", Table.ACIDTBL.name, null, slr.getLocks());
 
     pause(750);
-    TestTxnCommands2.runHouseKeeperService(houseKeeperService, hiveConf);
+    houseKeeperService.run();
     slr = txnHandler.showLocks(new ShowLocksRequest());
     Assert.assertEquals("Unexpected lock count: " + slr, 1, slr.getLocks().size());
     TestDbTxnManager2.checkLock(LockType.SHARED_READ, LockState.ACQUIRED, "default", Table.ACIDTBL.name, null, slr.getLocks());
 
     //should've done several heartbeats
-    s =TxnDbUtil.queryToString("select TXN_STARTED, TXN_LAST_HEARTBEAT from TXNS where TXN_ID = " + txnInfo.getId(), false);
+    s =TxnDbUtil.queryToString(hiveConf, "select TXN_STARTED, TXN_LAST_HEARTBEAT from TXNS where TXN_ID = " + txnInfo.getId(), false);
     vals = s.split("\\s+");
     Assert.assertEquals("Didn't get expected timestamps", 2, vals.length);
     Assert.assertTrue("Heartbeat didn't progress: (old,new) (" + lastHeartbeat + "," + vals[1]+ ")",
@@ -438,7 +412,6 @@ public class TestTxnCommands extends TestTxnCommandsBase {
     catch (InterruptedException e) {
     }
   }
-
 
   @Test
   public void exchangePartition() throws Exception {

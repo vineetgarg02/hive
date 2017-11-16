@@ -1,42 +1,56 @@
-/**
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+/*
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
  */
 package org.apache.hadoop.hive.ql.optimizer;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.CompilationOpContext;
-import org.apache.hadoop.hive.ql.exec.*;
+import org.apache.hadoop.hive.ql.exec.ConditionalTask;
+import org.apache.hadoop.hive.ql.exec.FileSinkOperator;
+import org.apache.hadoop.hive.ql.exec.MoveTask;
+import org.apache.hadoop.hive.ql.exec.RowSchema;
+import org.apache.hadoop.hive.ql.exec.Task;
 import org.apache.hadoop.hive.ql.exec.mr.MapRedTask;
 import org.apache.hadoop.hive.ql.io.HiveInputFormat;
 import org.apache.hadoop.hive.ql.io.HiveOutputFormat;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
-import org.apache.hadoop.hive.ql.plan.*;
+import org.apache.hadoop.hive.ql.plan.FileSinkDesc;
+import org.apache.hadoop.hive.ql.plan.LoadFileDesc;
+import org.apache.hadoop.hive.ql.plan.LoadMultiFilesDesc;
+import org.apache.hadoop.hive.ql.plan.LoadTableDesc;
+import org.apache.hadoop.hive.ql.plan.MoveWork;
+import org.apache.hadoop.hive.ql.plan.TableDesc;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.Serializable;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
@@ -44,7 +58,7 @@ import static org.mockito.Mockito.when;
 public class TestGenMapRedUtilsCreateConditionalTask {
   private static HiveConf hiveConf;
 
-  private Task dummyMRTask;
+  private Task<? extends Serializable> dummyMRTask;
 
   @BeforeClass
   public static void initializeSessionState() {
@@ -85,17 +99,20 @@ public class TestGenMapRedUtilsCreateConditionalTask {
         GenMapRedUtils.shouldMergeMovePaths(hiveConf, condInputPath, condOutputPath, mockWork));
 
     reset(mockWork);
-    when(mockWork.getLoadFileWork()).thenReturn(new LoadFileDesc(condInputPath, condOutputPath, false, "", ""));
+    when(mockWork.getLoadFileWork()).thenReturn(new LoadFileDesc(
+        condInputPath, condOutputPath, false, "", "", false));
     assertFalse("Merging paths is not allowed when both conditional output path is not equals to MoveWork input path.",
         GenMapRedUtils.shouldMergeMovePaths(hiveConf, condInputPath, condOutputPath, mockWork));
 
     reset(mockWork);
-    when(mockWork.getLoadFileWork()).thenReturn(new LoadFileDesc(condOutputPath, new Path("unused"), false, "", ""));
+    when(mockWork.getLoadFileWork()).thenReturn(new LoadFileDesc(
+        condOutputPath, new Path("unused"), false, "", "", false));
     assertFalse("Merging paths is not allowed when conditional input path is not a BlobStore path.",
         GenMapRedUtils.shouldMergeMovePaths(hiveConf, new Path("hdfs://hdfs-path"), condOutputPath, mockWork));
 
     reset(mockWork);
-    when(mockWork.getLoadFileWork()).thenReturn(new LoadFileDesc(condOutputPath, new Path("hdfs://hdfs-path"), false, "", ""));
+    when(mockWork.getLoadFileWork()).thenReturn(new LoadFileDesc(
+        condOutputPath, new Path("hdfs://hdfs-path"), false, "", "", false));
     assertFalse("Merging paths is not allowed when MoveWork output path is not a BlobStore path.",
         GenMapRedUtils.shouldMergeMovePaths(hiveConf, condInputPath, condOutputPath, mockWork));
   }
@@ -107,7 +124,8 @@ public class TestGenMapRedUtilsCreateConditionalTask {
     final Path targetMoveWorkPath = new Path("s3a://bucket/scratch/-ext-10003");
     final MoveWork mockWork = mock(MoveWork.class);
 
-    when(mockWork.getLoadFileWork()).thenReturn(new LoadFileDesc(condOutputPath, targetMoveWorkPath, false, "", ""));
+    when(mockWork.getLoadFileWork()).thenReturn(new LoadFileDesc(
+        condOutputPath, targetMoveWorkPath, false, "", "", false));
 
     assertTrue("Merging BlobStore paths should be allowed.",
         GenMapRedUtils.shouldMergeMovePaths(hiveConf, condInputPath, condOutputPath, mockWork));
@@ -131,7 +149,8 @@ public class TestGenMapRedUtilsCreateConditionalTask {
     MoveWork newWork;
 
     // test using loadFileWork
-    when(mockWork.getLoadFileWork()).thenReturn(new LoadFileDesc(condOutputPath, targetMoveWorkPath, false, "", ""));
+    when(mockWork.getLoadFileWork()).thenReturn(new LoadFileDesc(
+        condOutputPath, targetMoveWorkPath, false, "", "", false));
     newWork = GenMapRedUtils.mergeMovePaths(condInputPath, mockWork);
     assertNotNull(newWork);
     assertNotEquals(newWork, mockWork);
@@ -141,7 +160,8 @@ public class TestGenMapRedUtilsCreateConditionalTask {
     // test using loadTableWork
     TableDesc tableDesc = new TableDesc();
     reset(mockWork);
-    when(mockWork.getLoadTableWork()).thenReturn(new LoadTableDesc(condOutputPath, tableDesc, null));
+    when(mockWork.getLoadTableWork()).thenReturn(new LoadTableDesc(
+        condOutputPath, tableDesc, null, null));
     newWork = GenMapRedUtils.mergeMovePaths(condInputPath, mockWork);
     assertNotNull(newWork);
     assertNotEquals(newWork, mockWork);
@@ -159,7 +179,7 @@ public class TestGenMapRedUtilsCreateConditionalTask {
     Path finalDirName = new Path("s3a://bucket/scratch/-ext-10000");
     Path tableLocation = new Path("s3a://bucket/warehouse/table");
     Task<MoveWork> moveTask = createMoveTask(finalDirName, tableLocation);
-    List<Task<MoveWork>> moveTaskList = Arrays.asList(moveTask);
+    List<Task<MoveWork>> moveTaskList = Collections.singletonList(moveTask);
 
     GenMapRedUtils.createMRWorkForMergingFiles(fileSinkOperator, finalDirName, null, moveTaskList, hiveConf, dummyMRTask);
     ConditionalTask conditionalTask = (ConditionalTask)dummyMRTask.getChildTasks().get(0);
@@ -199,7 +219,7 @@ public class TestGenMapRedUtilsCreateConditionalTask {
     Path finalDirName = new Path("s3a://bucket/scratch/-ext-10000");
     Path tableLocation = new Path("s3a://bucket/warehouse/table");
     Task<MoveWork> moveTask = createMoveTask(finalDirName, tableLocation);
-    List<Task<MoveWork>> moveTaskList = Arrays.asList(moveTask);
+    List<Task<MoveWork>> moveTaskList = Collections.singletonList(moveTask);
 
     GenMapRedUtils.createMRWorkForMergingFiles(fileSinkOperator, finalDirName, null, moveTaskList, hiveConf, dummyMRTask);
     ConditionalTask conditionalTask = (ConditionalTask)dummyMRTask.getChildTasks().get(0);
@@ -233,7 +253,7 @@ public class TestGenMapRedUtilsCreateConditionalTask {
     Path finalDirName = new Path("hdfs://bucket/scratch/-ext-10000");
     Path tableLocation = new Path("hdfs://bucket/warehouse/table");
     Task<MoveWork> moveTask = createMoveTask(finalDirName, tableLocation);
-    List<Task<MoveWork>> moveTaskList = Arrays.asList(moveTask);
+    List<Task<MoveWork>> moveTaskList = Collections.singletonList(moveTask);
 
     GenMapRedUtils.createMRWorkForMergingFiles(fileSinkOperator, finalDirName, null, moveTaskList, hiveConf, dummyMRTask);
     ConditionalTask conditionalTask = (ConditionalTask)dummyMRTask.getChildTasks().get(0);
@@ -276,7 +296,7 @@ public class TestGenMapRedUtilsCreateConditionalTask {
   private Task<MoveWork> createMoveTask(Path source, Path destination) {
     Task<MoveWork> moveTask = mock(MoveTask.class);
     MoveWork moveWork = new MoveWork();
-    moveWork.setLoadFileWork(new LoadFileDesc(source, destination, true, null, null));
+    moveWork.setLoadFileWork(new LoadFileDesc(source, destination, true, null, null, false));
 
     when(moveTask.getWork()).thenReturn(moveWork);
 

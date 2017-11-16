@@ -127,6 +127,7 @@ TOK_DATETIME;
 TOK_TIMESTAMP;
 TOK_TIMESTAMPLITERAL;
 TOK_TIMESTAMPLOCALTZ;
+TOK_TIMESTAMPLOCALTZLITERAL;
 TOK_INTERVAL_YEAR_MONTH;
 TOK_INTERVAL_YEAR_MONTH_LITERAL;
 TOK_INTERVAL_DAY_TIME;
@@ -259,6 +260,8 @@ TOK_ALTERVIEW_DROPPARTS;
 TOK_ALTERVIEW_RENAME;
 TOK_CREATE_MATERIALIZED_VIEW;
 TOK_DROP_MATERIALIZED_VIEW;
+TOK_ALTER_MATERIALIZED_VIEW;
+TOK_ALTER_MATERIALIZED_VIEW_REWRITE;
 TOK_REWRITE_ENABLED;
 TOK_REWRITE_DISABLED;
 TOK_VIEWPARTCOLS;
@@ -330,6 +333,7 @@ TOK_DBPROPLIST;
 TOK_ALTERDATABASE_PROPERTIES;
 TOK_ALTERDATABASE_OWNER;
 TOK_ALTERDATABASE_LOCATION;
+TOK_DBNAME;
 TOK_TABNAME;
 TOK_TABSRC;
 TOK_RESTRICT;
@@ -374,6 +378,7 @@ TOK_COL_NAME;
 TOK_URI_TYPE;
 TOK_SERVER_TYPE;
 TOK_SHOWVIEWS;
+TOK_SHOWMATERIALIZEDVIEWS;
 TOK_START_TRANSACTION;
 TOK_ISOLATION_LEVEL;
 TOK_ISOLATION_SNAPSHOT;
@@ -393,6 +398,8 @@ TOK_DELETE;
 TOK_REPL_DUMP;
 TOK_REPL_LOAD;
 TOK_REPL_STATUS;
+TOK_REPL_CONFIG;
+TOK_REPL_CONFIG_LIST;
 TOK_TO;
 TOK_ONLY;
 TOK_SUMMARY;
@@ -400,6 +407,20 @@ TOK_OPERATOR;
 TOK_EXPRESSION;
 TOK_DETAIL;
 TOK_BLOCKING;
+TOK_KILL_QUERY;
+TOK_CREATERESOURCEPLAN;
+TOK_SHOWRESOURCEPLAN;
+TOK_ALTER_RP;
+TOK_DROP_RP;
+TOK_VALIDATE;
+TOK_ACTIVATE;
+TOK_QUERY_PARALLELISM;
+TOK_RENAME;
+TOK_DEFAULT_POOL;
+TOK_CREATE_TRIGGER;
+TOK_ALTER_TRIGGER;
+TOK_DROP_TRIGGER;
+TOK_TRIGGER_EXPRESSION;
 }
 
 
@@ -570,6 +591,17 @@ import org.apache.hadoop.hive.conf.HiveConf;
     xlateMap.put("KW_COMPACTIONS", "COMPACTIONS");
     xlateMap.put("KW_COMPACT", "COMPACT");
     xlateMap.put("KW_WAIT", "WAIT");
+    xlateMap.put("KW_KILL", "KILL");
+    xlateMap.put("KW_QUERY", "QUERY");
+    xlateMap.put("KW_RESOURCE", "RESOURCE");
+    xlateMap.put("KW_PLAN", "PLAN");
+    xlateMap.put("KW_QUERY_PARALLELISM", "QUERY_PARALLELISM");
+    xlateMap.put("KW_PLANS", "PLANS");
+    xlateMap.put("KW_ACTIVATE", "ACTIVATE");
+    xlateMap.put("KW_DEFAULT", "DEFAULT");
+    xlateMap.put("KW_POOL", "POOL");
+    xlateMap.put("KW_MOVE", "MOVE");
+    xlateMap.put("KW_DO", "DO");
 
     // Operators
     xlateMap.put("DOT", ".");
@@ -839,8 +871,23 @@ replLoadStatement
       : KW_REPL KW_LOAD
         ((dbName=identifier) (DOT tblName=identifier)?)?
         KW_FROM (path=StringLiteral)
-      -> ^(TOK_REPL_LOAD $path $dbName? $tblName?)
+        (KW_WITH replConf=replConfigs)?
+      -> ^(TOK_REPL_LOAD $path ^(TOK_DBNAME $dbName)? ^(TOK_TABNAME $tblName)? $replConf?)
       ;
+
+replConfigs
+@init { pushMsg("repl configurations", state); }
+@after { popMsg(state); }
+    :
+      LPAREN replConfigsList RPAREN -> ^(TOK_REPL_CONFIG replConfigsList)
+    ;
+
+replConfigsList
+@init { pushMsg("repl configurations list", state); }
+@after { popMsg(state); }
+    :
+      keyValueProperty (COMMA keyValueProperty)* -> ^(TOK_REPL_CONFIG_LIST keyValueProperty+)
+    ;
 
 replStatusStatement
 @init { pushMsg("replication load statement", state); }
@@ -892,6 +939,13 @@ ddlStatement
     | setRole
     | showCurrentRole
     | abortTransactionStatement
+    | killQueryStatement
+    | createResourcePlanStatement
+    | alterResourcePlanStatement
+    | dropResourcePlanStatement
+    | createTriggerStatement
+    | alterTriggerStatement
+    | dropTriggerStatement
     ;
 
 ifExists
@@ -943,6 +997,129 @@ orReplace
 @after { popMsg(state); }
     : KW_OR KW_REPLACE
     -> ^(TOK_ORREPLACE)
+    ;
+
+createResourcePlanStatement
+@init { pushMsg("create resource plan statement", state); }
+@after { popMsg(state); }
+    : KW_CREATE KW_RESOURCE KW_PLAN
+        name=identifier
+        (KW_WITH KW_QUERY_PARALLELISM parallelism=Number)?
+    -> ^(TOK_CREATERESOURCEPLAN $name $parallelism?)
+    ;
+
+alterRpSet
+@init { pushMsg("alterRpSet", state); }
+@after { popMsg(state); }
+  : (
+     (KW_QUERY_PARALLELISM EQUAL parallelism=Number -> ^(TOK_QUERY_PARALLELISM $parallelism))
+   | (KW_DEFAULT KW_POOL EQUAL poolName=StringLiteral -> ^(TOK_DEFAULT_POOL $poolName))
+    )
+  ;
+
+alterRpSetList
+@init { pushMsg("alterRpSetList", state); }
+@after { popMsg(state); }
+  :
+  alterRpSet (COMMA alterRpSet)* -> alterRpSet+
+  ;
+
+activate : KW_ACTIVATE -> ^(TOK_ACTIVATE);
+enable : KW_ENABLE -> ^(TOK_ENABLE);
+
+alterResourcePlanStatement
+@init { pushMsg("alter resource plan statement", state); }
+@after { popMsg(state); }
+    : KW_ALTER KW_RESOURCE KW_PLAN name=identifier (
+          (KW_VALIDATE -> ^(TOK_ALTER_RP $name TOK_VALIDATE))
+        | (KW_DISABLE -> ^(TOK_ALTER_RP $name TOK_DISABLE))
+        | (KW_SET setList=alterRpSetList -> ^(TOK_ALTER_RP $name $setList))
+        | (KW_RENAME KW_TO newName=identifier
+           -> ^(TOK_ALTER_RP $name TOK_RENAME $newName))
+        | ((activate+ enable? | enable+ activate?) -> ^(TOK_ALTER_RP $name activate? enable?))
+      )
+    ;
+
+dropResourcePlanStatement
+@init { pushMsg("drop resource plan statement", state); }
+@after { popMsg(state); }
+    : KW_DROP KW_RESOURCE KW_PLAN name=identifier
+    -> ^(TOK_DROP_RP $name)
+    ;
+
+poolPath
+@init { pushMsg("poolPath", state); }
+@after { popMsg(state); }
+    : identifier^ (DOT identifier)*
+    ;
+
+triggerExpression
+@init { pushMsg("triggerExpression", state); }
+@after { popMsg(state); }
+    : triggerOrExpression -> ^(TOK_TRIGGER_EXPRESSION triggerOrExpression)
+    ;
+
+triggerOrExpression
+@init { pushMsg("triggerOrExpression", state); }
+@after { popMsg(state); }
+    : triggerAndExpression (KW_OR triggerAndExpression)*
+    ;
+
+triggerAndExpression
+@init { pushMsg("triggerAndExpression", state); }
+@after { popMsg(state); }
+    : triggerAtomExpression (KW_AND triggerAtomExpression)*
+    ;
+
+triggerAtomExpression
+@init { pushMsg("triggerAtomExpression", state); }
+@after { popMsg(state); }
+    : (identifier comparisionOperator triggerLiteral)
+    | (LPAREN triggerOrExpression RPAREN)
+    ;
+
+triggerLiteral
+@init { pushMsg("triggerLiteral", state); }
+@after { popMsg(state); }
+    : (Number (KW_HOUR|KW_MINUTE|KW_SECOND)?)
+    | ByteLengthLiteral
+    | StringLiteral
+    ;
+
+comparisionOperator
+@init { pushMsg("comparisionOperator", state); }
+@after { popMsg(state); }
+    : EQUAL | LESSTHAN | LESSTHANOREQUALTO | GREATERTHAN | GREATERTHANOREQUALTO
+    ;
+
+triggerActionExpression
+@init { pushMsg("triggerActionExpression", state); }
+@after { popMsg(state); }
+    : KW_KILL
+    | (KW_MOVE^ KW_TO! poolPath)
+    ;
+
+createTriggerStatement
+@init { pushMsg("create trigger statement", state); }
+@after { popMsg(state); }
+    : KW_CREATE KW_TRIGGER rpName=identifier DOT triggerName=identifier
+      KW_WHEN triggerExpression KW_DO triggerActionExpression
+    -> ^(TOK_CREATE_TRIGGER $rpName $triggerName triggerExpression triggerActionExpression)
+    ;
+
+alterTriggerStatement
+@init { pushMsg("alter trigger statement", state); }
+@after { popMsg(state); }
+    : KW_ALTER KW_TRIGGER rpName=identifier DOT triggerName=identifier
+      KW_WHEN triggerExpression KW_DO triggerActionExpression
+    -> ^(TOK_ALTER_TRIGGER $rpName $triggerName triggerExpression triggerActionExpression)
+    ;
+
+dropTriggerStatement
+@init { pushMsg("drop trigger statement", state); }
+@after { popMsg(state); }
+    : KW_DROP KW_TRIGGER rpName=identifier DOT triggerName=identifier
+    -> ^(TOK_DROP_TRIGGER $rpName $triggerName)
     ;
 
 createDatabaseStatement
@@ -1126,6 +1303,8 @@ alterStatement
 @after { popMsg(state); }
     : KW_ALTER KW_TABLE tableName alterTableStatementSuffix -> ^(TOK_ALTERTABLE tableName alterTableStatementSuffix)
     | KW_ALTER KW_VIEW tableName KW_AS? alterViewStatementSuffix -> ^(TOK_ALTERVIEW tableName alterViewStatementSuffix)
+    | KW_ALTER KW_MATERIALIZED KW_VIEW tableName alterMaterializedViewStatementSuffix
+    -> ^(TOK_ALTER_MATERIALIZED_VIEW tableName alterMaterializedViewStatementSuffix)
     | KW_ALTER KW_INDEX alterIndexStatementSuffix -> alterIndexStatementSuffix
     | KW_ALTER (KW_DATABASE|KW_SCHEMA) alterDatabaseStatementSuffix -> alterDatabaseStatementSuffix
     ;
@@ -1181,6 +1360,12 @@ alterViewStatementSuffix
     | alterStatementSuffixAddPartitions[false]
     | alterStatementSuffixDropPartitions[false]
     | selectStatementWithCTE
+    ;
+
+alterMaterializedViewStatementSuffix
+@init { pushMsg("alter materialized view statement", state); }
+@after { popMsg(state); }
+    : alterMaterializedViewSuffixRewrite
     ;
 
 alterIndexStatementSuffix
@@ -1348,6 +1533,13 @@ alterViewSuffixProperties
     -> ^(TOK_ALTERVIEW_PROPERTIES tableProperties)
     | KW_UNSET KW_TBLPROPERTIES ifExists? tableProperties
     -> ^(TOK_ALTERVIEW_DROPPROPERTIES tableProperties ifExists?)
+    ;
+
+alterMaterializedViewSuffixRewrite
+@init { pushMsg("alter materialized view rewrite statement", state); }
+@after { popMsg(state); }
+    : (mvRewriteFlag=rewriteEnabled | mvRewriteFlag=rewriteDisabled)
+    -> ^(TOK_ALTER_MATERIALIZED_VIEW_REWRITE $mvRewriteFlag)
     ;
 
 alterStatementSuffixSerdeProperties
@@ -1524,7 +1716,7 @@ descStatement
     |
     (KW_FUNCTION) => KW_FUNCTION KW_EXTENDED? (name=descFuncNames) -> ^(TOK_DESCFUNCTION $name KW_EXTENDED?)
     |
-    (KW_FORMATTED|KW_EXTENDED|KW_PRETTY) => ((descOptions=KW_FORMATTED|descOptions=KW_EXTENDED|descOptions=KW_PRETTY) parttype=tabPartColTypeExpr) -> ^(TOK_DESCTABLE $parttype $descOptions)
+    (KW_FORMATTED|KW_EXTENDED) => ((descOptions=KW_FORMATTED|descOptions=KW_EXTENDED) parttype=tabPartColTypeExpr) -> ^(TOK_DESCTABLE $parttype $descOptions)
     |
     parttype=tabPartColTypeExpr -> ^(TOK_DESCTABLE $parttype)
     )
@@ -1535,9 +1727,9 @@ analyzeStatement
 @after { popMsg(state); }
     : KW_ANALYZE KW_TABLE (parttype=tableOrPartition)
       (
-      (KW_COMPUTE) => KW_COMPUTE KW_STATISTICS ((noscan=KW_NOSCAN) | (partialscan=KW_PARTIALSCAN)
+      (KW_COMPUTE) => KW_COMPUTE KW_STATISTICS ((noscan=KW_NOSCAN)
                                                       | (KW_FOR KW_COLUMNS (statsColumnName=columnNameList)?))?
-      -> ^(TOK_ANALYZE $parttype $noscan? $partialscan? KW_COLUMNS? $statsColumnName?)
+      -> ^(TOK_ANALYZE $parttype $noscan? KW_COLUMNS? $statsColumnName?)
       |
       (KW_CACHE) => KW_CACHE KW_METADATA -> ^(TOK_CACHE_METADATA $parttype)
       )
@@ -1549,6 +1741,7 @@ showStatement
     : KW_SHOW (KW_DATABASES|KW_SCHEMAS) (KW_LIKE showStmtIdentifier)? -> ^(TOK_SHOWDATABASES showStmtIdentifier?)
     | KW_SHOW KW_TABLES ((KW_FROM|KW_IN) db_name=identifier)? (KW_LIKE showStmtIdentifier|showStmtIdentifier)?  -> ^(TOK_SHOWTABLES (TOK_FROM $db_name)? showStmtIdentifier?)
     | KW_SHOW KW_VIEWS ((KW_FROM|KW_IN) db_name=identifier)? (KW_LIKE showStmtIdentifier|showStmtIdentifier)?  -> ^(TOK_SHOWVIEWS (TOK_FROM $db_name)? showStmtIdentifier?)
+    | KW_SHOW KW_MATERIALIZED KW_VIEWS ((KW_FROM|KW_IN) db_name=identifier)? (KW_LIKE showStmtIdentifier|showStmtIdentifier)?  -> ^(TOK_SHOWMATERIALIZEDVIEWS (TOK_FROM $db_name)? showStmtIdentifier?)
     | KW_SHOW KW_COLUMNS (KW_FROM|KW_IN) tableName ((KW_FROM|KW_IN) db_name=identifier)?
     -> ^(TOK_SHOWCOLUMNS tableName $db_name?)
     | KW_SHOW KW_FUNCTIONS (KW_LIKE showFunctionIdentifier|showFunctionIdentifier)?  -> ^(TOK_SHOWFUNCTIONS KW_LIKE? showFunctionIdentifier?)
@@ -1572,6 +1765,11 @@ showStatement
     | KW_SHOW KW_COMPACTIONS -> ^(TOK_SHOW_COMPACTIONS)
     | KW_SHOW KW_TRANSACTIONS -> ^(TOK_SHOW_TRANSACTIONS)
     | KW_SHOW KW_CONF StringLiteral -> ^(TOK_SHOWCONF StringLiteral)
+    | KW_SHOW KW_RESOURCE
+      (
+        (KW_PLAN rp_name=identifier -> ^(TOK_SHOWRESOURCEPLAN $rp_name))
+        | (KW_PLANS -> ^(TOK_SHOWRESOURCEPLAN))
+      )
     ;
 
 lockStatement
@@ -1896,7 +2094,7 @@ createMaterializedViewStatement
     : KW_CREATE KW_MATERIALIZED KW_VIEW (ifNotExists)? name=tableName
         rewriteEnabled? tableComment? tableRowFormat? tableFileFormat? tableLocation?
         tablePropertiesPrefixed? KW_AS selectStatementWithCTE
-    -> ^(TOK_CREATE_MATERIALIZED_VIEW $name 
+    -> ^(TOK_CREATE_MATERIALIZED_VIEW $name
          ifNotExists?
          rewriteEnabled?
          tableComment?
@@ -1951,8 +2149,8 @@ tableComment
 tablePartition
 @init { pushMsg("table partition specification", state); }
 @after { popMsg(state); }
-    : KW_PARTITIONED KW_BY LPAREN columnNameTypeList RPAREN
-    -> ^(TOK_TABLEPARTCOLS columnNameTypeList)
+    : KW_PARTITIONED KW_BY LPAREN columnNameTypeConstraint (COMMA columnNameTypeConstraint)* RPAREN
+    -> ^(TOK_TABLEPARTCOLS columnNameTypeConstraint+)
     ;
 
 tableBuckets
@@ -2119,8 +2317,9 @@ columnNameTypeList
 @after { popMsg(state); }
     : columnNameType (COMMA columnNameType)* -> ^(TOK_TABCOLLIST columnNameType+)
     ;
+
 columnNameTypeOrConstraintList
-@init { pushMsg("column name type list with PK and FK", state); }
+@init { pushMsg("column name type and constraints list", state); }
 @after { popMsg(state); }
     : columnNameTypeOrConstraint (COMMA columnNameTypeOrConstraint)* -> ^(TOK_TABCOLLIST columnNameTypeOrConstraint+)
     ;
@@ -2167,6 +2366,7 @@ enableValidateSpecification
 @init { pushMsg("enable specification", state); }
 @after { popMsg(state); }
     : enableSpecification validateSpecification?
+    | enforcedSpecification
     ;
 
 enableSpecification
@@ -2181,6 +2381,13 @@ validateSpecification
 @after { popMsg(state); }
     : KW_VALIDATE -> ^(TOK_VALIDATE)
     | KW_NOVALIDATE -> ^(TOK_NOVALIDATE)
+    ;
+
+enforcedSpecification
+@init { pushMsg("enforced specification", state); }
+@after { popMsg(state); }
+    : KW_ENFORCED -> ^(TOK_ENABLE)
+    | KW_NOT KW_ENFORCED -> ^(TOK_DISABLE)
     ;
 
 relySpecification
@@ -2921,3 +3128,10 @@ updateOrDelete
 /*
 END SQL Merge statement
 */
+
+killQueryStatement
+@init { pushMsg("kill query statement", state); }
+@after { popMsg(state); }
+  :
+  KW_KILL KW_QUERY ( StringLiteral )+ -> ^(TOK_KILL_QUERY ( StringLiteral )+)
+  ;

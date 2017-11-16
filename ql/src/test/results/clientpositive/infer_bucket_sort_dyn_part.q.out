@@ -42,13 +42,11 @@ POSTHOOK: query: DESCRIBE FORMATTED test_table PARTITION (ds='2008-04-08', hr='1
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@test_table
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	default             
 value               	string              	default             
 	 	 
 # Partition Information	 	 
 # col_name            	data_type           	comment             
-	 	 
 ds                  	string              	                    
 hr                  	string              	                    
 	 	 
@@ -82,13 +80,11 @@ POSTHOOK: query: DESCRIBE FORMATTED test_table PARTITION (ds='2008-04-08', hr='1
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@test_table
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	default             
 value               	string              	default             
 	 	 
 # Partition Information	 	 
 # col_name            	data_type           	comment             
-	 	 
 ds                  	string              	                    
 hr                  	string              	                    
 	 	 
@@ -145,13 +141,11 @@ POSTHOOK: query: DESCRIBE FORMATTED test_table PARTITION (ds='2008-04-08', hr='1
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@test_table
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	default             
 value               	string              	default             
 	 	 
 # Partition Information	 	 
 # col_name            	data_type           	comment             
-	 	 
 ds                  	string              	                    
 hr                  	string              	                    
 	 	 
@@ -185,13 +179,11 @@ POSTHOOK: query: DESCRIBE FORMATTED test_table PARTITION (ds='2008-04-08', hr='1
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@test_table
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	default             
 value               	string              	default             
 	 	 
 # Partition Information	 	 
 # col_name            	data_type           	comment             
-	 	 
 ds                  	string              	                    
 hr                  	string              	                    
 	 	 
@@ -250,13 +242,11 @@ POSTHOOK: query: DESCRIBE FORMATTED test_table PARTITION (ds='2008-04-08', hr='1
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@test_table
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	default             
 value               	string              	default             
 	 	 
 # Partition Information	 	 
 # col_name            	data_type           	comment             
-	 	 
 ds                  	string              	                    
 hr                  	string              	                    
 	 	 
@@ -290,13 +280,11 @@ POSTHOOK: query: DESCRIBE FORMATTED test_table PARTITION (ds='2008-04-08', hr='1
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@test_table
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	default             
 value               	string              	default             
 	 	 
 # Partition Information	 	 
 # col_name            	data_type           	comment             
-	 	 
 ds                  	string              	                    
 hr                  	string              	                    
 	 	 
@@ -498,7 +486,8 @@ STAGE PLANS:
               name: default.test_table
 
   Stage: Stage-2
-    Stats-Aggr Operator
+    Stats Work
+      Basic Stats Work:
 
   Stage: Stage-3
     Merge File Operator
@@ -552,13 +541,11 @@ POSTHOOK: query: DESCRIBE FORMATTED test_table PARTITION (ds='2008-04-08', hr='1
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@test_table
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	default             
 value               	string              	default             
 	 	 
 # Partition Information	 	 
 # col_name            	data_type           	comment             
-	 	 
 ds                  	string              	                    
 hr                  	string              	                    
 	 	 
@@ -592,13 +579,11 @@ POSTHOOK: query: DESCRIBE FORMATTED test_table PARTITION (ds='2008-04-08', hr='1
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@test_table
 # col_name            	data_type           	comment             
-	 	 
 key                 	string              	default             
 value               	string              	default             
 	 	 
 # Partition Information	 	 
 # col_name            	data_type           	comment             
-	 	 
 ds                  	string              	                    
 hr                  	string              	                    
 	 	 

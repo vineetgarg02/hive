@@ -28,6 +28,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -406,6 +407,7 @@ public class GenSparkUtils {
       HiveConf hconf, DependencyCollectionTask dependencyTask) {
 
     Path dest = null;
+    FileSinkDesc fileSinkDesc = fsOp.getConf();
 
     if (chDir) {
       dest = fsOp.getConf().getFinalDirName();
@@ -416,7 +418,6 @@ public class GenSparkUtils {
 
       Path tmpDir = baseCtx.getExternalTmpPath(dest);
 
-      FileSinkDesc fileSinkDesc = fsOp.getConf();
       // Change all the linked file sink descriptors
       if (fileSinkDesc.getLinkedFileSinkDesc() != null) {
         for (FileSinkDesc fsConf : fileSinkDesc.getLinkedFileSinkDesc()) {
@@ -430,7 +431,7 @@ public class GenSparkUtils {
     Task<MoveWork> mvTask = null;
 
     if (!chDir) {
-      mvTask = GenMapRedUtils.findMoveTask(mvTasks, fsOp);
+      mvTask = GenMapRedUtils.findMoveTaskForFsopOutput(mvTasks, fileSinkDesc.getFinalDirName(), false);
     }
 
     // Set the move task to be dependent on the current task
@@ -478,7 +479,7 @@ public class GenSparkUtils {
     }
 
     desc.setPath(new Path(tmpPath, sourceId));
-    desc.setTargetWork(targetWork.getName());
+    desc.setTargetMapWork(targetWork);
 
     // store table descriptor in map-targetWork
     if (!targetWork.getEventSourceTableDescMap().containsKey(sourceId)) {
@@ -505,7 +506,7 @@ public class GenSparkUtils {
       targetWork.getEventSourcePartKeyExprMap().put(sourceId, new LinkedList<ExprNodeDesc>());
     }
     List<ExprNodeDesc> keys = targetWork.getEventSourcePartKeyExprMap().get(sourceId);
-    keys.add(desc.getPartKey());
+    keys.add(desc.getTargetPartKey());
   }
 
   public static SparkEdgeProperty getEdgeProperty(HiveConf conf, ReduceSinkOperator reduceSink,
@@ -617,17 +618,28 @@ public class GenSparkUtils {
   }
 
   @SuppressWarnings("unchecked")
-  public static <T> T getChildOperator(Operator<?> op, Class<T> klazz) throws SemanticException {
-    if (klazz.isInstance(op)) {
-      return (T) op;
-    }
-    List<Operator<?>> childOperators = op.getChildOperators();
-    for (Operator<?> childOp : childOperators) {
-      T result = getChildOperator(childOp, klazz);
-      if (result != null) {
-        return result;
+  public static <T> T getChildOperator(Operator<?> root, Class<T> klazz) throws SemanticException {
+    if (root == null) return null;
+
+    HashSet<Operator<?>> visited = new HashSet<Operator<?>>();
+    Stack<Operator<?>> stack = new Stack<Operator<?>>();
+    stack.push(root);
+    visited.add(root);
+
+    while (!stack.isEmpty()) {
+      Operator<?> op = stack.pop();
+      if (klazz.isInstance(op)) {
+        return (T) op;
+      }
+      List<Operator<?>> childOperators = op.getChildOperators();
+      for (Operator<?> childOp : childOperators) {
+        if (!visited.contains(childOp)) {
+          stack.push(childOp);
+          visited.add(childOp);
+        }
       }
     }
+
     return null;
   }
 

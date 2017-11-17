@@ -21,6 +21,11 @@ and web_company_name = 'pri'
 and exists (select *
             from web_sales ws2
             where ws1.ws_order_number = ws2.ws_order_number
-              and ws1.ws_warehouse_sk <> ws2.ws_warehouse_sk);
+              and ws1.ws_warehouse_sk <> ws2.ws_warehouse_sk)
+and not exists(select *
+               from web_returns wr1
+               where ws1.ws_order_number = wr1.wr_order_number)
+order by count(distinct ws_order_number)
+limit 100;
 
 -- end query 1 in stream 0 using template query94.tpl

@@ -302,4 +302,12 @@ select * from part where p_size IN (select max(p_size) from part p where p.p_typ
 explain select * from part where p_size IN (select pp.p_size from part p join part pp on pp.p_type = p.p_type where part.p_type <> p.p_name);
 select * from part where p_size IN (select pp.p_size from part p join part pp on pp.p_type = p.p_type where part.p_type <> p.p_name);
 
+-- inner query has non-equi correlated predicate, this shouldn't have value gen
+explain select * from src b where b.key in (select key from src a where b.value > a.value);
+select * from src b where b.key in (select key from src a where b.value > a.value);
 
+explain select * from src b where b.key in (select key from src a where b.value <= a.value);
+select * from src b where b.key in (select key from src a where b.value <= a.value);
+
+explain select * from src b where b.key in (select key from src a where b.value > a.value and b.key < a.key) ;
+select * from src b where b.key in (select key from src a where b.value > a.value and b.key < a.key) ;

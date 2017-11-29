@@ -34,6 +34,7 @@ import java.util.TreeSet;
 
 import javax.annotation.Nonnull;
 
+import groovy.sql.Sql;
 import org.apache.calcite.linq4j.Ord;
 import org.apache.calcite.linq4j.function.Function2;
 import org.apache.calcite.plan.Context;
@@ -116,6 +117,7 @@ import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveSemiJoin;
 import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveSortLimit;
 import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveUnion;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
+import org.datanucleus.store.rdbms.sql.operation.SQLOperation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -1131,7 +1133,7 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
           // we need to keep predicate kind e.g. EQUAL or NOT EQUAL
           // so that later while decorrelating LogicalCorrelate appropriate join predicate
           // is generated
-          def.setPredicateKind((SqlKind)((Pair)e.getNode()).getValue());
+          def.setPredicateKind((SqlOperator) ((Pair)e.getNode()).getValue());
           map.put(def, (Integer)((Pair) e.getNode()).getKey());
         }
       }
@@ -1170,30 +1172,31 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
    * and if found, throws a {@link Util.FoundOne}. */
   private void findCorrelationEquivalent(CorRef correlation, RexNode e)
           throws Util.FoundOne {
-    switch (e.getKind()) {
-    // TODO: for now only EQUAL and NOT EQUAL corr predicates are optimized
-      //optimize rest of the predicates
-    case NOT_EQUALS:
-      if((boolean)valueGen.peek()) {
-        // we will need value generator
-        break;
-      }
-    case EQUALS:
-        final RexCall call = (RexCall) e;
-        final List<RexNode> operands = call.getOperands();
-        if (references(operands.get(0), correlation)
+    if(e.getKind() != SqlKind.EQUALS && (boolean)valueGen.peek()) {
+      // if call isn't EQUAL type and it has been determined that value generate might be
+      // required we should rather generate value generator
+    }
+    else if(e instanceof RexCall){
+      switch (e.getKind()) {
+        case AND:
+          for (RexNode operand : ((RexCall) e).getOperands()) {
+            findCorrelationEquivalent(correlation, operand);
+          }
+        default:
+          final RexCall call = (RexCall) e;
+          final List<RexNode> operands = call.getOperands();
+          if(operands.size() == 2) {
+            if (references(operands.get(0), correlation)
                 && operands.get(1) instanceof RexInputRef) {
-          throw new Util.FoundOne(Pair.of(((RexInputRef) operands.get(1)).getIndex(), e.getKind()));
-        }
-        if (references(operands.get(1), correlation)
+              throw new Util.FoundOne(Pair.of(((RexInputRef) operands.get(1)).getIndex(), ((RexCall) e).getOperator()));
+            }
+            if (references(operands.get(1), correlation)
                 && operands.get(0) instanceof RexInputRef) {
-          throw new Util.FoundOne(Pair.of(((RexInputRef) operands.get(0)).getIndex(), e.getKind()));
-        }
-        break;
-      case AND:
-        for (RexNode operand : ((RexCall) e).getOperands()) {
-          findCorrelationEquivalent(correlation, operand);
-        }
+              throw new Util.FoundOne(Pair.of(((RexInputRef) operands.get(0)).getIndex(), ((RexCall) e).getOperator()));
+            }
+            break;
+          }
+      }
     }
   }
 
@@ -1426,24 +1429,12 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
       }
       final int newLeftPos = leftFrame.oldToNewOutputs.get(corDef.field);
       final int newRightPos = rightOutput.getValue();
-      if(corDef.getPredicateKind() == SqlKind.NOT_EQUALS) {
+      SqlOperator callOp = corDef.getPredicateKind() == null ? SqlStdOperatorTable.EQUALS: corDef.getPredicateKind();
         conditions.add(
-            rexBuilder.makeCall(SqlStdOperatorTable.NOT_EQUALS,
+            rexBuilder.makeCall(callOp,
                 RexInputRef.of(newLeftPos, newLeftOutput),
                 new RexInputRef(newLeftFieldCount + newRightPos,
                     newRightOutput.get(newRightPos).getType())));
-
-      }
-      else {
-        assert(corDef.getPredicateKind() == null
-          || corDef.getPredicateKind() == SqlKind.EQUALS);
-        conditions.add(
-            rexBuilder.makeCall(SqlStdOperatorTable.EQUALS,
-                RexInputRef.of(newLeftPos, newLeftOutput),
-                new RexInputRef(newLeftFieldCount + newRightPos,
-                    newRightOutput.get(newRightPos).getType())));
-
-      }
 
       // remove this cor var from output position mapping
       corDefOutputs.remove(corDef);
@@ -1921,9 +1912,7 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
     // there is support of not equal
     @Override  public RexNode visitCall(final RexCall call) {
       if(!valueGenerator) {
-        switch (call.getKind()) {
-        case EQUALS:
-        case NOT_EQUALS:
+        if(call.getOperands().size() == 2) {
           final List<RexNode> operands = new ArrayList<>(call.operands);
           RexNode o0 = operands.get(0);
           RexNode o1 = operands.get(1);
@@ -3018,7 +3007,7 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
   static class CorDef implements Comparable<CorDef> {
     public final CorrelationId corr;
     public final int field;
-    private SqlKind predicateKind;
+    private SqlOperator predicateKind;
 
     CorDef(CorrelationId corr, int field) {
       this.corr = corr;
@@ -3048,10 +3037,12 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
       }
       return Integer.compare(field, o.field);
     }
-    public SqlKind getPredicateKind() {
+
+    public SqlOperator getPredicateKind() {
       return predicateKind;
     }
-    public void setPredicateKind(SqlKind predKind) {
+
+    public void setPredicateKind(SqlOperator predKind) {
       this.predicateKind = predKind;
 
     }

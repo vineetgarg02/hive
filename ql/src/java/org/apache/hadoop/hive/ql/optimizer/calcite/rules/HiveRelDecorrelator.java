@@ -1133,7 +1133,8 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
           // we need to keep predicate kind e.g. EQUAL or NOT EQUAL
           // so that later while decorrelating LogicalCorrelate appropriate join predicate
           // is generated
-          def.setPredicateKind((SqlOperator) ((Pair)e.getNode()).getValue());
+          def.setPredicateKind((SqlOperator) ((Pair)((Pair)e.getNode()).getValue()).getKey());
+          def.setIsLeft((boolean)((Pair)((Pair) e.getNode()).getValue()).getValue());
           map.put(def, (Integer)((Pair) e.getNode()).getKey());
         }
       }
@@ -1188,11 +1189,13 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
           if(operands.size() == 2) {
             if (references(operands.get(0), correlation)
                 && operands.get(1) instanceof RexInputRef) {
-              throw new Util.FoundOne(Pair.of(((RexInputRef) operands.get(1)).getIndex(), ((RexCall) e).getOperator()));
+              throw new Util.FoundOne(Pair.of(((RexInputRef) operands.get(1)).getIndex(),
+                  Pair.of(((RexCall) e).getOperator(), true)));
             }
             if (references(operands.get(1), correlation)
                 && operands.get(0) instanceof RexInputRef) {
-              throw new Util.FoundOne(Pair.of(((RexInputRef) operands.get(0)).getIndex(), ((RexCall) e).getOperator()));
+              throw new Util.FoundOne(Pair.of(((RexInputRef) operands.get(0)).getIndex(),
+                  Pair.of(((RexCall) e).getOperator(), false)));
             }
             break;
           }
@@ -1430,11 +1433,20 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
       final int newLeftPos = leftFrame.oldToNewOutputs.get(corDef.field);
       final int newRightPos = rightOutput.getValue();
       SqlOperator callOp = corDef.getPredicateKind() == null ? SqlStdOperatorTable.EQUALS: corDef.getPredicateKind();
+      if(corDef.isLeft) {
         conditions.add(
             rexBuilder.makeCall(callOp,
                 RexInputRef.of(newLeftPos, newLeftOutput),
                 new RexInputRef(newLeftFieldCount + newRightPos,
                     newRightOutput.get(newRightPos).getType())));
+      }
+      else {
+        conditions.add(
+            rexBuilder.makeCall(callOp,
+                new RexInputRef(newLeftFieldCount + newRightPos,
+                    newRightOutput.get(newRightPos).getType()),
+                RexInputRef.of(newLeftPos, newLeftOutput)));
+      }
 
       // remove this cor var from output position mapping
       corDefOutputs.remove(corDef);
@@ -3007,12 +3019,18 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
   static class CorDef implements Comparable<CorDef> {
     public final CorrelationId corr;
     public final int field;
+
     private SqlOperator predicateKind;
+    // this indicates if corr var is left operand of rex call or not
+    // this is used in decorrelate(logical correlate) to appropriately
+    // create Rex node expression
+    private boolean isLeft;
 
     CorDef(CorrelationId corr, int field) {
       this.corr = corr;
       this.field = field;
       this.predicateKind = null;
+      this.isLeft=false;
     }
 
     @Override public String toString() {
@@ -3046,6 +3064,12 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
       this.predicateKind = predKind;
 
     }
+
+    public boolean getIsLeft() {return this.isLeft;}
+    public void setIsLeft(boolean isLeft) {
+      this.isLeft = isLeft;
+    }
+
   }
 
   /** A map of the locations of

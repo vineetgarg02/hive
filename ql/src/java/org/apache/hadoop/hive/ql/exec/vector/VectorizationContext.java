@@ -423,6 +423,9 @@ public class VectorizationContext {
   public static final Pattern structTypePattern = Pattern.compile("struct.*",
       Pattern.CASE_INSENSITIVE);
 
+  public static final Pattern listTypePattern = Pattern.compile("array.*",
+      Pattern.CASE_INSENSITIVE);
+
   //Map column number to type
   private OutputColumnManager ocm;
 
@@ -694,6 +697,20 @@ public class VectorizationContext {
         break;
     }
     return expr;
+  }
+
+  public VectorExpression[] getVectorExpressionsUpConvertDecimal64(List<ExprNodeDesc> exprNodes)
+      throws HiveException {
+    VectorExpression[] vecExprs =
+        getVectorExpressions(exprNodes, VectorExpressionDescriptor.Mode.PROJECTION);
+    final int size = vecExprs.length;
+    for (int i = 0; i < size; i++) {
+      VectorExpression vecExpr = vecExprs[i];
+      if (vecExpr.getOutputColumnVectorType() == ColumnVector.Type.DECIMAL_64) {
+        vecExprs[i] = wrapWithDecimal64ToDecimalConversion(vecExpr);
+      }
+    }
+    return vecExprs;
   }
 
   public VectorExpression[] getVectorExpressions(List<ExprNodeDesc> exprNodes) throws HiveException {
@@ -3296,6 +3313,8 @@ public class VectorizationContext {
       return hiveTypeName;
     case STRUCT:
       return "Struct";
+    case LIST:
+      return "List";
     default:
       throw new HiveException("Unexpected hive type name " + hiveTypeName);
     }

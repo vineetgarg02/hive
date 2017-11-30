@@ -1355,7 +1355,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
       RelNode calciteGenPlan = null;
       RelNode calcitePreCboPlan = null;
       RelNode calciteOptimizedPlan = null;
-      subqueryId = 0;
+      subqueryId = -1;
 
       /*
        * recreate cluster, so that it picks up the additional traitDef
@@ -2659,6 +2659,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
               Phase1Ctx ctx1 = initPhase1Ctx();
               doPhase1((ASTNode)next.getChild(1), qbSQ, ctx1, null);
               getMetaData(qbSQ);
+              this.subqueryId++;
               RelNode subQueryRelNode = genLogicalPlan(qbSQ, false,  relToHiveColNameCalcitePosMap.get(srcRel),
                       relToHiveRR.get(srcRel));
               subQueryToRelNode.put(next, subQueryRelNode);
@@ -2706,7 +2707,6 @@ public class CalcitePlanner extends SemanticAnalyzer {
         this.relToHiveColNameCalcitePosMap.put(filterRel, this.relToHiveColNameCalcitePosMap
                 .get(srcRel));
         relToHiveRR.put(filterRel, relToHiveRR.get(srcRel));
-        this.subqueryId++;
         return filterRel;
       } else {
         return genFilterRelNode(searchCond, srcRel, outerNameToPosMap, outerRR, forHavingClause);

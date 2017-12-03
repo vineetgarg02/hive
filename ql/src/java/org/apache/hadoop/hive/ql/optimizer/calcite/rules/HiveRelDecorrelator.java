@@ -34,7 +34,6 @@ import java.util.TreeSet;
 
 import javax.annotation.Nonnull;
 
-import groovy.sql.Sql;
 import org.apache.calcite.linq4j.Ord;
 import org.apache.calcite.linq4j.function.Function2;
 import org.apache.calcite.plan.Context;
@@ -105,7 +104,6 @@ import org.apache.calcite.util.ReflectiveVisitor;
 import org.apache.calcite.util.Stacks;
 import org.apache.calcite.util.Util;
 import org.apache.calcite.util.mapping.Mappings;
-import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.optimizer.calcite.HiveRelShuttleImpl;
 import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveAggregate;
 import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveFilter;
@@ -117,7 +115,6 @@ import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveSemiJoin;
 import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveSortLimit;
 import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveUnion;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
-import org.datanucleus.store.rdbms.sql.operation.SQLOperation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -1176,29 +1173,30 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
     if(e.getKind() != SqlKind.EQUALS && (boolean)valueGen.peek()) {
       // if call isn't EQUAL type and it has been determined that value generate might be
       // required we should rather generate value generator
+      return;
     }
     else if(e instanceof RexCall){
       switch (e.getKind()) {
-        case AND:
-          for (RexNode operand : ((RexCall) e).getOperands()) {
-            findCorrelationEquivalent(correlation, operand);
+      case AND:
+        for (RexNode operand : ((RexCall) e).getOperands()) {
+          findCorrelationEquivalent(correlation, operand);
+        }
+      default:
+        final RexCall call = (RexCall) e;
+        final List<RexNode> operands = call.getOperands();
+        if(operands.size() == 2) {
+          if (references(operands.get(0), correlation)
+              && operands.get(1) instanceof RexInputRef) {
+            throw new Util.FoundOne(Pair.of(((RexInputRef) operands.get(1)).getIndex(),
+                Pair.of(((RexCall) e).getOperator(), true)));
           }
-        default:
-          final RexCall call = (RexCall) e;
-          final List<RexNode> operands = call.getOperands();
-          if(operands.size() == 2) {
-            if (references(operands.get(0), correlation)
-                && operands.get(1) instanceof RexInputRef) {
-              throw new Util.FoundOne(Pair.of(((RexInputRef) operands.get(1)).getIndex(),
-                  Pair.of(((RexCall) e).getOperator(), true)));
-            }
-            if (references(operands.get(1), correlation)
-                && operands.get(0) instanceof RexInputRef) {
-              throw new Util.FoundOne(Pair.of(((RexInputRef) operands.get(0)).getIndex(),
-                  Pair.of(((RexCall) e).getOperator(), false)));
-            }
-            break;
+          if (references(operands.get(1), correlation)
+              && operands.get(0) instanceof RexInputRef) {
+            throw new Util.FoundOne(Pair.of(((RexInputRef) operands.get(0)).getIndex(),
+                Pair.of(((RexCall) e).getOperator(), false)));
           }
+          break;
+        }
       }
     }
   }
@@ -1432,7 +1430,8 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
       }
       final int newLeftPos = leftFrame.oldToNewOutputs.get(corDef.field);
       final int newRightPos = rightOutput.getValue();
-      SqlOperator callOp = corDef.getPredicateKind() == null ? SqlStdOperatorTable.EQUALS: corDef.getPredicateKind();
+      SqlOperator callOp = corDef.getPredicateKind() == null ?
+          SqlStdOperatorTable.EQUALS: corDef.getPredicateKind();
       if(corDef.isLeft) {
         conditions.add(
             rexBuilder.makeCall(callOp,
@@ -3065,7 +3064,10 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
 
     }
 
-    public boolean getIsLeft() {return this.isLeft;}
+    public boolean getIsLeft() {
+      return this.isLeft;
+    }
+
     public void setIsLeft(boolean isLeft) {
       this.isLeft = isLeft;
     }

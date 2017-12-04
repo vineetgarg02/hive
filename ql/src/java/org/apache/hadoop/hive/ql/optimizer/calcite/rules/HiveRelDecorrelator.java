@@ -1173,8 +1173,8 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
     if(e.getKind() != SqlKind.EQUALS && (boolean)valueGen.peek()) {
       // if call isn't EQUAL type and it has been determined that value generate might be
       // required we should rather generate value generator
-      return; }
-    else if(e instanceof RexCall){
+      return;
+    } else if(e instanceof RexCall){
       switch (e.getKind()) {
       case AND:
         for (RexNode operand : ((RexCall) e).getOperands()) {

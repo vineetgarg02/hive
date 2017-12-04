@@ -2602,9 +2602,10 @@ public class CalcitePlanner extends SemanticAnalyzer {
 
         ASTNode outerQueryExpr = (ASTNode) subQueryAST.getChild(2);
 
-        if (outerQueryExpr != null && outerQueryExpr.getType() == HiveParser.TOK_SUBQUERY_EXPR ) {
+        if (outerQueryExpr != null && outerQueryExpr.getType() == HiveParser.TOK_SUBQUERY_EXPR) {
 
-          throw new CalciteSubquerySemanticException(ErrorMsg.UNSUPPORTED_SUBQUERY_EXPRESSION.getMsg(
+          throw new CalciteSubquerySemanticException(
+              ErrorMsg.UNSUPPORTED_SUBQUERY_EXPRESSION.getMsg(
               outerQueryExpr, "IN/NOT IN subqueries are not allowed in LHS"));
         }
 
@@ -2660,8 +2661,8 @@ public class CalcitePlanner extends SemanticAnalyzer {
           doPhase1((ASTNode)next.getChild(1), qbSQ, ctx1, null);
           getMetaData(qbSQ);
           this.subqueryId++;
-          RelNode subQueryRelNode = genLogicalPlan(qbSQ, false,  relToHiveColNameCalcitePosMap.get(srcRel),
-              relToHiveRR.get(srcRel));
+          RelNode subQueryRelNode = genLogicalPlan(qbSQ, false,
+              relToHiveColNameCalcitePosMap.get(srcRel), relToHiveRR.get(srcRel));
           subQueryToRelNode.put(next, subQueryRelNode);
           //keep track of subqueries which are scalar, correlated and contains aggregate
           // subquery expression. This will later be special cased in Subquery remove rule

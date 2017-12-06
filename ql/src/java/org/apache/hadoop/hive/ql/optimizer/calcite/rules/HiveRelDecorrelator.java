@@ -1170,11 +1170,7 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
    * and if found, throws a {@link Util.FoundOne}. */
   private void findCorrelationEquivalent(CorRef correlation, RexNode e)
           throws Util.FoundOne {
-    if(e.getKind() != SqlKind.EQUALS && (boolean)valueGen.peek()) {
-      // if call isn't EQUAL type and it has been determined that value generate might be
-      // required we should rather generate value generator
-      return;
-    } else if(e instanceof RexCall){
+    if(e instanceof RexCall){
       switch (e.getKind()) {
       case AND:
         for (RexNode operand : ((RexCall) e).getOperands()) {
@@ -1186,11 +1182,21 @@ public class HiveRelDecorrelator implements ReflectiveVisitor {
         if(operands.size() == 2) {
           if (references(operands.get(0), correlation)
               && operands.get(1) instanceof RexInputRef) {
+            // if call isn't EQUAL type and it has been determined that value generate might be
+            // required we should rather generate value generator
+            if(e.getKind() != SqlKind.EQUALS && (boolean)valueGen.peek()) {
+              return;
+            }
             throw new Util.FoundOne(Pair.of(((RexInputRef) operands.get(1)).getIndex(),
                 Pair.of(((RexCall) e).getOperator(), true)));
           }
           if (references(operands.get(1), correlation)
               && operands.get(0) instanceof RexInputRef) {
+            // if call isn't EQUAL type and it has been determined that value generate might be
+            // required we should rather generate value generator
+            if(e.getKind() != SqlKind.EQUALS && (boolean)valueGen.peek()) {
+              return;
+            }
             throw new Util.FoundOne(Pair.of(((RexInputRef) operands.get(0)).getIndex(),
                 Pair.of(((RexCall) e).getOperator(), false)));
           }

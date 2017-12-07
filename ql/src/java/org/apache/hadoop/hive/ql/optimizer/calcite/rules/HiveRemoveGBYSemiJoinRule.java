@@ -24,6 +24,7 @@ import org.apache.calcite.rel.core.JoinInfo;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.tools.RelBuilder;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.hadoop.hive.ql.optimizer.calcite.HiveRelFactories;
 import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveSemiJoin;
@@ -76,20 +77,9 @@ public class HiveRemoveGBYSemiJoinRule extends RelOptRule {
     boolean shouldTransform = joinInfo.rightSet().equals(
         ImmutableBitSet.range(rightAggregate.getGroupCount()));
     if(shouldTransform) {
-      List<Integer> gbyKeys = rightAggregate.getGroupSet().asList();
-      List<RexNode> projects = new ArrayList<>();
-
-      RexBuilder rexBuilder = semijoin.getCluster().getRexBuilder();
-      // since group by could change the rowschema we will need to create project
-      // to preserve the schema
-      for(int i=0; i<gbyKeys.size(); i++) {
-        RexNode project = rexBuilder.makeInputRef(rightAggregate.getInput(), gbyKeys.get(i));
-        projects.add(project);
-      }
-      RelNode newRightInput = rightAggregate.getInput();
-      if(!projects.isEmpty()) {
-        newRightInput = call.builder().push(rightAggregate.getInput()).project(projects).build();
-      }
+      final RelBuilder relBuilder = call.builder();
+      RelNode newRightInput = relBuilder.project(relBuilder.push(rightAggregate.getInput()).
+          fields(rightAggregate.getGroupSet().asList())).build();
       RelNode newSemiJoin = call.builder().push(left).push(newRightInput)
           .semiJoin(semijoin.getCondition()).build();
       call.transformTo(newSemiJoin);

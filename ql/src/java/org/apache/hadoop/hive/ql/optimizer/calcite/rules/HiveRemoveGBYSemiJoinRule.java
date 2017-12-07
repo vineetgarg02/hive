@@ -22,11 +22,16 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.core.JoinInfo;
 import org.apache.calcite.rel.core.JoinRelType;
+import org.apache.calcite.rex.RexBuilder;
+import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.hadoop.hive.ql.optimizer.calcite.HiveRelFactories;
 import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveSemiJoin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -37,43 +42,58 @@ public class HiveRemoveGBYSemiJoinRule extends RelOptRule {
 
   protected static final Logger LOG = LoggerFactory.getLogger(HiveRemoveGBYSemiJoinRule.class);
   public static final HiveRemoveGBYSemiJoinRule INSTANCE =
-      new HiveRemoveGBYSemiJoinRule() ;
+      new HiveRemoveGBYSemiJoinRule();
 
   public HiveRemoveGBYSemiJoinRule() {
     super(
-            operand(HiveSemiJoin.class,
-                some(
-                    operand(RelNode.class, any()),
-                    operand(Aggregate.class, any()))),
+        operand(HiveSemiJoin.class,
+            some(
+                operand(RelNode.class, any()),
+                operand(Aggregate.class, any()))),
         HiveRelFactories.HIVE_BUILDER, "HiveRemoveGBYSemiJoinRule");
   }
 
-    @Override public void onMatch(RelOptRuleCall call) {
-      final HiveSemiJoin semijoin= call.rel(0);
+  @Override public void onMatch(RelOptRuleCall call) {
+    final HiveSemiJoin semijoin= call.rel(0);
 
-      if(semijoin.getJoinType() != JoinRelType.INNER) {
-        return;
-      }
-      final RelNode left = call.rel(1);
-      final Aggregate rightAggregate= call.rel(2);
+    if(semijoin.getJoinType() != JoinRelType.INNER) {
+      return;
+    }
+    final RelNode left = call.rel(1);
+    final Aggregate rightAggregate= call.rel(2);
 
-      // if grouping sets are involved do early return
-      if(rightAggregate.indicator) {
-        return;
-      }
+    // if grouping sets are involved do early return
+    if(rightAggregate.indicator) {
+      return;
+    }
 
-      // if there is any aggregate function this group by is not un-necessary
-      if(!rightAggregate.getAggCallList().isEmpty()) {
-        return;
-      }
-      final JoinInfo joinInfo = semijoin.analyzeCondition();
+    // if there is any aggregate function this group by is not un-necessary
+    if(!rightAggregate.getAggCallList().isEmpty()) {
+      return;
+    }
+    final JoinInfo joinInfo = semijoin.analyzeCondition();
 
-      boolean shouldTransform = joinInfo.rightSet().equals(
-          ImmutableBitSet.range(rightAggregate.getGroupCount()));
-      if(shouldTransform) {
-        RelNode newSemiJoin = call.builder().push(left).push(rightAggregate.getInput()).semiJoin(semijoin.getCondition()).build();
-        call.transformTo(newSemiJoin);
+    boolean shouldTransform = joinInfo.rightSet().equals(
+        ImmutableBitSet.range(rightAggregate.getGroupCount()));
+    if(shouldTransform) {
+      List<Integer> gbyKeys = rightAggregate.getGroupSet().asList();
+      List<RexNode> projects = new ArrayList<>();
+
+      RexBuilder rexBuilder = semijoin.getCluster().getRexBuilder();
+      // since group by could change the rowschema we will need to create project
+      // to preserve the schema
+      for(int i=0; i<gbyKeys.size(); i++) {
+        RexNode project = rexBuilder.makeInputRef(rightAggregate.getInput(), gbyKeys.get(i));
+        projects.add(project);
       }
+      RelNode newRightInput = rightAggregate.getInput();
+      if(!projects.isEmpty()) {
+        newRightInput = call.builder().push(rightAggregate.getInput()).project(projects).build();
+      }
+      RelNode newSemiJoin = call.builder().push(left).push(newRightInput)
+          .semiJoin(semijoin.getCondition()).build();
+      call.transformTo(newSemiJoin);
     }
   }
+}
 // End HiveRemoveGBYSemiJoinRule

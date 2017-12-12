@@ -58,6 +58,10 @@ public class HiveRemoveGBYSemiJoinRule extends RelOptRule {
     final Aggregate rightAggregate= call.rel(2);
 
     // if grouping sets are involved do early return
+    if(rightAggregate.getGroupType() != Aggregate.Group.SIMPLE) {
+      return;
+    }
+
     if(rightAggregate.indicator) {
       return;
     }

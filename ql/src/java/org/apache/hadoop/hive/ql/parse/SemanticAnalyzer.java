@@ -52,6 +52,7 @@ import org.antlr.runtime.tree.TreeVisitorAction;
 import org.antlr.runtime.tree.TreeWizard;
 import org.antlr.runtime.tree.TreeWizard.ContextVisitor;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
@@ -127,6 +128,7 @@ import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.HiveUtils;
 import org.apache.hadoop.hive.ql.metadata.InvalidTableException;
+import org.apache.hadoop.hive.ql.metadata.NotNullConstraint;
 import org.apache.hadoop.hive.ql.metadata.Partition;
 import org.apache.hadoop.hive.ql.metadata.SessionHiveMetaStoreClient;
 import org.apache.hadoop.hive.ql.metadata.Table;
@@ -136,6 +138,7 @@ import org.apache.hadoop.hive.ql.optimizer.QueryPlanPostProcessor;
 import org.apache.hadoop.hive.ql.optimizer.Transform;
 import org.apache.hadoop.hive.ql.optimizer.calcite.CalciteSemanticException;
 import org.apache.hadoop.hive.ql.optimizer.calcite.CalciteSemanticException.UnsupportedFeature;
+import org.apache.hadoop.hive.ql.optimizer.calcite.translator.ASTBuilder;
 import org.apache.hadoop.hive.ql.optimizer.calcite.translator.HiveOpConverterPostProc;
 import org.apache.hadoop.hive.ql.optimizer.lineage.Generator;
 import org.apache.hadoop.hive.ql.optimizer.unionproc.UnionProcContext;
@@ -202,6 +205,7 @@ import org.apache.hadoop.hive.ql.plan.TableDesc;
 import org.apache.hadoop.hive.ql.plan.TableScanDesc;
 import org.apache.hadoop.hive.ql.plan.UDTFDesc;
 import org.apache.hadoop.hive.ql.plan.UnionDesc;
+import org.apache.hadoop.hive.ql.plan.api.OperatorType;
 import org.apache.hadoop.hive.ql.plan.ptf.OrderExpressionDef;
 import org.apache.hadoop.hive.ql.plan.ptf.PTFExpressionDef;
 import org.apache.hadoop.hive.ql.plan.ptf.PartitionedTableFunctionDef;
@@ -6775,9 +6779,103 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     this.rootTasks.add(TaskFactory.get(new DDLWork(getInputs(), getOutputs(), alterTblDesc), conf));
   }
 
+  private ImmutableBitSet getEnabledNotNullConstraints(Table tbl) throws HiveException{
+    List<Boolean> nullConstraints = new ArrayList<>();
+    final NotNullConstraint nnc = Hive.get().getEnabledNotNullConstraints(
+        tbl.getDbName(), tbl.getTableName());
+    ImmutableBitSet bitSet = null;
+    if(nnc == null || nnc.getNotNullConstraints().isEmpty()) {
+      return bitSet;
+    }
+    // Build the bitset with not null columns
+    ImmutableBitSet.Builder builder = ImmutableBitSet.builder();
+    for (String nnCol : nnc.getNotNullConstraints().values()) {
+      int nnPos = -1;
+      for (int i = 0; i < tbl.getCols().size(); i++) {
+        if (tbl.getCols().get(i).getName().equals(nnCol)) {
+          nnPos = i;
+          break;
+        }
+      }
+      if (nnPos == -1) {
+        LOG.error("Column for not null constraint definition " + nnCol + " not found");
+        break;
+      }
+      builder.set(nnPos);
+    }
+    bitSet = builder.build();
+    return bitSet;
+  }
+
+  private Operator
+  genIsNotNullConstraint(String dest, QB qb, Operator input)
+      throws SemanticException {
+
+      if(qb.getMetaData().getDestTypeForAlias(dest) == QBMetaData.DEST_TABLE) {
+        // if this is an insert into statement we might need to add constraint check
+        final Table targetTable = qb.getMetaData().getNameToDestTable().get(dest);
+        ImmutableBitSet nullConstraintBitSet = null;
+        try {
+          nullConstraintBitSet = getEnabledNotNullConstraints(targetTable);
+        } catch (Exception e) {
+          if (e instanceof SemanticException) {
+            throw (SemanticException) e;
+          } else {
+            throw (new RuntimeException(e));
+          }
+        }
+        if(nullConstraintBitSet == null) {
+          return input;
+        }
+        assert (input.getType() == OperatorType.SELECT);
+        List<ExprNodeDesc> colExprs = ((SelectOperator) input).getConf().getColList();
+
+        ExprNodeDesc currUDF = null;
+        for (int i = 0; i < colExprs.size(); i++) {
+          if (nullConstraintBitSet.indexOf(i) != -1) {
+            ExprNodeDesc isNotNullUDF = TypeCheckProcFactory.DefaultExprProcessor.
+                getFuncExprNodeDesc("isnotnull", colExprs.get(i));
+            ExprNodeDesc constraintUDF = TypeCheckProcFactory.DefaultExprProcessor.
+                getFuncExprNodeDesc("enforce_constraint", isNotNullUDF);
+            if (currUDF != null) {
+              currUDF = TypeCheckProcFactory.DefaultExprProcessor.
+                  getFuncExprNodeDesc("and", currUDF, constraintUDF);
+            } else {
+              currUDF = constraintUDF;
+            }
+          }
+        }
+        if (currUDF != null) {
+          assert (input.getParentOperators().size() == 1);
+          Operator childOperator = (Operator) input.getParentOperators().get(0);
+          childOperator.setChildOperators(null);
+          RowResolver inputRR = opParseCtx.get(childOperator).getRowResolver();
+          Operator newConstraintFilter = putOpInsertMap(OperatorFactory.getAndMakeChild(
+              new FilterDesc(currUDF, false), new RowSchema(
+                  inputRR.getColumnInfos()), childOperator), inputRR);
+
+          input.setParentOperators(null);
+
+          List<Operator<? extends OperatorDesc>> childOperators = new ArrayList<>();
+          childOperators.add(input);
+          newConstraintFilter.setChildOperators(childOperators);
+
+          List<Operator<? extends OperatorDesc>> parentOperators = new ArrayList<>();
+          parentOperators.add(newConstraintFilter);
+          input.setParentOperators(parentOperators);
+
+        }
+      }
+    return input;
+  }
   @SuppressWarnings("nls")
   protected Operator genFileSinkPlan(String dest, QB qb, Operator input)
       throws SemanticException {
+
+    boolean forceNotNullConstraint = conf.getBoolVar(ConfVars.HIVE_ENFORCE_NOT_NULL_CONSTRAINT);
+    if(forceNotNullConstraint) {
+      genIsNotNullConstraint(dest, qb, input);
+    }
 
     RowResolver inputRR = opParseCtx.get(input).getRowResolver();
     QBMetaData qbm = qb.getMetaData();
@@ -11520,6 +11618,68 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     return genPlan(qb);
   }
 
+  private List<Boolean> getConstraintsForcedForTable(final Table tbl) {
+    List<FieldSchema> allCols = tbl.getCols();
+    List<Boolean> constr = new ArrayList<Boolean>();
+    for(FieldSchema fs:allCols) {
+      constr.add(true);
+    }
+    return constr;
+  }
+
+  // this method will rewrite incoming AST to enforce constraint
+  // (For now only NOT NULL)
+ /* private void enforceConstraint(final QB qb, ASTNode query) {
+    QBParseInfo parseInfo = qb.getParseInfo();
+    QBMetaData qbMetaData = qb.getMetaData();
+    //TODO: if and only if it is insert query
+
+    // get all the inclauses
+    Set<String> allInClauses = parseInfo.getClauseNames();
+    for(String currClause:allInClauses) {
+      Table targetTable = qbMetaData.getNameToDestTable().get(currClause);
+      List<Boolean> constr = getConstraintsForcedForTable(targetTable);
+
+      ASTNode selectC = parseInfo.getSelForClause(currClause);
+      List<Node> selExprs = selectC.getChildren();
+
+      assert(selExprs.size() == constr.size());
+
+      ASTNode newNode = null;
+
+      for(int i=0; i<selExprs.size(); i++) {
+        //TODO: if this has enforced constraint
+        ASTNode selectExpr = (ASTNode)selExprs.get(i);
+        assert(selectExpr.getChildren().size() == 1);
+        ASTNode childNode = (ASTNode)(selectExpr.getChild(0));
+        if(childNode.getType() == HiveParser.TOK_ALLCOLREF) {
+          //TODO`
+        }
+        ASTNode copySelExpr = (ASTNode)childNode.dupNode();
+        ASTNode isnotnullAST = ASTBuilder.createAST(HiveParser.TOK_FUNCTION, "isnotnull");
+        isnotnullAST.setChild(0, copySelExpr);
+        ASTNode constraintNode= ASTBuilder.createAST(HiveParser.TOK_FUNCTION, "enforce_constraint");
+        constraintNode.setChild(0, isnotnullAST);
+
+        if(newNode != null) {
+          ASTNode andNode = ASTBuilder.createAST(HiveParser.KW_AND, "and");
+          andNode.setChild(0, newNode);
+          andNode.setChild(1, constraintNode);
+          newNode = andNode;
+        }
+        else {
+          newNode = constraintNode;
+        }
+      }
+      if(newNode != null) {
+        ASTNode newWhere = ASTBuilder.createAST(HiveParser.TOK_WHERE, "TOK_WHERE");
+        newWhere.setChild(0, newNode);
+        ASTNode currInsertClause = parseInfo.getInsertOverwriteTables().get(currClause);
+        currInsertClause.setChild(currInsertClause.getChildCount(), newWhere);
+      }
+    }
+
+  } */
   private void removeOBInSubQuery(QBExpr qbExpr) {
     if (qbExpr == null) {
       return;

@@ -792,16 +792,16 @@ public abstract class BaseSemanticAnalyzer {
         rely = true;
       }
     }
-    if (enable) {
+    /*if (enable) {
       throw new SemanticException(
           ErrorMsg.INVALID_CSTR_SYNTAX.getMsg("ENABLE/ENFORCED feature not supported yet. "
               + "Please use DISABLE/NOT ENFORCED instead."));
-    }
-    if (validate) {
+    } */
+    /* if (validate) {
       throw new SemanticException(
         ErrorMsg.INVALID_CSTR_SYNTAX.getMsg("VALIDATE feature not supported yet. "
               + "Please use NOVALIDATE instead."));
-    }
+    }*/
 
     for (String columnName : columnNames) {
       cstrInfos.add(new ConstraintInfo(columnName, constraintName,

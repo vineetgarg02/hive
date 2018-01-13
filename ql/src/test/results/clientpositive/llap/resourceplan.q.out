@@ -1868,13 +1868,15 @@ POSTHOOK: Output: SYS@VERSION
 POSTHOOK: Output: database:sys
 PREHOOK: query: INSERT INTO `VERSION` VALUES (1, '3.0.0', 'Hive release version 3.0.0')
 PREHOOK: type: QUERY
+PREHOOK: Input: _dummy_database@_dummy_table
 PREHOOK: Output: sys@version
 POSTHOOK: query: INSERT INTO `VERSION` VALUES (1, '3.0.0', 'Hive release version 3.0.0')
 POSTHOOK: type: QUERY
+POSTHOOK: Input: _dummy_database@_dummy_table
 POSTHOOK: Output: sys@version
-POSTHOOK: Lineage: version.schema_version SIMPLE [(values__tmp__table__1)values__tmp__table__1.FieldSchema(name:tmp_values_col2, type:string, comment:), ]
-POSTHOOK: Lineage: version.ver_id EXPRESSION [(values__tmp__table__1)values__tmp__table__1.FieldSchema(name:tmp_values_col1, type:string, comment:), ]
-POSTHOOK: Lineage: version.version_comment SIMPLE [(values__tmp__table__1)values__tmp__table__1.FieldSchema(name:tmp_values_col3, type:string, comment:), ]
+POSTHOOK: Lineage: version.schema_version SCRIPT []
+POSTHOOK: Lineage: version.ver_id SCRIPT []
+POSTHOOK: Lineage: version.version_comment SCRIPT []
 PREHOOK: query: CREATE TABLE IF NOT EXISTS `DB_VERSION` (
   `VER_ID` BIGINT,
   `SCHEMA_VERSION` string,
@@ -2344,12 +2346,12 @@ TBLPROPERTIES (
   WM_RESOURCEPLAN.NAME,
   ENTITY_TYPE,
   ENTITY_NAME,
-  WM_POOL.PATH,
+  case when WM_POOL.PATH is null then '<unmanaged>' else WM_POOL.PATH end,
   ORDERING
-FROM
-  WM_MAPPING
+FROM WM_MAPPING
 JOIN WM_RESOURCEPLAN ON WM_MAPPING.RP_ID = WM_RESOURCEPLAN.RP_ID
-LEFT OUTER JOIN WM_POOL ON WM_POOL.POOL_ID = WM_MAPPING.POOL_ID"
+LEFT OUTER JOIN WM_POOL ON WM_POOL.POOL_ID = WM_MAPPING.POOL_ID
+"
 )
 PREHOOK: type: CREATETABLE
 PREHOOK: Output: SYS@WM_MAPPINGS
@@ -2369,15 +2371,53 @@ TBLPROPERTIES (
   WM_RESOURCEPLAN.NAME,
   ENTITY_TYPE,
   ENTITY_NAME,
-  WM_POOL.PATH,
+  case when WM_POOL.PATH is null then '<unmanaged>' else WM_POOL.PATH end,
   ORDERING
-FROM
-  WM_MAPPING
+FROM WM_MAPPING
 JOIN WM_RESOURCEPLAN ON WM_MAPPING.RP_ID = WM_RESOURCEPLAN.RP_ID
-LEFT OUTER JOIN WM_POOL ON WM_POOL.POOL_ID = WM_MAPPING.POOL_ID"
+LEFT OUTER JOIN WM_POOL ON WM_POOL.POOL_ID = WM_MAPPING.POOL_ID
+"
 )
 POSTHOOK: type: CREATETABLE
 POSTHOOK: Output: SYS@WM_MAPPINGS
+POSTHOOK: Output: database:sys
+PREHOOK: query: CREATE TABLE IF NOT EXISTS `MV_CREATION_METADATA` (
+  TBL_ID bigint,
+  TBL_NAME string,
+  LAST_TRANSACTION_INFO string
+)
+STORED BY 'org.apache.hive.storage.jdbc.JdbcStorageHandler'
+TBLPROPERTIES (
+"hive.sql.database.type" = "METASTORE",
+"hive.sql.query" =
+"SELECT
+  \"TBL_ID\",
+  \"TBL_NAME\",
+  \"LAST_TRANSACTION_INFO\"
+FROM
+  \"MV_CREATION_METADATA\""
+)
+PREHOOK: type: CREATETABLE
+PREHOOK: Output: SYS@MV_CREATION_METADATA
+PREHOOK: Output: database:sys
+POSTHOOK: query: CREATE TABLE IF NOT EXISTS `MV_CREATION_METADATA` (
+  TBL_ID bigint,
+  TBL_NAME string,
+  LAST_TRANSACTION_INFO string
+)
+STORED BY 'org.apache.hive.storage.jdbc.JdbcStorageHandler'
+TBLPROPERTIES (
+"hive.sql.database.type" = "METASTORE",
+"hive.sql.query" =
+"SELECT
+  \"TBL_ID\",
+  \"TBL_NAME\",
+  \"LAST_TRANSACTION_INFO\"
+FROM
+  \"MV_CREATION_METADATA\""
+)
+POSTHOOK: type: CREATETABLE
+POSTHOOK: Output: SYS@MV_CREATION_METADATA
 POSTHOOK: Output: database:sys
 PREHOOK: query: DROP DATABASE IF EXISTS INFORMATION_SCHEMA
 PREHOOK: type: DROPDATABASE
@@ -4036,10 +4076,22 @@ PREHOOK: query: CREATE GROUP MAPPING "group1" IN plan_2 TO def.c1
 PREHOOK: type: CREATE MAPPING
 POSTHOOK: query: CREATE GROUP MAPPING "group1" IN plan_2 TO def.c1
 POSTHOOK: type: CREATE MAPPING
+PREHOOK: query: CREATE APPLICATION MAPPING "app1" IN plan_2 TO def.c1
+PREHOOK: type: CREATE MAPPING
+POSTHOOK: query: CREATE APPLICATION MAPPING "app1" IN plan_2 TO def.c1
+POSTHOOK: type: CREATE MAPPING
 PREHOOK: query: CREATE GROUP MAPPING 'group2' IN plan_2 TO def.c2 WITH ORDER 1
 PREHOOK: type: CREATE MAPPING
 POSTHOOK: query: CREATE GROUP MAPPING 'group2' IN plan_2 TO def.c2 WITH ORDER 1
 POSTHOOK: type: CREATE MAPPING
+PREHOOK: query: CREATE GROUP MAPPING 'group3' IN plan_2 UNMANAGED WITH ORDER 1
+PREHOOK: type: CREATE MAPPING
+POSTHOOK: query: CREATE GROUP MAPPING 'group3' IN plan_2 UNMANAGED WITH ORDER 1
+POSTHOOK: type: CREATE MAPPING
+PREHOOK: query: ALTER USER MAPPING "user1" IN plan_2 UNMANAGED
+PREHOOK: type: ALTER MAPPING
+POSTHOOK: query: ALTER USER MAPPING "user1" IN plan_2 UNMANAGED
+POSTHOOK: type: ALTER MAPPING
 PREHOOK: query: SELECT * FROM SYS.WM_MAPPINGS
 PREHOOK: type: QUERY
 PREHOOK: Input: sys@wm_mappings
@@ -4048,9 +4100,11 @@ POSTHOOK: query: SELECT * FROM SYS.WM_MAPPINGS
 POSTHOOK: type: QUERY
 POSTHOOK: Input: sys@wm_mappings
 #### A masked pattern was here ####
+plan_2	APPLICATION	app1	def.c1	0
 plan_2	GROUP	group1	def.c1	0
 plan_2	GROUP	group2	def.c2	1
-plan_2	USER	user1	def	0
+plan_2	GROUP	group3	<unmanaged>	1
+plan_2	USER	user1	<unmanaged>	0
 plan_2	USER	user2	def	1
 PREHOOK: query: DROP POOL plan_2.def.c1
 PREHOOK: type: DROP POOL
@@ -4063,6 +4117,14 @@ PREHOOK: query: DROP GROUP MAPPING "group2" in plan_2
 PREHOOK: type: DROP MAPPING
 POSTHOOK: query: DROP GROUP MAPPING "group2" in plan_2
 POSTHOOK: type: DROP MAPPING
+PREHOOK: query: DROP GROUP MAPPING "group3" in plan_2
+PREHOOK: type: DROP MAPPING
+POSTHOOK: query: DROP GROUP MAPPING "group3" in plan_2
+POSTHOOK: type: DROP MAPPING
+PREHOOK: query: DROP APPLICATION MAPPING "app1" in plan_2
+PREHOOK: type: DROP MAPPING
+POSTHOOK: query: DROP APPLICATION MAPPING "app1" in plan_2
+POSTHOOK: type: DROP MAPPING
 PREHOOK: query: SELECT * FROM SYS.WM_MAPPINGS
 PREHOOK: type: QUERY
 PREHOOK: Input: sys@wm_mappings
@@ -4072,7 +4134,7 @@ POSTHOOK: type: QUERY
 POSTHOOK: Input: sys@wm_mappings
 #### A masked pattern was here ####
 plan_2	GROUP	group1	def.c1	0
-plan_2	USER	user1	def	0
+plan_2	USER	user1	<unmanaged>	0
 PREHOOK: query: CREATE RESOURCE PLAN plan_4
 PREHOOK: type: CREATE RESOURCEPLAN
 POSTHOOK: query: CREATE RESOURCE PLAN plan_4

@@ -4770,7 +4770,7 @@ private void constructOneLBLocationMap(FileStatus fSta,
   }
 
   /**
-   * Get not null constraints associated with the table that are enabled
+   * Get not null constraints associated with the table that are enabled/enforced
    *
    * @param dbName Database Name
    * @param tblName Table Name

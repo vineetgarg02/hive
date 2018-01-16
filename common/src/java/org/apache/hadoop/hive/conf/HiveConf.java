@@ -1567,7 +1567,7 @@ public class HiveConf extends Configuration {
         "query will fail if hive.enforce.bucketmapjoin is set to true."),
 
     HIVE_ENFORCE_NOT_NULL_CONSTRAINT("hive.constraint.notnull.enforce", true,
-        "Should \"IS NOT NULL \" constraint be enforced ?"),
+        "Should \"IS NOT NULL \" constraint be enforced?"),
 
     HIVE_AUTO_SORTMERGE_JOIN("hive.auto.convert.sortmerge.join", false,
         "Will the join be automatically converted to a sort-merge join, if the joined tables pass the criteria for sort-merge join."),

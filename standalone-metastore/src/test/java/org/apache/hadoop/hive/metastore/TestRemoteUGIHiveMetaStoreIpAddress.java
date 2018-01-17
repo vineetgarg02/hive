@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,17 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.hadoop.hive.metastore;
 
-import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 
-public class TestSetUGIOnBothClientServer extends TestRemoteHiveMetaStore{
+import org.apache.hadoop.hive.metastore.conf.MetastoreConf;
 
-  public TestSetUGIOnBothClientServer() {
-    super();
-    isThriftClient = true;
-    // This will turn on setugi on both client and server processes of the test.
-    System.setProperty(ConfVars.METASTORE_EXECUTE_SET_UGI.varname, "true");
+public class TestRemoteUGIHiveMetaStoreIpAddress extends TestRemoteHiveMetaStoreIpAddress {
+  public TestRemoteUGIHiveMetaStoreIpAddress() {
+    System.setProperty(MetastoreConf.ConfVars.EXECUTE_SET_UGI.toString(), "true");
   }
+
 }

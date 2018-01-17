@@ -778,8 +778,8 @@ public abstract class BaseSemanticAnalyzer {
         constraintName = unescapeIdentifier(grandChild.getChild(0).getText().toLowerCase());
       } else if (type == HiveParser.TOK_ENABLE) {
         enable = true;
-        // validate is true by default if we enable the constraint
-        validate = true;
+        // validate is false by default if we enable the constraint
+        validate = false;
       } else if (type == HiveParser.TOK_DISABLE) {
         enable = false;
         // validate is false by default if we disable the constraint
@@ -792,16 +792,12 @@ public abstract class BaseSemanticAnalyzer {
         rely = true;
       }
     }
-    /*if (enable) {
-      throw new SemanticException(
-          ErrorMsg.INVALID_CSTR_SYNTAX.getMsg("ENABLE/ENFORCED feature not supported yet. "
-              + "Please use DISABLE/NOT ENFORCED instead."));
-    } */
-    /* if (validate) {
+
+    if (validate) {
       throw new SemanticException(
         ErrorMsg.INVALID_CSTR_SYNTAX.getMsg("VALIDATE feature not supported yet. "
               + "Please use NOVALIDATE instead."));
-    }*/
+    }
 
     for (String columnName : columnNames) {
       cstrInfos.add(new ConstraintInfo(columnName, constraintName,

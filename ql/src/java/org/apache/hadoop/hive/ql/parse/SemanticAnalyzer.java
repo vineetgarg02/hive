@@ -5292,7 +5292,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       ExprNodeDesc inputExpr = genExprNodeDesc(grpbyExpr,
           reduceSinkInputRowResolver);
       ColumnInfo prev = reduceSinkOutputRowResolver.getExpression(grpbyExpr);
-      if (prev != null && isDeterministic(inputExpr)) {
+      if (prev != null && isConsistentWithinQuery(inputExpr)) {
         colExprMap.put(prev.getInternalName(), inputExpr);
         continue;
       }
@@ -5309,9 +5309,9 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     return reduceKeys;
   }
 
-  private boolean isDeterministic(ExprNodeDesc expr) throws SemanticException {
+  private boolean isConsistentWithinQuery(ExprNodeDesc expr) throws SemanticException {
     try {
-      return ExprNodeEvaluatorFactory.get(expr).isDeterministic();
+      return ExprNodeEvaluatorFactory.get(expr).isConsistentWithinQuery();
     } catch (Exception e) {
       throw new SemanticException(e);
     }

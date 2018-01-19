@@ -9416,11 +9416,11 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
 
     isNodeOuterJoin = !node.getNoOuterJoin();
     isNodeSemiJoin= !node.getNoSemiJoin();
-    hasNodePostJoinFilters = node.getPostJoinFilters().size() !=0 ;
+    hasNodePostJoinFilters = node.getPostJoinFilters().size() !=0;
 
     isTargetOuterJoin = !target.getNoOuterJoin();
     isTargetSemiJoin= !target.getNoSemiJoin();
-    hasTargetPostJoinFilters = target.getPostJoinFilters().size() !=0 ;
+    hasTargetPostJoinFilters = target.getPostJoinFilters().size() !=0;
 
     if((hasNodePostJoinFilters && (isNodeOuterJoin || isNodeSemiJoin))
         || (hasTargetPostJoinFilters && (isTargetOuterJoin || isTargetSemiJoin))) {

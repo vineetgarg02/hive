@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -43,6 +43,7 @@ import org.apache.hadoop.hive.metastore.api.ColumnStatisticsObj;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.WMFullResourcePlan;
 import org.apache.hadoop.hive.metastore.api.WMResourcePlan;
+import org.apache.hadoop.hive.metastore.api.WMValidateResourcePlanResponse;
 import org.apache.hadoop.hive.ql.exec.Utilities;
 import org.apache.hadoop.hive.ql.metadata.ForeignKeyInfo;
 import org.apache.hadoop.hive.ql.metadata.Hive;
@@ -208,7 +209,8 @@ class TextMetaDataFormatter implements MetaDataFormatter {
             // show table information
             outStream.write(("Detailed Table Information").getBytes("UTF-8"));
             outStream.write(separator);
-            outStream.write(tbl.getTTable().toString().getBytes("UTF-8"));
+            String tableDesc = HiveStringUtils.escapeJava(tbl.getTTable().toString());
+            outStream.write(tableDesc.getBytes("UTF-8"));
             outStream.write(separator);
             outStream.write(terminator);
           }
@@ -724,10 +726,16 @@ class TextMetaDataFormatter implements MetaDataFormatter {
     out.write(str(val));
   }
 
-  public void showErrors(DataOutputStream out, List<String> errors) throws HiveException {
+  public void showErrors(DataOutputStream out, WMValidateResourcePlanResponse response)
+      throws HiveException {
     try {
-      for (String error : errors) {
-        out.write(error.getBytes("UTF-8"));
+      for (String error : response.getErrors()) {
+        write(out, error);
+        out.write(terminator);
+      }
+      for (String warning : response.getWarnings()) {
+        write(out, "warn: ");
+        write(out, warning);
         out.write(terminator);
       }
     } catch (IOException e) {

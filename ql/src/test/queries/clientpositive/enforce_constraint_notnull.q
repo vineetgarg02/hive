@@ -87,11 +87,22 @@ from src
 insert overwrite table acid_uami select cast(key as int), cast(key as decimal(5,2)), value where key < 10
 insert overwrite table src_multi2 select * where key > 10 and key < 20;
 
+-- Table with partition
+CREATE TABLE tablePartitioned (a STRING NOT NULL ENFORCED, b STRING, c STRING NOT NULL ENFORCED)
+    PARTITIONED BY (p1 STRING, p2 INT NOT NULL ENABLE);
+
+explain INSERT INTO tablePartitioned partition(p1, p2) select key, value, value, key as p1, 3 as p2 from src limit 10;
+INSERT INTO tablePartitioned partition(p1, p2) select key, value, value, key as p1, 3 as p2 from src limit 10;
+
+explain INSERT INTO tablePartitioned partition(p1='today', p2=10) values('not', 'null', 'constraint');
+INSERT INTO tablePartitioned partition(p1='today', p2=10) values('not', 'null', 'constraint');
+
 
 DROP TABLE table1;
 DROP TABLE src_multi1;
 DROP TABLE src_multi2;
 DROP TABLE acid_uami;
+
 
 --TODO: Table with partition
 -- TODO: Table with bucket

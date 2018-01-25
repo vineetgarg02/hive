@@ -6661,7 +6661,20 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     }
 
     // if this is an insert into statement we might need to add constraint check
-    final Table targetTable = qb.getMetaData().getNameToDestTable().get(dest);
+    Table targetTable = null;
+    Integer dest_type = qb.getMetaData().getDestTypeForAlias(dest);
+    if(dest_type == QBMetaData.DEST_TABLE) {
+      targetTable= qb.getMetaData().getDestTableForAlias(dest);
+
+    }
+    else if(dest_type == QBMetaData.DEST_PARTITION){
+      Partition dest_part = qb.getMetaData().getDestPartitionForAlias(dest);
+      targetTable = dest_part.getTable();
+
+    }
+    else {
+      throw new SemanticException("Generating NOT NULL constraint check: Invalid target type");
+    }
     ImmutableBitSet nullConstraintBitSet = null;
     try {
       nullConstraintBitSet = getEnabledNotNullConstraints(targetTable);
@@ -6887,6 +6900,9 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
             + queryTmpdir + " from " + dest_path);
       }
       table_desc = Utilities.getTableDesc(dest_tab);
+
+      // Add NOT NULL constraint check
+      input = genIsNotNullConstraint(dest, qb, input);
 
       // Add sorting/bucketing if needed
       input = genBucketingSortingDest(dest, input, qb, table_desc, dest_tab, rsCtx);

@@ -2240,6 +2240,9 @@ public class HiveConf extends Configuration {
 
     HIVE_CLI_PRINT_HEADER("hive.cli.print.header", false, "Whether to print the names of the columns in query output."),
 
+    HIVE_CLI_PRINT_ESCAPE_CRLF("hive.cli.print.escape.crlf", false,
+        "Whether to print carriage returns and line feeds in row output as escaped \\r and \\n"),
+
     HIVE_CLI_TEZ_SESSION_ASYNC("hive.cli.tez.session.async", true, "Whether to start Tez\n" +
         "session in background when running CLI with Tez, allowing CLI to be available earlier."),
 
@@ -4961,7 +4964,7 @@ public class HiveConf extends Configuration {
 
     private static final String NO_LIMIT_MSG = makeMessage(
         "Order by-s without limit", ConfVars.HIVE_STRICT_CHECKS_LARGE_QUERY);
-    private static final String NO_PARTITIONLESS_MSG = makeMessage(
+    public static final String NO_PARTITIONLESS_MSG = makeMessage(
         "Queries against partitioned tables without a partition filter",
         ConfVars.HIVE_STRICT_CHECKS_LARGE_QUERY);
     private static final String NO_COMPARES_MSG = makeMessage(
@@ -4972,7 +4975,7 @@ public class HiveConf extends Configuration {
         "Load into bucketed tables", ConfVars.HIVE_STRICT_CHECKS_BUCKETING);
 
     private static String makeMessage(String what, ConfVars setting) {
-      return what + " are disabled for safety reasons. If you know what you are doing, please set"
+      return what + " are disabled for safety reasons. If you know what you are doing, please set "
           + setting.varname + " to false and that " + ConfVars.HIVEMAPREDMODE.varname + " is not"
           + " set to 'strict' to proceed. Note that if you may get errors or incorrect results if"
           + " you make a mistake while using some of the unsafe features.";

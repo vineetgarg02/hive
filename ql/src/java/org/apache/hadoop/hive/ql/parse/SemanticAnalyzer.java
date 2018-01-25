@@ -6645,71 +6645,75 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
   genIsNotNullConstraint(String dest, QB qb, Operator input)
       throws SemanticException {
 
-      if(qb.getMetaData().getDestTypeForAlias(dest) == QBMetaData.DEST_TABLE) {
-        // if this is an insert into statement we might need to add constraint check
-        final Table targetTable = qb.getMetaData().getNameToDestTable().get(dest);
-        ImmutableBitSet nullConstraintBitSet = null;
-        try {
-          nullConstraintBitSet = getEnabledNotNullConstraints(targetTable);
-        } catch (Exception e) {
-          if (e instanceof SemanticException) {
-            throw (SemanticException) e;
-          } else {
-            throw (new RuntimeException(e));
-          }
-        }
-        if(nullConstraintBitSet == null) {
-          return input;
-        }
-        assert (input.getType() == OperatorType.SELECT);
-        List<ExprNodeDesc> colExprs = ((SelectOperator) input).getConf().getColList();
+    boolean forceNotNullConstraint = conf.getBoolVar(ConfVars.HIVE_ENFORCE_NOT_NULL_CONSTRAINT);
+    if(!forceNotNullConstraint) {
+      return input;
+    }
 
-        ExprNodeDesc currUDF = null;
-        for (int i = 0; i < colExprs.size(); i++) {
-          if (nullConstraintBitSet.indexOf(i) != -1) {
-            ExprNodeDesc isNotNullUDF = TypeCheckProcFactory.DefaultExprProcessor.
-                getFuncExprNodeDesc("isnotnull", colExprs.get(i));
-            ExprNodeDesc constraintUDF = TypeCheckProcFactory.DefaultExprProcessor.
-                getFuncExprNodeDesc("enforce_constraint", isNotNullUDF);
-            if (currUDF != null) {
-              currUDF = TypeCheckProcFactory.DefaultExprProcessor.
-                  getFuncExprNodeDesc("and", currUDF, constraintUDF);
-            } else {
-              currUDF = constraintUDF;
-            }
-          }
-        }
+    // if this is an insert into statement we might need to add constraint check
+    final Table targetTable = qb.getMetaData().getNameToDestTable().get(dest);
+    ImmutableBitSet nullConstraintBitSet = null;
+    try {
+      nullConstraintBitSet = getEnabledNotNullConstraints(targetTable);
+    } catch (Exception e) {
+      if (e instanceof SemanticException) {
+        throw (SemanticException) e;
+      } else {
+        throw (new RuntimeException(e));
+      }
+    }
+    if(nullConstraintBitSet == null) {
+      return input;
+    }
+    assert (input.getType() == OperatorType.SELECT);
+    List<ExprNodeDesc> colExprs = ((SelectOperator) input).getConf().getColList();
+
+    ExprNodeDesc currUDF = null;
+    int constraintIdx = 0;
+    for (int colExprIdx = 0; colExprIdx < colExprs.size(); colExprIdx++) {
+      if(updating(dest) && colExprIdx == 0) {
+        // for updates first column is _rowid
+        continue;
+      }
+      if (nullConstraintBitSet.indexOf(constraintIdx) != -1) {
+        ExprNodeDesc isNotNullUDF = TypeCheckProcFactory.DefaultExprProcessor.
+            getFuncExprNodeDesc("isnotnull", colExprs.get(colExprIdx));
+        ExprNodeDesc constraintUDF = TypeCheckProcFactory.DefaultExprProcessor.
+            getFuncExprNodeDesc("enforce_constraint", isNotNullUDF);
         if (currUDF != null) {
-          assert (input.getParentOperators().size() == 1);
-          Operator childOperator = (Operator) input.getParentOperators().get(0);
-          childOperator.setChildOperators(null);
-          RowResolver inputRR = opParseCtx.get(childOperator).getRowResolver();
-          Operator newConstraintFilter = putOpInsertMap(OperatorFactory.getAndMakeChild(
-              new FilterDesc(currUDF, false), new RowSchema(
-                  inputRR.getColumnInfos()), childOperator), inputRR);
-
-          input.setParentOperators(null);
-
-          List<Operator<? extends OperatorDesc>> childOperators = new ArrayList<>();
-          childOperators.add(input);
-          newConstraintFilter.setChildOperators(childOperators);
-
-          List<Operator<? extends OperatorDesc>> parentOperators = new ArrayList<>();
-          parentOperators.add(newConstraintFilter);
-          input.setParentOperators(parentOperators);
-
+          currUDF = TypeCheckProcFactory.DefaultExprProcessor.
+              getFuncExprNodeDesc("and", currUDF, constraintUDF);
+        } else {
+          currUDF = constraintUDF;
         }
       }
+      constraintIdx++;
+    }
+    if (currUDF != null) {
+      assert (input.getParentOperators().size() == 1);
+      Operator childOperator = (Operator) input.getParentOperators().get(0);
+      childOperator.setChildOperators(null);
+      RowResolver inputRR = opParseCtx.get(childOperator).getRowResolver();
+      Operator newConstraintFilter = putOpInsertMap(OperatorFactory.getAndMakeChild(
+          new FilterDesc(currUDF, false), new RowSchema(
+              inputRR.getColumnInfos()), childOperator), inputRR);
+
+      input.setParentOperators(null);
+
+      List<Operator<? extends OperatorDesc>> childOperators = new ArrayList<>();
+      childOperators.add(input);
+      newConstraintFilter.setChildOperators(childOperators);
+
+      List<Operator<? extends OperatorDesc>> parentOperators = new ArrayList<>();
+      parentOperators.add(newConstraintFilter);
+      input.setParentOperators(parentOperators);
+
+    }
     return input;
   }
   @SuppressWarnings("nls")
   protected Operator genFileSinkPlan(String dest, QB qb, Operator input)
       throws SemanticException {
-
-    boolean forceNotNullConstraint = conf.getBoolVar(ConfVars.HIVE_ENFORCE_NOT_NULL_CONSTRAINT);
-    if(forceNotNullConstraint) {
-      genIsNotNullConstraint(dest, qb, input);
-    }
 
     RowResolver inputRR = opParseCtx.get(input).getRowResolver();
     QBMetaData qbm = qb.getMetaData();
@@ -6791,6 +6795,9 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       }
       // this table_desc does not contain the partitioning columns
       table_desc = Utilities.getTableDesc(dest_tab);
+
+      // Add NOT NULL constraint check
+      input = genIsNotNullConstraint(dest, qb, input);
 
       // Add sorting/bucketing if needed
       input = genBucketingSortingDest(dest, input, qb, table_desc, dest_tab, rsCtx);

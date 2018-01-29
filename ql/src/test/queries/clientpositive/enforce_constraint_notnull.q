@@ -67,6 +67,11 @@ select * from acid_uami;
 explain insert into table acid_uami select cast(key as int), cast (key as decimal(5,2)), value from src;
 insert into table acid_uami select cast(key as int), cast (key as decimal(5,2)), value from src;
 
+-- select with limit
+explain insert into table acid_uami select cast(key as int), cast (key as decimal(5,2)), value from src limit 2;
+
+--TODO: ORDER BY, GROUP BY, WINDOWING
+
  --overwrite
 explain insert into table acid_uami select cast(key as int), cast (key as decimal(5,2)), value from src;
 insert into table acid_uami select cast(key as int), cast (key as decimal(5,2)), value from src;
@@ -96,6 +101,8 @@ INSERT INTO tablePartitioned partition(p1, p2) select key, value, value, key as 
 
 explain INSERT INTO tablePartitioned partition(p1='today', p2=10) values('not', 'null', 'constraint');
 INSERT INTO tablePartitioned partition(p1='today', p2=10) values('not', 'null', 'constraint');
+
+--TODO: can partition be before rest of the columns in dynamic partition
 
 
 DROP TABLE table1;

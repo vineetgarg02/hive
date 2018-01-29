@@ -6689,19 +6689,22 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     if(nullConstraintBitSet == null) {
       return input;
     }
-    assert (input.getType() == OperatorType.SELECT);
-    List<ExprNodeDesc> colExprs = ((SelectOperator) input).getConf().getColList();
+    //assert (input.getType() == OperatorType.SELECT);
+    //List<ExprNodeDesc> colExprs = ((SelectOperator) input).getConf().getColList();
+    List<ColumnInfo> colInfos = input.getSchema().getSignature();
 
     ExprNodeDesc currUDF = null;
     int constraintIdx = 0;
-    for (int colExprIdx = 0; colExprIdx < colExprs.size(); colExprIdx++) {
+    for(int colExprIdx=0; colExprIdx < colInfos.size(); colExprIdx++) {
+    //for (int colExprIdx = 0; colExprIdx < colExprs.size(); colExprIdx++) {
       if(updating(dest) && colExprIdx == 0) {
         // for updates first column is _rowid
         continue;
       }
       if (nullConstraintBitSet.indexOf(constraintIdx) != -1) {
+        ExprNodeDesc currExpr = TypeCheckProcFactory.toExprNodeDesc(colInfos.get(colExprIdx));
         ExprNodeDesc isNotNullUDF = TypeCheckProcFactory.DefaultExprProcessor.
-            getFuncExprNodeDesc("isnotnull", colExprs.get(colExprIdx));
+            getFuncExprNodeDesc("isnotnull", currExpr);
         ExprNodeDesc constraintUDF = TypeCheckProcFactory.DefaultExprProcessor.
             getFuncExprNodeDesc("enforce_constraint", isNotNullUDF);
         if (currUDF != null) {
@@ -6715,23 +6718,21 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     }
     if (currUDF != null) {
       assert (input.getParentOperators().size() == 1);
-      Operator childOperator = (Operator) input.getParentOperators().get(0);
-      childOperator.setChildOperators(null);
-      RowResolver inputRR = opParseCtx.get(childOperator).getRowResolver();
+      //Operator childOperator = (Operator) input.getParentOperators().get(0);
+      //childOperator.setChildOperators(null);
+      RowResolver inputRR = opParseCtx.get(input).getRowResolver();
       Operator newConstraintFilter = putOpInsertMap(OperatorFactory.getAndMakeChild(
           new FilterDesc(currUDF, false), new RowSchema(
-              inputRR.getColumnInfos()), childOperator), inputRR);
+              inputRR.getColumnInfos()), input), inputRR);
 
-      input.setParentOperators(null);
+      /*List<Operator<? extends OperatorDesc>> parentOperators = new ArrayList<>();
+      parentOperators.add(input);
+      newConstraintFilter.setParentOperators(parentOperators);
 
       List<Operator<? extends OperatorDesc>> childOperators = new ArrayList<>();
-      childOperators.add(input);
-      newConstraintFilter.setChildOperators(childOperators);
-
-      List<Operator<? extends OperatorDesc>> parentOperators = new ArrayList<>();
-      parentOperators.add(newConstraintFilter);
-      input.setParentOperators(parentOperators);
-
+      childOperators.add(newConstraintFilter);
+      input.setChildOperators(childOperators); */
+      return newConstraintFilter;
     }
     return input;
   }

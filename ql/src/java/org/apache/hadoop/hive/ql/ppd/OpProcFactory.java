@@ -28,6 +28,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Stack;
 
+import org.apache.avro.generic.GenericData;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.exec.FilterOperator;
 import org.apache.hadoop.hive.ql.exec.JoinOperator;
@@ -139,8 +140,10 @@ public final class OpProcFactory {
   }
 
   private static void removeOperator(Operator<? extends OperatorDesc> operator) {
-    List<Operator<? extends OperatorDesc>> children = operator.getChildOperators();
-    List<Operator<? extends OperatorDesc>> parents = operator.getParentOperators();
+    // since removeParent/removeChild updates the childOperators and parentOperators list in place
+    // we need to make a copy of list to iterator over them
+    List<Operator<? extends OperatorDesc>> children = new ArrayList<>(operator.getChildOperators());
+    List<Operator<? extends OperatorDesc>> parents = new ArrayList<>(operator.getParentOperators());
     for (Operator<? extends OperatorDesc> parent : parents) {
       parent.getChildOperators().addAll(children);
       parent.removeChild(operator);

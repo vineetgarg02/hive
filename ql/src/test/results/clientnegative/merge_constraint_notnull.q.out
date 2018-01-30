@@ -1,0 +1,34 @@
+PREHOOK: query: create table nonacid (key int, a1 string, value string) stored as orc
+PREHOOK: type: CREATETABLE
+PREHOOK: Output: database:default
+PREHOOK: Output: default@nonacid
+POSTHOOK: query: create table nonacid (key int, a1 string, value string) stored as orc
+POSTHOOK: type: CREATETABLE
+POSTHOOK: Output: database:default
+POSTHOOK: Output: default@nonacid
+PREHOOK: query: insert into nonacid values(1, null, 'value')
+PREHOOK: type: QUERY
+PREHOOK: Input: _dummy_database@_dummy_table
+PREHOOK: Output: default@nonacid
+POSTHOOK: query: insert into nonacid values(1, null, 'value')
+POSTHOOK: type: QUERY
+POSTHOOK: Input: _dummy_database@_dummy_table
+POSTHOOK: Output: default@nonacid
+POSTHOOK: Lineage: nonacid.a1 EXPRESSION []
+POSTHOOK: Lineage: nonacid.key SCRIPT []
+POSTHOOK: Lineage: nonacid.value SCRIPT []
+PREHOOK: query: create table test1(key int NOT NULL enable, a1 string, value string)
+clustered by (value) into 2 buckets stored as orc
+tblproperties ("transactional"="true")
+PREHOOK: type: CREATETABLE
+PREHOOK: Output: database:default
+PREHOOK: Output: default@test1
+POSTHOOK: query: create table test1(key int NOT NULL enable, a1 string, value string)
+clustered by (value) into 2 buckets stored as orc
+tblproperties ("transactional"="true")
+POSTHOOK: type: CREATETABLE
+POSTHOOK: Output: database:default
+POSTHOOK: Output: default@test1
+FAILED: SemanticException [Error 10265]: This command is not allowed on an ACID table default.test1 with a non-ACID transaction manager. Failed command: 
+
+insert into test1 values(2, 'a1', 'value')

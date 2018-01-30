@@ -214,6 +214,7 @@ import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.hive.ql.session.SessionState.ResourceType;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDAFEvaluator;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDAFEvaluator.Mode;
+import org.apache.hadoop.hive.ql.udf.generic.GenericUDFCardinalityViolation;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDFHash;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDFOPOr;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDTF;
@@ -6639,17 +6640,29 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       for (int i = 0; i < tbl.getCols().size(); i++) {
         if (tbl.getCols().get(i).getName().equals(nnCol)) {
           nnPos = i;
+          builder.set(nnPos);
           break;
         }
       }
-      if (nnPos == -1) {
-        LOG.error("Column for not null constraint definition " + nnCol + " not found");
-        break;
-      }
-      builder.set(nnPos);
     }
     bitSet = builder.build();
     return bitSet;
+  }
+
+  private boolean mergeCardinalityViolationBranch(final Operator input) {
+    if(input instanceof SelectOperator) {
+      SelectOperator selectOp = (SelectOperator)input;
+      if(selectOp.getConf().getColList().size() == 1) {
+        ExprNodeDesc colExpr = selectOp.getConf().getColList().get(0);
+        if(colExpr instanceof ExprNodeGenericFuncDesc) {
+          ExprNodeGenericFuncDesc func = (ExprNodeGenericFuncDesc)colExpr ;
+          if(func.getGenericUDF() instanceof GenericUDFCardinalityViolation) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
   }
 
   private Operator
@@ -6658,6 +6671,16 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
 
     boolean forceNotNullConstraint = conf.getBoolVar(ConfVars.HIVE_ENFORCE_NOT_NULL_CONSTRAINT);
     if(!forceNotNullConstraint) {
+      return input;
+    }
+
+    if(deleting(dest)) {
+      // for DELETE statements NOT NULL constraint need not be checked
+      return input;
+    }
+
+    //MERGE statements could have inserted a cardinality violation branch, we need to avoid that
+    if(mergeCardinalityViolationBranch(input)){
       return input;
     }
 

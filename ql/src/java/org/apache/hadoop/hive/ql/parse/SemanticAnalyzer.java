@@ -6712,14 +6712,11 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     if(nullConstraintBitSet == null) {
       return input;
     }
-    //assert (input.getType() == OperatorType.SELECT);
-    //List<ExprNodeDesc> colExprs = ((SelectOperator) input).getConf().getColList();
     List<ColumnInfo> colInfos = input.getSchema().getSignature();
 
     ExprNodeDesc currUDF = null;
     int constraintIdx = 0;
     for(int colExprIdx=0; colExprIdx < colInfos.size(); colExprIdx++) {
-    //for (int colExprIdx = 0; colExprIdx < colExprs.size(); colExprIdx++) {
       if(updating(dest) && colExprIdx == 0) {
         // for updates first column is _rowid
         continue;
@@ -6741,20 +6738,11 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     }
     if (currUDF != null) {
       assert (input.getParentOperators().size() == 1);
-      //Operator childOperator = (Operator) input.getParentOperators().get(0);
-      //childOperator.setChildOperators(null);
       RowResolver inputRR = opParseCtx.get(input).getRowResolver();
       Operator newConstraintFilter = putOpInsertMap(OperatorFactory.getAndMakeChild(
           new FilterDesc(currUDF, false), new RowSchema(
               inputRR.getColumnInfos()), input), inputRR);
 
-      /*List<Operator<? extends OperatorDesc>> parentOperators = new ArrayList<>();
-      parentOperators.add(input);
-      newConstraintFilter.setParentOperators(parentOperators);
-
-      List<Operator<? extends OperatorDesc>> childOperators = new ArrayList<>();
-      childOperators.add(newConstraintFilter);
-      input.setChildOperators(childOperators); */
       return newConstraintFilter;
     }
     return input;
@@ -11494,68 +11482,6 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     return genPlan(qb);
   }
 
-  private List<Boolean> getConstraintsForcedForTable(final Table tbl) {
-    List<FieldSchema> allCols = tbl.getCols();
-    List<Boolean> constr = new ArrayList<Boolean>();
-    for(FieldSchema fs:allCols) {
-      constr.add(true);
-    }
-    return constr;
-  }
-
-  // this method will rewrite incoming AST to enforce constraint
-  // (For now only NOT NULL)
- /* private void enforceConstraint(final QB qb, ASTNode query) {
-    QBParseInfo parseInfo = qb.getParseInfo();
-    QBMetaData qbMetaData = qb.getMetaData();
-    //TODO: if and only if it is insert query
-
-    // get all the inclauses
-    Set<String> allInClauses = parseInfo.getClauseNames();
-    for(String currClause:allInClauses) {
-      Table targetTable = qbMetaData.getNameToDestTable().get(currClause);
-      List<Boolean> constr = getConstraintsForcedForTable(targetTable);
-
-      ASTNode selectC = parseInfo.getSelForClause(currClause);
-      List<Node> selExprs = selectC.getChildren();
-
-      assert(selExprs.size() == constr.size());
-
-      ASTNode newNode = null;
-
-      for(int i=0; i<selExprs.size(); i++) {
-        //TODO: if this has enforced constraint
-        ASTNode selectExpr = (ASTNode)selExprs.get(i);
-        assert(selectExpr.getChildren().size() == 1);
-        ASTNode childNode = (ASTNode)(selectExpr.getChild(0));
-        if(childNode.getType() == HiveParser.TOK_ALLCOLREF) {
-          //TODO`
-        }
-        ASTNode copySelExpr = (ASTNode)childNode.dupNode();
-        ASTNode isnotnullAST = ASTBuilder.createAST(HiveParser.TOK_FUNCTION, "isnotnull");
-        isnotnullAST.setChild(0, copySelExpr);
-        ASTNode constraintNode= ASTBuilder.createAST(HiveParser.TOK_FUNCTION, "enforce_constraint");
-        constraintNode.setChild(0, isnotnullAST);
-
-        if(newNode != null) {
-          ASTNode andNode = ASTBuilder.createAST(HiveParser.KW_AND, "and");
-          andNode.setChild(0, newNode);
-          andNode.setChild(1, constraintNode);
-          newNode = andNode;
-        }
-        else {
-          newNode = constraintNode;
-        }
-      }
-      if(newNode != null) {
-        ASTNode newWhere = ASTBuilder.createAST(HiveParser.TOK_WHERE, "TOK_WHERE");
-        newWhere.setChild(0, newNode);
-        ASTNode currInsertClause = parseInfo.getInsertOverwriteTables().get(currClause);
-        currInsertClause.setChild(currInsertClause.getChildCount(), newWhere);
-      }
-    }
-
-  } */
   private void removeOBInSubQuery(QBExpr qbExpr) {
     if (qbExpr == null) {
       return;

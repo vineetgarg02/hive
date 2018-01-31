@@ -252,7 +252,6 @@ public class Optimizer {
     for (Transform t : transformations) {
       t.beginPerfLogging();
       pctx = t.transform(pctx);
-
       t.endPerfLogging(t.toString());
     }
     return pctx;

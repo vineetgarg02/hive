@@ -95,6 +95,7 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.metastore.conf.MetastoreConf;
 import org.apache.hive.druid.MiniDruidCluster;
+import org.apache.hive.testutils.HiveTestEnvSetup;
 import org.apache.hadoop.hive.llap.LlapItUtils;
 import org.apache.hadoop.hive.llap.daemon.MiniLlapCluster;
 import org.apache.hadoop.hive.llap.io.api.LlapProxy;
@@ -198,7 +199,6 @@ public class QTestUtil {
   private MiniLlapCluster llapCluster = null;
   private String hadoopVer = null;
   private QTestSetup setup = null;
-  private TezSessionState tezSessionState = null;
   private SparkSession sparkSession = null;
   private boolean isSessionStateStarted = false;
   private static final String javaVersion = getJavaVersion();
@@ -1192,7 +1192,7 @@ public class QTestUtil {
     boolean canReuseSession = !qNoSessionReuseQuerySet.contains(tname);
     if (oldSs != null && canReuseSession && clusterType.getCoreClusterType() == CoreClusterType.TEZ) {
       // Copy the tezSessionState from the old CliSessionState.
-      tezSessionState = oldSs.getTezSession();
+      TezSessionState tezSessionState = oldSs.getTezSession();
       oldSs.setTezSession(null);
       ss.setTezSession(tezSessionState);
       oldSs.close();
@@ -1207,6 +1207,9 @@ public class QTestUtil {
 
     if (oldSs != null && oldSs.out != null && oldSs.out != System.out) {
       oldSs.out.close();
+    }
+    if (oldSs != null) {
+      oldSs.close();
     }
     SessionState.start(ss);
 
@@ -1237,7 +1240,7 @@ public class QTestUtil {
     SessionState oldSs = SessionState.get();
     if (oldSs != null && canReuseSession && clusterType.getCoreClusterType() == CoreClusterType.TEZ) {
       // Copy the tezSessionState from the old CliSessionState.
-      tezSessionState = oldSs.getTezSession();
+      TezSessionState tezSessionState = oldSs.getTezSession();
       ss.setTezSession(tezSessionState);
       oldSs.setTezSession(null);
       oldSs.close();
@@ -1251,6 +1254,9 @@ public class QTestUtil {
     }
     if (oldSs != null && oldSs.out != null && oldSs.out != System.out) {
       oldSs.out.close();
+    }
+    if (oldSs != null) {
+      oldSs.close();
     }
     SessionState.start(ss);
 
@@ -2167,17 +2173,6 @@ public class QTestUtil {
         "./ql/target/surefire-reports or ./itests/qtest/target/surefire-reports/ for specific " +
         "test cases logs.");
     System.err.flush();
-  }
-
-  public static String ensurePathEndsInSlash(String path) {
-    if(path == null) {
-      throw new NullPointerException("Path cannot be null");
-    }
-    if(path.endsWith(File.separator)) {
-      return path;
-    } else {
-      return path + File.separator;
-    }
   }
 
   private static String[] cachedQvFileList = null;

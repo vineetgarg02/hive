@@ -113,16 +113,12 @@ INSERT INTO tablePartitioned partition(p1='today', p2=10) values('not', 'null', 
 explain INSERT INTO tablePartitioned partition(p1, p2) select key, value, value, key as p1, 3 as p2 from src limit 10;
 INSERT INTO tablePartitioned partition(p1, p2) select key, value, value, key as p1, 3 as p2 from src limit 10;
 
--- partition is not based on alias but on position so constraints should be on appropriate columns
-explain INSERT INTO tablePartitioned partition(p1, p2) select 1 as p1, 2 as p2, value, key, 3 from default.src limit 2;
-INSERT INTO tablePartitioned partition(p1, p2) select 1 as p1, 2 as p2, value, key, 3 from default.src limit 2;
-
 select * from tablePartitioned;
 
 -- multi insert
 explain
 from src
-INSERT INTO tablePartitioned partition(p1, p2) select 1 as p1, 2 as p2, value, key, 3 from default.src;
+INSERT INTO tablePartitioned partition(p1, p2) select key, value, value, 'yesterday' as p1, 3 as p2
 insert overwrite table src_multi2 select * where key > 10 and key < 20;
 
 DROP TABLE src_multi1;
@@ -168,13 +164,17 @@ WHEN MATCHED AND s.key < 5 THEN DELETE;
 
 DROP TABLE masking_test;
 DROP TABLE nonacid;
+
 -- Test drop constraint
-create table table2(i int constraint nn5 not null enforced, j);
+create table table2(i int constraint nn5 not null enforced, j int);
 explain insert into table2 values(2, 3);
 alter table table2 drop constraint nn5;
 explain insert into table2 values(2, 3);
 DROP TABLE table2;
 
-    -- Updates
--- TODO: CTAS
+-- temporary table
+create temporary table tttemp(i int not null enforced);
+explain insert into tttemp values(1);
+explain insert into tttemp select cast(key as int) from src;
+drop table tttemp;
 

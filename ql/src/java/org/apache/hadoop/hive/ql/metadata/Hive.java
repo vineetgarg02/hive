@@ -1881,7 +1881,7 @@ public class Hive {
           // base_x.  (there is Insert Overwrite and Load Data Overwrite)
           boolean isAutoPurge = "true".equalsIgnoreCase(tbl.getProperty("auto.purge"));
           replaceFiles(tbl.getPath(), loadPath, destPath, oldPartPath, getConf(),
-              isSrcLocal, isAutoPurge, newFiles, filter, isMmTableWrite?true:false);
+              isSrcLocal, isAutoPurge, newFiles, filter, isMmTableWrite?true:false, !tbl.isTemporary());
         } else {
           FileSystem fs = tbl.getDataLocation().getFileSystem(conf);
           copyFiles(conf, loadPath, destPath, fs, isSrcLocal, isAcidIUDoperation,
@@ -2427,7 +2427,7 @@ private void constructOneLBLocationMap(FileStatus fSta,
         //todo:  should probably do the same for MM IOW
         boolean isAutopurge = "true".equalsIgnoreCase(tbl.getProperty("auto.purge"));
         replaceFiles(tblPath, loadPath, destPath, tblPath,
-            sessionConf, isSrcLocal, isAutopurge, newFiles, filter, isMmTable?true:false);
+            sessionConf, isSrcLocal, isAutopurge, newFiles, filter, isMmTable?true:false, !tbl.isTemporary());
       } else {
         try {
           FileSystem fs = tbl.getDataLocation().getFileSystem(sessionConf);
@@ -2591,28 +2591,7 @@ private void constructOneLBLocationMap(FileStatus fSta,
 
   public Partition getPartition(Table tbl, Map<String, String> partSpec,
       boolean forceCreate) throws HiveException {
-    return getPartition(tbl, partSpec, forceCreate, null, true, null);
-  }
-
-  /**
-   * Returns partition metadata
-   *
-   * @param tbl
-   *          the partition's table
-   * @param partSpec
-   *          partition keys and values
-   * @param forceCreate
-   *          if this is true and partition doesn't exist then a partition is
-   *          created
-   * @param partPath the path where the partition data is located
-   * @param inheritTableSpecs whether to copy over the table specs for if/of/serde
-   * @return result partition object or null if there is no partition
-   * @throws HiveException
-   */
-  public Partition getPartition(Table tbl, Map<String, String> partSpec, boolean forceCreate,
-                                String partPath, boolean inheritTableSpecs)
-      throws HiveException {
-    return getPartition(tbl, partSpec, forceCreate, partPath, inheritTableSpecs, null);
+    return getPartition(tbl, partSpec, forceCreate, null, true);
   }
 
   /**
@@ -2633,8 +2612,7 @@ private void constructOneLBLocationMap(FileStatus fSta,
    * @throws HiveException
    */
   public Partition getPartition(Table tbl, Map<String, String> partSpec,
-      boolean forceCreate, String partPath, boolean inheritTableSpecs, List<Path> newFiles)
-      throws HiveException {
+      boolean forceCreate, String partPath, boolean inheritTableSpecs) throws HiveException {
     tbl.validatePartColumnNames(partSpec, true);
     List<String> pvals = new ArrayList<String>();
     for (FieldSchema field : tbl.getPartCols()) {
@@ -2694,7 +2672,7 @@ private void constructOneLBLocationMap(FileStatus fSta,
         }
         else {
           alterPartitionSpec(tbl, partSpec, tpart, inheritTableSpecs, partPath);
-          fireInsertEvent(tbl, partSpec, true, newFiles);
+          fireInsertEvent(tbl, partSpec, true, null);
         }
       }
       if (tpart == null) {
@@ -2758,20 +2736,8 @@ private void constructOneLBLocationMap(FileStatus fSta,
         InsertEventRequestData insertData = new InsertEventRequestData();
         insertData.setReplace(replace);
         data.setInsertData(insertData);
-        if (newFiles != null && newFiles.size() > 0) {
-          for (Path p : newFiles) {
-            insertData.addToFilesAdded(p.toString());
-            FileChecksum cksum = fileSystem.getFileChecksum(p);
-            // File checksum is not implemented for local filesystem (RawLocalFileSystem)
-            if (cksum != null) {
-              String checksumString =
-                  StringUtils.byteToHexString(cksum.getBytes(), 0, cksum.getLength());
-              insertData.addToFilesAddedChecksum(checksumString);
-            } else {
-              // Add an empty checksum string for filesystems that don't generate one
-              insertData.addToFilesAddedChecksum("");
-            }
-          }
+        if (newFiles != null && !newFiles.isEmpty()) {
+          addInsertFileInformation(newFiles, fileSystem, insertData);
         } else {
           insertData.setFilesAdded(new ArrayList<String>());
         }
@@ -2789,6 +2755,53 @@ private void constructOneLBLocationMap(FileStatus fSta,
       } catch (IOException | TException e) {
         throw new HiveException(e);
       }
+    }
+  }
+
+
+  private static void addInsertFileInformation(List<Path> newFiles, FileSystem fileSystem,
+      InsertEventRequestData insertData) throws IOException {
+    LinkedList<Path> directories = null;
+    for (Path p : newFiles) {
+      if (fileSystem.isDirectory(p)) {
+        if (directories == null) {
+          directories = new LinkedList<>();
+        }
+        directories.add(p);
+        continue;
+      }
+      addInsertNonDirectoryInformation(p, fileSystem, insertData);
+    }
+    if (directories == null) return;
+    // We don't expect any nesting in most cases, or a lot of it if it is present; union and LB
+    // are some examples where we would have 1, or few, levels respectively.
+    while (!directories.isEmpty()) {
+      Path dir = directories.poll();
+      FileStatus[] contents = fileSystem.listStatus(dir);
+      if (contents == null) continue;
+      for (FileStatus status : contents) {
+        if (status.isDirectory()) {
+          directories.add(status.getPath());
+          continue;
+        }
+        addInsertNonDirectoryInformation(status.getPath(), fileSystem, insertData);
+      }
+    }
+  }
+
+
+  private static void addInsertNonDirectoryInformation(Path p, FileSystem fileSystem,
+      InsertEventRequestData insertData) throws IOException {
+    insertData.addToFilesAdded(p.toString());
+    FileChecksum cksum = fileSystem.getFileChecksum(p);
+    // File checksum is not implemented for local filesystem (RawLocalFileSystem)
+    if (cksum != null) {
+      String checksumString =
+          StringUtils.byteToHexString(cksum.getBytes(), 0, cksum.getLength());
+      insertData.addToFilesAddedChecksum(checksumString);
+    } else {
+      // Add an empty checksum string for filesystems that don't generate one
+      insertData.addToFilesAddedChecksum("");
     }
   }
 
@@ -3950,7 +3963,7 @@ private void constructOneLBLocationMap(FileStatus fSta,
    */
   protected void replaceFiles(Path tablePath, Path srcf, Path destf, Path oldPath, HiveConf conf,
           boolean isSrcLocal, boolean purge, List<Path> newFiles, PathFilter deletePathFilter,
-          boolean isMmTableOverwrite) throws HiveException {
+          boolean isMmTableOverwrite, boolean isNeedRecycle) throws HiveException {
     try {
 
       FileSystem destFs = destf.getFileSystem(conf);
@@ -3971,7 +3984,7 @@ private void constructOneLBLocationMap(FileStatus fSta,
       if (oldPath != null) {
         // Note: we assume lbLevels is 0 here. Same as old code for non-MM.
         //       For MM tables, this can only be a LOAD command. Does LOAD even support LB?
-        deleteOldPathForReplace(destf, oldPath, conf, purge, deletePathFilter, isMmTableOverwrite, 0);
+        deleteOldPathForReplace(destf, oldPath, conf, purge, deletePathFilter, isMmTableOverwrite, 0, isNeedRecycle);
       }
 
       // first call FileUtils.mkdir to make sure that destf directory exists, if not, it creates
@@ -4017,7 +4030,7 @@ private void constructOneLBLocationMap(FileStatus fSta,
   }
 
   private void deleteOldPathForReplace(Path destPath, Path oldPath, HiveConf conf, boolean purge,
-      PathFilter pathFilter, boolean isMmTableOverwrite, int lbLevels) throws HiveException {
+      PathFilter pathFilter, boolean isMmTableOverwrite, int lbLevels, boolean isNeedRecycle) throws HiveException {
     Utilities.FILE_OP_LOGGER.debug("Deleting old paths for replace in " + destPath
         + " and old path " + oldPath);
     boolean isOldPathUnderDestf = false;
@@ -4031,7 +4044,7 @@ private void constructOneLBLocationMap(FileStatus fSta,
       isOldPathUnderDestf = isSubDir(oldPath, destPath, oldFs, destFs, false);
       if (isOldPathUnderDestf || isMmTableOverwrite) {
         if (lbLevels == 0 || !isMmTableOverwrite) {
-          cleanUpOneDirectoryForReplace(oldPath, oldFs, pathFilter, conf, purge);
+          cleanUpOneDirectoryForReplace(oldPath, oldFs, pathFilter, conf, purge, isNeedRecycle);
         }
       }
     } catch (IOException e) {
@@ -4048,8 +4061,8 @@ private void constructOneLBLocationMap(FileStatus fSta,
 
 
   private void cleanUpOneDirectoryForReplace(Path path, FileSystem fs,
-      PathFilter pathFilter, HiveConf conf, boolean purge) throws IOException, HiveException {
-    if (conf.getBoolVar(HiveConf.ConfVars.REPLCMENABLED)) {
+      PathFilter pathFilter, HiveConf conf, boolean purge, boolean isNeedRecycle) throws IOException, HiveException {
+    if (isNeedRecycle && conf.getBoolVar(HiveConf.ConfVars.REPLCMENABLED)) {
       recycleDirToCmPath(path, purge);
     }
     FileStatus[] statuses = fs.listStatus(path, pathFilter);

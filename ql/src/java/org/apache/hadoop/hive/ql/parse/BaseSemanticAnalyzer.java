@@ -779,7 +779,7 @@ public abstract class BaseSemanticAnalyzer {
       } else if (type == HiveParser.TOK_ENABLE) {
         enable = true;
         // validate is true by default if we enable the constraint
-        validate = true;
+        validate = false;
       } else if (type == HiveParser.TOK_DISABLE) {
         enable = false;
         // validate is false by default if we disable the constraint
@@ -791,11 +791,6 @@ public abstract class BaseSemanticAnalyzer {
       } else if (type == HiveParser.TOK_RELY) {
         rely = true;
       }
-    }
-    if (enable) {
-      throw new SemanticException(
-          ErrorMsg.INVALID_CSTR_SYNTAX.getMsg("ENABLE/ENFORCED feature not supported yet. "
-              + "Please use DISABLE/NOT ENFORCED instead."));
     }
     if (validate) {
       throw new SemanticException(

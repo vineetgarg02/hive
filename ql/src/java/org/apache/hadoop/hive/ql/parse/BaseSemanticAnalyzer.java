@@ -793,6 +793,13 @@ public abstract class BaseSemanticAnalyzer {
       }
     }
 
+    // NOT NULL constraint could be enforced/enabled
+    if (child.getToken().getType() != HiveParser.TOK_NOT_NULL
+        && enable) {
+      throw new SemanticException(
+          ErrorMsg.INVALID_CSTR_SYNTAX.getMsg("ENABLE/ENFORCED feature not supported yet. "
+              + "Please use DISABLE/NOT ENFORCED instead."));
+    }
     if (validate) {
       throw new SemanticException(
         ErrorMsg.INVALID_CSTR_SYNTAX.getMsg("VALIDATE feature not supported yet. "

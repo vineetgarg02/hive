@@ -6695,7 +6695,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
 
     }
     else {
-      throw new SemanticException("Generating NOT NULL constraint check: Invalid target type");
+      throw new SemanticException("Generating NOT NULL constraint check: Invalid target type: " + dest);
     }
     ImmutableBitSet nullConstraintBitSet = null;
     try {

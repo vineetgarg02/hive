@@ -4645,6 +4645,21 @@ private void constructOneLBLocationMap(FileStatus fSta,
     }
   }
 
+  public PrimaryKeyInfo getEnabledPrimaryKeys(String dbName, String tblName, boolean onlyReliable)
+      throws HiveException {
+    try {
+      List<SQLPrimaryKey> primaryKeys = getMSC().getPrimaryKeys(new PrimaryKeysRequest(dbName, tblName));
+      if (onlyReliable && primaryKeys != null && !primaryKeys.isEmpty()) {
+        primaryKeys = primaryKeys.stream()
+            .filter(pk -> pk.isRely_cstr())
+            .collect(Collectors.toList());
+      }
+      return new PrimaryKeyInfo(primaryKeys, tblName, dbName);
+    } catch (Exception e) {
+      throw new HiveException(e);
+    }
+  }
+
   /**
    * Get all primary key columns associated with the table.
    *
@@ -4735,6 +4750,29 @@ private void constructOneLBLocationMap(FileStatus fSta,
     return getUniqueConstraints(dbName, tblName, false);
   }
 
+  /**
+   * Get unique constraints associated with the table that are enabled.
+   *
+   * @param dbName Database Name
+   * @param tblName Table Name
+   * @return Unique constraints associated with the table.
+   * @throws HiveException
+   */
+  private UniqueConstraint getEnabledUniqueConstraints(String dbName, String tblName)
+      throws HiveException {
+    try {
+      List<SQLUniqueConstraint> uniqueConstraints = getMSC().getUniqueConstraints(
+          new UniqueConstraintsRequest(dbName, tblName));
+      if (uniqueConstraints != null && !uniqueConstraints.isEmpty()) {
+        uniqueConstraints = uniqueConstraints.stream()
+            .filter(uk -> uk.isEnable_cstr())
+            .collect(Collectors.toList());
+      }
+      return new UniqueConstraint(uniqueConstraints, tblName, dbName);
+    } catch (Exception e) {
+      throw new HiveException(e);
+    }
+  }
   /**
    * Get unique constraints associated with the table that are available for optimization.
    *

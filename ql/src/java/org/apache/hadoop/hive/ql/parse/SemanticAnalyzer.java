@@ -12247,32 +12247,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     return retValue;
   }
 
-  private boolean hasEnabledConstraints(List<SQLPrimaryKey> primaryKeys,
-                                        List<SQLForeignKey> foreignKeys,
-                                        List<SQLUniqueConstraint> uniqueConstraints,
-                                        List<SQLNotNullConstraint> notNullConstraints){
-    for(SQLPrimaryKey constr:primaryKeys){
-      if(constr.isEnable_cstr() || constr.isValidate_cstr()){
-        return true;
-      }
-    }
-    for(SQLForeignKey constr:foreignKeys){
-      if(constr.isEnable_cstr() || constr.isValidate_cstr()){
-        return true;
-      }
-    }
-    for(SQLUniqueConstraint constr:uniqueConstraints){
-      if(constr.isEnable_cstr() || constr.isValidate_cstr()) {
-        return true;
-      }
-    }
-    for(SQLNotNullConstraint nnC:notNullConstraints){
-      if(nnC.isEnable_cstr() || nnC.isValidate_cstr()){
-        return true;
-      }
-    }
-    return false;
-  }
+
 
   /**
    * Analyze the create table command. If it is a regular create-table or
@@ -12453,8 +12428,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       throw new SemanticException("Unrecognized command.");
     }
 
-    if(isExt && hasEnabledConstraints(primaryKeys, foreignKeys, uniqueConstraints,
-        notNullConstraints)){
+    if(isExt && hasEnabledOrValidatedConstraints(notNullConstraints)){
       throw new SemanticException(
           ErrorMsg.INVALID_CSTR_SYNTAX.getMsg("Constraints are disallowed with External tables. "
               + "Only RELY is allowed."));

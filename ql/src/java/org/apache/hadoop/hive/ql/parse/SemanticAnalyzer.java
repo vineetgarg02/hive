@@ -2053,6 +2053,9 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
                 location = wh.getDatabasePath(db.getDatabase(destTableDb));
               } catch (MetaException e) {
                 throw new SemanticException(e);
+                }
+              }
+              try {
                 CreateTableDesc tblDesc = qb.getTableDesc();
                 if (tblDesc != null
                     && tblDesc.isTemporary()
@@ -2071,19 +2074,6 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
                 // Add the table spec for the destination table.
                 qb.getParseInfo().addTableSpec(ts.tableName.toLowerCase(), ts);
               }
-            }
-            try {
-              fname = ctx.getExtTmpPathRelTo(
-                  FileUtils.makeQualified(location, conf)).toString();
-            } catch (Exception e) {
-              throw new SemanticException(generateErrorMessage(ast,
-                  "Error creating temporary folder on: " + location.toString()), e);
-            }
-            if (HiveConf.getBoolVar(conf, HiveConf.ConfVars.HIVESTATSAUTOGATHER)) {
-              TableSpec ts = new TableSpec(db, conf, this.ast);
-              // Add the table spec for the destination table.
-              qb.getParseInfo().addTableSpec(ts.tableName.toLowerCase(), ts);
-            }
           } else {
             // This is the only place where isQuery is set to true; it defaults to false.
             qb.setIsQuery(true);

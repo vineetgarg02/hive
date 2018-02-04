@@ -6642,7 +6642,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     ImmutableBitSet.Builder builder = ImmutableBitSet.builder();
     for (String nnCol : nnc.getNotNullConstraints().values()) {
       int nnPos = -1;
-      for (int i = 0; i < tbl.getAllCols()Cols().size(); i++) {
+      for (int i = 0; i < tbl.getCols().size(); i++) {
         if (tbl.getCols().get(i).getName().equals(nnCol)) {
           nnPos = i;
           builder.set(nnPos);

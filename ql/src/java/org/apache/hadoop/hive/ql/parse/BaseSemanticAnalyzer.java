@@ -779,6 +779,8 @@ public abstract class BaseSemanticAnalyzer {
       } else if (type == HiveParser.TOK_ENABLE) {
         enable = true;
         // validate is false by default if we enable the constraint
+        // TODO: A constraint like NOT NULL could be enabled using ALTER but VALIDATE remains
+        //  false in such cases. Ideally VALIDATE should be set to true to validate existing data
         validate = false;
       } else if (type == HiveParser.TOK_DISABLE) {
         enable = false;

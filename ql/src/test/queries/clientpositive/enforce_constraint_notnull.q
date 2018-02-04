@@ -7,6 +7,10 @@ explain INSERT INTO table1 values('not', 'null', 'constraint');
 INSERT INTO table1 values('not', 'null', 'constraint');
 SELECT * FROM table1;
 
+-- insert with column specified
+explain insert into table1(a,c) values('1','2');
+insert into table1(a,c) values('1','2');
+
 -- insert from select
 explain INSERT INTO table1 select key, src.value, value from src;
 INSERT INTO table1 select key, src.value, value from src;

@@ -1,7 +1,6 @@
 set hive.mapred.mode=nonstrict;
 set hive.support.concurrency=true;
 set hive.txn.manager=org.apache.hadoop.hive.ql.lockmgr.DbTxnManager;
-set hive.merge.cardinality.check=false;
 
 create table nonacid (key int, a1 string, value string) stored as orc;
 insert into nonacid values(1, null, 'value');

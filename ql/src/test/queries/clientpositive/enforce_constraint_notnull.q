@@ -182,3 +182,15 @@ explain insert into tttemp values(1);
 explain insert into tttemp select cast(key as int) from src;
 drop table tttemp;
 
+-- micro-managed table
+set hive.create.as.insert.only=true;
+set hive.exec.dynamic.partition.mode=nonstrict;
+set hive.support.concurrency=true;
+set hive.txn.manager=org.apache.hadoop.hive.ql.lockmgr.DbTxnManager;
+create table part_mm(key int not null enforced) partitioned by (key_mm int) stored as orc tblproperties ("transactional"="true", "transactional_properties"="insert_only");
+explain insert into table part_mm partition(key_mm=455) select key from src order by value limit 3;
+insert into table part_mm partition(key_mm=455) select key from src order by value limit 3;
+select key from src order by value limit 3;
+select * from part_mm;
+drop table part_mm;
+

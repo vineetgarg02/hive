@@ -47,6 +47,7 @@ WHEN NOT MATCHED THEN INSERT VALUES (s.key, s.a1, s.value)
 PREHOOK: type: QUERY
 PREHOOK: Input: default@nonacid
 PREHOOK: Input: default@testt
+PREHOOK: Output: default@merge_tmp_table
 PREHOOK: Output: default@testt
 PREHOOK: Output: default@testt
 PREHOOK: Output: default@testt

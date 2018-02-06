@@ -21,19 +21,11 @@ package org.apache.hadoop.hive.ql.udf.generic;
 import org.apache.hadoop.hive.ql.exec.Description;
 import org.apache.hadoop.hive.ql.exec.UDFArgumentException;
 import org.apache.hadoop.hive.ql.exec.UDFArgumentLengthException;
-import org.apache.hadoop.hive.ql.exec.vector.VectorizedExpressions;
-import org.apache.hadoop.hive.ql.exec.vector.expressions.gen.FuncAbsDecimalToDecimal;
-import org.apache.hadoop.hive.ql.exec.vector.expressions.gen.FuncAbsDoubleToDouble;
-import org.apache.hadoop.hive.ql.exec.vector.expressions.gen.FuncAbsLongToLong;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
-import org.apache.hadoop.hive.serde2.objectinspector.ConstantObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
-import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspectorConverters;
-import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspectorConverters.Converter;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.BooleanObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.PrimitiveObjectInspectorFactory;
 import org.apache.hadoop.io.BooleanWritable;
-import org.apache.hadoop.io.LongWritable;
 
 /**
  * GenericUDFAbs.
@@ -42,7 +34,6 @@ import org.apache.hadoop.io.LongWritable;
 @Description(name = "enforce_constraint",
     value = "_FUNC_(x) - Internal UDF to enforce NOT NULL constraint",
     extended = "For internal use only")
-@VectorizedExpressions({FuncAbsLongToLong.class, FuncAbsDoubleToDouble.class, FuncAbsDecimalToDecimal.class})
 public class GenericUDFEnforceNotNullConstraint extends GenericUDF {
   private final BooleanWritable resultBool = new BooleanWritable();
   private transient BooleanObjectInspector boi;
@@ -51,7 +42,8 @@ public class GenericUDFEnforceNotNullConstraint extends GenericUDF {
   public ObjectInspector initialize(ObjectInspector[] arguments) throws UDFArgumentException {
     if (arguments.length > 1) {
       throw new UDFArgumentLengthException(
-          "Invalid number of arguments. enforce_constraint UDF expected one argument but received: " + arguments.length);
+          "Invalid number of arguments. enforce_constraint UDF expected one argument but received: "
+              + arguments.length);
     }
 
     boi = (BooleanObjectInspector) arguments[0];
@@ -64,7 +56,7 @@ public class GenericUDFEnforceNotNullConstraint extends GenericUDF {
     Object a = arguments[0].get();
     boolean result = boi.get(a);
 
-    if(result == false) {
+    if(!result) {
       throw new UDFArgumentLengthException(
           "NOT NULL constraint violated!");
     }
@@ -81,5 +73,4 @@ public class GenericUDFEnforceNotNullConstraint extends GenericUDF {
   public String getDisplayString(String[] children) {
     return getStandardDisplayString(getFuncName(), children);
   }
-
 }

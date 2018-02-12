@@ -22,7 +22,7 @@ import java.io.Serializable;
 public class MConstraint
 {
   String constraintName;
-  int constraintType;
+  ConstraintType constraintType;
   int position;
   Integer deleteRule;
   Integer updateRule;
@@ -34,14 +34,14 @@ public class MConstraint
   Integer parentIntegerIndex;
   int enableValidateRely;
 
-  // 0 - Primary Key
-  // 1 - PK-FK relationship
-  // 2 - Unique Constraint
-  // 3 - Not Null Constraint
-  public final static int PRIMARY_KEY_CONSTRAINT = 0;
-  public final static int FOREIGN_KEY_CONSTRAINT = 1;
-  public final static int UNIQUE_CONSTRAINT = 2;
-  public final static int NOT_NULL_CONSTRAINT = 3;
+  public static enum ConstraintType {
+    PRIMARY_KEY_CONSTRAINT,
+    FOREIGN_KEY_CONSTRAINT,
+    UNIQUE_CONSTRAINT,
+    NOT_NULL_CONSTRAINT,
+    DEFAULT_CONSTRAINT
+  };
+
 
   @SuppressWarnings("serial")
   public static class PK implements Serializable {
@@ -74,7 +74,7 @@ public class MConstraint
 
   public MConstraint() {}
 
-  public MConstraint(String constraintName, int constraintType, int position, Integer deleteRule, Integer updateRule, int enableRelyValidate, MTable parentTable,
+  public MConstraint(String constraintName, ConstraintType constraintType, int position, Integer deleteRule, Integer updateRule, int enableRelyValidate, MTable parentTable,
     MTable childTable, MColumnDescriptor parentColumn, MColumnDescriptor childColumn, Integer childIntegerIndex, Integer parentIntegerIndex) {
    this.constraintName = constraintName;
    this.constraintType = constraintType;
@@ -98,11 +98,11 @@ public class MConstraint
     this.constraintName = fkName;
   }
 
-  public int getConstraintType() {
+  public ConstraintType getConstraintType() {
     return constraintType;
   }
 
-  public void setConstraintType(int ct) {
+  public void setConstraintType(ConstraintType ct) {
     this.constraintType = ct;
   }
 

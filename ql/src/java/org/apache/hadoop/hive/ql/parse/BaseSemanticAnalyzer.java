@@ -42,13 +42,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.common.FileUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.metastore.api.Database;
-import org.apache.hadoop.hive.metastore.api.FieldSchema;
-import org.apache.hadoop.hive.metastore.api.Order;
-import org.apache.hadoop.hive.metastore.api.SQLForeignKey;
-import org.apache.hadoop.hive.metastore.api.SQLNotNullConstraint;
-import org.apache.hadoop.hive.metastore.api.SQLPrimaryKey;
-import org.apache.hadoop.hive.metastore.api.SQLUniqueConstraint;
+import org.apache.hadoop.hive.metastore.api.*;
 import org.apache.hadoop.hive.metastore.utils.MetaStoreUtils;
 import org.apache.hadoop.hive.ql.CompilationOpContext;
 import org.apache.hadoop.hive.ql.Context;
@@ -718,6 +712,22 @@ public abstract class BaseSemanticAnalyzer {
     }
   }
 
+  protected static void processDefaultConstraints(String databaseName, String tableName,
+      ASTNode child, List<String> columnNames, List<SQLDefaultConstraint> defaultConstraints)
+      throws SemanticException {
+    List<ConstraintInfo> defaultInfos = new ArrayList<ConstraintInfo>();
+    generateConstraintInfos(child, columnNames, defaultInfos);
+    constraintInfosToDefaultConstraints(databaseName, tableName, defaultInfos, defaultConstraints);
+  }
+
+  private static void constraintInfosToDefaultConstraints(String databaseName, String tableName,
+     List<ConstraintInfo> defaultInfos, List<SQLDefaultConstraint> defaultConstraints) {
+    for (ConstraintInfo defaultInfo : defaultInfos) {
+      defaultConstraints.add(new SQLDefaultConstraint(databaseName, tableName, defaultInfo.colName,
+          defaultInfo.constraintName, defaultInfo.enable, defaultInfo.validate, defaultInfo.rely));
+    }
+  }
+
   protected static void processNotNullConstraints(String databaseName, String tableName,
       ASTNode child, List<String> columnNames, List<SQLNotNullConstraint> notNullConstraints)
           throws SemanticException {
@@ -918,7 +928,8 @@ public abstract class BaseSemanticAnalyzer {
    */
   public static List<FieldSchema> getColumns(ASTNode ast, boolean lowerCase,
     List<SQLPrimaryKey> primaryKeys, List<SQLForeignKey> foreignKeys,
-    List<SQLUniqueConstraint> uniqueConstraints, List<SQLNotNullConstraint> notNullConstraints)
+    List<SQLUniqueConstraint> uniqueConstraints, List<SQLNotNullConstraint> notNullConstraints,
+                                           List<SQLDefaultConstraint> defaultConstraints)
         throws SemanticException {
     List<FieldSchema> colList = new ArrayList<FieldSchema>();
     Tree parent = ast.getParent();
@@ -976,6 +987,10 @@ public abstract class BaseSemanticAnalyzer {
               String[] qualifiedTabName = getQualifiedTableName((ASTNode) parent.getChild(0));
               // Process column constraint
               switch (constraintChild.getToken().getType()) {
+              case HiveParser.TOK_DEFAULT_VALUE:
+                processDefaultConstraints(qualifiedTabName[0], qualifiedTabName[1], constraintChild,
+                    ImmutableList.of(col.getName()), defaultConstraints);
+                break;
                 case HiveParser.TOK_NOT_NULL:
                   processNotNullConstraints(qualifiedTabName[0], qualifiedTabName[1], constraintChild,
                           ImmutableList.of(col.getName()), notNullConstraints);

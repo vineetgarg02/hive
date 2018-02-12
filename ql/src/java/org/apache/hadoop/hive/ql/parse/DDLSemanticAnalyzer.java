@@ -3373,7 +3373,7 @@ public class DDLSemanticAnalyzer extends BaseSemanticAnalyzer {
       alterTblDesc = new AlterTableDesc(tblName, partSpec,
           unescapeIdentifier(oldColName), unescapeIdentifier(newColName),
           newType, newComment, first, flagCol, isCascade,
-          primaryKeys, foreignKeys, uniqueConstraints, notNullConstraints);
+          primaryKeys, foreignKeys, uniqueConstraints, notNullConstraints, null);
     }
     addInputsOutputsAlterTable(tblName, partSpec, alterTblDesc);
 

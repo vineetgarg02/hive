@@ -21,6 +21,7 @@ package org.apache.hadoop.hive.ql.plan;
 import org.apache.hadoop.hive.metastore.api.EnvironmentContext;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Order;
+import org.apache.hadoop.hive.metastore.api.SQLDefaultConstraint;
 import org.apache.hadoop.hive.metastore.api.SQLForeignKey;
 import org.apache.hadoop.hive.metastore.api.SQLNotNullConstraint;
 import org.apache.hadoop.hive.metastore.api.SQLPrimaryKey;
@@ -132,6 +133,7 @@ public class AlterTableDesc extends DDLDesc implements Serializable {
   List<SQLForeignKey> foreignKeyCols;
   List<SQLUniqueConstraint> uniqueConstraintCols;
   List<SQLNotNullConstraint> notNullConstraintCols;
+  List<SQLDefaultConstraint> defaultConstraints;
   ReplicationSpec replicationSpec;
 
   public AlterTableDesc() {
@@ -167,7 +169,7 @@ public class AlterTableDesc extends DDLDesc implements Serializable {
       String oldColName, String newColName, String newType, String newComment,
       boolean first, String afterCol, boolean isCascade, List<SQLPrimaryKey> primaryKeyCols,
       List<SQLForeignKey> foreignKeyCols, List<SQLUniqueConstraint> uniqueConstraintCols,
-      List<SQLNotNullConstraint> notNullConstraintCols) {
+      List<SQLNotNullConstraint> notNullConstraintCols, List<SQLDefaultConstraint> defaultConstraints) {
     super();
     oldName = tblName;
     this.partSpec = partSpec;
@@ -183,6 +185,7 @@ public class AlterTableDesc extends DDLDesc implements Serializable {
     this.foreignKeyCols = foreignKeyCols;
     this.uniqueConstraintCols = uniqueConstraintCols;
     this.notNullConstraintCols = notNullConstraintCols;
+    this.defaultConstraints = defaultConstraints;
   }
 
   /**
@@ -342,12 +345,14 @@ public class AlterTableDesc extends DDLDesc implements Serializable {
 
   public AlterTableDesc(String tableName, List<SQLPrimaryKey> primaryKeyCols,
       List<SQLForeignKey> foreignKeyCols, List<SQLUniqueConstraint> uniqueConstraintCols,
-      List<SQLNotNullConstraint> notNullConstraintCols, ReplicationSpec replicationSpec) {
+      List<SQLNotNullConstraint> notNullConstraintCols, List<SQLDefaultConstraint> defaultConstraints,
+                        ReplicationSpec replicationSpec) {
     this.oldName = tableName;
     this.primaryKeyCols = primaryKeyCols;
     this.foreignKeyCols = foreignKeyCols;
     this.uniqueConstraintCols = uniqueConstraintCols;
     this.notNullConstraintCols = notNullConstraintCols;
+    this.defaultConstraints = defaultConstraints;
     this.replicationSpec = replicationSpec;
     op = AlterTableTypes.ADDCONSTRAINT;
   }
@@ -538,6 +543,13 @@ public class AlterTableDesc extends DDLDesc implements Serializable {
    */
   public List<SQLNotNullConstraint> getNotNullConstraintCols() {
     return notNullConstraintCols;
+  }
+
+  /**
+   * @return the default constraint cols
+   */
+  public List<SQLDefaultConstraint> getDefaultConstraints() {
+    return defaultConstraints;
   }
 
   /**

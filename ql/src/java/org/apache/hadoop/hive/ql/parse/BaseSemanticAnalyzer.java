@@ -68,13 +68,7 @@ import org.apache.hadoop.hive.ql.metadata.Partition;
 import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.ql.metadata.VirtualColumn;
 import org.apache.hadoop.hive.ql.optimizer.listbucketingpruner.ListBucketingPrunerUtils;
-import org.apache.hadoop.hive.ql.plan.ExprNodeConstantDesc;
-import org.apache.hadoop.hive.ql.plan.ExprNodeDesc;
-import org.apache.hadoop.hive.ql.plan.FetchWork;
-import org.apache.hadoop.hive.ql.plan.FileSinkDesc;
-import org.apache.hadoop.hive.ql.plan.ListBucketingCtx;
-import org.apache.hadoop.hive.ql.plan.PlanUtils;
-import org.apache.hadoop.hive.ql.plan.TableDesc;
+import org.apache.hadoop.hive.ql.plan.*;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.hive.ql.session.SessionState.LogHelper;
 import org.apache.hadoop.hive.serde.serdeConstants;
@@ -637,7 +631,8 @@ public abstract class BaseSemanticAnalyzer {
    */
   public static List<FieldSchema> getColumns(ASTNode ast, boolean lowerCase) throws SemanticException {
     return getColumns(ast, lowerCase, new ArrayList<SQLPrimaryKey>(), new ArrayList<SQLForeignKey>(),
-            new ArrayList<SQLUniqueConstraint>(), new ArrayList<SQLNotNullConstraint>());
+            new ArrayList<SQLUniqueConstraint>(), new ArrayList<SQLNotNullConstraint>(),
+        new ArrayList<SQLDefaultConstraint>());
   }
 
   private static class ConstraintInfo {
@@ -646,6 +641,7 @@ public abstract class BaseSemanticAnalyzer {
     final boolean enable;
     final boolean validate;
     final boolean rely;
+    final String defaultValue;
 
     ConstraintInfo(String colName, String constraintName,
         boolean enable, boolean validate, boolean rely) {
@@ -654,6 +650,16 @@ public abstract class BaseSemanticAnalyzer {
       this.enable = enable;
       this.validate = validate;
       this.rely = rely;
+      this.defaultValue = null;
+    }
+    ConstraintInfo(String colName, String constraintName,
+                   boolean enable, boolean validate, boolean rely, String defaultValue) {
+      this.colName = colName;
+      this.constraintName = constraintName;
+      this.enable = enable;
+      this.validate = validate;
+      this.rely = rely;
+      this.defaultValue = defaultValue;
     }
   }
 
@@ -724,7 +730,8 @@ public abstract class BaseSemanticAnalyzer {
      List<ConstraintInfo> defaultInfos, List<SQLDefaultConstraint> defaultConstraints) {
     for (ConstraintInfo defaultInfo : defaultInfos) {
       defaultConstraints.add(new SQLDefaultConstraint(databaseName, tableName, defaultInfo.colName,
-          defaultInfo.constraintName, defaultInfo.enable, defaultInfo.validate, defaultInfo.rely));
+          defaultInfo.defaultValue, defaultInfo.constraintName, defaultInfo.enable,
+          defaultInfo.validate, defaultInfo.rely));
     }
   }
 
@@ -763,6 +770,29 @@ public abstract class BaseSemanticAnalyzer {
   }
 
   /**
+   * Validate and get the default value from the AST
+   * @param defaultValueAST AST node corresponding to default value
+   * @return retrieve the default value and return it as string
+   * @throws SemanticException
+   */
+  private static String getDefaultValue(ASTNode defaultValueAST) throws SemanticException{
+    TypeCheckCtx typeCheckCtx = new TypeCheckCtx(null);
+    ExprNodeDesc defaultValExpr = TypeCheckProcFactory
+        .genExprNode(defaultValueAST, typeCheckCtx).get(defaultValueAST);
+    // default value, Make sure that this is a function or literal only
+    if(!(defaultValExpr instanceof ExprNodeConstantDesc) || !(defaultValExpr instanceof ExprNodeGenericFuncDesc)){
+      //throw and error
+    }
+
+    if(defaultValExpr instanceof ExprNodeGenericFuncDesc){
+     //TODO: allow only some functions
+    }
+
+    return defaultValueAST.getText();
+  }
+
+
+  /**
    * Get the constraint from the AST and populate the cstrInfos with the required
    * information.
    * @param child  The node with the constraint token
@@ -783,9 +813,12 @@ public abstract class BaseSemanticAnalyzer {
     // when the user does not specify the constraint name.
     // Default values
     String constraintName = null;
+    //by default if user hasn't provided any optional constraint properties
+    // it will be considered ENABLE and NOVALIDATE and RELY=false
     boolean enable = true;
-    boolean validate = true;
+    boolean validate = false;
     boolean rely = false;
+    String defaultValue = null;
     for (int i = 0; i < child.getChildCount(); i++) {
       ASTNode grandChild = (ASTNode) child.getChild(i);
       int type = grandChild.getToken().getType();
@@ -808,11 +841,14 @@ public abstract class BaseSemanticAnalyzer {
       } else if (type == HiveParser.TOK_RELY) {
         rely = true;
       }
+      else {
+        defaultValue = getDefaultValue(grandChild);
+      }
     }
 
     // NOT NULL constraint could be enforced/enabled
-    if (child.getToken().getType() != HiveParser.TOK_NOT_NULL
-        && enable) {
+    if (enable && child.getToken().getType() != HiveParser.TOK_NOT_NULL
+        && child.getToken().getType() != HiveParser.TOK_DEFAULT_VALUE) {
       throw new SemanticException(
           ErrorMsg.INVALID_CSTR_SYNTAX.getMsg("ENABLE/ENFORCED feature not supported yet. "
               + "Please use DISABLE/NOT ENFORCED instead."));
@@ -825,7 +861,7 @@ public abstract class BaseSemanticAnalyzer {
 
     for (String columnName : columnNames) {
       cstrInfos.add(new ConstraintInfo(columnName, constraintName,
-          enable, validate, rely));
+          enable, validate, rely, defaultValue));
     }
   }
 

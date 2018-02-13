@@ -4244,7 +4244,7 @@ public class ObjectStore implements RawStore, Configurable {
                   (foreignKey.isValidate_cstr() ? 2 : 0) + (foreignKey.isRely_cstr() ? 1 : 0);
           MConstraint mpkfk = new MConstraint(
             currentConstraintName,
-            MConstraint.ConstraintType.FOREIGN_KEY_CONSTRAINT,
+            MConstraint.FOREIGN_KEY_CONSTRAINT,
             foreignKey.getKey_seq(),
             deleteRule,
             updateRule,
@@ -4393,7 +4393,7 @@ public class ObjectStore implements RawStore, Configurable {
       (pks.get(i).isValidate_cstr() ? 2 : 0) + (pks.get(i).isRely_cstr() ? 1 : 0);
       MConstraint mpk = new MConstraint(
         constraintName,
-        MConstraint.ConstraintType.PRIMARY_KEY_CONSTRAINT,
+        MConstraint.PRIMARY_KEY_CONSTRAINT,
         pks.get(i).getKey_seq(),
         null,
         null,
@@ -4459,7 +4459,7 @@ public class ObjectStore implements RawStore, Configurable {
           (uks.get(i).isValidate_cstr() ? 2 : 0) + (uks.get(i).isRely_cstr() ? 1 : 0);
       MConstraint muk = new MConstraint(
         constraintName,
-        MConstraint.ConstraintType.UNIQUE_CONSTRAINT,
+        MConstraint.UNIQUE_CONSTRAINT,
         uks.get(i).getKey_seq(),
         null,
         null,
@@ -4529,7 +4529,7 @@ public class ObjectStore implements RawStore, Configurable {
           (nns.get(i).isValidate_cstr() ? 2 : 0) + (nns.get(i).isRely_cstr() ? 1 : 0);
       MConstraint muk = new MConstraint(
           constraintName,
-          MConstraint.ConstraintType.DEFAULT_CONSTRAINT,
+          MConstraint.DEFAULT_CONSTRAINT,
           1, // Not null constraint should reference a single column
           null,
           null,
@@ -4587,7 +4587,7 @@ public class ObjectStore implements RawStore, Configurable {
           (nns.get(i).isValidate_cstr() ? 2 : 0) + (nns.get(i).isRely_cstr() ? 1 : 0);
       MConstraint muk = new MConstraint(
         constraintName,
-        MConstraint.ConstraintType.NOT_NULL_CONSTRAINT,
+        MConstraint.NOT_NULL_CONSTRAINT,
         1, // Not null constraint should reference a single column
         null,
         null,
@@ -9350,7 +9350,7 @@ public class ObjectStore implements RawStore, Configurable {
       openTransaction();
       query = pm.newQuery(MConstraint.class,
         "parentTable.tableName == tbl_name && parentTable.database.name == db_name &&"
-        + " constraintType == MConstraint.ConstraintType.PRIMARY_KEY_CONSTRAINT");
+        + " constraintType == MConstraint.PRIMARY_KEY_CONSTRAINT");
       query.declareParameters("java.lang.String tbl_name, java.lang.String db_name");
       Collection<?> constraints = (Collection<?>) query.execute(tbl_name, db_name);
       pm.retrieveAll(constraints);
@@ -9385,7 +9385,7 @@ public class ObjectStore implements RawStore, Configurable {
       openTransaction();
       query = pm.newQuery(MConstraint.class,
         "parentTable.tableName == tbl_name && parentTable.database.name == db_name &&"
-        + " constraintType == MConstraint.ConstraintType.PRIMARY_KEY_CONSTRAINT");
+        + " constraintType == MConstraint.PRIMARY_KEY_CONSTRAINT");
       query.declareParameters("java.lang.String tbl_name, java.lang.String db_name");
       Collection<?> constraints = (Collection<?>) query.execute(tbl_name, db_name);
       pm.retrieveAll(constraints);
@@ -9459,7 +9459,7 @@ public class ObjectStore implements RawStore, Configurable {
         + (parent_db_name != null ? " parentTable.database.name == parent_db_name && " : "")
         + (foreign_tbl_name != null ? " childTable.tableName == foreign_tbl_name && " : "")
         + (foreign_db_name != null ? " childTable.database.name == foreign_db_name && " : "")
-        + " constraintType == MConstraint.ConstraintType.FOREIGN_KEY_CONSTRAINT";
+        + " constraintType == MConstraint.FOREIGN_KEY_CONSTRAINT";
       queryText = queryText.trim();
       query = pm.newQuery(MConstraint.class, queryText);
       String paramText = (parent_tbl_name == null ? "" : "java.lang.String parent_tbl_name,")
@@ -9578,7 +9578,7 @@ public class ObjectStore implements RawStore, Configurable {
       openTransaction();
       query = pm.newQuery(MConstraint.class,
         "parentTable.tableName == tbl_name && parentTable.database.name == db_name &&"
-        + " constraintType == MConstraint.ConstraintType.UNIQUE_CONSTRAINT");
+        + " constraintType == MConstraint.UNIQUE_CONSTRAINT");
       query.declareParameters("java.lang.String tbl_name, java.lang.String db_name");
       Collection<?> constraints = (Collection<?>) query.execute(tbl_name, db_name);
       pm.retrieveAll(constraints);
@@ -9659,7 +9659,7 @@ public class ObjectStore implements RawStore, Configurable {
       openTransaction();
       query = pm.newQuery(MConstraint.class,
         "parentTable.tableName == tbl_name && parentTable.database.name == db_name &&"
-        + " constraintType == MConstraint.ConstraintType.NOT_NULL_CONSTRAINT");
+        + " constraintType == MConstraint.DEFAULT_CONSTRAINT");
       query.declareParameters("java.lang.String tbl_name, java.lang.String db_name");
       Collection<?> constraints = (Collection<?>) query.execute(tbl_name, db_name);
       pm.retrieveAll(constraints);
@@ -9675,7 +9675,7 @@ public class ObjectStore implements RawStore, Configurable {
         defaultConstraints.add(new SQLDefaultConstraint(db_name,
          tbl_name,
          cols.get(currConstraint.getParentIntegerIndex()).getName(),
-         currConstraint.getConstraintName(), "value", enable, validate, rely));
+         "value", currConstraint.getConstraintName(), enable, validate, rely));
       }
       commited = commitTransaction();
     } finally {
@@ -9719,7 +9719,7 @@ public class ObjectStore implements RawStore, Configurable {
       openTransaction();
       query = pm.newQuery(MConstraint.class,
           "parentTable.tableName == tbl_name && parentTable.database.name == db_name &&"
-              + " constraintType == MConstraint.ConstraintType.NOT_NULL_CONSTRAINT");
+              + " constraintType == MConstraint.NOT_NULL_CONSTRAINT");
       query.declareParameters("java.lang.String tbl_name, java.lang.String db_name");
       Collection<?> constraints = (Collection<?>) query.execute(tbl_name, db_name);
       pm.retrieveAll(constraints);

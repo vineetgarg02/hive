@@ -4882,6 +4882,21 @@ private void constructOneLBLocationMap(FileStatus fSta,
     }
   }
 
+  public DefaultConstraint getDefaultConstraints(String dbName, String tblName)
+      throws HiveException {
+    try {
+      List<SQLDefaultConstraint> defaultConstraints = getMSC().getDefaultConstraints(
+          new DefaultConstraintsRequest(dbName, tblName));
+      if (defaultConstraints != null && !defaultConstraints.isEmpty()) {
+        defaultConstraints = defaultConstraints.stream()
+            .collect(Collectors.toList());
+      }
+      return new DefaultConstraint(defaultConstraints, tblName, dbName);
+    } catch (Exception e) {
+      throw new HiveException(e);
+    }
+  }
+
   public void addPrimaryKey(List<SQLPrimaryKey> primaryKeyCols)
     throws HiveException, NoSuchObjectException {
     try {

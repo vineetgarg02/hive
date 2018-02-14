@@ -1496,7 +1496,7 @@ class SQLDefaultConstraint {
   /**
    * @var string
    */
-  public $nn_name = null;
+  public $dc_name = null;
   /**
    * @var bool
    */
@@ -1530,7 +1530,7 @@ class SQLDefaultConstraint {
           'type' => TType::STRING,
           ),
         5 => array(
-          'var' => 'nn_name',
+          'var' => 'dc_name',
           'type' => TType::STRING,
           ),
         6 => array(
@@ -1560,8 +1560,8 @@ class SQLDefaultConstraint {
       if (isset($vals['default_value'])) {
         $this->default_value = $vals['default_value'];
       }
-      if (isset($vals['nn_name'])) {
-        $this->nn_name = $vals['nn_name'];
+      if (isset($vals['dc_name'])) {
+        $this->dc_name = $vals['dc_name'];
       }
       if (isset($vals['enable_cstr'])) {
         $this->enable_cstr = $vals['enable_cstr'];
@@ -1624,7 +1624,7 @@ class SQLDefaultConstraint {
           break;
         case 5:
           if ($ftype == TType::STRING) {
-            $xfer += $input->readString($this->nn_name);
+            $xfer += $input->readString($this->dc_name);
           } else {
             $xfer += $input->skip($ftype);
           }
@@ -1683,9 +1683,9 @@ class SQLDefaultConstraint {
       $xfer += $output->writeString($this->default_value);
       $xfer += $output->writeFieldEnd();
     }
-    if ($this->nn_name !== null) {
-      $xfer += $output->writeFieldBegin('nn_name', TType::STRING, 5);
-      $xfer += $output->writeString($this->nn_name);
+    if ($this->dc_name !== null) {
+      $xfer += $output->writeFieldBegin('dc_name', TType::STRING, 5);
+      $xfer += $output->writeString($this->dc_name);
       $xfer += $output->writeFieldEnd();
     }
     if ($this->enable_cstr !== null) {

@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
   private static final org.apache.thrift.protocol.TField TABLE_NAME_FIELD_DESC = new org.apache.thrift.protocol.TField("table_name", org.apache.thrift.protocol.TType.STRING, (short)2);
   private static final org.apache.thrift.protocol.TField COLUMN_NAME_FIELD_DESC = new org.apache.thrift.protocol.TField("column_name", org.apache.thrift.protocol.TType.STRING, (short)3);
   private static final org.apache.thrift.protocol.TField DEFAULT_VALUE_FIELD_DESC = new org.apache.thrift.protocol.TField("default_value", org.apache.thrift.protocol.TType.STRING, (short)4);
-  private static final org.apache.thrift.protocol.TField NN_NAME_FIELD_DESC = new org.apache.thrift.protocol.TField("nn_name", org.apache.thrift.protocol.TType.STRING, (short)5);
+  private static final org.apache.thrift.protocol.TField DC_NAME_FIELD_DESC = new org.apache.thrift.protocol.TField("dc_name", org.apache.thrift.protocol.TType.STRING, (short)5);
   private static final org.apache.thrift.protocol.TField ENABLE_CSTR_FIELD_DESC = new org.apache.thrift.protocol.TField("enable_cstr", org.apache.thrift.protocol.TType.BOOL, (short)6);
   private static final org.apache.thrift.protocol.TField VALIDATE_CSTR_FIELD_DESC = new org.apache.thrift.protocol.TField("validate_cstr", org.apache.thrift.protocol.TType.BOOL, (short)7);
   private static final org.apache.thrift.protocol.TField RELY_CSTR_FIELD_DESC = new org.apache.thrift.protocol.TField("rely_cstr", org.apache.thrift.protocol.TType.BOOL, (short)8);
@@ -57,7 +57,7 @@ import org.slf4j.LoggerFactory;
   private String table_name; // required
   private String column_name; // required
   private String default_value; // required
-  private String nn_name; // required
+  private String dc_name; // required
   private boolean enable_cstr; // required
   private boolean validate_cstr; // required
   private boolean rely_cstr; // required
@@ -68,7 +68,7 @@ import org.slf4j.LoggerFactory;
     TABLE_NAME((short)2, "table_name"),
     COLUMN_NAME((short)3, "column_name"),
     DEFAULT_VALUE((short)4, "default_value"),
-    NN_NAME((short)5, "nn_name"),
+    DC_NAME((short)5, "dc_name"),
     ENABLE_CSTR((short)6, "enable_cstr"),
     VALIDATE_CSTR((short)7, "validate_cstr"),
     RELY_CSTR((short)8, "rely_cstr");
@@ -94,8 +94,8 @@ import org.slf4j.LoggerFactory;
           return COLUMN_NAME;
         case 4: // DEFAULT_VALUE
           return DEFAULT_VALUE;
-        case 5: // NN_NAME
-          return NN_NAME;
+        case 5: // DC_NAME
+          return DC_NAME;
         case 6: // ENABLE_CSTR
           return ENABLE_CSTR;
         case 7: // VALIDATE_CSTR
@@ -157,7 +157,7 @@ import org.slf4j.LoggerFactory;
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     tmpMap.put(_Fields.DEFAULT_VALUE, new org.apache.thrift.meta_data.FieldMetaData("default_value", org.apache.thrift.TFieldRequirementType.DEFAULT, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
-    tmpMap.put(_Fields.NN_NAME, new org.apache.thrift.meta_data.FieldMetaData("nn_name", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+    tmpMap.put(_Fields.DC_NAME, new org.apache.thrift.meta_data.FieldMetaData("dc_name", org.apache.thrift.TFieldRequirementType.DEFAULT, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     tmpMap.put(_Fields.ENABLE_CSTR, new org.apache.thrift.meta_data.FieldMetaData("enable_cstr", org.apache.thrift.TFieldRequirementType.DEFAULT, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BOOL)));
@@ -177,7 +177,7 @@ import org.slf4j.LoggerFactory;
     String table_name,
     String column_name,
     String default_value,
-    String nn_name,
+    String dc_name,
     boolean enable_cstr,
     boolean validate_cstr,
     boolean rely_cstr)
@@ -187,7 +187,7 @@ import org.slf4j.LoggerFactory;
     this.table_name = table_name;
     this.column_name = column_name;
     this.default_value = default_value;
-    this.nn_name = nn_name;
+    this.dc_name = dc_name;
     this.enable_cstr = enable_cstr;
     setEnable_cstrIsSet(true);
     this.validate_cstr = validate_cstr;
@@ -213,8 +213,8 @@ import org.slf4j.LoggerFactory;
     if (other.isSetDefault_value()) {
       this.default_value = other.default_value;
     }
-    if (other.isSetNn_name()) {
-      this.nn_name = other.nn_name;
+    if (other.isSetDc_name()) {
+      this.dc_name = other.dc_name;
     }
     this.enable_cstr = other.enable_cstr;
     this.validate_cstr = other.validate_cstr;
@@ -231,7 +231,7 @@ import org.slf4j.LoggerFactory;
     this.table_name = null;
     this.column_name = null;
     this.default_value = null;
-    this.nn_name = null;
+    this.dc_name = null;
     setEnable_cstrIsSet(false);
     this.enable_cstr = false;
     setValidate_cstrIsSet(false);
@@ -332,26 +332,26 @@ import org.slf4j.LoggerFactory;
     }
   }
 
-  public String getNn_name() {
-    return this.nn_name;
+  public String getDc_name() {
+    return this.dc_name;
   }
 
-  public void setNn_name(String nn_name) {
-    this.nn_name = nn_name;
+  public void setDc_name(String dc_name) {
+    this.dc_name = dc_name;
   }
 
-  public void unsetNn_name() {
-    this.nn_name = null;
+  public void unsetDc_name() {
+    this.dc_name = null;
   }
 
-  /** Returns true if field nn_name is set (has been assigned a value) and false otherwise */
-  public boolean isSetNn_name() {
-    return this.nn_name != null;
+  /** Returns true if field dc_name is set (has been assigned a value) and false otherwise */
+  public boolean isSetDc_name() {
+    return this.dc_name != null;
   }
 
-  public void setNn_nameIsSet(boolean value) {
+  public void setDc_nameIsSet(boolean value) {
     if (!value) {
-      this.nn_name = null;
+      this.dc_name = null;
     }
   }
 
@@ -455,11 +455,11 @@ import org.slf4j.LoggerFactory;
       }
       break;
 
-    case NN_NAME:
+    case DC_NAME:
       if (value == null) {
-        unsetNn_name();
+        unsetDc_name();
       } else {
-        setNn_name((String)value);
+        setDc_name((String)value);
       }
       break;
 
@@ -504,8 +504,8 @@ import org.slf4j.LoggerFactory;
     case DEFAULT_VALUE:
       return getDefault_value();
 
-    case NN_NAME:
-      return getNn_name();
+    case DC_NAME:
+      return getDc_name();
 
     case ENABLE_CSTR:
       return isEnable_cstr();
@@ -535,8 +535,8 @@ import org.slf4j.LoggerFactory;
       return isSetColumn_name();
     case DEFAULT_VALUE:
       return isSetDefault_value();
-    case NN_NAME:
-      return isSetNn_name();
+    case DC_NAME:
+      return isSetDc_name();
     case ENABLE_CSTR:
       return isSetEnable_cstr();
     case VALIDATE_CSTR:
@@ -596,12 +596,12 @@ import org.slf4j.LoggerFactory;
         return false;
     }
 
-    boolean this_present_nn_name = true && this.isSetNn_name();
-    boolean that_present_nn_name = true && that.isSetNn_name();
-    if (this_present_nn_name || that_present_nn_name) {
-      if (!(this_present_nn_name && that_present_nn_name))
+    boolean this_present_dc_name = true && this.isSetDc_name();
+    boolean that_present_dc_name = true && that.isSetDc_name();
+    if (this_present_dc_name || that_present_dc_name) {
+      if (!(this_present_dc_name && that_present_dc_name))
         return false;
-      if (!this.nn_name.equals(that.nn_name))
+      if (!this.dc_name.equals(that.dc_name))
         return false;
     }
 
@@ -659,10 +659,10 @@ import org.slf4j.LoggerFactory;
     if (present_default_value)
       list.add(default_value);
 
-    boolean present_nn_name = true && (isSetNn_name());
-    list.add(present_nn_name);
-    if (present_nn_name)
-      list.add(nn_name);
+    boolean present_dc_name = true && (isSetDc_name());
+    list.add(present_dc_name);
+    if (present_dc_name)
+      list.add(dc_name);
 
     boolean present_enable_cstr = true;
     list.add(present_enable_cstr);
@@ -730,12 +730,12 @@ import org.slf4j.LoggerFactory;
         return lastComparison;
       }
     }
-    lastComparison = Boolean.valueOf(isSetNn_name()).compareTo(other.isSetNn_name());
+    lastComparison = Boolean.valueOf(isSetDc_name()).compareTo(other.isSetDc_name());
     if (lastComparison != 0) {
       return lastComparison;
     }
-    if (isSetNn_name()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.nn_name, other.nn_name);
+    if (isSetDc_name()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.dc_name, other.dc_name);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -822,11 +822,11 @@ import org.slf4j.LoggerFactory;
     }
     first = false;
     if (!first) sb.append(", ");
-    sb.append("nn_name:");
-    if (this.nn_name == null) {
+    sb.append("dc_name:");
+    if (this.dc_name == null) {
       sb.append("null");
     } else {
-      sb.append(this.nn_name);
+      sb.append(this.dc_name);
     }
     first = false;
     if (!first) sb.append(", ");
@@ -918,10 +918,10 @@ import org.slf4j.LoggerFactory;
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
-          case 5: // NN_NAME
+          case 5: // DC_NAME
             if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
-              struct.nn_name = iprot.readString();
-              struct.setNn_nameIsSet(true);
+              struct.dc_name = iprot.readString();
+              struct.setDc_nameIsSet(true);
             } else { 
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
@@ -983,9 +983,9 @@ import org.slf4j.LoggerFactory;
         oprot.writeString(struct.default_value);
         oprot.writeFieldEnd();
       }
-      if (struct.nn_name != null) {
-        oprot.writeFieldBegin(NN_NAME_FIELD_DESC);
-        oprot.writeString(struct.nn_name);
+      if (struct.dc_name != null) {
+        oprot.writeFieldBegin(DC_NAME_FIELD_DESC);
+        oprot.writeString(struct.dc_name);
         oprot.writeFieldEnd();
       }
       oprot.writeFieldBegin(ENABLE_CSTR_FIELD_DESC);
@@ -1027,7 +1027,7 @@ import org.slf4j.LoggerFactory;
       if (struct.isSetDefault_value()) {
         optionals.set(3);
       }
-      if (struct.isSetNn_name()) {
+      if (struct.isSetDc_name()) {
         optionals.set(4);
       }
       if (struct.isSetEnable_cstr()) {
@@ -1052,8 +1052,8 @@ import org.slf4j.LoggerFactory;
       if (struct.isSetDefault_value()) {
         oprot.writeString(struct.default_value);
       }
-      if (struct.isSetNn_name()) {
-        oprot.writeString(struct.nn_name);
+      if (struct.isSetDc_name()) {
+        oprot.writeString(struct.dc_name);
       }
       if (struct.isSetEnable_cstr()) {
         oprot.writeBool(struct.enable_cstr);
@@ -1087,8 +1087,8 @@ import org.slf4j.LoggerFactory;
         struct.setDefault_valueIsSet(true);
       }
       if (incoming.get(4)) {
-        struct.nn_name = iprot.readString();
-        struct.setNn_nameIsSet(true);
+        struct.dc_name = iprot.readString();
+        struct.setDc_nameIsSet(true);
       }
       if (incoming.get(5)) {
         struct.enable_cstr = iprot.readBool();

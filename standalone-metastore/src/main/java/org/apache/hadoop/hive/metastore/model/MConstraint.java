@@ -33,6 +33,7 @@ public class MConstraint
   Integer childIntegerIndex;
   Integer parentIntegerIndex;
   int enableValidateRely;
+  String defaultValue;
 
   // 0 - Primary Key
   // 1 - PK-FK relationship
@@ -91,6 +92,29 @@ public class MConstraint
    this.parentIntegerIndex = parentIntegerIndex;
   }
 
+  public MConstraint(String constraintName, int constraintType, int position, Integer deleteRule, Integer updateRule,
+          int enableRelyValidate, MTable parentTable, MTable childTable, MColumnDescriptor parentColumn,
+          MColumnDescriptor childColumn, Integer childIntegerIndex, Integer parentIntegerIndex, String defaultValue) {
+    this.constraintName = constraintName;
+    this.constraintType = constraintType;
+    this.parentTable = parentTable;
+    this.childTable = childTable;
+    this.parentColumn = parentColumn;
+    this.childColumn = childColumn;
+    this.position = position;
+    this.deleteRule = deleteRule;
+    this.updateRule = updateRule;
+    this.enableValidateRely = enableRelyValidate;
+    this.childIntegerIndex = childIntegerIndex;
+    this.parentIntegerIndex = parentIntegerIndex;
+    this.defaultValue = defaultValue;
+  }
+
+  public String getDefaultValue() { return defaultValue; }
+
+  public void setDefaultValue(String defaultValue) {
+    this.defaultValue = defaultValue;
+  }
   public String getConstraintName() {
     return constraintName;
   }

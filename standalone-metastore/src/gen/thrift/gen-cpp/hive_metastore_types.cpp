@@ -1466,8 +1466,8 @@ void SQLDefaultConstraint::__set_default_value(const std::string& val) {
   this->default_value = val;
 }
 
-void SQLDefaultConstraint::__set_nn_name(const std::string& val) {
-  this->nn_name = val;
+void SQLDefaultConstraint::__set_dc_name(const std::string& val) {
+  this->dc_name = val;
 }
 
 void SQLDefaultConstraint::__set_enable_cstr(const bool val) {
@@ -1537,8 +1537,8 @@ uint32_t SQLDefaultConstraint::read(::apache::thrift::protocol::TProtocol* iprot
         break;
       case 5:
         if (ftype == ::apache::thrift::protocol::T_STRING) {
-          xfer += iprot->readString(this->nn_name);
-          this->__isset.nn_name = true;
+          xfer += iprot->readString(this->dc_name);
+          this->__isset.dc_name = true;
         } else {
           xfer += iprot->skip(ftype);
         }
@@ -1600,8 +1600,8 @@ uint32_t SQLDefaultConstraint::write(::apache::thrift::protocol::TProtocol* opro
   xfer += oprot->writeString(this->default_value);
   xfer += oprot->writeFieldEnd();
 
-  xfer += oprot->writeFieldBegin("nn_name", ::apache::thrift::protocol::T_STRING, 5);
-  xfer += oprot->writeString(this->nn_name);
+  xfer += oprot->writeFieldBegin("dc_name", ::apache::thrift::protocol::T_STRING, 5);
+  xfer += oprot->writeString(this->dc_name);
   xfer += oprot->writeFieldEnd();
 
   xfer += oprot->writeFieldBegin("enable_cstr", ::apache::thrift::protocol::T_BOOL, 6);
@@ -1627,7 +1627,7 @@ void swap(SQLDefaultConstraint &a, SQLDefaultConstraint &b) {
   swap(a.table_name, b.table_name);
   swap(a.column_name, b.column_name);
   swap(a.default_value, b.default_value);
-  swap(a.nn_name, b.nn_name);
+  swap(a.dc_name, b.dc_name);
   swap(a.enable_cstr, b.enable_cstr);
   swap(a.validate_cstr, b.validate_cstr);
   swap(a.rely_cstr, b.rely_cstr);
@@ -1639,7 +1639,7 @@ SQLDefaultConstraint::SQLDefaultConstraint(const SQLDefaultConstraint& other12) 
   table_name = other12.table_name;
   column_name = other12.column_name;
   default_value = other12.default_value;
-  nn_name = other12.nn_name;
+  dc_name = other12.dc_name;
   enable_cstr = other12.enable_cstr;
   validate_cstr = other12.validate_cstr;
   rely_cstr = other12.rely_cstr;
@@ -1650,7 +1650,7 @@ SQLDefaultConstraint& SQLDefaultConstraint::operator=(const SQLDefaultConstraint
   table_name = other13.table_name;
   column_name = other13.column_name;
   default_value = other13.default_value;
-  nn_name = other13.nn_name;
+  dc_name = other13.dc_name;
   enable_cstr = other13.enable_cstr;
   validate_cstr = other13.validate_cstr;
   rely_cstr = other13.rely_cstr;
@@ -1664,7 +1664,7 @@ void SQLDefaultConstraint::printTo(std::ostream& out) const {
   out << ", " << "table_name=" << to_string(table_name);
   out << ", " << "column_name=" << to_string(column_name);
   out << ", " << "default_value=" << to_string(default_value);
-  out << ", " << "nn_name=" << to_string(nn_name);
+  out << ", " << "dc_name=" << to_string(dc_name);
   out << ", " << "enable_cstr=" << to_string(enable_cstr);
   out << ", " << "validate_cstr=" << to_string(validate_cstr);
   out << ", " << "rely_cstr=" << to_string(rely_cstr);

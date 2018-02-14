@@ -2288,7 +2288,8 @@ class MetaStoreDirectSql {
         "SELECT " + DBS + ".\"NAME\", " + TBLS + ".\"TBL_NAME\","
             + "CASE WHEN " + COLUMNS_V2 + ".\"COLUMN_NAME\" IS NOT NULL THEN " + COLUMNS_V2 + ".\"COLUMN_NAME\" "
             + "ELSE " + PARTITION_KEYS + ".\"PKEY_NAME\" END, "
-            + "" + KEY_CONSTRAINTS + ".\"CONSTRAINT_NAME\", " + KEY_CONSTRAINTS + ".\"ENABLE_VALIDATE_RELY\" "
+            + "" + KEY_CONSTRAINTS + ".\"CONSTRAINT_NAME\", " + KEY_CONSTRAINTS + ".\"ENABLE_VALIDATE_RELY\", "
+            + "" + KEY_CONSTRAINTS + ".\"DEFAULT_VALUE\" "
             + " from " + TBLS + " "
             + " INNER JOIN " + KEY_CONSTRAINTS + " ON " + TBLS + ".\"TBL_ID\" = " + KEY_CONSTRAINTS + ".\"PARENT_TBL_ID\" "
             + " INNER JOIN " + DBS + " ON " + TBLS + ".\"DB_ID\" = " + DBS + ".\"DB_ID\" "
@@ -2296,7 +2297,7 @@ class MetaStoreDirectSql {
             + " " + COLUMNS_V2 + ".\"INTEGER_IDX\" = " + KEY_CONSTRAINTS + ".\"PARENT_INTEGER_IDX\" "
             + " LEFT OUTER JOIN " + PARTITION_KEYS + " ON " + TBLS + ".\"TBL_ID\" = " + PARTITION_KEYS + ".\"TBL_ID\" AND "
             + " " + PARTITION_KEYS + ".\"INTEGER_IDX\" = " + KEY_CONSTRAINTS + ".\"PARENT_INTEGER_IDX\" "
-            + " WHERE " + KEY_CONSTRAINTS + ".\"CONSTRAINT_TYPE\" = "+ MConstraint.NOT_NULL_CONSTRAINT + " AND"
+            + " WHERE " + KEY_CONSTRAINTS + ".\"CONSTRAINT_TYPE\" = "+ MConstraint.DEFAULT_CONSTRAINT+ " AND"
             + (db_name == null ? "" : " " + DBS + ".\"NAME\" = ? AND")
             + (tbl_name == null ? "" : " " + TBLS + ".\"TBL_NAME\" = ? ") ;
 
@@ -2326,8 +2327,8 @@ class MetaStoreDirectSql {
             extractSqlString(line[0]),
             extractSqlString(line[1]),
             extractSqlString(line[2]),
+            extractSqlString(line[5]),
             extractSqlString(line[3]),
-            "value",
             enable,
             validate,
             rely);

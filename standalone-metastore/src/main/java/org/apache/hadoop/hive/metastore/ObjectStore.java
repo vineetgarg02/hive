@@ -4518,15 +4518,16 @@ public class ObjectStore implements RawStore, Configurable {
           throw new InvalidObjectException("Parent column not found: " + columnName);
         }
       }
-      if (nns.get(i).getNn_name() == null) {
-        constraintName = generateConstraintName(tableDB, tableName, columnName, "nn");
+      if (nns.get(i).getDc_name() == null) {
+        constraintName = generateConstraintName(tableDB, tableName, columnName, "d");
       } else {
-        constraintName = normalizeIdentifier(nns.get(i).getNn_name());
+        constraintName = normalizeIdentifier(nns.get(i).getDc_name());
       }
       nnNames.add(constraintName);
 
       int enableValidateRely = (nns.get(i).isEnable_cstr() ? 4 : 0) +
           (nns.get(i).isValidate_cstr() ? 2 : 0) + (nns.get(i).isRely_cstr() ? 1 : 0);
+      String defaultValue = nns.get(i).getDefault_value();
       MConstraint muk = new MConstraint(
           constraintName,
           MConstraint.DEFAULT_CONSTRAINT,
@@ -4539,7 +4540,8 @@ public class ObjectStore implements RawStore, Configurable {
           parentCD,
           null,
           null,
-          parentIntegerIndex);
+          parentIntegerIndex,
+          defaultValue);
       cstrs.add(muk);
     }
     pm.makePersistentAll(cstrs);
@@ -9675,7 +9677,7 @@ public class ObjectStore implements RawStore, Configurable {
         defaultConstraints.add(new SQLDefaultConstraint(db_name,
          tbl_name,
          cols.get(currConstraint.getParentIntegerIndex()).getName(),
-         "value", currConstraint.getConstraintName(), enable, validate, rely));
+         currConstraint.getDefaultValue(), currConstraint.getConstraintName(), enable, validate, rely));
       }
       commited = commitTransaction();
     } finally {

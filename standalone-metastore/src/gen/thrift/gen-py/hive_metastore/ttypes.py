@@ -1161,7 +1161,7 @@ class SQLDefaultConstraint:
    - table_name
    - column_name
    - default_value
-   - nn_name
+   - dc_name
    - enable_cstr
    - validate_cstr
    - rely_cstr
@@ -1173,18 +1173,18 @@ class SQLDefaultConstraint:
     (2, TType.STRING, 'table_name', None, None, ), # 2
     (3, TType.STRING, 'column_name', None, None, ), # 3
     (4, TType.STRING, 'default_value', None, None, ), # 4
-    (5, TType.STRING, 'nn_name', None, None, ), # 5
+    (5, TType.STRING, 'dc_name', None, None, ), # 5
     (6, TType.BOOL, 'enable_cstr', None, None, ), # 6
     (7, TType.BOOL, 'validate_cstr', None, None, ), # 7
     (8, TType.BOOL, 'rely_cstr', None, None, ), # 8
   )
 
-  def __init__(self, table_db=None, table_name=None, column_name=None, default_value=None, nn_name=None, enable_cstr=None, validate_cstr=None, rely_cstr=None,):
+  def __init__(self, table_db=None, table_name=None, column_name=None, default_value=None, dc_name=None, enable_cstr=None, validate_cstr=None, rely_cstr=None,):
     self.table_db = table_db
     self.table_name = table_name
     self.column_name = column_name
     self.default_value = default_value
-    self.nn_name = nn_name
+    self.dc_name = dc_name
     self.enable_cstr = enable_cstr
     self.validate_cstr = validate_cstr
     self.rely_cstr = rely_cstr
@@ -1220,7 +1220,7 @@ class SQLDefaultConstraint:
           iprot.skip(ftype)
       elif fid == 5:
         if ftype == TType.STRING:
-          self.nn_name = iprot.readString()
+          self.dc_name = iprot.readString()
         else:
           iprot.skip(ftype)
       elif fid == 6:
@@ -1264,9 +1264,9 @@ class SQLDefaultConstraint:
       oprot.writeFieldBegin('default_value', TType.STRING, 4)
       oprot.writeString(self.default_value)
       oprot.writeFieldEnd()
-    if self.nn_name is not None:
-      oprot.writeFieldBegin('nn_name', TType.STRING, 5)
-      oprot.writeString(self.nn_name)
+    if self.dc_name is not None:
+      oprot.writeFieldBegin('dc_name', TType.STRING, 5)
+      oprot.writeString(self.dc_name)
       oprot.writeFieldEnd()
     if self.enable_cstr is not None:
       oprot.writeFieldBegin('enable_cstr', TType.BOOL, 6)
@@ -1293,7 +1293,7 @@ class SQLDefaultConstraint:
     value = (value * 31) ^ hash(self.table_name)
     value = (value * 31) ^ hash(self.column_name)
     value = (value * 31) ^ hash(self.default_value)
-    value = (value * 31) ^ hash(self.nn_name)
+    value = (value * 31) ^ hash(self.dc_name)
     value = (value * 31) ^ hash(self.enable_cstr)
     value = (value * 31) ^ hash(self.validate_cstr)
     value = (value * 31) ^ hash(self.rely_cstr)

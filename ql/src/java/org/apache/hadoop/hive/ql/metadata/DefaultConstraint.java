@@ -63,7 +63,7 @@ public class DefaultConstraint implements Serializable {
           uk.getTable_name().equalsIgnoreCase(tableName)) {
         DefaultConstraintCol currCol = new DefaultConstraintCol(
                 uk.getColumn_name(), uk.getDefault_value());
-        String constraintName = uk.getNn_name();
+        String constraintName = uk.getDc_name();
         if (defaultConstraints.containsKey(constraintName)) {
           defaultConstraints.get(constraintName).add(currCol);
         } else {

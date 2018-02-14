@@ -1081,12 +1081,12 @@ inline std::ostream& operator<<(std::ostream& out, const SQLNotNullConstraint& o
 }
 
 typedef struct _SQLDefaultConstraint__isset {
-  _SQLDefaultConstraint__isset() : table_db(false), table_name(false), column_name(false), default_value(false), nn_name(false), enable_cstr(false), validate_cstr(false), rely_cstr(false) {}
+  _SQLDefaultConstraint__isset() : table_db(false), table_name(false), column_name(false), default_value(false), dc_name(false), enable_cstr(false), validate_cstr(false), rely_cstr(false) {}
   bool table_db :1;
   bool table_name :1;
   bool column_name :1;
   bool default_value :1;
-  bool nn_name :1;
+  bool dc_name :1;
   bool enable_cstr :1;
   bool validate_cstr :1;
   bool rely_cstr :1;
@@ -1097,7 +1097,7 @@ class SQLDefaultConstraint {
 
   SQLDefaultConstraint(const SQLDefaultConstraint&);
   SQLDefaultConstraint& operator=(const SQLDefaultConstraint&);
-  SQLDefaultConstraint() : table_db(), table_name(), column_name(), default_value(), nn_name(), enable_cstr(0), validate_cstr(0), rely_cstr(0) {
+  SQLDefaultConstraint() : table_db(), table_name(), column_name(), default_value(), dc_name(), enable_cstr(0), validate_cstr(0), rely_cstr(0) {
   }
 
   virtual ~SQLDefaultConstraint() throw();
@@ -1105,7 +1105,7 @@ class SQLDefaultConstraint {
   std::string table_name;
   std::string column_name;
   std::string default_value;
-  std::string nn_name;
+  std::string dc_name;
   bool enable_cstr;
   bool validate_cstr;
   bool rely_cstr;
@@ -1120,7 +1120,7 @@ class SQLDefaultConstraint {
 
   void __set_default_value(const std::string& val);
 
-  void __set_nn_name(const std::string& val);
+  void __set_dc_name(const std::string& val);
 
   void __set_enable_cstr(const bool val);
 
@@ -1138,7 +1138,7 @@ class SQLDefaultConstraint {
       return false;
     if (!(default_value == rhs.default_value))
       return false;
-    if (!(nn_name == rhs.nn_name))
+    if (!(dc_name == rhs.dc_name))
       return false;
     if (!(enable_cstr == rhs.enable_cstr))
       return false;

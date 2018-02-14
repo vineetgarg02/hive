@@ -1546,8 +1546,8 @@ public class HiveMetaStore extends ThriftHiveMetastore {
           }
           if (defaultConstraints!= null) {
             for (int i = 0; i < defaultConstraints.size(); i++) {
-              if (defaultConstraints.get(i).getNn_name() == null) {
-                defaultConstraints.get(i).setNn_name(constraintNames.get(primaryKeySize + foreignKeySize
+              if (defaultConstraints.get(i).getDc_name() == null) {
+                defaultConstraints.get(i).setDc_name(constraintNames.get(primaryKeySize + foreignKeySize
                     + uniqueConstraintSize + notNullConstraintSize + i));
               }
             }
@@ -1933,7 +1933,7 @@ public class HiveMetaStore extends ThriftHiveMetastore {
         throws MetaException, InvalidObjectException {
       List<SQLDefaultConstraint> defaultConstraintCols= req.getDefaultConstraintCols();
       String constraintName = (defaultConstraintCols != null && defaultConstraintCols.size() > 0) ?
-          defaultConstraintCols.get(0).getNn_name() : "null";
+          defaultConstraintCols.get(0).getDc_name() : "null";
       startFunction("add_default_constraint", ": " + constraintName);
       boolean success = false;
       Exception ex = null;
@@ -1944,8 +1944,8 @@ public class HiveMetaStore extends ThriftHiveMetastore {
         // Set not null constraint name if null before sending to listener
         if (defaultConstraintCols != null) {
           for (int i = 0; i < defaultConstraintCols.size(); i++) {
-            if (defaultConstraintCols.get(i).getNn_name() == null) {
-              defaultConstraintCols.get(i).setNn_name(constraintNames.get(i));
+            if (defaultConstraintCols.get(i).getDc_name() == null) {
+              defaultConstraintCols.get(i).setDc_name(constraintNames.get(i));
             }
           }
         }

@@ -314,7 +314,7 @@ class SQLDefaultConstraint
   TABLE_NAME = 2
   COLUMN_NAME = 3
   DEFAULT_VALUE = 4
-  NN_NAME = 5
+  DC_NAME = 5
   ENABLE_CSTR = 6
   VALIDATE_CSTR = 7
   RELY_CSTR = 8
@@ -324,7 +324,7 @@ class SQLDefaultConstraint
     TABLE_NAME => {:type => ::Thrift::Types::STRING, :name => 'table_name'},
     COLUMN_NAME => {:type => ::Thrift::Types::STRING, :name => 'column_name'},
     DEFAULT_VALUE => {:type => ::Thrift::Types::STRING, :name => 'default_value'},
-    NN_NAME => {:type => ::Thrift::Types::STRING, :name => 'nn_name'},
+    DC_NAME => {:type => ::Thrift::Types::STRING, :name => 'dc_name'},
     ENABLE_CSTR => {:type => ::Thrift::Types::BOOL, :name => 'enable_cstr'},
     VALIDATE_CSTR => {:type => ::Thrift::Types::BOOL, :name => 'validate_cstr'},
     RELY_CSTR => {:type => ::Thrift::Types::BOOL, :name => 'rely_cstr'}

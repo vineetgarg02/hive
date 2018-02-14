@@ -95,7 +95,7 @@ struct SQLDefaultConstraint {
   2: string table_name,  // table name
   3: string column_name, // column name
   4: string default_value,// default value
-  5: string nn_name,     // default name
+  5: string dc_name,     // default name
   6: bool enable_cstr,   // Enable/Disable
   7: bool validate_cstr, // Validate/No validate
   8: bool rely_cstr      // Rely/No Rely

@@ -37,7 +37,6 @@ import com.google.common.collect.ImmutableList;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -133,7 +132,7 @@ public class AlterTableDesc extends DDLDesc implements Serializable {
   List<SQLForeignKey> foreignKeyCols;
   List<SQLUniqueConstraint> uniqueConstraintCols;
   List<SQLNotNullConstraint> notNullConstraintCols;
-  List<SQLDefaultConstraint> defaultConstraints;
+  List<SQLDefaultConstraint> defaultConstraintsCols;
   ReplicationSpec replicationSpec;
 
   public AlterTableDesc() {
@@ -185,7 +184,7 @@ public class AlterTableDesc extends DDLDesc implements Serializable {
     this.foreignKeyCols = foreignKeyCols;
     this.uniqueConstraintCols = uniqueConstraintCols;
     this.notNullConstraintCols = notNullConstraintCols;
-    this.defaultConstraints = defaultConstraints;
+    this.defaultConstraintsCols = defaultConstraints;
   }
 
   /**
@@ -352,7 +351,7 @@ public class AlterTableDesc extends DDLDesc implements Serializable {
     this.foreignKeyCols = foreignKeyCols;
     this.uniqueConstraintCols = uniqueConstraintCols;
     this.notNullConstraintCols = notNullConstraintCols;
-    this.defaultConstraints = defaultConstraints;
+    this.defaultConstraintsCols = defaultConstraints;
     this.replicationSpec = replicationSpec;
     op = AlterTableTypes.ADDCONSTRAINT;
   }
@@ -548,8 +547,8 @@ public class AlterTableDesc extends DDLDesc implements Serializable {
   /**
    * @return the default constraint cols
    */
-  public List<SQLDefaultConstraint> getDefaultConstraints() {
-    return defaultConstraints;
+  public List<SQLDefaultConstraint> getDefaultConstraintCols() {
+    return defaultConstraintsCols;
   }
 
   /**

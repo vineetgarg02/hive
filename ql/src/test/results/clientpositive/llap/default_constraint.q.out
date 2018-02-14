@@ -129,3 +129,11 @@ Bucket Columns:     	[]
 Sort Columns:       	[]                  	 
 Storage Desc Params:	 	 
 	serialization.format	1                   
+	 	 
+# Constraints	 	 
+	 	 
+# Default Constraints	 	 
+Table:              	default.table1      	 
+Constraint Name:    	d_222580934_1518588163525_0	 
+Column Name:b       	Default Value:"value"	 
+	 	 

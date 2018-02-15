@@ -1,20 +1,99 @@
-PREHOOK: query: CREATE TABLE table1 (a STRING CONSTRAINT d1 DEFAULT 'key', b STRING )
+PREHOOK: query: -- numeric type
+CREATE TABLE numericDataType(a TINYINT CONSTRAINT tinyint_constraint DEFAULT 127Y ENABLE, b SMALLINT DEFAULT 32767S, c INT DEFAULT 2147483647,
+    d BIGINT DEFAULT  9223372036854775807L, e DOUBLE DEFAULT 3.4E38, f DECIMAL(9,7) DEFAULT 1234567.89)
+PREHOOK: type: CREATETABLE
+PREHOOK: Output: database:default
+PREHOOK: Output: default@numericDataType
+POSTHOOK: query: -- numeric type
+CREATE TABLE numericDataType(a TINYINT CONSTRAINT tinyint_constraint DEFAULT 127Y ENABLE, b SMALLINT DEFAULT 32767S, c INT DEFAULT 2147483647,
+    d BIGINT DEFAULT  9223372036854775807L, e DOUBLE DEFAULT 3.4E38, f DECIMAL(9,7) DEFAULT 1234567.89)
+POSTHOOK: type: CREATETABLE
+POSTHOOK: Output: database:default
+POSTHOOK: Output: default@numericDataType
+PREHOOK: query: DESC FORMATTED numericDataType
+PREHOOK: type: DESCTABLE
+PREHOOK: Input: default@numericdatatype
+POSTHOOK: query: DESC FORMATTED numericDataType
+POSTHOOK: type: DESCTABLE
+POSTHOOK: Input: default@numericdatatype
+# col_name            	data_type           	comment             
+a                   	tinyint             	                    
+b                   	smallint            	                    
+c                   	int                 	                    
+d                   	bigint              	                    
+e                   	double              	                    
+f                   	decimal(9,7)        	                    
+	 	 
+# Detailed Table Information	 	 
+Database:           	default             	 
+#### A masked pattern was here ####
+Retention:          	0                   	 
+#### A masked pattern was here ####
+Table Type:         	MANAGED_TABLE       	 
+Table Parameters:	 	 
+	COLUMN_STATS_ACCURATE	{\"BASIC_STATS\":\"true\",\"COLUMN_STATS\":{\"a\":\"true\",\"b\":\"true\",\"c\":\"true\",\"d\":\"true\",\"e\":\"true\",\"f\":\"true\"}}
+	numFiles            	0                   
+	numRows             	0                   
+	rawDataSize         	0                   
+	totalSize           	0                   
+#### A masked pattern was here ####
+	 	 
+# Storage Information	 	 
+SerDe Library:      	org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe	 
+InputFormat:        	org.apache.hadoop.mapred.TextInputFormat	 
+OutputFormat:       	org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat	 
+Compressed:         	No                  	 
+Num Buckets:        	-1                  	 
+Bucket Columns:     	[]                  	 
+Sort Columns:       	[]                  	 
+Storage Desc Params:	 	 
+	serialization.format	1                   
+	 	 
+# Constraints	 	 
+	 	 
+# Default Constraints	 	 
+Table:              	default.numericdatatype	 
+Constraint Name:    	d_247629700_1518732141451_0	 
+Column Name:b       	Default Value:32767S	 
+	 	 
+Constraint Name:    	d_247659491_1518732141454_0	 
+Column Name:c       	Default Value:2147483647	 
+	 	 
+Constraint Name:    	d_247689282_1518732141456_0	 
+Column Name:d       	Default Value:9223372036854775807L	 
+	 	 
+Constraint Name:    	d_247719073_1518732141457_0	 
+Column Name:e       	Default Value:3.4E38	 
+	 	 
+Constraint Name:    	d_247748864_1518732141459_0	 
+Column Name:f       	Default Value:1234567.89	 
+	 	 
+Constraint Name:    	tinyint_constraint  	 
+Column Name:a       	Default Value:127Y  	 
+	 	 
+PREHOOK: query: -- Date/time
+CREATE TABLE table1(d DATE DEFAULT DATE'2018-02-14', t TIMESTAMP DEFAULT "2016-02-22 12:45:07.000000000",
+    d1 DATE DEFAULT current_date() ENABLE, t1 TIMESTAMP DEFAULT current_timestamp() DISABLE)
 PREHOOK: type: CREATETABLE
 PREHOOK: Output: database:default
 PREHOOK: Output: default@table1
-POSTHOOK: query: CREATE TABLE table1 (a STRING CONSTRAINT d1 DEFAULT 'key', b STRING )
+POSTHOOK: query: -- Date/time
+CREATE TABLE table1(d DATE DEFAULT DATE'2018-02-14', t TIMESTAMP DEFAULT "2016-02-22 12:45:07.000000000",
+    d1 DATE DEFAULT current_date() ENABLE, t1 TIMESTAMP DEFAULT current_timestamp() DISABLE)
 POSTHOOK: type: CREATETABLE
 POSTHOOK: Output: database:default
 POSTHOOK: Output: default@table1
-PREHOOK: query: DESCRIBE FORMATTED table1
+PREHOOK: query: DESC FORMATTED table1
 PREHOOK: type: DESCTABLE
 PREHOOK: Input: default@table1
-POSTHOOK: query: DESCRIBE FORMATTED table1
+POSTHOOK: query: DESC FORMATTED table1
 POSTHOOK: type: DESCTABLE
 POSTHOOK: Input: default@table1
 # col_name            	data_type           	comment             
-a                   	string              	                    
-b                   	string              	                    
+d                   	date                	                    
+t                   	timestamp           	                    
+d1                  	date                	                    
+t1                  	timestamp           	                    
 	 	 
 # Detailed Table Information	 	 
 Database:           	default             	 
@@ -23,7 +102,7 @@ Retention:          	0
 #### A masked pattern was here ####
 Table Type:         	MANAGED_TABLE       	 
 Table Parameters:	 	 
-	COLUMN_STATS_ACCURATE	{\"BASIC_STATS\":\"true\",\"COLUMN_STATS\":{\"a\":\"true\",\"b\":\"true\"}}
+	COLUMN_STATS_ACCURATE	{\"BASIC_STATS\":\"true\",\"COLUMN_STATS\":{\"d\":\"true\",\"d1\":\"true\",\"t\":\"true\",\"t1\":\"true\"}}
 	numFiles            	0                   
 	numRows             	0                   
 	rawDataSize         	0                   
@@ -45,22 +124,40 @@ Storage Desc Params:
 	 	 
 # Default Constraints	 	 
 Table:              	default.table1      	 
-Constraint Name:    	d1                  	 
-Column Name:a       	Default Value:'key' 	 
+Constraint Name:    	d_191064085_1518732141596_0	 
+Column Name:d1      	Default Value:current_date()	 
 	 	 
-PREHOOK: query: ALTER TABLE table1 DROP CONSTRAINT d1
-PREHOOK: type: ALTERTABLE_DROPCONSTRAINT
-POSTHOOK: query: ALTER TABLE table1 DROP CONSTRAINT d1
-POSTHOOK: type: ALTERTABLE_DROPCONSTRAINT
-PREHOOK: query: DESC FORMATTED table1
+Constraint Name:    	d_205840421_1518732141598_0	 
+Column Name:t1      	Default Value:current_timestamp()	 
+	 	 
+Constraint Name:    	d_222640516_1518732141592_0	 
+Column Name:d       	Default Value:'2018-02-14'	 
+	 	 
+Constraint Name:    	d_223117172_1518732141594_0	 
+Column Name:t       	Default Value:"2016-02-22 12:45:07.000000000"	 
+	 	 
+PREHOOK: query: CREATE TABLE table2(i STRING DEFAULT current_database(), j STRING DEFAULT current_user(),
+    k STRING DEFAULT 'current_user()', v varchar(350) DEFAULT 'varchar_default_value', c char(20) DEFAULT 'char_value')
+PREHOOK: type: CREATETABLE
+PREHOOK: Output: database:default
+PREHOOK: Output: default@table2
+POSTHOOK: query: CREATE TABLE table2(i STRING DEFAULT current_database(), j STRING DEFAULT current_user(),
+    k STRING DEFAULT 'current_user()', v varchar(350) DEFAULT 'varchar_default_value', c char(20) DEFAULT 'char_value')
+POSTHOOK: type: CREATETABLE
+POSTHOOK: Output: database:default
+POSTHOOK: Output: default@table2
+PREHOOK: query: DESC FORMATTED table2
 PREHOOK: type: DESCTABLE
-PREHOOK: Input: default@table1
-POSTHOOK: query: DESC FORMATTED table1
+PREHOOK: Input: default@table2
+POSTHOOK: query: DESC FORMATTED table2
 POSTHOOK: type: DESCTABLE
-POSTHOOK: Input: default@table1
+POSTHOOK: Input: default@table2
 # col_name            	data_type           	comment             
-a                   	string              	                    
-b                   	string              	                    
+i                   	string              	                    
+j                   	string              	                    
+k                   	string              	                    
+v                   	varchar(350)        	                    
+c                   	char(20)            	                    
 	 	 
 # Detailed Table Information	 	 
 Database:           	default             	 
@@ -69,7 +166,7 @@ Retention:          	0
 #### A masked pattern was here ####
 Table Type:         	MANAGED_TABLE       	 
 Table Parameters:	 	 
-	COLUMN_STATS_ACCURATE	{\"BASIC_STATS\":\"true\",\"COLUMN_STATS\":{\"a\":\"true\",\"b\":\"true\"}}
+	COLUMN_STATS_ACCURATE	{\"BASIC_STATS\":\"true\",\"COLUMN_STATS\":{\"c\":\"true\",\"i\":\"true\",\"j\":\"true\",\"k\":\"true\",\"v\":\"true\"}}
 	numFiles            	0                   
 	numRows             	0                   
 	rawDataSize         	0                   
@@ -86,54 +183,373 @@ Bucket Columns:     	[]
 Sort Columns:       	[]                  	 
 Storage Desc Params:	 	 
 	serialization.format	1                   
-PREHOOK: query: ALTER TABLE table1 CHANGE b b STRING DEFAULT "value"
+	 	 
+# Constraints	 	 
+	 	 
+# Default Constraints	 	 
+Table:              	default.table2      	 
+Constraint Name:    	d_251239876_1518732141674_0	 
+Column Name:c       	Default Value:'char_value'	 
+	 	 
+Constraint Name:    	d_251418622_1518732141667_0	 
+Column Name:i       	Default Value:current_database()	 
+	 	 
+Constraint Name:    	d_251448413_1518732141669_0	 
+Column Name:j       	Default Value:current_user()	 
+	 	 
+Constraint Name:    	d_251478204_1518732141671_0	 
+Column Name:k       	Default Value:'current_user()'	 
+	 	 
+Constraint Name:    	d_251805905_1518732141673_0	 
+Column Name:v       	Default Value:'varchar_default_value'	 
+	 	 
+PREHOOK: query: CREATE TABLE misc(b BOOLEAN DEFAULT true, b1 BINARY DEFAULT 'bin')
+PREHOOK: type: CREATETABLE
+PREHOOK: Output: database:default
+PREHOOK: Output: default@misc
+POSTHOOK: query: CREATE TABLE misc(b BOOLEAN DEFAULT true, b1 BINARY DEFAULT 'bin')
+POSTHOOK: type: CREATETABLE
+POSTHOOK: Output: database:default
+POSTHOOK: Output: default@misc
+PREHOOK: query: DESC FORMATTED misc
+PREHOOK: type: DESCTABLE
+PREHOOK: Input: default@misc
+POSTHOOK: query: DESC FORMATTED misc
+POSTHOOK: type: DESCTABLE
+POSTHOOK: Input: default@misc
+# col_name            	data_type           	comment             
+b                   	boolean             	                    
+b1                  	binary              	                    
+	 	 
+# Detailed Table Information	 	 
+Database:           	default             	 
+#### A masked pattern was here ####
+Retention:          	0                   	 
+#### A masked pattern was here ####
+Table Type:         	MANAGED_TABLE       	 
+Table Parameters:	 	 
+	COLUMN_STATS_ACCURATE	{\"BASIC_STATS\":\"true\",\"COLUMN_STATS\":{\"b\":\"true\",\"b1\":\"true\"}}
+	numFiles            	0                   
+	numRows             	0                   
+	rawDataSize         	0                   
+	totalSize           	0                   
+#### A masked pattern was here ####
+	 	 
+# Storage Information	 	 
+SerDe Library:      	org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe	 
+InputFormat:        	org.apache.hadoop.mapred.TextInputFormat	 
+OutputFormat:       	org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat	 
+Compressed:         	No                  	 
+Num Buckets:        	-1                  	 
+Bucket Columns:     	[]                  	 
+Sort Columns:       	[]                  	 
+Storage Desc Params:	 	 
+	serialization.format	1                   
+	 	 
+# Constraints	 	 
+	 	 
+# Default Constraints	 	 
+Table:              	default.misc        	 
+Constraint Name:    	d_100476445_1518732141754_0	 
+Column Name:b       	Default Value:true  	 
+	 	 
+Constraint Name:    	d_162074268_1518732141756_0	 
+Column Name:b1      	Default Value:'bin' 	 
+	 	 
+PREHOOK: query: ALTER TABLE numericDataType DROP CONSTRAINT tinyint_constraint
+PREHOOK: type: ALTERTABLE_DROPCONSTRAINT
+POSTHOOK: query: ALTER TABLE numericDataType DROP CONSTRAINT tinyint_constraint
+POSTHOOK: type: ALTERTABLE_DROPCONSTRAINT
+PREHOOK: query: DESC FORMATTED numericDataType
+PREHOOK: type: DESCTABLE
+PREHOOK: Input: default@numericdatatype
+POSTHOOK: query: DESC FORMATTED numericDataType
+POSTHOOK: type: DESCTABLE
+POSTHOOK: Input: default@numericdatatype
+# col_name            	data_type           	comment             
+a                   	tinyint             	                    
+b                   	smallint            	                    
+c                   	int                 	                    
+d                   	bigint              	                    
+e                   	double              	                    
+f                   	decimal(9,7)        	                    
+	 	 
+# Detailed Table Information	 	 
+Database:           	default             	 
+#### A masked pattern was here ####
+Retention:          	0                   	 
+#### A masked pattern was here ####
+Table Type:         	MANAGED_TABLE       	 
+Table Parameters:	 	 
+	COLUMN_STATS_ACCURATE	{\"BASIC_STATS\":\"true\",\"COLUMN_STATS\":{\"a\":\"true\",\"b\":\"true\",\"c\":\"true\",\"d\":\"true\",\"e\":\"true\",\"f\":\"true\"}}
+	numFiles            	0                   
+	numRows             	0                   
+	rawDataSize         	0                   
+	totalSize           	0                   
+#### A masked pattern was here ####
+	 	 
+# Storage Information	 	 
+SerDe Library:      	org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe	 
+InputFormat:        	org.apache.hadoop.mapred.TextInputFormat	 
+OutputFormat:       	org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat	 
+Compressed:         	No                  	 
+Num Buckets:        	-1                  	 
+Bucket Columns:     	[]                  	 
+Sort Columns:       	[]                  	 
+Storage Desc Params:	 	 
+	serialization.format	1                   
+	 	 
+# Constraints	 	 
+	 	 
+# Default Constraints	 	 
+Table:              	default.numericdatatype	 
+Constraint Name:    	d_247629700_1518732141451_0	 
+Column Name:b       	Default Value:32767S	 
+	 	 
+Constraint Name:    	d_247659491_1518732141454_0	 
+Column Name:c       	Default Value:2147483647	 
+	 	 
+Constraint Name:    	d_247689282_1518732141456_0	 
+Column Name:d       	Default Value:9223372036854775807L	 
+	 	 
+Constraint Name:    	d_247719073_1518732141457_0	 
+Column Name:e       	Default Value:3.4E38	 
+	 	 
+Constraint Name:    	d_247748864_1518732141459_0	 
+Column Name:f       	Default Value:1234567.89	 
+	 	 
+PREHOOK: query: ALTER TABLE numericDataType ADD CONSTRAINT uk1 UNIQUE(a,b) DISABLE NOVALIDATE
+PREHOOK: type: ALTERTABLE_ADDCONSTRAINT
+POSTHOOK: query: ALTER TABLE numericDataType ADD CONSTRAINT uk1 UNIQUE(a,b) DISABLE NOVALIDATE
+POSTHOOK: type: ALTERTABLE_ADDCONSTRAINT
+PREHOOK: query: DESC FORMATTED numericDataType
+PREHOOK: type: DESCTABLE
+PREHOOK: Input: default@numericdatatype
+POSTHOOK: query: DESC FORMATTED numericDataType
+POSTHOOK: type: DESCTABLE
+POSTHOOK: Input: default@numericdatatype
+# col_name            	data_type           	comment             
+a                   	tinyint             	                    
+b                   	smallint            	                    
+c                   	int                 	                    
+d                   	bigint              	                    
+e                   	double              	                    
+f                   	decimal(9,7)        	                    
+	 	 
+# Detailed Table Information	 	 
+Database:           	default             	 
+#### A masked pattern was here ####
+Retention:          	0                   	 
+#### A masked pattern was here ####
+Table Type:         	MANAGED_TABLE       	 
+Table Parameters:	 	 
+	COLUMN_STATS_ACCURATE	{\"BASIC_STATS\":\"true\",\"COLUMN_STATS\":{\"a\":\"true\",\"b\":\"true\",\"c\":\"true\",\"d\":\"true\",\"e\":\"true\",\"f\":\"true\"}}
+	numFiles            	0                   
+	numRows             	0                   
+	rawDataSize         	0                   
+	totalSize           	0                   
+#### A masked pattern was here ####
+	 	 
+# Storage Information	 	 
+SerDe Library:      	org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe	 
+InputFormat:        	org.apache.hadoop.mapred.TextInputFormat	 
+OutputFormat:       	org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat	 
+Compressed:         	No                  	 
+Num Buckets:        	-1                  	 
+Bucket Columns:     	[]                  	 
+Sort Columns:       	[]                  	 
+Storage Desc Params:	 	 
+	serialization.format	1                   
+	 	 
+# Constraints	 	 
+	 	 
+# Unique Constraints	 	 
+Table:              	default.numericdatatype	 
+Constraint Name:    	uk1                 	 
+Column Name:a       	Key Sequence:1      	 
+Column Name:b       	Key Sequence:2      	 
+	 	 
+	 	 
+# Default Constraints	 	 
+Table:              	default.numericdatatype	 
+Constraint Name:    	d_247629700_1518732141451_0	 
+Column Name:b       	Default Value:32767S	 
+	 	 
+Constraint Name:    	d_247659491_1518732141454_0	 
+Column Name:c       	Default Value:2147483647	 
+	 	 
+Constraint Name:    	d_247689282_1518732141456_0	 
+Column Name:d       	Default Value:9223372036854775807L	 
+	 	 
+Constraint Name:    	d_247719073_1518732141457_0	 
+Column Name:e       	Default Value:3.4E38	 
+	 	 
+Constraint Name:    	d_247748864_1518732141459_0	 
+Column Name:f       	Default Value:1234567.89	 
+	 	 
+PREHOOK: query: ALTER TABLE numericDataType CHANGE a a TINYINT CONSTRAINT second_constraint DEFAULT 127Y ENABLE
 PREHOOK: type: ALTERTABLE_RENAMECOL
+PREHOOK: Input: default@numericdatatype
+PREHOOK: Output: default@numericdatatype
+POSTHOOK: query: ALTER TABLE numericDataType CHANGE a a TINYINT CONSTRAINT second_constraint DEFAULT 127Y ENABLE
+POSTHOOK: type: ALTERTABLE_RENAMECOL
+POSTHOOK: Input: default@numericdatatype
+POSTHOOK: Output: default@numericdatatype
+PREHOOK: query: DESC FORMATTED numericDataType
+PREHOOK: type: DESCTABLE
+PREHOOK: Input: default@numericdatatype
+POSTHOOK: query: DESC FORMATTED numericDataType
+POSTHOOK: type: DESCTABLE
+POSTHOOK: Input: default@numericdatatype
+# col_name            	data_type           	comment             
+a                   	tinyint             	                    
+b                   	smallint            	                    
+c                   	int                 	                    
+d                   	bigint              	                    
+e                   	double              	                    
+f                   	decimal(9,7)        	                    
+	 	 
+# Detailed Table Information	 	 
+Database:           	default             	 
+#### A masked pattern was here ####
+Retention:          	0                   	 
+#### A masked pattern was here ####
+Table Type:         	MANAGED_TABLE       	 
+Table Parameters:	 	 
+	COLUMN_STATS_ACCURATE	{\"BASIC_STATS\":\"true\",\"COLUMN_STATS\":{\"a\":\"true\",\"b\":\"true\",\"c\":\"true\",\"d\":\"true\",\"e\":\"true\",\"f\":\"true\"}}
+#### A masked pattern was here ####
+	numFiles            	0                   
+	numRows             	0                   
+	rawDataSize         	0                   
+	totalSize           	0                   
+#### A masked pattern was here ####
+	 	 
+# Storage Information	 	 
+SerDe Library:      	org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe	 
+InputFormat:        	org.apache.hadoop.mapred.TextInputFormat	 
+OutputFormat:       	org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat	 
+Compressed:         	No                  	 
+Num Buckets:        	-1                  	 
+Bucket Columns:     	[]                  	 
+Sort Columns:       	[]                  	 
+Storage Desc Params:	 	 
+	serialization.format	1                   
+	 	 
+# Constraints	 	 
+	 	 
+# Unique Constraints	 	 
+Table:              	default.numericdatatype	 
+Constraint Name:    	uk1                 	 
+Column Name:a       	Key Sequence:1      	 
+Column Name:b       	Key Sequence:2      	 
+	 	 
+	 	 
+# Default Constraints	 	 
+Table:              	default.numericdatatype	 
+Constraint Name:    	d_247629700_1518732141451_0	 
+Column Name:b       	Default Value:32767S	 
+	 	 
+Constraint Name:    	d_247659491_1518732141454_0	 
+Column Name:c       	Default Value:2147483647	 
+	 	 
+Constraint Name:    	d_247689282_1518732141456_0	 
+Column Name:d       	Default Value:9223372036854775807L	 
+	 	 
+Constraint Name:    	d_247719073_1518732141457_0	 
+Column Name:e       	Default Value:3.4E38	 
+	 	 
+Constraint Name:    	d_247748864_1518732141459_0	 
+Column Name:f       	Default Value:1234567.89	 
+	 	 
+Constraint Name:    	second_constraint   	 
+Column Name:a       	Default Value:127Y  	 
+	 	 
+PREHOOK: query: ALTER TABLE misc CHANGE b1 b1 BINARY DEFAULT 'newValue'
+PREHOOK: type: ALTERTABLE_RENAMECOL
+PREHOOK: Input: default@misc
+PREHOOK: Output: default@misc
+POSTHOOK: query: ALTER TABLE misc CHANGE b1 b1 BINARY DEFAULT 'newValue'
+POSTHOOK: type: ALTERTABLE_RENAMECOL
+POSTHOOK: Input: default@misc
+POSTHOOK: Output: default@misc
+PREHOOK: query: DESC FORMATTED misc
+PREHOOK: type: DESCTABLE
+PREHOOK: Input: default@misc
+POSTHOOK: query: DESC FORMATTED misc
+POSTHOOK: type: DESCTABLE
+POSTHOOK: Input: default@misc
+# col_name            	data_type           	comment             
+b                   	boolean             	                    
+b1                  	binary              	                    
+	 	 
+# Detailed Table Information	 	 
+Database:           	default             	 
+#### A masked pattern was here ####
+Retention:          	0                   	 
+#### A masked pattern was here ####
+Table Type:         	MANAGED_TABLE       	 
+Table Parameters:	 	 
+	COLUMN_STATS_ACCURATE	{\"BASIC_STATS\":\"true\",\"COLUMN_STATS\":{\"b\":\"true\",\"b1\":\"true\"}}
+#### A masked pattern was here ####
+	numFiles            	0                   
+	numRows             	0                   
+	rawDataSize         	0                   
+	totalSize           	0                   
+#### A masked pattern was here ####
+	 	 
+# Storage Information	 	 
+SerDe Library:      	org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe	 
+InputFormat:        	org.apache.hadoop.mapred.TextInputFormat	 
+OutputFormat:       	org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat	 
+Compressed:         	No                  	 
+Num Buckets:        	-1                  	 
+Bucket Columns:     	[]                  	 
+Sort Columns:       	[]                  	 
+Storage Desc Params:	 	 
+	serialization.format	1                   
+	 	 
+# Constraints	 	 
+	 	 
+# Default Constraints	 	 
+Table:              	default.misc        	 
+Constraint Name:    	d_100476445_1518732141754_0	 
+Column Name:b       	Default Value:true  	 
+	 	 
+Constraint Name:    	d_162074268_1518732141756_0	 
+Column Name:b1      	Default Value:'bin' 	 
+	 	 
+Constraint Name:    	d_162074268_1518732141998_0	 
+Column Name:b1      	Default Value:'newValue'	 
+	 	 
+PREHOOK: query: DROP TABLE numericDataType
+PREHOOK: type: DROPTABLE
+PREHOOK: Input: default@numericdatatype
+PREHOOK: Output: default@numericdatatype
+POSTHOOK: query: DROP TABLE numericDataType
+POSTHOOK: type: DROPTABLE
+POSTHOOK: Input: default@numericdatatype
+POSTHOOK: Output: default@numericdatatype
+PREHOOK: query: DROP TABLE table1
+PREHOOK: type: DROPTABLE
 PREHOOK: Input: default@table1
 PREHOOK: Output: default@table1
-POSTHOOK: query: ALTER TABLE table1 CHANGE b b STRING DEFAULT "value"
-POSTHOOK: type: ALTERTABLE_RENAMECOL
+POSTHOOK: query: DROP TABLE table1
+POSTHOOK: type: DROPTABLE
 POSTHOOK: Input: default@table1
 POSTHOOK: Output: default@table1
-PREHOOK: query: DESC FORMATTED table1
-PREHOOK: type: DESCTABLE
-PREHOOK: Input: default@table1
-POSTHOOK: query: DESC FORMATTED table1
-POSTHOOK: type: DESCTABLE
-POSTHOOK: Input: default@table1
-# col_name            	data_type           	comment             
-a                   	string              	                    
-b                   	string              	                    
-	 	 
-# Detailed Table Information	 	 
-Database:           	default             	 
-#### A masked pattern was here ####
-Retention:          	0                   	 
-#### A masked pattern was here ####
-Table Type:         	MANAGED_TABLE       	 
-Table Parameters:	 	 
-	COLUMN_STATS_ACCURATE	{\"BASIC_STATS\":\"true\",\"COLUMN_STATS\":{\"a\":\"true\",\"b\":\"true\"}}
-#### A masked pattern was here ####
-	numFiles            	0                   
-	numRows             	0                   
-	rawDataSize         	0                   
-	totalSize           	0                   
-#### A masked pattern was here ####
-	 	 
-# Storage Information	 	 
-SerDe Library:      	org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe	 
-InputFormat:        	org.apache.hadoop.mapred.TextInputFormat	 
-OutputFormat:       	org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat	 
-Compressed:         	No                  	 
-Num Buckets:        	-1                  	 
-Bucket Columns:     	[]                  	 
-Sort Columns:       	[]                  	 
-Storage Desc Params:	 	 
-	serialization.format	1                   
-	 	 
-# Constraints	 	 
-	 	 
-# Default Constraints	 	 
-Table:              	default.table1      	 
-Constraint Name:    	d_222580934_1518588163525_0	 
-Column Name:b       	Default Value:"value"	 
-	 	 
+PREHOOK: query: DROP TABLE table2
+PREHOOK: type: DROPTABLE
+PREHOOK: Input: default@table2
+PREHOOK: Output: default@table2
+POSTHOOK: query: DROP TABLE table2
+POSTHOOK: type: DROPTABLE
+POSTHOOK: Input: default@table2
+POSTHOOK: Output: default@table2
+PREHOOK: query: DROP TABLE misc
+PREHOOK: type: DROPTABLE
+PREHOOK: Input: default@misc
+PREHOOK: Output: default@misc
+POSTHOOK: query: DROP TABLE misc
+POSTHOOK: type: DROPTABLE
+POSTHOOK: Input: default@misc
+POSTHOOK: Output: default@misc

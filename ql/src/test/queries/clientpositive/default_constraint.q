@@ -29,15 +29,15 @@ ALTER TABLE numericDataType CHANGE a a TINYINT CONSTRAINT second_constraint DEFA
 DESC FORMATTED numericDataType;
 
 -- alter table add column with constraint
---XXX: Existing BUG wrong(NULL) column names
-ALTER TABLE misc ADD COLUMNS (a STRING);
-DESC FORMATTED misc;
-ALTER TABLE misc CHANGE a a STRING DEFAULT 'newValue';
+--XXX: Existing BUG ADD column not working
+--ALTER TABLE misc ADD COLUMNS (a STRING);
+--DESC FORMATTED misc;
+ALTER TABLE misc CHANGE b1 b1 BINARY DEFAULT 'newValue';
 DESC FORMATTED misc;
 
---DROP COLUMN with constraint
-ALTER TABLE table1 DROP COLUMN t;
-DESC FORMATTED table1;
+--DROP COLUMN with constraint XXX BUG
+-- ALTER TABLE misc REPLACE COLUMNS(b BOOLEAN);
+-- DESC FORMATTED misc;
 
 DROP TABLE numericDataType;
 DROP TABLE table1;

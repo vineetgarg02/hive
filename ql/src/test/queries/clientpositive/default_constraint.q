@@ -21,7 +21,7 @@ DESC FORMATTED misc;
 -- alter table drop and add constraint
 ALTER TABLE numericDataType DROP CONSTRAINT tinyint_constraint;
 DESC FORMATTED numericDataType;
-ALTER TABLE numericDataType ADD CONSTRAINT uk1 UNIQUE(a) DISABLE NOVALIDATE;
+ALTER TABLE numericDataType ADD CONSTRAINT uk1 UNIQUE(a,b) DISABLE NOVALIDATE;
 DESC FORMATTED numericDataType;
 
 -- alter table change column with constraint
@@ -29,6 +29,7 @@ ALTER TABLE numericDataType CHANGE a a TINYINT CONSTRAINT second_constraint DEFA
 DESC FORMATTED numericDataType;
 
 -- alter table add column with constraint
+--XXX: Existing BUG wrong(NULL) column names
 ALTER TABLE misc ADD COLUMNS (a STRING);
 DESC FORMATTED misc;
 ALTER TABLE misc CHANGE a a STRING DEFAULT 'newValue';

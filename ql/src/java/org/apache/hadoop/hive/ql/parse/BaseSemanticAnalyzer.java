@@ -841,7 +841,8 @@ public abstract class BaseSemanticAnalyzer {
         rely = true;
       } else if( type == HiveParser.TOK_NORELY) {
         rely = false;
-      } else {
+      } else if( child.getToken().getType() == HiveParser.TOK_DEFAULT_VALUE){
+        // try to get default value only if this is DEFAULT constraint
         defaultValue = getDefaultValue(grandChild);
       }
     }

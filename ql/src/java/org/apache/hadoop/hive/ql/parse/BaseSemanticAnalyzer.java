@@ -47,10 +47,7 @@ import org.apache.hadoop.hive.ql.optimizer.listbucketingpruner.ListBucketingPrun
 import org.apache.hadoop.hive.ql.plan.*;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.hive.ql.session.SessionState.LogHelper;
-import org.apache.hadoop.hive.ql.udf.generic.GenericUDFCurrentDate;
-import org.apache.hadoop.hive.ql.udf.generic.GenericUDFCurrentTimestamp;
-import org.apache.hadoop.hive.ql.udf.generic.GenericUDFCurrentUser;
-import org.apache.hadoop.hive.ql.udf.generic.GenericUDFOPNull;
+import org.apache.hadoop.hive.ql.udf.generic.*;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.hive.serde2.io.DateWritable;
 import org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe;
@@ -767,26 +764,30 @@ public abstract class BaseSemanticAnalyzer {
 
     // default value, Make sure that this is a function or literal only
     boolean isDefValueAllowed = false;
+    String defaultValue = null;
 
     if(defaultValExpr instanceof  ExprNodeConstantDesc) {
       isDefValueAllowed = true;
+      defaultValue = defaultValueAST.getText();
     }
     else if(defaultValExpr instanceof ExprNodeGenericFuncDesc){
       ExprNodeGenericFuncDesc defFunc = (ExprNodeGenericFuncDesc)defaultValExpr;
       if(defFunc.getGenericUDF() instanceof GenericUDFOPNull
           || defFunc.getGenericUDF() instanceof GenericUDFCurrentTimestamp
           || defFunc.getGenericUDF() instanceof GenericUDFCurrentDate
+          || defFunc.getGenericUDF() instanceof UDFCurrentDB
           || defFunc.getGenericUDF() instanceof GenericUDFCurrentUser){
         isDefValueAllowed = true;
       }
+      defaultValue = defFunc.getFuncText() + "()";
     }
 
     if(!isDefValueAllowed) {
       throw new SemanticException(
-          ErrorMsg.INVALID_CSTR_SYNTAX.getMsg("Invalid Default value: " + defaultValueAST.getText()
-                                              + "DEFAULT only allows constant or function expressions"));
+          ErrorMsg.INVALID_CSTR_SYNTAX.getMsg("Invalid Default value: " + defaultValue
+                                              + ". DEFAULT only allows constant or function expressions"));
     }
-    return defaultValueAST.getText();
+    return defaultValue;
   }
 
 

@@ -20,6 +20,7 @@ package org.apache.hadoop.hive.metastore.client;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
+import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.api.AlreadyExistsException;
 import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.metastore.api.Function;
@@ -52,6 +53,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Test class for IMetaStoreClient API. Testing the Database related functions.
+ */
 @RunWith(Parameterized.class)
 public class TestDatabases {
   private static final Logger LOG = LoggerFactory.getLogger(TestDatabases.class);
@@ -408,7 +412,7 @@ public class TestDatabases {
   }
 
   /**
-   * Creates an index in the given database for testing purposes
+   * Creates an index in the given database for testing purposes.
    * @param databaseName The database name in which the index should be creatd
    * @throws TException If there is an error during the index creation
    */
@@ -430,6 +434,7 @@ public class TestDatabases {
     Table testIndexTable =
         new TableBuilder()
             .setDbName(databaseName)
+            .setType(TableType.INDEX_TABLE.name())
             .setTableName("test_index_table")
             .addCol("test_col", "int")
             .build();

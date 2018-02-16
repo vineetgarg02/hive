@@ -53,19 +53,19 @@ Storage Desc Params:
 	 	 
 # Default Constraints	 	 
 Table:              	default.numericdatatype	 
-Constraint Name:    	d_247629700_1518732141451_0	 
+Constraint Name:    	#### A masked pattern was here ####	 
 Column Name:b       	Default Value:32767S	 
 	 	 
-Constraint Name:    	d_247659491_1518732141454_0	 
+Constraint Name:    	#### A masked pattern was here ####	 
 Column Name:c       	Default Value:2147483647	 
 	 	 
-Constraint Name:    	d_247689282_1518732141456_0	 
+Constraint Name:    	#### A masked pattern was here ####	 
 Column Name:d       	Default Value:9223372036854775807L	 
 	 	 
-Constraint Name:    	d_247719073_1518732141457_0	 
+Constraint Name:    	#### A masked pattern was here ####	 
 Column Name:e       	Default Value:3.4E38	 
 	 	 
-Constraint Name:    	d_247748864_1518732141459_0	 
+Constraint Name:    	#### A masked pattern was here ####	 
 Column Name:f       	Default Value:1234567.89	 
 	 	 
 Constraint Name:    	tinyint_constraint  	 
@@ -124,17 +124,17 @@ Storage Desc Params:
 	 	 
 # Default Constraints	 	 
 Table:              	default.table1      	 
-Constraint Name:    	d_191064085_1518732141596_0	 
+Constraint Name:    	#### A masked pattern was here ####	 
 Column Name:d1      	Default Value:current_date()	 
 	 	 
-Constraint Name:    	d_205840421_1518732141598_0	 
-Column Name:t1      	Default Value:current_timestamp()	 
-	 	 
-Constraint Name:    	d_222640516_1518732141592_0	 
+Constraint Name:    	#### A masked pattern was here ####	 
 Column Name:d       	Default Value:'2018-02-14'	 
 	 	 
-Constraint Name:    	d_223117172_1518732141594_0	 
+Constraint Name:    	#### A masked pattern was here ####	 
 Column Name:t       	Default Value:"2016-02-22 12:45:07.000000000"	 
+	 	 
+Constraint Name:    	#### A masked pattern was here ####	 
+Column Name:t1      	Default Value:current_timestamp()	 
 	 	 
 PREHOOK: query: CREATE TABLE table2(i STRING DEFAULT current_database(), j STRING DEFAULT current_user(),
     k STRING DEFAULT 'current_user()', v varchar(350) DEFAULT 'varchar_default_value', c char(20) DEFAULT 'char_value')
@@ -188,20 +188,20 @@ Storage Desc Params:
 	 	 
 # Default Constraints	 	 
 Table:              	default.table2      	 
-Constraint Name:    	d_251239876_1518732141674_0	 
-Column Name:c       	Default Value:'char_value'	 
-	 	 
-Constraint Name:    	d_251418622_1518732141667_0	 
-Column Name:i       	Default Value:current_database()	 
-	 	 
-Constraint Name:    	d_251448413_1518732141669_0	 
+Constraint Name:    	#### A masked pattern was here ####	 
 Column Name:j       	Default Value:current_user()	 
 	 	 
-Constraint Name:    	d_251478204_1518732141671_0	 
+Constraint Name:    	#### A masked pattern was here ####	 
 Column Name:k       	Default Value:'current_user()'	 
 	 	 
-Constraint Name:    	d_251805905_1518732141673_0	 
+Constraint Name:    	#### A masked pattern was here ####	 
 Column Name:v       	Default Value:'varchar_default_value'	 
+	 	 
+Constraint Name:    	#### A masked pattern was here ####	 
+Column Name:c       	Default Value:'char_value'	 
+	 	 
+Constraint Name:    	#### A masked pattern was here ####	 
+Column Name:i       	Default Value:current_database()	 
 	 	 
 PREHOOK: query: CREATE TABLE misc(b BOOLEAN DEFAULT true, b1 BINARY DEFAULT 'bin')
 PREHOOK: type: CREATETABLE
@@ -250,10 +250,10 @@ Storage Desc Params:
 	 	 
 # Default Constraints	 	 
 Table:              	default.misc        	 
-Constraint Name:    	d_100476445_1518732141754_0	 
+Constraint Name:    	#### A masked pattern was here ####	 
 Column Name:b       	Default Value:true  	 
 	 	 
-Constraint Name:    	d_162074268_1518732141756_0	 
+Constraint Name:    	#### A masked pattern was here ####	 
 Column Name:b1      	Default Value:'bin' 	 
 	 	 
 PREHOOK: query: ALTER TABLE numericDataType DROP CONSTRAINT tinyint_constraint
@@ -303,19 +303,19 @@ Storage Desc Params:
 	 	 
 # Default Constraints	 	 
 Table:              	default.numericdatatype	 
-Constraint Name:    	d_247629700_1518732141451_0	 
+Constraint Name:    	#### A masked pattern was here ####	 
 Column Name:b       	Default Value:32767S	 
 	 	 
-Constraint Name:    	d_247659491_1518732141454_0	 
+Constraint Name:    	#### A masked pattern was here ####	 
 Column Name:c       	Default Value:2147483647	 
 	 	 
-Constraint Name:    	d_247689282_1518732141456_0	 
+Constraint Name:    	#### A masked pattern was here ####	 
 Column Name:d       	Default Value:9223372036854775807L	 
 	 	 
-Constraint Name:    	d_247719073_1518732141457_0	 
+Constraint Name:    	#### A masked pattern was here ####	 
 Column Name:e       	Default Value:3.4E38	 
 	 	 
-Constraint Name:    	d_247748864_1518732141459_0	 
+Constraint Name:    	#### A masked pattern was here ####	 
 Column Name:f       	Default Value:1234567.89	 
 	 	 
 PREHOOK: query: ALTER TABLE numericDataType ADD CONSTRAINT uk1 UNIQUE(a,b) DISABLE NOVALIDATE
@@ -372,19 +372,19 @@ Column Name:b       	Key Sequence:2
 	 	 
 # Default Constraints	 	 
 Table:              	default.numericdatatype	 
-Constraint Name:    	d_247629700_1518732141451_0	 
+Constraint Name:    	#### A masked pattern was here ####	 
 Column Name:b       	Default Value:32767S	 
 	 	 
-Constraint Name:    	d_247659491_1518732141454_0	 
+Constraint Name:    	#### A masked pattern was here ####	 
 Column Name:c       	Default Value:2147483647	 
 	 	 
-Constraint Name:    	d_247689282_1518732141456_0	 
+Constraint Name:    	#### A masked pattern was here ####	 
 Column Name:d       	Default Value:9223372036854775807L	 
 	 	 
-Constraint Name:    	d_247719073_1518732141457_0	 
+Constraint Name:    	#### A masked pattern was here ####	 
 Column Name:e       	Default Value:3.4E38	 
 	 	 
-Constraint Name:    	d_247748864_1518732141459_0	 
+Constraint Name:    	#### A masked pattern was here ####	 
 Column Name:f       	Default Value:1234567.89	 
 	 	 
 PREHOOK: query: ALTER TABLE numericDataType CHANGE a a TINYINT CONSTRAINT second_constraint DEFAULT 127Y ENABLE
@@ -446,19 +446,19 @@ Column Name:b       	Key Sequence:2
 	 	 
 # Default Constraints	 	 
 Table:              	default.numericdatatype	 
-Constraint Name:    	d_247629700_1518732141451_0	 
+Constraint Name:    	#### A masked pattern was here ####	 
 Column Name:b       	Default Value:32767S	 
 	 	 
-Constraint Name:    	d_247659491_1518732141454_0	 
+Constraint Name:    	#### A masked pattern was here ####	 
 Column Name:c       	Default Value:2147483647	 
 	 	 
-Constraint Name:    	d_247689282_1518732141456_0	 
+Constraint Name:    	#### A masked pattern was here ####	 
 Column Name:d       	Default Value:9223372036854775807L	 
 	 	 
-Constraint Name:    	d_247719073_1518732141457_0	 
+Constraint Name:    	#### A masked pattern was here ####	 
 Column Name:e       	Default Value:3.4E38	 
 	 	 
-Constraint Name:    	d_247748864_1518732141459_0	 
+Constraint Name:    	#### A masked pattern was here ####	 
 Column Name:f       	Default Value:1234567.89	 
 	 	 
 Constraint Name:    	second_constraint   	 
@@ -512,13 +512,13 @@ Storage Desc Params:
 	 	 
 # Default Constraints	 	 
 Table:              	default.misc        	 
-Constraint Name:    	d_100476445_1518732141754_0	 
+Constraint Name:    	#### A masked pattern was here ####	 
 Column Name:b       	Default Value:true  	 
 	 	 
-Constraint Name:    	d_162074268_1518732141756_0	 
+Constraint Name:    	#### A masked pattern was here ####	 
 Column Name:b1      	Default Value:'bin' 	 
 	 	 
-Constraint Name:    	d_162074268_1518732141998_0	 
+Constraint Name:    	#### A masked pattern was here ####	 
 Column Name:b1      	Default Value:'newValue'	 
 	 	 
 PREHOOK: query: DROP TABLE numericDataType

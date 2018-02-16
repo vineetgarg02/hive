@@ -4519,7 +4519,7 @@ public class ObjectStore implements RawStore, Configurable {
         }
       }
       if (nns.get(i).getDc_name() == null) {
-        constraintName = generateConstraintName(tableDB, tableName, columnName, "d");
+        constraintName = generateConstraintName(tableDB, tableName, columnName, "dc");
       } else {
         constraintName = normalizeIdentifier(nns.get(i).getDc_name());
       }

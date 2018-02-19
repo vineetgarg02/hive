@@ -1,12 +1,10 @@
-PREHOOK: query: -- numeric type
-CREATE TABLE numericDataType(a TINYINT CONSTRAINT tinyint_constraint DEFAULT 127Y ENABLE, b SMALLINT DEFAULT 32767S, c INT DEFAULT 2147483647,
-    d BIGINT DEFAULT  9223372036854775807L, e DOUBLE DEFAULT 3.4E38, f DECIMAL(9,7) DEFAULT 1234567.89)
+PREHOOK: query: CREATE TABLE numericDataType(a TINYINT CONSTRAINT tinyint_constraint DEFAULT 127Y ENABLE, b SMALLINT DEFAULT 32767S, c INT DEFAULT 2147483647,
+    d BIGINT DEFAULT  9223372036854775807L, e DOUBLE DEFAULT 3.4E38, f DECIMAL(9,2) DEFAULT 1234567.89)
 PREHOOK: type: CREATETABLE
 PREHOOK: Output: database:default
 PREHOOK: Output: default@numericDataType
-POSTHOOK: query: -- numeric type
-CREATE TABLE numericDataType(a TINYINT CONSTRAINT tinyint_constraint DEFAULT 127Y ENABLE, b SMALLINT DEFAULT 32767S, c INT DEFAULT 2147483647,
-    d BIGINT DEFAULT  9223372036854775807L, e DOUBLE DEFAULT 3.4E38, f DECIMAL(9,7) DEFAULT 1234567.89)
+POSTHOOK: query: CREATE TABLE numericDataType(a TINYINT CONSTRAINT tinyint_constraint DEFAULT 127Y ENABLE, b SMALLINT DEFAULT 32767S, c INT DEFAULT 2147483647,
+    d BIGINT DEFAULT  9223372036854775807L, e DOUBLE DEFAULT 3.4E38, f DECIMAL(9,2) DEFAULT 1234567.89)
 POSTHOOK: type: CREATETABLE
 POSTHOOK: Output: database:default
 POSTHOOK: Output: default@numericDataType
@@ -22,7 +20,7 @@ b                   	smallint
 c                   	int                 	                    
 d                   	bigint              	                    
 e                   	double              	                    
-f                   	decimal(9,7)        	                    
+f                   	decimal(9,2)        	                    
 	 	 
 # Detailed Table Information	 	 
 Database:           	default             	 
@@ -31,11 +29,6 @@ Retention:          	0
 #### A masked pattern was here ####
 Table Type:         	MANAGED_TABLE       	 
 Table Parameters:	 	 
-	COLUMN_STATS_ACCURATE	{\"BASIC_STATS\":\"true\",\"COLUMN_STATS\":{\"a\":\"true\",\"b\":\"true\",\"c\":\"true\",\"d\":\"true\",\"e\":\"true\",\"f\":\"true\"}}
-	numFiles            	0                   
-	numRows             	0                   
-	rawDataSize         	0                   
-	totalSize           	0                   
 #### A masked pattern was here ####
 	 	 
 # Storage Information	 	 
@@ -71,6 +64,163 @@ Column Name:f       	Default Value:1234567.89
 Constraint Name:    	tinyint_constraint  	 
 Column Name:a       	Default Value:127Y  	 
 	 	 
+PREHOOK: query: EXPLAIN INSERT INTO numericDataType(a) values(3Y)
+PREHOOK: type: QUERY
+POSTHOOK: query: EXPLAIN INSERT INTO numericDataType(a) values(3Y)
+POSTHOOK: type: QUERY
+STAGE DEPENDENCIES:
+  Stage-1 is a root stage
+  Stage-2 depends on stages: Stage-1
+  Stage-0 depends on stages: Stage-2
+
+STAGE PLANS:
+  Stage: Stage-1
+    Tez
+#### A masked pattern was here ####
+      Vertices:
+        Map 1 
+            Map Operator Tree:
+                TableScan
+                  alias: _dummy_table
+                  Row Limit Per Split: 1
+                  Statistics: Num rows: 1 Data size: 10 Basic stats: COMPLETE Column stats: COMPLETE
+                  Select Operator
+                    expressions: array(const struct(3)) (type: array<struct<col1:int>>)
+                    outputColumnNames: _col0
+                    Statistics: Num rows: 1 Data size: 48 Basic stats: COMPLETE Column stats: COMPLETE
+                    UDTF Operator
+                      Statistics: Num rows: 1 Data size: 48 Basic stats: COMPLETE Column stats: COMPLETE
+                      function name: inline
+                      Select Operator
+                        expressions: UDFToByte(col1) (type: tinyint), 32767 (type: smallint), 2147483647 (type: int), 9223372036854775807 (type: bigint), 3.4E38 (type: double), 1234567.89 (type: decimal(9,2))
+                        outputColumnNames: _col0, _col1, _col2, _col3, _col4, _col5
+                        Statistics: Num rows: 1 Data size: 140 Basic stats: COMPLETE Column stats: COMPLETE
+                        File Output Operator
+                          compressed: false
+                          Statistics: Num rows: 1 Data size: 140 Basic stats: COMPLETE Column stats: COMPLETE
+                          table:
+                              input format: org.apache.hadoop.mapred.TextInputFormat
+                              output format: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+                              serde: org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe
+                              name: default.numericdatatype
+            Execution mode: llap
+            LLAP IO: no inputs
+
+  Stage: Stage-2
+    Dependency Collection
+
+  Stage: Stage-0
+    Move Operator
+      tables:
+          replace: false
+          table:
+              input format: org.apache.hadoop.mapred.TextInputFormat
+              output format: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+              serde: org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe
+              name: default.numericdatatype
+
+PREHOOK: query: INSERT INTO numericDataType(a) values(3Y)
+PREHOOK: type: QUERY
+PREHOOK: Input: _dummy_database@_dummy_table
+PREHOOK: Output: default@numericdatatype
+POSTHOOK: query: INSERT INTO numericDataType(a) values(3Y)
+POSTHOOK: type: QUERY
+POSTHOOK: Input: _dummy_database@_dummy_table
+POSTHOOK: Output: default@numericdatatype
+POSTHOOK: Lineage: numericdatatype.a SCRIPT []
+POSTHOOK: Lineage: numericdatatype.b SIMPLE []
+POSTHOOK: Lineage: numericdatatype.c SIMPLE []
+POSTHOOK: Lineage: numericdatatype.d SIMPLE []
+POSTHOOK: Lineage: numericdatatype.e SIMPLE []
+POSTHOOK: Lineage: numericdatatype.f SIMPLE []
+PREHOOK: query: SELECT * FROM numericDataType
+PREHOOK: type: QUERY
+PREHOOK: Input: default@numericdatatype
+#### A masked pattern was here ####
+POSTHOOK: query: SELECT * FROM numericDataType
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@numericdatatype
+#### A masked pattern was here ####
+3	32767	2147483647	9223372036854775807	3.4E38	1234567.89
+PREHOOK: query: EXPLAIN INSERT INTO numericDataType(e,f) values(4.5, 678.4)
+PREHOOK: type: QUERY
+POSTHOOK: query: EXPLAIN INSERT INTO numericDataType(e,f) values(4.5, 678.4)
+POSTHOOK: type: QUERY
+STAGE DEPENDENCIES:
+  Stage-1 is a root stage
+  Stage-2 depends on stages: Stage-1
+  Stage-0 depends on stages: Stage-2
+
+STAGE PLANS:
+  Stage: Stage-1
+    Tez
+#### A masked pattern was here ####
+      Vertices:
+        Map 1 
+            Map Operator Tree:
+                TableScan
+                  alias: _dummy_table
+                  Row Limit Per Split: 1
+                  Statistics: Num rows: 1 Data size: 10 Basic stats: COMPLETE Column stats: COMPLETE
+                  Select Operator
+                    expressions: array(const struct(4.5,678.4)) (type: array<struct<col1:decimal(2,1),col2:decimal(4,1)>>)
+                    outputColumnNames: _col0
+                    Statistics: Num rows: 1 Data size: 48 Basic stats: COMPLETE Column stats: COMPLETE
+                    UDTF Operator
+                      Statistics: Num rows: 1 Data size: 48 Basic stats: COMPLETE Column stats: COMPLETE
+                      function name: inline
+                      Select Operator
+                        expressions: 127 (type: tinyint), 32767 (type: smallint), 2147483647 (type: int), 9223372036854775807 (type: bigint), UDFToDouble(col1) (type: double), CAST( col2 AS decimal(9,2)) (type: decimal(9,2))
+                        outputColumnNames: _col0, _col1, _col2, _col3, _col4, _col5
+                        Statistics: Num rows: 1 Data size: 140 Basic stats: COMPLETE Column stats: COMPLETE
+                        File Output Operator
+                          compressed: false
+                          Statistics: Num rows: 1 Data size: 140 Basic stats: COMPLETE Column stats: COMPLETE
+                          table:
+                              input format: org.apache.hadoop.mapred.TextInputFormat
+                              output format: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+                              serde: org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe
+                              name: default.numericdatatype
+            Execution mode: llap
+            LLAP IO: no inputs
+
+  Stage: Stage-2
+    Dependency Collection
+
+  Stage: Stage-0
+    Move Operator
+      tables:
+          replace: false
+          table:
+              input format: org.apache.hadoop.mapred.TextInputFormat
+              output format: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+              serde: org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe
+              name: default.numericdatatype
+
+PREHOOK: query: INSERT INTO numericDataType(e,f) values(4.5, 678.4)
+PREHOOK: type: QUERY
+PREHOOK: Input: _dummy_database@_dummy_table
+PREHOOK: Output: default@numericdatatype
+POSTHOOK: query: INSERT INTO numericDataType(e,f) values(4.5, 678.4)
+POSTHOOK: type: QUERY
+POSTHOOK: Input: _dummy_database@_dummy_table
+POSTHOOK: Output: default@numericdatatype
+POSTHOOK: Lineage: numericdatatype.a SIMPLE []
+POSTHOOK: Lineage: numericdatatype.b SIMPLE []
+POSTHOOK: Lineage: numericdatatype.c SIMPLE []
+POSTHOOK: Lineage: numericdatatype.d SIMPLE []
+POSTHOOK: Lineage: numericdatatype.e SCRIPT []
+POSTHOOK: Lineage: numericdatatype.f SCRIPT []
+PREHOOK: query: SELECT * FROM numericDataType
+PREHOOK: type: QUERY
+PREHOOK: Input: default@numericdatatype
+#### A masked pattern was here ####
+POSTHOOK: query: SELECT * FROM numericDataType
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@numericdatatype
+#### A masked pattern was here ####
+3	32767	2147483647	9223372036854775807	3.4E38	1234567.89
+127	32767	2147483647	9223372036854775807	4.5	678.40
 PREHOOK: query: -- Date/time
 CREATE TABLE table1(d DATE DEFAULT DATE'2018-02-14', t TIMESTAMP DEFAULT "2016-02-22 12:45:07.000000000",
     d1 DATE DEFAULT current_date() ENABLE, t1 TIMESTAMP DEFAULT current_timestamp() DISABLE)
@@ -102,11 +252,6 @@ Retention:          	0
 #### A masked pattern was here ####
 Table Type:         	MANAGED_TABLE       	 
 Table Parameters:	 	 
-	COLUMN_STATS_ACCURATE	{\"BASIC_STATS\":\"true\",\"COLUMN_STATS\":{\"d\":\"true\",\"d1\":\"true\",\"t\":\"true\",\"t1\":\"true\"}}
-	numFiles            	0                   
-	numRows             	0                   
-	rawDataSize         	0                   
-	totalSize           	0                   
 #### A masked pattern was here ####
 	 	 
 # Storage Information	 	 
@@ -136,6 +281,159 @@ Column Name:t       	Default Value:"2016-02-22 12:45:07.000000000"
 Constraint Name:    	#### A masked pattern was here ####	 
 Column Name:t1      	Default Value:current_timestamp()	 
 	 	 
+PREHOOK: query: EXPLAIN INSERT INTO table1(t) values ("1985-12-31 12:45:07")
+PREHOOK: type: QUERY
+POSTHOOK: query: EXPLAIN INSERT INTO table1(t) values ("1985-12-31 12:45:07")
+POSTHOOK: type: QUERY
+STAGE DEPENDENCIES:
+  Stage-1 is a root stage
+  Stage-2 depends on stages: Stage-1
+  Stage-0 depends on stages: Stage-2
+
+STAGE PLANS:
+  Stage: Stage-1
+    Tez
+#### A masked pattern was here ####
+      Vertices:
+        Map 1 
+            Map Operator Tree:
+                TableScan
+                  alias: _dummy_table
+                  Row Limit Per Split: 1
+                  Statistics: Num rows: 1 Data size: 10 Basic stats: COMPLETE Column stats: COMPLETE
+                  Select Operator
+                    expressions: array(const struct('1985-12-31 12:45:07')) (type: array<struct<col1:string>>)
+                    outputColumnNames: _col0
+                    Statistics: Num rows: 1 Data size: 48 Basic stats: COMPLETE Column stats: COMPLETE
+                    UDTF Operator
+                      Statistics: Num rows: 1 Data size: 48 Basic stats: COMPLETE Column stats: COMPLETE
+                      function name: inline
+                      Select Operator
+                        expressions: 2018-02-14 (type: date), CAST( col1 AS TIMESTAMP) (type: timestamp), CURRENT_DATE() (type: date), null (type: timestamp)
+                        outputColumnNames: _col0, _col1, _col2, _col3
+                        Statistics: Num rows: 1 Data size: 192 Basic stats: COMPLETE Column stats: COMPLETE
+                        File Output Operator
+                          compressed: false
+                          Statistics: Num rows: 1 Data size: 192 Basic stats: COMPLETE Column stats: COMPLETE
+                          table:
+                              input format: org.apache.hadoop.mapred.TextInputFormat
+                              output format: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+                              serde: org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe
+                              name: default.table1
+            Execution mode: llap
+            LLAP IO: no inputs
+
+  Stage: Stage-2
+    Dependency Collection
+
+  Stage: Stage-0
+    Move Operator
+      tables:
+          replace: false
+          table:
+              input format: org.apache.hadoop.mapred.TextInputFormat
+              output format: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+              serde: org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe
+              name: default.table1
+
+PREHOOK: query: INSERT INTO table1(t) values ("1985-12-31 12:45:07")
+PREHOOK: type: QUERY
+PREHOOK: Input: _dummy_database@_dummy_table
+PREHOOK: Output: default@table1
+POSTHOOK: query: INSERT INTO table1(t) values ("1985-12-31 12:45:07")
+POSTHOOK: type: QUERY
+POSTHOOK: Input: _dummy_database@_dummy_table
+POSTHOOK: Output: default@table1
+POSTHOOK: Lineage: table1.d EXPRESSION []
+POSTHOOK: Lineage: table1.d1 EXPRESSION []
+POSTHOOK: Lineage: table1.t SCRIPT []
+POSTHOOK: Lineage: table1.t1 SIMPLE []
+PREHOOK: query: SELECT d, t, d1=current_date(), t1 from table1
+PREHOOK: type: QUERY
+PREHOOK: Input: default@table1
+#### A masked pattern was here ####
+POSTHOOK: query: SELECT d, t, d1=current_date(), t1 from table1
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@table1
+#### A masked pattern was here ####
+2018-02-14	1985-12-31 12:45:07	true	NULL
+PREHOOK: query: EXPLAIN INSERT INTO table1(d, t1) values ("1985-12-31", current_timestamp())
+PREHOOK: type: QUERY
+POSTHOOK: query: EXPLAIN INSERT INTO table1(d, t1) values ("1985-12-31", current_timestamp())
+POSTHOOK: type: QUERY
+STAGE DEPENDENCIES:
+  Stage-1 is a root stage
+  Stage-2 depends on stages: Stage-1
+  Stage-0 depends on stages: Stage-2
+
+STAGE PLANS:
+  Stage: Stage-1
+    Tez
+#### A masked pattern was here ####
+      Vertices:
+        Map 1 
+            Map Operator Tree:
+                TableScan
+                  alias: _dummy_table
+                  Row Limit Per Split: 1
+                  Statistics: Num rows: 1 Data size: 10 Basic stats: COMPLETE Column stats: COMPLETE
+                  Select Operator
+                    expressions: array(const struct('1985-12-31',2018-02-18 22:30:32.903)) (type: array<struct<col1:string,col2:timestamp>>)
+                    outputColumnNames: _col0
+                    Statistics: Num rows: 1 Data size: 48 Basic stats: COMPLETE Column stats: COMPLETE
+                    UDTF Operator
+                      Statistics: Num rows: 1 Data size: 48 Basic stats: COMPLETE Column stats: COMPLETE
+                      function name: inline
+                      Select Operator
+                        expressions: CAST( col1 AS DATE) (type: date), 2016-02-22 12:45:07.0 (type: timestamp), CURRENT_DATE() (type: date), col2 (type: timestamp)
+                        outputColumnNames: _col0, _col1, _col2, _col3
+                        Statistics: Num rows: 1 Data size: 152 Basic stats: COMPLETE Column stats: COMPLETE
+                        File Output Operator
+                          compressed: false
+                          Statistics: Num rows: 1 Data size: 152 Basic stats: COMPLETE Column stats: COMPLETE
+                          table:
+                              input format: org.apache.hadoop.mapred.TextInputFormat
+                              output format: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+                              serde: org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe
+                              name: default.table1
+            Execution mode: llap
+            LLAP IO: no inputs
+
+  Stage: Stage-2
+    Dependency Collection
+
+  Stage: Stage-0
+    Move Operator
+      tables:
+          replace: false
+          table:
+              input format: org.apache.hadoop.mapred.TextInputFormat
+              output format: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+              serde: org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe
+              name: default.table1
+
+PREHOOK: query: INSERT INTO table1(d, t1) values ("1985-12-31", current_timestamp())
+PREHOOK: type: QUERY
+PREHOOK: Input: _dummy_database@_dummy_table
+PREHOOK: Output: default@table1
+POSTHOOK: query: INSERT INTO table1(d, t1) values ("1985-12-31", current_timestamp())
+POSTHOOK: type: QUERY
+POSTHOOK: Input: _dummy_database@_dummy_table
+POSTHOOK: Output: default@table1
+POSTHOOK: Lineage: table1.d SCRIPT []
+POSTHOOK: Lineage: table1.d1 EXPRESSION []
+POSTHOOK: Lineage: table1.t EXPRESSION []
+POSTHOOK: Lineage: table1.t1 SCRIPT []
+PREHOOK: query: SELECT d, t, d1=current_date(), t1=current_timestamp() from table1
+PREHOOK: type: QUERY
+PREHOOK: Input: default@table1
+#### A masked pattern was here ####
+POSTHOOK: query: SELECT d, t, d1=current_date(), t1=current_timestamp() from table1
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@table1
+#### A masked pattern was here ####
+2018-02-14	1985-12-31 12:45:07	true	NULL
+1985-12-31	2016-02-22 12:45:07	true	false
 PREHOOK: query: CREATE TABLE table2(i STRING DEFAULT current_database(), j STRING DEFAULT current_user(),
     k STRING DEFAULT 'current_user()', v varchar(350) DEFAULT 'varchar_default_value', c char(20) DEFAULT 'char_value')
 PREHOOK: type: CREATETABLE
@@ -166,11 +464,6 @@ Retention:          	0
 #### A masked pattern was here ####
 Table Type:         	MANAGED_TABLE       	 
 Table Parameters:	 	 
-	COLUMN_STATS_ACCURATE	{\"BASIC_STATS\":\"true\",\"COLUMN_STATS\":{\"c\":\"true\",\"i\":\"true\",\"j\":\"true\",\"k\":\"true\",\"v\":\"true\"}}
-	numFiles            	0                   
-	numRows             	0                   
-	rawDataSize         	0                   
-	totalSize           	0                   
 #### A masked pattern was here ####
 	 	 
 # Storage Information	 	 
@@ -228,11 +521,6 @@ Retention:          	0
 #### A masked pattern was here ####
 Table Type:         	MANAGED_TABLE       	 
 Table Parameters:	 	 
-	COLUMN_STATS_ACCURATE	{\"BASIC_STATS\":\"true\",\"COLUMN_STATS\":{\"b\":\"true\",\"b1\":\"true\"}}
-	numFiles            	0                   
-	numRows             	0                   
-	rawDataSize         	0                   
-	totalSize           	0                   
 #### A masked pattern was here ####
 	 	 
 # Storage Information	 	 
@@ -272,7 +560,7 @@ b                   	smallint
 c                   	int                 	                    
 d                   	bigint              	                    
 e                   	double              	                    
-f                   	decimal(9,7)        	                    
+f                   	decimal(9,2)        	                    
 	 	 
 # Detailed Table Information	 	 
 Database:           	default             	 
@@ -281,11 +569,8 @@ Retention:          	0
 #### A masked pattern was here ####
 Table Type:         	MANAGED_TABLE       	 
 Table Parameters:	 	 
-	COLUMN_STATS_ACCURATE	{\"BASIC_STATS\":\"true\",\"COLUMN_STATS\":{\"a\":\"true\",\"b\":\"true\",\"c\":\"true\",\"d\":\"true\",\"e\":\"true\",\"f\":\"true\"}}
-	numFiles            	0                   
-	numRows             	0                   
-	rawDataSize         	0                   
-	totalSize           	0                   
+	numFiles            	2                   
+	totalSize           	109                 
 #### A masked pattern was here ####
 	 	 
 # Storage Information	 	 
@@ -334,7 +619,7 @@ b                   	smallint
 c                   	int                 	                    
 d                   	bigint              	                    
 e                   	double              	                    
-f                   	decimal(9,7)        	                    
+f                   	decimal(9,2)        	                    
 	 	 
 # Detailed Table Information	 	 
 Database:           	default             	 
@@ -343,11 +628,8 @@ Retention:          	0
 #### A masked pattern was here ####
 Table Type:         	MANAGED_TABLE       	 
 Table Parameters:	 	 
-	COLUMN_STATS_ACCURATE	{\"BASIC_STATS\":\"true\",\"COLUMN_STATS\":{\"a\":\"true\",\"b\":\"true\",\"c\":\"true\",\"d\":\"true\",\"e\":\"true\",\"f\":\"true\"}}
-	numFiles            	0                   
-	numRows             	0                   
-	rawDataSize         	0                   
-	totalSize           	0                   
+	numFiles            	2                   
+	totalSize           	109                 
 #### A masked pattern was here ####
 	 	 
 # Storage Information	 	 
@@ -407,7 +689,7 @@ b                   	smallint
 c                   	int                 	                    
 d                   	bigint              	                    
 e                   	double              	                    
-f                   	decimal(9,7)        	                    
+f                   	decimal(9,2)        	                    
 	 	 
 # Detailed Table Information	 	 
 Database:           	default             	 
@@ -416,12 +698,9 @@ Retention:          	0
 #### A masked pattern was here ####
 Table Type:         	MANAGED_TABLE       	 
 Table Parameters:	 	 
-	COLUMN_STATS_ACCURATE	{\"BASIC_STATS\":\"true\",\"COLUMN_STATS\":{\"a\":\"true\",\"b\":\"true\",\"c\":\"true\",\"d\":\"true\",\"e\":\"true\",\"f\":\"true\"}}
 #### A masked pattern was here ####
-	numFiles            	0                   
-	numRows             	0                   
-	rawDataSize         	0                   
-	totalSize           	0                   
+	numFiles            	2                   
+	totalSize           	109                 
 #### A masked pattern was here ####
 	 	 
 # Storage Information	 	 
@@ -489,12 +768,6 @@ Retention:          	0
 #### A masked pattern was here ####
 Table Type:         	MANAGED_TABLE       	 
 Table Parameters:	 	 
-	COLUMN_STATS_ACCURATE	{\"BASIC_STATS\":\"true\",\"COLUMN_STATS\":{\"b\":\"true\",\"b1\":\"true\"}}
-#### A masked pattern was here ####
-	numFiles            	0                   
-	numRows             	0                   
-	rawDataSize         	0                   
-	totalSize           	0                   
 #### A masked pattern was here ####
 	 	 
 # Storage Information	 	 

@@ -128,6 +128,7 @@ import org.apache.hadoop.hive.ql.lib.Dispatcher;
 import org.apache.hadoop.hive.ql.lib.GraphWalker;
 import org.apache.hadoop.hive.ql.lib.Node;
 import org.apache.hadoop.hive.ql.lockmgr.DbTxnManager;
+import org.apache.hadoop.hive.ql.metadata.DefaultConstraint;
 import org.apache.hadoop.hive.ql.metadata.DummyPartition;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
@@ -4340,6 +4341,70 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     return output;
   }
 
+  private RowResolver getColForInsertStmtSpec(Map<String, ExprNodeDesc> targetCol2Projection, final Table target,
+                                              Map<String, ColumnInfo> targetCol2ColumnInfo, int colListPos,
+                                              List<TypeInfo> targetTableColTypes, ArrayList<ExprNodeDesc> new_col_list,
+                                              List<String> targetTableColNames)
+      throws SemanticException {
+    RowResolver newOutputRR = new RowResolver();
+    Map<String, String> colNameToDefaultVal = null;
+
+    // see if we need to fetch default constraints from metastore
+    if(targetCol2Projection.size() < targetTableColNames.size()) {
+      try {
+          DefaultConstraint dc = Hive.get().getEnabledDefaultConstraints(target.getDbName(), target.getTableName());
+          colNameToDefaultVal = dc.getColNameToDefaultValueMap();
+      } catch (Exception e) {
+        if (e instanceof SemanticException) {
+          throw (SemanticException) e;
+        } else {
+          throw (new RuntimeException(e));
+        }
+      }
+
+    }
+    boolean defaultConstraintsFetch = true;
+    for (int i = 0; i < targetTableColNames.size(); i++) {
+      String f = targetTableColNames.get(i);
+      if(targetCol2Projection.containsKey(f)) {
+        //put existing column in new list to make sure it is in the right position
+        new_col_list.add(targetCol2Projection.get(f));
+        ColumnInfo ci = targetCol2ColumnInfo.get(f);
+        ci.setInternalName(getColumnInternalName(colListPos));
+        newOutputRR.put(ci.getTabAlias(), ci.getInternalName(), ci);
+      }
+      else {
+        //add new 'synthetic' columns for projections not provided by Select
+        assert(colNameToDefaultVal != null);
+        ExprNodeDesc exp = null;
+        if(colNameToDefaultVal.containsKey(f)) {
+          // make an expression for default value
+          String defaultValue = colNameToDefaultVal.get(f);
+          ParseDriver parseDriver = new ParseDriver();
+          try {
+            ASTNode defValAst = parseDriver.parseExpression(defaultValue);
+
+            exp = TypeCheckProcFactory.genExprNode(defValAst, new TypeCheckCtx(null)).get(defValAst);
+            //exp = new ExprNodeConstantDesc(targetTableColTypes.get(i), defaultValue);
+          } catch(Exception e) {
+            throw new SemanticException("Error while parsing default value: " + defaultValue
+              + ". Error message: " + e.getMessage());
+          }
+        }
+        else {
+          exp = new ExprNodeConstantDesc(targetTableColTypes.get(i), null);
+        }
+        new_col_list.add(exp);
+        final String tableAlias = null;//this column doesn't come from any table
+        ColumnInfo colInfo = new ColumnInfo(getColumnInternalName(colListPos),
+                                            exp.getWritableObjectInspector(), tableAlias, false);
+        newOutputRR.put(colInfo.getTabAlias(), colInfo.getInternalName(), colInfo);
+      }
+      colListPos++;
+    }
+    return newOutputRR;
+  }
+
   /**
    * This modifies the Select projections when the Select is part of an insert statement and
    * the insert statement specifies a column list for the target table, e.g.
@@ -4408,29 +4473,11 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
         }
       }
     }
-    RowResolver newOutputRR = new RowResolver();
+
     //now make the select produce <regular columns>,<dynamic partition columns> with
     //where missing columns are NULL-filled
-    for (int i = 0; i < targetTableColNames.size(); i++) {
-      String f = targetTableColNames.get(i);
-      if(targetCol2Projection.containsKey(f)) {
-        //put existing column in new list to make sure it is in the right position
-        new_col_list.add(targetCol2Projection.get(f));
-        ColumnInfo ci = targetCol2ColumnInfo.get(f);//todo: is this OK?
-        ci.setInternalName(getColumnInternalName(colListPos));
-        newOutputRR.put(ci.getTabAlias(), ci.getInternalName(), ci);
-      }
-      else {
-        //add new 'synthetic' columns for projections not provided by Select
-        ExprNodeDesc exp = new ExprNodeConstantDesc(targetTableColTypes.get(i), null);
-        new_col_list.add(exp);
-        final String tableAlias = null;//this column doesn't come from any table
-        ColumnInfo colInfo = new ColumnInfo(getColumnInternalName(colListPos),
-            exp.getWritableObjectInspector(), tableAlias, false);
-        newOutputRR.put(colInfo.getTabAlias(), colInfo.getInternalName(), colInfo);
-      }
-      colListPos++;
-    }
+    RowResolver newOutputRR =  getColForInsertStmtSpec(targetCol2Projection, target, targetCol2ColumnInfo, colListPos,
+                                                       targetTableColTypes, new_col_list, targetTableColNames);
     col_list.clear();
     col_list.addAll(new_col_list);
     return newOutputRR;

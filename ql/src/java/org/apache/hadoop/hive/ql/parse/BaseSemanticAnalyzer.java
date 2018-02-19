@@ -31,6 +31,7 @@ import org.apache.hadoop.hive.metastore.utils.MetaStoreUtils;
 import org.apache.hadoop.hive.ql.*;
 import org.apache.hadoop.hive.ql.cache.results.CacheUsage;
 import org.apache.hadoop.hive.ql.exec.FetchTask;
+import org.apache.hadoop.hive.ql.exec.FunctionRegistry;
 import org.apache.hadoop.hive.ql.exec.Task;
 import org.apache.hadoop.hive.ql.exec.TaskFactory;
 import org.apache.hadoop.hive.ql.exec.Utilities;
@@ -659,7 +660,7 @@ public abstract class BaseSemanticAnalyzer {
       ASTNode child, List<String> columnNames, List<SQLPrimaryKey> primaryKeys)
           throws SemanticException {
     List<ConstraintInfo> primaryKeyInfos = new ArrayList<ConstraintInfo>();
-    generateConstraintInfos(child, columnNames, primaryKeyInfos);
+    generateConstraintInfos(child, columnNames, primaryKeyInfos, null);
     constraintInfosToPrimaryKeys(databaseName, tableName, primaryKeyInfos, primaryKeys);
   }
 
@@ -687,7 +688,7 @@ public abstract class BaseSemanticAnalyzer {
       ASTNode child, List<String> columnNames, List<SQLUniqueConstraint> uniqueConstraints)
           throws SemanticException {
     List<ConstraintInfo> uniqueInfos = new ArrayList<ConstraintInfo>();
-    generateConstraintInfos(child, columnNames, uniqueInfos);
+    generateConstraintInfos(child, columnNames, uniqueInfos, null);
     constraintInfosToUniqueConstraints(databaseName, tableName, uniqueInfos, uniqueConstraints);
   }
 
@@ -701,10 +702,10 @@ public abstract class BaseSemanticAnalyzer {
   }
 
   protected static void processDefaultConstraints(String databaseName, String tableName,
-      ASTNode child, List<String> columnNames, List<SQLDefaultConstraint> defaultConstraints)
+      ASTNode child, List<String> columnNames, List<SQLDefaultConstraint> defaultConstraints, final ASTNode typeChild)
       throws SemanticException {
     List<ConstraintInfo> defaultInfos = new ArrayList<ConstraintInfo>();
-    generateConstraintInfos(child, columnNames, defaultInfos);
+    generateConstraintInfos(child, columnNames, defaultInfos, typeChild);
     constraintInfosToDefaultConstraints(databaseName, tableName, defaultInfos, defaultConstraints);
   }
 
@@ -721,7 +722,7 @@ public abstract class BaseSemanticAnalyzer {
       ASTNode child, List<String> columnNames, List<SQLNotNullConstraint> notNullConstraints)
           throws SemanticException {
     List<ConstraintInfo> notNullInfos = new ArrayList<ConstraintInfo>();
-    generateConstraintInfos(child, columnNames, notNullInfos);
+    generateConstraintInfos(child, columnNames, notNullInfos, null);
     constraintInfosToNotNullConstraints(databaseName, tableName, notNullInfos, notNullConstraints);
   }
 
@@ -748,7 +749,7 @@ public abstract class BaseSemanticAnalyzer {
       checkColumnName(columnName.getText());
       columnNames.add(unescapeIdentifier(columnName.getText().toLowerCase()));
     }
-    generateConstraintInfos(child, columnNames.build(), cstrInfos);
+    generateConstraintInfos(child, columnNames.build(), cstrInfos, null);
   }
 
   /**
@@ -757,10 +758,12 @@ public abstract class BaseSemanticAnalyzer {
    * @return retrieve the default value and return it as string
    * @throws SemanticException
    */
-  private static String getDefaultValue(ASTNode defaultValueAST) throws SemanticException{
+  private static String getDefaultValue(ASTNode defaultValueAST, ASTNode typeChild) throws SemanticException{
     TypeCheckCtx typeCheckCtx = new TypeCheckCtx(null);
     ExprNodeDesc defaultValExpr = TypeCheckProcFactory
         .genExprNode(defaultValueAST, typeCheckCtx).get(defaultValueAST);
+
+
 
     // default value, Make sure that this is a function or literal only
     boolean isDefValueAllowed = false;
@@ -787,6 +790,22 @@ public abstract class BaseSemanticAnalyzer {
           ErrorMsg.INVALID_CSTR_SYNTAX.getMsg("Invalid Default value: " + defaultValue
                                               + ". DEFAULT only allows constant or function expressions"));
     }
+    TypeInfo defaultValTypeInfo = defaultValExpr.getTypeInfo();
+    TypeInfo colTypeInfo = TypeInfoUtils.getTypeInfoFromTypeString(getTypeStringFromAST(typeChild));
+    TypeInfo commonType = FunctionRegistry.getCommonClass(defaultValTypeInfo, colTypeInfo);
+    /*if(!ColumnType.areColTypesCompatible(getTypeStringFromAST(typeChild), defaultValExpr.getTypeString())) {
+    //if(!commonType.equals(colTypeInfo) ) {
+      // since we are only checking if common type is null, that means there is no way to cast/promote one type
+      //  to another. Otherwise there is a way to cast/promote even though it could lead to truncation/loss of value
+      // e.g. if col type is char(2) but default value type is lets say '123' we would allow this since string and
+      // char(2) are compatible although promoting string here to char(2) will result in truncation during execution.
+      //type are incompatible
+      throw new SemanticException(
+          ErrorMsg.INVALID_CSTR_SYNTAX.getMsg("Invalid type for default value: " + defaultValTypeInfo.getTypeName()
+                                                  + ". Please make sure that the type is compatible with column type: "
+          + colTypeInfo.getTypeName()));
+
+    } */
     return defaultValue;
   }
 
@@ -797,10 +816,11 @@ public abstract class BaseSemanticAnalyzer {
    * @param child  The node with the constraint token
    * @param columnNames The name of the columns for the primary key
    * @param cstrInfos Constraint information
+   * @param typeChildForDefault type of column used for default value type check
    * @throws SemanticException
    */
   private static void generateConstraintInfos(ASTNode child, List<String> columnNames,
-      List<ConstraintInfo> cstrInfos) throws SemanticException {
+      List<ConstraintInfo> cstrInfos, ASTNode typeChildForDefault) throws SemanticException {
     // The ANTLR grammar looks like :
     // 1. KW_CONSTRAINT idfr=identifier KW_PRIMARY KW_KEY pkCols=columnParenthesesList
     //  constraintOptsCreate?
@@ -843,7 +863,7 @@ public abstract class BaseSemanticAnalyzer {
         rely = false;
       } else if( child.getToken().getType() == HiveParser.TOK_DEFAULT_VALUE){
         // try to get default value only if this is DEFAULT constraint
-        defaultValue = getDefaultValue(grandChild);
+        defaultValue = getDefaultValue(grandChild, typeChildForDefault);
       }
     }
 
@@ -868,7 +888,6 @@ public abstract class BaseSemanticAnalyzer {
 
   /**
    * Process the foreign keys from the AST and populate the foreign keys in the SQLForeignKey list
-   * @param parent  Parent of the foreign key token node
    * @param child Foreign Key token node
    * @param foreignKeys SQLForeignKey list
    * @throws SemanticException
@@ -1037,7 +1056,7 @@ public abstract class BaseSemanticAnalyzer {
               switch (constraintChild.getToken().getType()) {
               case HiveParser.TOK_DEFAULT_VALUE:
                 processDefaultConstraints(qualifiedTabName[0], qualifiedTabName[1], constraintChild,
-                    ImmutableList.of(col.getName()), defaultConstraints);
+                    ImmutableList.of(col.getName()), defaultConstraints, typeChild);
                 break;
                 case HiveParser.TOK_NOT_NULL:
                   processNotNullConstraints(qualifiedTabName[0], qualifiedTabName[1], constraintChild,

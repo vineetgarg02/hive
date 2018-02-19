@@ -46,6 +46,9 @@ public class DefaultConstraint implements Serializable {
 
   // Mapping from constraint name to list of default constraints
   Map<String, List<DefaultConstraintCol>> defaultConstraints;
+
+  // Mapping from column name to default value
+  Map<String, String> colNameToDefaultValueMap;
   String tableName;
   String databaseName;
 
@@ -55,14 +58,18 @@ public class DefaultConstraint implements Serializable {
     this.tableName = tableName;
     this.databaseName = databaseName;
     defaultConstraints = new TreeMap<String, List<DefaultConstraintCol>>();
+    colNameToDefaultValueMap = new TreeMap<String, String>();
     if (defaultConstraintList == null) {
       return;
     }
     for (SQLDefaultConstraint uk : defaultConstraintList) {
       if (uk.getTable_db().equalsIgnoreCase(databaseName) &&
           uk.getTable_name().equalsIgnoreCase(tableName)) {
+        String colName = uk.getColumn_name();
+        String defVal = uk.getDefault_value();
+        colNameToDefaultValueMap.put(colName, defVal);
         DefaultConstraintCol currCol = new DefaultConstraintCol(
-                uk.getColumn_name(), uk.getDefault_value());
+                colName, defVal);
         String constraintName = uk.getDc_name();
         if (defaultConstraints.containsKey(constraintName)) {
           defaultConstraints.get(constraintName).add(currCol);
@@ -85,6 +92,9 @@ public class DefaultConstraint implements Serializable {
 
   public Map<String, List<DefaultConstraintCol>> getDefaultConstraints() {
     return defaultConstraints;
+  }
+  public Map<String, String> getColNameToDefaultValueMap() {
+    return colNameToDefaultValueMap;
   }
 
   @Override

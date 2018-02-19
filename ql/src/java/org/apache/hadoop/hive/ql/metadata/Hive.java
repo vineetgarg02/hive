@@ -4614,6 +4614,30 @@ private void constructOneLBLocationMap(FileStatus fSta,
     }
   }
 
+  /**
+   * Get Default constraints associated with the table that are enabled
+   *
+   * @param dbName Database Name
+   * @param tblName Table Name
+   * @return Default constraints associated with the table.
+   * @throws HiveException
+   */
+  public DefaultConstraint getEnabledDefaultConstraints(String dbName, String tblName)
+      throws HiveException {
+    try {
+      List<SQLDefaultConstraint> defaultConstraints = getMSC().getDefaultConstraints(
+          new DefaultConstraintsRequest(dbName, tblName));
+      if (defaultConstraints != null && !defaultConstraints.isEmpty()) {
+        defaultConstraints = defaultConstraints.stream()
+            .filter(nnc -> nnc.isEnable_cstr())
+            .collect(Collectors.toList());
+      }
+      return new DefaultConstraint(defaultConstraints, tblName, dbName);
+    } catch (Exception e) {
+      throw new HiveException(e);
+    }
+  }
+
   private NotNullConstraint getNotNullConstraints(String dbName, String tblName, boolean onlyReliable)
       throws HiveException {
     try {

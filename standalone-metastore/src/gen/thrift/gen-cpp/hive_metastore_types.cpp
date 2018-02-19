@@ -21734,12 +21734,13 @@ Materialization::~Materialization() throw() {
 }
 
 
-void Materialization::__set_materializationTable(const Table& val) {
-  this->materializationTable = val;
-}
-
 void Materialization::__set_tablesUsed(const std::set<std::string> & val) {
   this->tablesUsed = val;
+}
+
+void Materialization::__set_validTxnList(const std::string& val) {
+  this->validTxnList = val;
+__isset.validTxnList = true;
 }
 
 void Materialization::__set_invalidationTime(const int64_t val) {
@@ -21758,7 +21759,6 @@ uint32_t Materialization::read(::apache::thrift::protocol::TProtocol* iprot) {
 
   using ::apache::thrift::protocol::TProtocolException;
 
-  bool isset_materializationTable = false;
   bool isset_tablesUsed = false;
   bool isset_invalidationTime = false;
 
@@ -21771,14 +21771,6 @@ uint32_t Materialization::read(::apache::thrift::protocol::TProtocol* iprot) {
     switch (fid)
     {
       case 1:
-        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
-          xfer += this->materializationTable.read(iprot);
-          isset_materializationTable = true;
-        } else {
-          xfer += iprot->skip(ftype);
-        }
-        break;
-      case 2:
         if (ftype == ::apache::thrift::protocol::T_SET) {
           {
             this->tablesUsed.clear();
@@ -21795,6 +21787,14 @@ uint32_t Materialization::read(::apache::thrift::protocol::TProtocol* iprot) {
             xfer += iprot->readSetEnd();
           }
           isset_tablesUsed = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 2:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->validTxnList);
+          this->__isset.validTxnList = true;
         } else {
           xfer += iprot->skip(ftype);
         }
@@ -21816,8 +21816,6 @@ uint32_t Materialization::read(::apache::thrift::protocol::TProtocol* iprot) {
 
   xfer += iprot->readStructEnd();
 
-  if (!isset_materializationTable)
-    throw TProtocolException(TProtocolException::INVALID_DATA);
   if (!isset_tablesUsed)
     throw TProtocolException(TProtocolException::INVALID_DATA);
   if (!isset_invalidationTime)
@@ -21830,11 +21828,7 @@ uint32_t Materialization::write(::apache::thrift::protocol::TProtocol* oprot) co
   apache::thrift::protocol::TOutputRecursionTracker tracker(*oprot);
   xfer += oprot->writeStructBegin("Materialization");
 
-  xfer += oprot->writeFieldBegin("materializationTable", ::apache::thrift::protocol::T_STRUCT, 1);
-  xfer += this->materializationTable.write(oprot);
-  xfer += oprot->writeFieldEnd();
-
-  xfer += oprot->writeFieldBegin("tablesUsed", ::apache::thrift::protocol::T_SET, 2);
+  xfer += oprot->writeFieldBegin("tablesUsed", ::apache::thrift::protocol::T_SET, 1);
   {
     xfer += oprot->writeSetBegin(::apache::thrift::protocol::T_STRING, static_cast<uint32_t>(this->tablesUsed.size()));
     std::set<std::string> ::const_iterator _iter900;
@@ -21846,6 +21840,11 @@ uint32_t Materialization::write(::apache::thrift::protocol::TProtocol* oprot) co
   }
   xfer += oprot->writeFieldEnd();
 
+  if (this->__isset.validTxnList) {
+    xfer += oprot->writeFieldBegin("validTxnList", ::apache::thrift::protocol::T_STRING, 2);
+    xfer += oprot->writeString(this->validTxnList);
+    xfer += oprot->writeFieldEnd();
+  }
   xfer += oprot->writeFieldBegin("invalidationTime", ::apache::thrift::protocol::T_I64, 3);
   xfer += oprot->writeI64(this->invalidationTime);
   xfer += oprot->writeFieldEnd();
@@ -21857,27 +21856,30 @@ uint32_t Materialization::write(::apache::thrift::protocol::TProtocol* oprot) co
 
 void swap(Materialization &a, Materialization &b) {
   using ::std::swap;
-  swap(a.materializationTable, b.materializationTable);
   swap(a.tablesUsed, b.tablesUsed);
+  swap(a.validTxnList, b.validTxnList);
   swap(a.invalidationTime, b.invalidationTime);
+  swap(a.__isset, b.__isset);
 }
 
-Materialization::Materialization(const Materialization& other901) {
-  materializationTable = other901.materializationTable;
-  tablesUsed = other901.tablesUsed;
-  invalidationTime = other901.invalidationTime;
+Materialization::Materialization(const Materialization& other881) {
+  tablesUsed = other881.tablesUsed;
+  validTxnList = other881.validTxnList;
+  invalidationTime = other881.invalidationTime;
+  __isset = other881.__isset;
 }
-Materialization& Materialization::operator=(const Materialization& other902) {
-  materializationTable = other902.materializationTable;
-  tablesUsed = other902.tablesUsed;
-  invalidationTime = other902.invalidationTime;
+Materialization& Materialization::operator=(const Materialization& other882) {
+  tablesUsed = other882.tablesUsed;
+  validTxnList = other882.validTxnList;
+  invalidationTime = other882.invalidationTime;
+  __isset = other882.__isset;
   return *this;
 }
 void Materialization::printTo(std::ostream& out) const {
   using ::apache::thrift::to_string;
   out << "Materialization(";
-  out << "materializationTable=" << to_string(materializationTable);
-  out << ", " << "tablesUsed=" << to_string(tablesUsed);
+  out << "tablesUsed=" << to_string(tablesUsed);
+  out << ", " << "validTxnList="; (__isset.validTxnList ? (out << to_string(validTxnList)) : (out << "<null>"));
   out << ", " << "invalidationTime=" << to_string(invalidationTime);
   out << ")";
 }

@@ -378,7 +378,7 @@ STAGE PLANS:
                   Row Limit Per Split: 1
                   Statistics: Num rows: 1 Data size: 10 Basic stats: COMPLETE Column stats: COMPLETE
                   Select Operator
-                    expressions: array(const struct('1985-12-31',2018-02-18 22:30:32.903)) (type: array<struct<col1:string,col2:timestamp>>)
+                    expressions: array(const struct('1985-12-31',2018-02-18 22:58:52.696)) (type: array<struct<col1:string,col2:timestamp>>)
                     outputColumnNames: _col0
                     Statistics: Num rows: 1 Data size: 48 Basic stats: COMPLETE Column stats: COMPLETE
                     UDTF Operator

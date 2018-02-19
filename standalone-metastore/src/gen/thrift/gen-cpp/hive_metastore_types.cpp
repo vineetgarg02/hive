@@ -21862,17 +21862,17 @@ void swap(Materialization &a, Materialization &b) {
   swap(a.__isset, b.__isset);
 }
 
-Materialization::Materialization(const Materialization& other881) {
-  tablesUsed = other881.tablesUsed;
-  validTxnList = other881.validTxnList;
-  invalidationTime = other881.invalidationTime;
-  __isset = other881.__isset;
+Materialization::Materialization(const Materialization& other901) {
+  tablesUsed = other901.tablesUsed;
+  validTxnList = other901.validTxnList;
+  invalidationTime = other901.invalidationTime;
+  __isset = other901.__isset;
 }
-Materialization& Materialization::operator=(const Materialization& other882) {
-  tablesUsed = other882.tablesUsed;
-  validTxnList = other882.validTxnList;
-  invalidationTime = other882.invalidationTime;
-  __isset = other882.__isset;
+Materialization& Materialization::operator=(const Materialization& other902) {
+  tablesUsed = other902.tablesUsed;
+  validTxnList = other902.validTxnList;
+  invalidationTime = other902.invalidationTime;
+  __isset = other902.__isset;
   return *this;
 }
 void Materialization::printTo(std::ostream& out) const {

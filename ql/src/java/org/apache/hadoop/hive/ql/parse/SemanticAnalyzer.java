@@ -4488,7 +4488,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
 
     //now make the select produce <regular columns>,<dynamic partition columns> with
     //where missing columns are NULL-filled
-    RowResolver newOutputRR =  getColForInsertStmtSpec(targetCol2Projection, target, targetCol2ColumnInfo, colListPos,
+    Table tbl = target == null? partition.getTable() : target;
+    RowResolver newOutputRR =  getColForInsertStmtSpec(targetCol2Projection, tbl, targetCol2ColumnInfo, colListPos,
                                                        targetTableColTypes, new_col_list, targetTableColNames);
     col_list.clear();
     col_list.addAll(new_col_list);

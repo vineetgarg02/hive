@@ -2409,6 +2409,7 @@ columnConstraintType
 defaultVal
     : constant
     | function
+    | castExpression
     ;
 
 tableConstraintType

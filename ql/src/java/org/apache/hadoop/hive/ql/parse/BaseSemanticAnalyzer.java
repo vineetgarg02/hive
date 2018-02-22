@@ -752,26 +752,12 @@ public abstract class BaseSemanticAnalyzer {
     generateConstraintInfos(child, columnNames.build(), cstrInfos, null);
   }
 
-  /**
-   * Validate and get the default value from the AST
-   * @param defaultValueAST AST node corresponding to default value
-   * @return retrieve the default value and return it as string
-   * @throws SemanticException
-   */
-  private static String getDefaultValue(ASTNode defaultValueAST, ASTNode typeChild) throws SemanticException{
-    TypeCheckCtx typeCheckCtx = new TypeCheckCtx(null);
-    ExprNodeDesc defaultValExpr = TypeCheckProcFactory
-        .genExprNode(defaultValueAST, typeCheckCtx).get(defaultValueAST);
-
-
-
-    // default value, Make sure that this is a function or literal only
-    boolean isDefValueAllowed = false;
-    String defaultValue = null;
-
-    if(defaultValExpr instanceof  ExprNodeConstantDesc) {
-      isDefValueAllowed = true;
-      defaultValue = defaultValueAST.getText();
+  private static boolean isDefaultValueAllowed(final ExprNodeDesc defaultValExpr) {
+    if(defaultValExpr instanceof ExprNodeConstantDesc) {
+      return true;
+    }
+    else if(FunctionRegistry.isOpCast(defaultValExpr)) {
+      return isDefaultValueAllowed(defaultValExpr.getChildren().get(0));
     }
     else if(defaultValExpr instanceof ExprNodeGenericFuncDesc){
       ExprNodeGenericFuncDesc defFunc = (ExprNodeGenericFuncDesc)defaultValExpr;
@@ -780,33 +766,54 @@ public abstract class BaseSemanticAnalyzer {
           || defFunc.getGenericUDF() instanceof GenericUDFCurrentDate
           || defFunc.getGenericUDF() instanceof UDFCurrentDB
           || defFunc.getGenericUDF() instanceof GenericUDFCurrentUser){
-        isDefValueAllowed = true;
+        return true;
       }
-      defaultValue = defFunc.getFuncText() + "()";
+    }
+    return false;
+  }
+
+  /**
+   * Validate and get the default value from the AST
+   * @param defaultValueAST AST node corresponding to default value
+   * @return retrieve the default value and return it as string
+   * @throws SemanticException
+   */
+  private static String getDefaultValue(ASTNode defaultValueAST, ASTNode typeChild) throws SemanticException{
+    // first create expression from defaultValueAST
+    TypeCheckCtx typeCheckCtx = new TypeCheckCtx(null);
+    ExprNodeDesc defaultValExpr = TypeCheckProcFactory
+        .genExprNode(defaultValueAST, typeCheckCtx).get(defaultValueAST);
+
+    if(defaultValExpr == null) {
+      throw new SemanticException(
+          ErrorMsg.INVALID_CSTR_SYNTAX.getMsg("Invalid Default value!"));
     }
 
-    if(!isDefValueAllowed) {
-      throw new SemanticException(
-          ErrorMsg.INVALID_CSTR_SYNTAX.getMsg("Invalid Default value: " + defaultValue
-                                              + ". DEFAULT only allows constant or function expressions"));
-    }
+    //get default value to be be stored in metastore
+    String defaultValueText  = defaultValExpr.getExprString();
+    //if(defaultValExpr instanceof ExprNodeConstantDesc) {
+     // defaultValueText = "CAST(" + defaultValueText + " as " + defaultValExpr.getTypeString() + ")";
+    //}
+
+    // Make sure the default value expression type is exactly same as column's type.
     TypeInfo defaultValTypeInfo = defaultValExpr.getTypeInfo();
     TypeInfo colTypeInfo = TypeInfoUtils.getTypeInfoFromTypeString(getTypeStringFromAST(typeChild));
-    TypeInfo commonType = FunctionRegistry.getCommonClass(defaultValTypeInfo, colTypeInfo);
-    /*if(!ColumnType.areColTypesCompatible(getTypeStringFromAST(typeChild), defaultValExpr.getTypeString())) {
-    //if(!commonType.equals(colTypeInfo) ) {
-      // since we are only checking if common type is null, that means there is no way to cast/promote one type
-      //  to another. Otherwise there is a way to cast/promote even though it could lead to truncation/loss of value
-      // e.g. if col type is char(2) but default value type is lets say '123' we would allow this since string and
-      // char(2) are compatible although promoting string here to char(2) will result in truncation during execution.
-      //type are incompatible
+    if(!defaultValTypeInfo.equals(colTypeInfo)) {
       throw new SemanticException(
-          ErrorMsg.INVALID_CSTR_SYNTAX.getMsg("Invalid type for default value: " + defaultValTypeInfo.getTypeName()
+          ErrorMsg.INVALID_CSTR_SYNTAX.getMsg("Invalid type: " + defaultValTypeInfo.getTypeName()
+                                                  + " for default value: "
+                                                  + defaultValueText
                                                   + ". Please make sure that the type is compatible with column type: "
-          + colTypeInfo.getTypeName()));
+                                                  + colTypeInfo.getTypeName()));
+    }
 
-    } */
-    return defaultValue;
+    // throw an error if default value isn't what hive allows
+    if(!isDefaultValueAllowed(defaultValExpr)) {
+      throw new SemanticException(
+          ErrorMsg.INVALID_CSTR_SYNTAX.getMsg("Invalid Default value: " + defaultValueText
+                                                  + ". DEFAULT only allows constant or function expressions"));
+    }
+    return defaultValueText;
   }
 
 

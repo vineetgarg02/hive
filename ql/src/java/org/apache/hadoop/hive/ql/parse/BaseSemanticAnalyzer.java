@@ -791,6 +791,13 @@ public abstract class BaseSemanticAnalyzer {
 
     //get default value to be be stored in metastore
     String defaultValueText  = defaultValExpr.getExprString();
+    final int DEFAULT_MAX_LEN = 255;
+    if(defaultValueText.length() > DEFAULT_MAX_LEN) {
+      throw new SemanticException(
+          ErrorMsg.INVALID_CSTR_SYNTAX.getMsg("Invalid Default value:  " + defaultValueText +
+                                                  " .Maximum character length allowed is " + DEFAULT_MAX_LEN +" ."));
+    }
+
     //if(defaultValExpr instanceof ExprNodeConstantDesc) {
      // defaultValueText = "CAST(" + defaultValueText + " as " + defaultValExpr.getTypeString() + ")";
     //}
@@ -979,9 +986,17 @@ public abstract class BaseSemanticAnalyzer {
     }
   }
 
-  protected boolean hasEnabledOrValidatedConstraints(List<SQLNotNullConstraint> notNullConstraints){
+  protected boolean hasEnabledOrValidatedConstraints(List<SQLNotNullConstraint> notNullConstraints,
+                                                     List<SQLDefaultConstraint> defaultConstraints){
     if(notNullConstraints != null) {
       for (SQLNotNullConstraint nnC : notNullConstraints) {
+        if (nnC.isEnable_cstr() || nnC.isValidate_cstr()) {
+          return true;
+        }
+      }
+    }
+    if(defaultConstraints!= null) {
+      for (SQLDefaultConstraint nnC : defaultConstraints) {
         if (nnC.isEnable_cstr() || nnC.isValidate_cstr()) {
           return true;
         }

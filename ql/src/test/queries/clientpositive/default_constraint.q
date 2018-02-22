@@ -117,6 +117,15 @@ INSERT INTO numericDataType(f) values(847.45);
 Select * from numericDataType;
 DROP TABLE numericDataType;
 
+-- create default with maximum length allowed for default val (255)
+create table t (i int, j string default
+	'1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123');
+desc formatted t;
+explain insert into t(i) values(3);
+insert into t(i) values(3);
+select * from t;
+drop table t;
+
 -- Following all are existing BUGS
 -- BUG1: alter table change constraint doesn't work, so following not working
 -- ALTER TABLE numericDataType change a a TINYINT CONSTRAINT default_constraint DEFAULT 1Y ENABLE; -- change default val

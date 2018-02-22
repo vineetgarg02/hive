@@ -87,13 +87,7 @@ import org.apache.hadoop.hive.ql.lib.Node;
 import org.apache.hadoop.hive.ql.lockmgr.HiveTxnManager;
 import org.apache.hadoop.hive.ql.lockmgr.LockException;
 import org.apache.hadoop.hive.ql.lockmgr.TxnManagerFactory;
-import org.apache.hadoop.hive.ql.metadata.Hive;
-import org.apache.hadoop.hive.ql.metadata.HiveException;
-import org.apache.hadoop.hive.ql.metadata.HiveUtils;
-import org.apache.hadoop.hive.ql.metadata.InvalidTableException;
-import org.apache.hadoop.hive.ql.metadata.NotNullConstraint;
-import org.apache.hadoop.hive.ql.metadata.Partition;
-import org.apache.hadoop.hive.ql.metadata.Table;
+import org.apache.hadoop.hive.ql.metadata.*;
 import org.apache.hadoop.hive.ql.parse.authorization.AuthorizationParseUtils;
 import org.apache.hadoop.hive.ql.parse.authorization.HiveAuthorizationTaskFactory;
 import org.apache.hadoop.hive.ql.parse.authorization.HiveAuthorizationTaskFactoryImpl;
@@ -1638,9 +1632,12 @@ public class DDLSemanticAnalyzer extends BaseSemanticAnalyzer {
   private boolean hasConstraintsEnabled(final String tblName) throws SemanticException{
 
     NotNullConstraint nnc = null;
+    DefaultConstraint dc = null;
     try {
       // retrieve enabled NOT NULL constraint from metastore
       nnc = Hive.get().getEnabledNotNullConstraints(
+          db.getDatabaseCurrent().getName(), tblName);
+      dc = Hive.get().getEnabledDefaultConstraints(
           db.getDatabaseCurrent().getName(), tblName);
     } catch (Exception e) {
       if (e instanceof SemanticException) {
@@ -1649,7 +1646,8 @@ public class DDLSemanticAnalyzer extends BaseSemanticAnalyzer {
         throw (new RuntimeException(e));
       }
     }
-    if(nnc != null  && !nnc.getNotNullConstraints().isEmpty()) {
+    if((nnc != null  && !nnc.getNotNullConstraints().isEmpty())
+        || (dc != null && !dc.getDefaultConstraints().isEmpty())) {
       return true;
     }
     return false;
@@ -3134,7 +3132,7 @@ public class DDLSemanticAnalyzer extends BaseSemanticAnalyzer {
     Table tab = getTable(qualified);
 
     if(tab.getTableType() == TableType.EXTERNAL_TABLE
-        && hasEnabledOrValidatedConstraints(notNullConstraints)){
+        && hasEnabledOrValidatedConstraints(notNullConstraints, defaultConstraints)){
       throw new SemanticException(
           ErrorMsg.INVALID_CSTR_SYNTAX.getMsg("Constraints are disallowed with External tables. "
               + "Only RELY is allowed."));

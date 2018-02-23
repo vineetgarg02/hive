@@ -350,25 +350,14 @@ import org.slf4j.LoggerFactory;
           case 1: // LOCKS
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-<<<<<<< HEAD
-                org.apache.thrift.protocol.TList _list580 = iprot.readListBegin();
-                struct.locks = new ArrayList<ShowLocksResponseElement>(_list580.size);
-                ShowLocksResponseElement _elem581;
-                for (int _i582 = 0; _i582 < _list580.size; ++_i582)
+                org.apache.thrift.protocol.TList _list620 = iprot.readListBegin();
+                struct.locks = new ArrayList<ShowLocksResponseElement>(_list620.size);
+                ShowLocksResponseElement _elem621;
+                for (int _i622 = 0; _i622 < _list620.size; ++_i622)
                 {
-                  _elem581 = new ShowLocksResponseElement();
-                  _elem581.read(iprot);
-                  struct.locks.add(_elem581);
-=======
-                org.apache.thrift.protocol.TList _list604 = iprot.readListBegin();
-                struct.locks = new ArrayList<ShowLocksResponseElement>(_list604.size);
-                ShowLocksResponseElement _elem605;
-                for (int _i606 = 0; _i606 < _list604.size; ++_i606)
-                {
-                  _elem605 = new ShowLocksResponseElement();
-                  _elem605.read(iprot);
-                  struct.locks.add(_elem605);
->>>>>>> origin/master
+                  _elem621 = new ShowLocksResponseElement();
+                  _elem621.read(iprot);
+                  struct.locks.add(_elem621);
                 }
                 iprot.readListEnd();
               }
@@ -394,15 +383,9 @@ import org.slf4j.LoggerFactory;
         oprot.writeFieldBegin(LOCKS_FIELD_DESC);
         {
           oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.locks.size()));
-<<<<<<< HEAD
-          for (ShowLocksResponseElement _iter583 : struct.locks)
+          for (ShowLocksResponseElement _iter623 : struct.locks)
           {
-            _iter583.write(oprot);
-=======
-          for (ShowLocksResponseElement _iter607 : struct.locks)
-          {
-            _iter607.write(oprot);
->>>>>>> origin/master
+            _iter623.write(oprot);
           }
           oprot.writeListEnd();
         }
@@ -433,15 +416,9 @@ import org.slf4j.LoggerFactory;
       if (struct.isSetLocks()) {
         {
           oprot.writeI32(struct.locks.size());
-<<<<<<< HEAD
-          for (ShowLocksResponseElement _iter584 : struct.locks)
+          for (ShowLocksResponseElement _iter624 : struct.locks)
           {
-            _iter584.write(oprot);
-=======
-          for (ShowLocksResponseElement _iter608 : struct.locks)
-          {
-            _iter608.write(oprot);
->>>>>>> origin/master
+            _iter624.write(oprot);
           }
         }
       }
@@ -453,25 +430,14 @@ import org.slf4j.LoggerFactory;
       BitSet incoming = iprot.readBitSet(1);
       if (incoming.get(0)) {
         {
-<<<<<<< HEAD
-          org.apache.thrift.protocol.TList _list585 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-          struct.locks = new ArrayList<ShowLocksResponseElement>(_list585.size);
-          ShowLocksResponseElement _elem586;
-          for (int _i587 = 0; _i587 < _list585.size; ++_i587)
+          org.apache.thrift.protocol.TList _list625 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+          struct.locks = new ArrayList<ShowLocksResponseElement>(_list625.size);
+          ShowLocksResponseElement _elem626;
+          for (int _i627 = 0; _i627 < _list625.size; ++_i627)
           {
-            _elem586 = new ShowLocksResponseElement();
-            _elem586.read(iprot);
-            struct.locks.add(_elem586);
-=======
-          org.apache.thrift.protocol.TList _list609 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-          struct.locks = new ArrayList<ShowLocksResponseElement>(_list609.size);
-          ShowLocksResponseElement _elem610;
-          for (int _i611 = 0; _i611 < _list609.size; ++_i611)
-          {
-            _elem610 = new ShowLocksResponseElement();
-            _elem610.read(iprot);
-            struct.locks.add(_elem610);
->>>>>>> origin/master
+            _elem626 = new ShowLocksResponseElement();
+            _elem626.read(iprot);
+            struct.locks.add(_elem626);
           }
         }
         struct.setLocksIsSet(true);

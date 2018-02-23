@@ -346,25 +346,14 @@ import org.slf4j.LoggerFactory;
           case 1: // RESOURCE_PLANS
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-<<<<<<< HEAD
-                org.apache.thrift.protocol.TList _list802 = iprot.readListBegin();
-                struct.resourcePlans = new ArrayList<WMResourcePlan>(_list802.size);
-                WMResourcePlan _elem803;
-                for (int _i804 = 0; _i804 < _list802.size; ++_i804)
+                org.apache.thrift.protocol.TList _list842 = iprot.readListBegin();
+                struct.resourcePlans = new ArrayList<WMResourcePlan>(_list842.size);
+                WMResourcePlan _elem843;
+                for (int _i844 = 0; _i844 < _list842.size; ++_i844)
                 {
-                  _elem803 = new WMResourcePlan();
-                  _elem803.read(iprot);
-                  struct.resourcePlans.add(_elem803);
-=======
-                org.apache.thrift.protocol.TList _list826 = iprot.readListBegin();
-                struct.resourcePlans = new ArrayList<WMResourcePlan>(_list826.size);
-                WMResourcePlan _elem827;
-                for (int _i828 = 0; _i828 < _list826.size; ++_i828)
-                {
-                  _elem827 = new WMResourcePlan();
-                  _elem827.read(iprot);
-                  struct.resourcePlans.add(_elem827);
->>>>>>> origin/master
+                  _elem843 = new WMResourcePlan();
+                  _elem843.read(iprot);
+                  struct.resourcePlans.add(_elem843);
                 }
                 iprot.readListEnd();
               }
@@ -391,15 +380,9 @@ import org.slf4j.LoggerFactory;
           oprot.writeFieldBegin(RESOURCE_PLANS_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.resourcePlans.size()));
-<<<<<<< HEAD
-            for (WMResourcePlan _iter805 : struct.resourcePlans)
+            for (WMResourcePlan _iter845 : struct.resourcePlans)
             {
-              _iter805.write(oprot);
-=======
-            for (WMResourcePlan _iter829 : struct.resourcePlans)
-            {
-              _iter829.write(oprot);
->>>>>>> origin/master
+              _iter845.write(oprot);
             }
             oprot.writeListEnd();
           }
@@ -431,15 +414,9 @@ import org.slf4j.LoggerFactory;
       if (struct.isSetResourcePlans()) {
         {
           oprot.writeI32(struct.resourcePlans.size());
-<<<<<<< HEAD
-          for (WMResourcePlan _iter806 : struct.resourcePlans)
+          for (WMResourcePlan _iter846 : struct.resourcePlans)
           {
-            _iter806.write(oprot);
-=======
-          for (WMResourcePlan _iter830 : struct.resourcePlans)
-          {
-            _iter830.write(oprot);
->>>>>>> origin/master
+            _iter846.write(oprot);
           }
         }
       }
@@ -451,25 +428,14 @@ import org.slf4j.LoggerFactory;
       BitSet incoming = iprot.readBitSet(1);
       if (incoming.get(0)) {
         {
-<<<<<<< HEAD
-          org.apache.thrift.protocol.TList _list807 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-          struct.resourcePlans = new ArrayList<WMResourcePlan>(_list807.size);
-          WMResourcePlan _elem808;
-          for (int _i809 = 0; _i809 < _list807.size; ++_i809)
+          org.apache.thrift.protocol.TList _list847 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+          struct.resourcePlans = new ArrayList<WMResourcePlan>(_list847.size);
+          WMResourcePlan _elem848;
+          for (int _i849 = 0; _i849 < _list847.size; ++_i849)
           {
-            _elem808 = new WMResourcePlan();
-            _elem808.read(iprot);
-            struct.resourcePlans.add(_elem808);
-=======
-          org.apache.thrift.protocol.TList _list831 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-          struct.resourcePlans = new ArrayList<WMResourcePlan>(_list831.size);
-          WMResourcePlan _elem832;
-          for (int _i833 = 0; _i833 < _list831.size; ++_i833)
-          {
-            _elem832 = new WMResourcePlan();
-            _elem832.read(iprot);
-            struct.resourcePlans.add(_elem832);
->>>>>>> origin/master
+            _elem848 = new WMResourcePlan();
+            _elem848.read(iprot);
+            struct.resourcePlans.add(_elem848);
           }
         }
         struct.setResourcePlansIsSet(true);

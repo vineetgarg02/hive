@@ -346,25 +346,14 @@ import org.slf4j.LoggerFactory;
           case 1: // TRIGGERS
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-<<<<<<< HEAD
-                org.apache.thrift.protocol.TList _list826 = iprot.readListBegin();
-                struct.triggers = new ArrayList<WMTrigger>(_list826.size);
-                WMTrigger _elem827;
-                for (int _i828 = 0; _i828 < _list826.size; ++_i828)
+                org.apache.thrift.protocol.TList _list866 = iprot.readListBegin();
+                struct.triggers = new ArrayList<WMTrigger>(_list866.size);
+                WMTrigger _elem867;
+                for (int _i868 = 0; _i868 < _list866.size; ++_i868)
                 {
-                  _elem827 = new WMTrigger();
-                  _elem827.read(iprot);
-                  struct.triggers.add(_elem827);
-=======
-                org.apache.thrift.protocol.TList _list850 = iprot.readListBegin();
-                struct.triggers = new ArrayList<WMTrigger>(_list850.size);
-                WMTrigger _elem851;
-                for (int _i852 = 0; _i852 < _list850.size; ++_i852)
-                {
-                  _elem851 = new WMTrigger();
-                  _elem851.read(iprot);
-                  struct.triggers.add(_elem851);
->>>>>>> origin/master
+                  _elem867 = new WMTrigger();
+                  _elem867.read(iprot);
+                  struct.triggers.add(_elem867);
                 }
                 iprot.readListEnd();
               }
@@ -391,15 +380,9 @@ import org.slf4j.LoggerFactory;
           oprot.writeFieldBegin(TRIGGERS_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.triggers.size()));
-<<<<<<< HEAD
-            for (WMTrigger _iter829 : struct.triggers)
+            for (WMTrigger _iter869 : struct.triggers)
             {
-              _iter829.write(oprot);
-=======
-            for (WMTrigger _iter853 : struct.triggers)
-            {
-              _iter853.write(oprot);
->>>>>>> origin/master
+              _iter869.write(oprot);
             }
             oprot.writeListEnd();
           }
@@ -431,15 +414,9 @@ import org.slf4j.LoggerFactory;
       if (struct.isSetTriggers()) {
         {
           oprot.writeI32(struct.triggers.size());
-<<<<<<< HEAD
-          for (WMTrigger _iter830 : struct.triggers)
+          for (WMTrigger _iter870 : struct.triggers)
           {
-            _iter830.write(oprot);
-=======
-          for (WMTrigger _iter854 : struct.triggers)
-          {
-            _iter854.write(oprot);
->>>>>>> origin/master
+            _iter870.write(oprot);
           }
         }
       }
@@ -451,25 +428,14 @@ import org.slf4j.LoggerFactory;
       BitSet incoming = iprot.readBitSet(1);
       if (incoming.get(0)) {
         {
-<<<<<<< HEAD
-          org.apache.thrift.protocol.TList _list831 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-          struct.triggers = new ArrayList<WMTrigger>(_list831.size);
-          WMTrigger _elem832;
-          for (int _i833 = 0; _i833 < _list831.size; ++_i833)
+          org.apache.thrift.protocol.TList _list871 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+          struct.triggers = new ArrayList<WMTrigger>(_list871.size);
+          WMTrigger _elem872;
+          for (int _i873 = 0; _i873 < _list871.size; ++_i873)
           {
-            _elem832 = new WMTrigger();
-            _elem832.read(iprot);
-            struct.triggers.add(_elem832);
-=======
-          org.apache.thrift.protocol.TList _list855 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-          struct.triggers = new ArrayList<WMTrigger>(_list855.size);
-          WMTrigger _elem856;
-          for (int _i857 = 0; _i857 < _list855.size; ++_i857)
-          {
-            _elem856 = new WMTrigger();
-            _elem856.read(iprot);
-            struct.triggers.add(_elem856);
->>>>>>> origin/master
+            _elem872 = new WMTrigger();
+            _elem872.read(iprot);
+            struct.triggers.add(_elem872);
           }
         }
         struct.setTriggersIsSet(true);

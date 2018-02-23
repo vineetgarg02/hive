@@ -525,23 +525,13 @@ import org.slf4j.LoggerFactory;
           case 2: // TBL_NAMES
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-<<<<<<< HEAD
-                org.apache.thrift.protocol.TList _list746 = iprot.readListBegin();
-                struct.tblNames = new ArrayList<String>(_list746.size);
-                String _elem747;
-                for (int _i748 = 0; _i748 < _list746.size; ++_i748)
+                org.apache.thrift.protocol.TList _list786 = iprot.readListBegin();
+                struct.tblNames = new ArrayList<String>(_list786.size);
+                String _elem787;
+                for (int _i788 = 0; _i788 < _list786.size; ++_i788)
                 {
-                  _elem747 = iprot.readString();
-                  struct.tblNames.add(_elem747);
-=======
-                org.apache.thrift.protocol.TList _list770 = iprot.readListBegin();
-                struct.tblNames = new ArrayList<String>(_list770.size);
-                String _elem771;
-                for (int _i772 = 0; _i772 < _list770.size; ++_i772)
-                {
-                  _elem771 = iprot.readString();
-                  struct.tblNames.add(_elem771);
->>>>>>> origin/master
+                  _elem787 = iprot.readString();
+                  struct.tblNames.add(_elem787);
                 }
                 iprot.readListEnd();
               }
@@ -582,15 +572,9 @@ import org.slf4j.LoggerFactory;
           oprot.writeFieldBegin(TBL_NAMES_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, struct.tblNames.size()));
-<<<<<<< HEAD
-            for (String _iter749 : struct.tblNames)
+            for (String _iter789 : struct.tblNames)
             {
-              oprot.writeString(_iter749);
-=======
-            for (String _iter773 : struct.tblNames)
-            {
-              oprot.writeString(_iter773);
->>>>>>> origin/master
+              oprot.writeString(_iter789);
             }
             oprot.writeListEnd();
           }
@@ -633,15 +617,9 @@ import org.slf4j.LoggerFactory;
       if (struct.isSetTblNames()) {
         {
           oprot.writeI32(struct.tblNames.size());
-<<<<<<< HEAD
-          for (String _iter750 : struct.tblNames)
+          for (String _iter790 : struct.tblNames)
           {
-            oprot.writeString(_iter750);
-=======
-          for (String _iter774 : struct.tblNames)
-          {
-            oprot.writeString(_iter774);
->>>>>>> origin/master
+            oprot.writeString(_iter790);
           }
         }
       }
@@ -658,23 +636,13 @@ import org.slf4j.LoggerFactory;
       BitSet incoming = iprot.readBitSet(2);
       if (incoming.get(0)) {
         {
-<<<<<<< HEAD
-          org.apache.thrift.protocol.TList _list751 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
-          struct.tblNames = new ArrayList<String>(_list751.size);
-          String _elem752;
-          for (int _i753 = 0; _i753 < _list751.size; ++_i753)
+          org.apache.thrift.protocol.TList _list791 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+          struct.tblNames = new ArrayList<String>(_list791.size);
+          String _elem792;
+          for (int _i793 = 0; _i793 < _list791.size; ++_i793)
           {
-            _elem752 = iprot.readString();
-            struct.tblNames.add(_elem752);
-=======
-          org.apache.thrift.protocol.TList _list775 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
-          struct.tblNames = new ArrayList<String>(_list775.size);
-          String _elem776;
-          for (int _i777 = 0; _i777 < _list775.size; ++_i777)
-          {
-            _elem776 = iprot.readString();
-            struct.tblNames.add(_elem776);
->>>>>>> origin/master
+            _elem792 = iprot.readString();
+            struct.tblNames.add(_elem792);
           }
         }
         struct.setTblNamesIsSet(true);

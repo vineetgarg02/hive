@@ -354,25 +354,14 @@ import org.slf4j.LoggerFactory;
           case 1: // COMPACTS
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-<<<<<<< HEAD
-                org.apache.thrift.protocol.TList _list614 = iprot.readListBegin();
-                struct.compacts = new ArrayList<ShowCompactResponseElement>(_list614.size);
-                ShowCompactResponseElement _elem615;
-                for (int _i616 = 0; _i616 < _list614.size; ++_i616)
+                org.apache.thrift.protocol.TList _list654 = iprot.readListBegin();
+                struct.compacts = new ArrayList<ShowCompactResponseElement>(_list654.size);
+                ShowCompactResponseElement _elem655;
+                for (int _i656 = 0; _i656 < _list654.size; ++_i656)
                 {
-                  _elem615 = new ShowCompactResponseElement();
-                  _elem615.read(iprot);
-                  struct.compacts.add(_elem615);
-=======
-                org.apache.thrift.protocol.TList _list638 = iprot.readListBegin();
-                struct.compacts = new ArrayList<ShowCompactResponseElement>(_list638.size);
-                ShowCompactResponseElement _elem639;
-                for (int _i640 = 0; _i640 < _list638.size; ++_i640)
-                {
-                  _elem639 = new ShowCompactResponseElement();
-                  _elem639.read(iprot);
-                  struct.compacts.add(_elem639);
->>>>>>> origin/master
+                  _elem655 = new ShowCompactResponseElement();
+                  _elem655.read(iprot);
+                  struct.compacts.add(_elem655);
                 }
                 iprot.readListEnd();
               }
@@ -398,15 +387,9 @@ import org.slf4j.LoggerFactory;
         oprot.writeFieldBegin(COMPACTS_FIELD_DESC);
         {
           oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.compacts.size()));
-<<<<<<< HEAD
-          for (ShowCompactResponseElement _iter617 : struct.compacts)
+          for (ShowCompactResponseElement _iter657 : struct.compacts)
           {
-            _iter617.write(oprot);
-=======
-          for (ShowCompactResponseElement _iter641 : struct.compacts)
-          {
-            _iter641.write(oprot);
->>>>>>> origin/master
+            _iter657.write(oprot);
           }
           oprot.writeListEnd();
         }
@@ -431,15 +414,9 @@ import org.slf4j.LoggerFactory;
       TTupleProtocol oprot = (TTupleProtocol) prot;
       {
         oprot.writeI32(struct.compacts.size());
-<<<<<<< HEAD
-        for (ShowCompactResponseElement _iter618 : struct.compacts)
+        for (ShowCompactResponseElement _iter658 : struct.compacts)
         {
-          _iter618.write(oprot);
-=======
-        for (ShowCompactResponseElement _iter642 : struct.compacts)
-        {
-          _iter642.write(oprot);
->>>>>>> origin/master
+          _iter658.write(oprot);
         }
       }
     }
@@ -448,25 +425,14 @@ import org.slf4j.LoggerFactory;
     public void read(org.apache.thrift.protocol.TProtocol prot, ShowCompactResponse struct) throws org.apache.thrift.TException {
       TTupleProtocol iprot = (TTupleProtocol) prot;
       {
-<<<<<<< HEAD
-        org.apache.thrift.protocol.TList _list619 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-        struct.compacts = new ArrayList<ShowCompactResponseElement>(_list619.size);
-        ShowCompactResponseElement _elem620;
-        for (int _i621 = 0; _i621 < _list619.size; ++_i621)
+        org.apache.thrift.protocol.TList _list659 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+        struct.compacts = new ArrayList<ShowCompactResponseElement>(_list659.size);
+        ShowCompactResponseElement _elem660;
+        for (int _i661 = 0; _i661 < _list659.size; ++_i661)
         {
-          _elem620 = new ShowCompactResponseElement();
-          _elem620.read(iprot);
-          struct.compacts.add(_elem620);
-=======
-        org.apache.thrift.protocol.TList _list643 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-        struct.compacts = new ArrayList<ShowCompactResponseElement>(_list643.size);
-        ShowCompactResponseElement _elem644;
-        for (int _i645 = 0; _i645 < _list643.size; ++_i645)
-        {
-          _elem644 = new ShowCompactResponseElement();
-          _elem644.read(iprot);
-          struct.compacts.add(_elem644);
->>>>>>> origin/master
+          _elem660 = new ShowCompactResponseElement();
+          _elem660.read(iprot);
+          struct.compacts.add(_elem660);
         }
       }
       struct.setCompactsIsSet(true);

@@ -881,6 +881,14 @@ public abstract class BaseSemanticAnalyzer {
       }
     }
 
+    // metastore schema only allows maximum 255 for constraint name column
+    final int CONSTRAINT_NAME_MAX_LENGTH = 255;
+    if(constraintName != null && constraintName.length() > CONSTRAINT_NAME_MAX_LENGTH) {
+      throw new SemanticException(
+          ErrorMsg.INVALID_CSTR_SYNTAX.getMsg("Constraint name: " + constraintName + " exceeded maximum allowed "
+                                              + "length: " + CONSTRAINT_NAME_MAX_LENGTH ));
+    }
+
     // NOT NULL constraint could be enforced/enabled
     if (enable && child.getToken().getType() != HiveParser.TOK_NOT_NULL
         && child.getToken().getType() != HiveParser.TOK_DEFAULT_VALUE) {

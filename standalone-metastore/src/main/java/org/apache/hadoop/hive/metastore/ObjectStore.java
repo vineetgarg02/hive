@@ -4247,6 +4247,9 @@ public class ObjectStore implements RawStore, Configurable {
             }
           } else {
             currentConstraintName = normalizeIdentifier(foreignKey.getFk_name());
+            if(constraintNameAlreadyExists(currentConstraintName)) {
+              throw new InvalidObjectException("Constraint name already exists: " + currentConstraintName);
+            }
           }
           fkNames.add(currentConstraintName);
           Integer updateRule = foreignKey.getUpdate_rule();
@@ -4398,6 +4401,9 @@ public class ObjectStore implements RawStore, Configurable {
         }
       } else {
         constraintName = normalizeIdentifier(pks.get(i).getPk_name());
+        if(constraintNameAlreadyExists(constraintName)) {
+          throw new InvalidObjectException("Constraint name already exists: " + constraintName);
+        }
       }
       pkNames.add(constraintName);
       int enableValidateRely = (pks.get(i).isEnable_cstr() ? 4 : 0) +
@@ -4463,6 +4469,9 @@ public class ObjectStore implements RawStore, Configurable {
         }
       } else {
         constraintName = normalizeIdentifier(uks.get(i).getUk_name());
+        if(constraintNameAlreadyExists(constraintName)) {
+          throw new InvalidObjectException("Constraint name already exists: " + constraintName);
+        }
       }
       ukNames.add(constraintName);
 
@@ -4533,6 +4542,9 @@ public class ObjectStore implements RawStore, Configurable {
         constraintName = generateConstraintName(tableDB, tableName, columnName, "dc");
       } else {
         constraintName = normalizeIdentifier(nns.get(i).getDc_name());
+        if(constraintNameAlreadyExists(constraintName)) {
+          throw new InvalidObjectException("Constraint name already exists: " + constraintName);
+        }
       }
       nnNames.add(constraintName);
 
@@ -4593,6 +4605,9 @@ public class ObjectStore implements RawStore, Configurable {
         constraintName = generateConstraintName(tableDB, tableName, columnName, "nn");
       } else {
         constraintName = normalizeIdentifier(nns.get(i).getNn_name());
+        if(constraintNameAlreadyExists(constraintName)) {
+          throw new InvalidObjectException("Constraint name already exists: " + constraintName);
+        }
       }
       nnNames.add(constraintName);
 

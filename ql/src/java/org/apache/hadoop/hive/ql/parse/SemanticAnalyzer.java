@@ -12563,6 +12563,11 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       case HiveParser.TOK_TABLEPARTCOLS:
         partCols = getColumns(child, false, primaryKeys, foreignKeys,
             uniqueConstraints, notNullConstraints, defaultConstraints);
+        if(!notNullConstraints.isEmpty() || !defaultConstraints.isEmpty()) {
+          throw new SemanticException(
+              ErrorMsg.INVALID_CSTR_SYNTAX.getMsg("NOT NULL and Default Constraints are not allowed with " +
+                                                      "partition columns. "));
+        }
         break;
       case HiveParser.TOK_ALTERTABLE_BUCKETS:
         bucketCols = getColumnNames((ASTNode) child.getChild(0));

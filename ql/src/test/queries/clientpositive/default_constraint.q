@@ -126,6 +126,18 @@ insert into t(i) values(3);
 select * from t;
 drop table t;
 
+-- partitioned table
+set hive.exec.dynamic.partition.mode=nonstrict;
+-- Table with partition
+CREATE TABLE tablePartitioned (a STRING NOT NULL ENFORCED, url STRING constraint bdc1 'http://localhost',
+    c STRING NOT NULL ENFORCED)
+    PARTITIONED BY (p1 STRING, p2 INT NOT NULL ENABLE);
+
+-- Insert into
+explain INSERT INTO tablePartitioned partition(p1='today', p2=10) values('not', 'null', 'constraint');
+INSERT INTO tablePartitioned partition(p1='today', p2=10) values('not', 'null', 'constraint');
+
+
 -- Following all are existing BUGS
 -- BUG1: alter table change constraint doesn't work, so following not working
 -- ALTER TABLE numericDataType change a a TINYINT CONSTRAINT default_constraint DEFAULT 1Y ENABLE; -- change default val

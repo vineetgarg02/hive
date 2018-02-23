@@ -1161,7 +1161,7 @@ public class HiveConf extends Configuration {
     // materialized views
     HIVE_MATERIALIZED_VIEW_ENABLE_AUTO_REWRITING("hive.materializedview.rewriting", false,
         "Whether to try to rewrite queries using the materialized views enabled for rewriting"),
-    HIVE_MATERIALIZED_VIEW_REWRITING_TIME_WINDOW("hive.materializedview.rewriting.time.window", 0,
+    HIVE_MATERIALIZED_VIEW_REWRITING_TIME_WINDOW("hive.materializedview.rewriting.time.window", "0s", new TimeValidator(TimeUnit.SECONDS),
         "Time window, specified in seconds, after which outdated materialized views become invalid for automatic query rewriting.\n" +
         "For instance, if a materialized view is created and afterwards one of its source tables is changed at " +
         "moment in time t0, the materialized view will not be considered for rewriting anymore after t0 plus " +
@@ -1172,6 +1172,17 @@ public class HiveConf extends Configuration {
         "Default file format for CREATE MATERIALIZED VIEW statement"),
     HIVE_MATERIALIZED_VIEW_SERDE("hive.materializedview.serde",
         "org.apache.hadoop.hive.ql.io.orc.OrcSerde", "Default SerDe used for materialized views"),
+    HIVE_MATERIALIZATIONS_INVALIDATION_CACHE_IMPL("hive.metastore.materializations.invalidation.impl", "DEFAULT",
+        new StringSet("DEFAULT", "DISABLE"),
+        "The implementation that we should use for the materializations invalidation cache. \n" +
+            "  DEFAULT: Default implementation for invalidation cache\n" +
+            "  DISABLE: Disable invalidation cache (debugging purposes)"),
+    HIVE_MATERIALIZATIONS_INVALIDATION_CACHE_CLEAN_FREQUENCY("hive.metastore.materializations.invalidation.clean.frequency",
+        "3600s", new TimeValidator(TimeUnit.SECONDS), "Frequency at which timer task runs to remove unnecessary transactions information from" +
+        "materializations invalidation cache."),
+    HIVE_MATERIALIZATIONS_INVALIDATION_CACHE_EXPIRY_DURATION("hive.metastore.materializations.invalidation.max.duration",
+        "86400s", new TimeValidator(TimeUnit.SECONDS), "Maximum duration for query producing a materialization. After this time, transactions" +
+        "information that is not relevant for materializations can be removed from invalidation cache."),
 
     // hive.mapjoin.bucket.cache.size has been replaced by hive.smbjoin.cache.row,
     // need to remove by hive .13. Also, do not change default (see SMB operator)
@@ -2450,6 +2461,8 @@ public class HiveConf extends Configuration {
         "the value of hive.server2.webui.host or the correct host name."),
     HIVE_SERVER2_WEBUI_MAX_HISTORIC_QUERIES("hive.server2.webui.max.historic.queries", 25,
         "The maximum number of past queries to show in HiverSever2 WebUI."),
+    HIVE_SERVER2_WEBUI_USE_PAM("hive.server2.webui.use.pam", false,
+        "If true, the HiveServer2 WebUI will be secured with PAM."),
 
     // Tez session settings
     HIVE_SERVER2_TEZ_INTERACTIVE_QUEUE("hive.server2.tez.interactive.queue", "",
@@ -3118,6 +3131,7 @@ public class HiveConf extends Configuration {
         false, "Use Tez cartesian product edge to speed up cross product"),
     // The default is different on the client and server, so it's null here.
     LLAP_IO_ENABLED("hive.llap.io.enabled", null, "Whether the LLAP IO layer is enabled."),
+    LLAP_IO_ACID_ENABLED("hive.llap.io.acid", true, "Whether the LLAP IO layer is enabled for ACID."),
     LLAP_IO_TRACE_SIZE("hive.llap.io.trace.size", "2Mb",
         new SizeValidator(0L, true, (long)Integer.MAX_VALUE, false),
         "The buffer size for a per-fragment LLAP debug trace. 0 to disable."),

@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.apache.hadoop.hive.metastore.api.SQLDefaultConstraint;
-import org.apache.hadoop.hive.metastore.api.SQLDefaultConstraint;
 
 /**
  * DefaultConstraintInfo is a metadata structure containing the default constraints

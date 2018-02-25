@@ -192,7 +192,7 @@ STAGE PLANS:
           alias: src
           Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: COMPLETE
           Select Operator
-            expressions: 1970-12-31 15:59:58.174 (type: timestamp)
+            expressions: TIMESTAMP'1970-12-31 15:59:58.174' (type: timestamp)
             outputColumnNames: _col0
             Statistics: Num rows: 500 Data size: 20000 Basic stats: COMPLETE Column stats: COMPLETE
             ListSink
@@ -213,7 +213,7 @@ STAGE PLANS:
           alias: src
           Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: COMPLETE
           Select Operator
-            expressions: 1970-12-31 (type: date)
+            expressions: DATE'1970-12-31' (type: date)
             outputColumnNames: _col0
             Statistics: Num rows: 500 Data size: 28000 Basic stats: COMPLETE Column stats: COMPLETE
             ListSink

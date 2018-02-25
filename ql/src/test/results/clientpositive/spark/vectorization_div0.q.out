@@ -209,7 +209,7 @@ STAGE PLANS:
                         className: VectorFilterOperator
                         native: true
                         predicateExpression: FilterExprAndExpr(children: FilterLongColGreaterLongScalar(col 3:bigint, val 0), FilterLongColLessLongScalar(col 3:bigint, val 100000000))
-                    predicate: ((cbigint < 100000000) and (cbigint > 0)) (type: boolean)
+                    predicate: ((cbigint < 100000000L) and (cbigint > 0L)) (type: boolean)
                     Statistics: Num rows: 1365 Data size: 293479 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: (cbigint - 988888) (type: bigint), (cdouble / UDFToDouble((cbigint - 988888))) (type: double), (1.2 / CAST( (cbigint - 988888) AS decimal(19,0))) (type: decimal(22,21))
@@ -641,7 +641,7 @@ STAGE PLANS:
                         className: VectorFilterOperator
                         native: true
                         predicateExpression: FilterExprOrExpr(children: FilterLongColGreaterLongScalar(col 2:int, val 500000000), FilterDoubleColGreaterDoubleScalar(col 5:double, val 1.0E9), FilterLongColEqualLongScalar(col 0:tinyint, val 0))
-                    predicate: ((cdouble > 1.0E9) or (cint > 500000000) or (ctinyint = 0)) (type: boolean)
+                    predicate: ((cdouble > 1.0E9) or (cint > 500000000) or (ctinyint = 0Y)) (type: boolean)
                     Statistics: Num rows: 12288 Data size: 2641964 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
                       expressions: cint (type: int), cbigint (type: bigint), ctinyint (type: tinyint), (cint / (cint - 528534767)) (type: double), (cbigint / (cbigint - 1018195815)) (type: double), (ctinyint / ctinyint) (type: double), (cint % (cint - 528534767)) (type: int), (cbigint % (cbigint - 1018195815)) (type: bigint), (ctinyint % ctinyint) (type: tinyint)

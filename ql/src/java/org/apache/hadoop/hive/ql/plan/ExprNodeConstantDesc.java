@@ -128,6 +128,13 @@ public class ExprNodeConstantDesc extends ExprNodeDesc implements Serializable {
       return value.toString() + "S";
     } else if(typeInfo.getTypeName().equals(serdeConstants.BIGINT_TYPE_NAME)) {
       return value.toString() + "L";
+    } else if(typeInfo.getTypeName().equals(serdeConstants.DOUBLE_TYPE_NAME)) {
+      return value.toString() + "D";
+    } else if(typeInfo.getTypeName().equals(serdeConstants.DECIMAL_TYPE_NAME)) {
+      return value.toString() + "BD";
+    } else if(typeInfo.getTypeName().equals(serdeConstants.INTERVAL_DAY_TIME_TYPE_NAME)
+        || typeInfo.getTypeName().equals(serdeConstants.INTERVAL_YEAR_MONTH_TYPE_NAME)) {
+      return "INTERVAL'" + value.toString() + "'";
     }
     return value.toString();
   }

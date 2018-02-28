@@ -800,7 +800,6 @@ public abstract class BaseSemanticAnalyzer {
       if(defFunc.getGenericUDF() instanceof GenericUDFOPNull
           || defFunc.getGenericUDF() instanceof GenericUDFCurrentTimestamp
           || defFunc.getGenericUDF() instanceof GenericUDFCurrentDate
-          //|| defFunc.getGenericUDF() instanceof UDFCurrentDB
           || defFunc.getGenericUDF() instanceof GenericUDFCurrentUser){
         return true;
       }

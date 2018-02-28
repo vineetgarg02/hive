@@ -1,8 +1,12 @@
 -- create table
  -- numeric type
  set hive.stats.autogather=false;
+ set hive.support.concurrency=true;
+ set hive.txn.manager=org.apache.hadoop.hive.ql.lockmgr.DbTxnManager;
+
 CREATE TABLE numericDataType(a TINYINT CONSTRAINT tinyint_constraint DEFAULT 127Y ENABLE, b SMALLINT DEFAULT 32767S, c INT DEFAULT 2147483647,
-    d BIGINT DEFAULT  9223372036854775807L, e DOUBLE DEFAULT 3.4E38, f DECIMAL(9,2) DEFAULT 1234567.89);
+    d BIGINT DEFAULT  9223372036854775807L, e DOUBLE DEFAULT 3.4E38, f DECIMAL(9,2) DEFAULT 1234567.89)
+    clustered by (a) into 2 buckets stored as orc TBLPROPERTIES ('transactional'='true');
 DESC FORMATTED numericDataType;
 
 EXPLAIN INSERT INTO numericDataType(a) values(3Y);
@@ -25,8 +29,8 @@ EXPLAIN INSERT INTO table1(t) values ("1985-12-31 12:45:07");
 INSERT INTO table1(t) values ("1985-12-31 12:45:07");
 SELECT d, t, tz,d1=current_date(), t1 from table1;
 
-EXPLAIN INSERT INTO table1(d, t1) values ("1985-12-31", current_timestamp());
-INSERT INTO table1(d, t1) values ("1985-12-31", current_timestamp());
+EXPLAIN INSERT INTO table1(d, t1) values ("1985-12-31", '2018-02-27 17:32:14.259');
+INSERT INTO table1(d, t1) values ("1985-12-31", '2018-02-27 17:32:14.259');
 SELECT d, t, tz,d1=current_date(), t1=current_timestamp() from table1;
 
 DROP TABLE table1;
@@ -34,7 +38,8 @@ DROP TABLE table1;
 -- string type
 CREATE TABLE table2(i STRING DEFAULT 'current_database()', j STRING DEFAULT current_user(),
     k STRING DEFAULT 'Current_User()', v varchar(350) DEFAULT cast('varchar_default_value' as varchar(350)),
-    c char(20) DEFAULT cast('char_value' as char(20)));
+    c char(20) DEFAULT cast('char_value' as char(20)))
+    clustered by (i) into 2 buckets stored as orc TBLPROPERTIES ('transactional'='true');
 DESC FORMATTED table2;
 EXPLAIN INSERT INTO table2(i) values('default');
 INSERT INTO table2(i) values('default');
@@ -47,7 +52,8 @@ DROP TABLE table2;
 
 
 -- misc type
-CREATE TABLE misc(b BOOLEAN DEFAULT true, b1 BINARY DEFAULT cast('bin' as binary));
+CREATE TABLE misc(b BOOLEAN DEFAULT true, b1 BINARY DEFAULT cast('bin' as binary))
+    clustered by (b) into 2 buckets stored as orc TBLPROPERTIES ('transactional'='true');
 DESC FORMATTED misc;
 EXPLAIN INSERT INTO misc(b) values(false);
 INSERT INTO misc(b) values(false);
@@ -82,7 +88,8 @@ DROP TABLE t11;
 -- alter table
 -- drop constraint
 CREATE TABLE numericDataType(a TINYINT CONSTRAINT tinyint_constraint DEFAULT 127Y ENABLE, b SMALLINT DEFAULT 32767S, c INT DEFAULT 2147483647,
-    d BIGINT DEFAULT  9223372036854775807L, e DOUBLE DEFAULT 3.4E38, f DECIMAL(9,2) DEFAULT 1234567.89);
+    d BIGINT DEFAULT  9223372036854775807L, e DOUBLE DEFAULT 3.4E38, f DECIMAL(9,2) DEFAULT 1234567.89)
+    clustered by (b) into 2 buckets stored as orc TBLPROPERTIES ('transactional'='true');
 ALTER TABLE numericDataType DROP CONSTRAINT tinyint_constraint;
 DESC FORMATTED numericDataType;
 
@@ -129,14 +136,34 @@ drop table t;
 -- partitioned table
 set hive.exec.dynamic.partition.mode=nonstrict;
 -- Table with partition
-CREATE TABLE tablePartitioned (a STRING NOT NULL ENFORCED, url STRING constraint bdc1 'http://localhost',
+CREATE TABLE tablePartitioned (a STRING NOT NULL ENFORCED, url STRING constraint bdc1 default 'http://localhost',
     c STRING NOT NULL ENFORCED)
-    PARTITIONED BY (p1 STRING, p2 INT NOT NULL ENABLE);
+    PARTITIONED BY (p1 STRING, p2 INT);
 
 -- Insert into
 explain INSERT INTO tablePartitioned partition(p1='today', p2=10) values('not', 'null', 'constraint');
 INSERT INTO tablePartitioned partition(p1='today', p2=10) values('not', 'null', 'constraint');
+DROP TABLE tablePartitioned;
 
+-- try constraint with direct sql as false
+set hive.metastore.try.direct.sql=false;
+CREATE TABLE numericDataType(a TINYINT CONSTRAINT tinyint_constraint DEFAULT 127Y ENABLE, b SMALLINT DEFAULT 32767S, c INT DEFAULT 2147483647,
+    d BIGINT DEFAULT  9223372036854775807L, e DOUBLE DEFAULT 3.4E38, f DECIMAL(9,2) DEFAULT 1234567.89)
+    clustered by (b) into 2 buckets stored as orc TBLPROPERTIES ('transactional'='true');
+ALTER TABLE numericDataType DROP CONSTRAINT tinyint_constraint;
+DESC FORMATTED numericDataType;
+
+EXPLAIN INSERT INTO numericDataType(b) values(456);
+INSERT INTO numericDataType(b) values(456);
+SELECT * from numericDataType;
+
+-- add another constraint on same column
+ALTER TABLE numericDataType ADD CONSTRAINT uk1 UNIQUE(a,b) DISABLE NOVALIDATE;
+DESC FORMATTED numericDataType;
+EXPLAIN INSERT INTO numericDataType(b) values(56);
+INSERT INTO numericDataType(b) values(456);
+SELECT * from numericDataType;
+DROP TABLE numericDataType;
 
 -- Following all are existing BUGS
 -- BUG1: alter table change constraint doesn't work, so following not working

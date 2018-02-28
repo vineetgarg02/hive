@@ -4399,11 +4399,11 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
             ASTNode defValAst = parseDriver.parseExpression(defaultValue);
 
             exp = TypeCheckProcFactory.genExprNode(defValAst, new TypeCheckCtx(null)).get(defValAst);
-            //exp = new ExprNodeConstantDesc(targetTableColTypes.get(i), defaultValue);
           } catch(Exception e) {
             throw new SemanticException("Error while parsing default value: " + defaultValue
               + ". Error message: " + e.getMessage());
           }
+          LOG.debug("Added default value from metastore: " + exp);
         }
         else {
           exp = new ExprNodeConstantDesc(targetTableColTypes.get(i), null);
@@ -12468,6 +12468,29 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
   }
 
   /**
+   * Checks to see if given partition columns has constraints (wheather enabled or disabled)
+   * @param partCols partition columns
+   * @param defConstraints default constraints
+   * @param notNullConstraints not null constraints
+   * @return
+   */
+  boolean hasConstraints(final List<FieldSchema> partCols, final List<SQLDefaultConstraint> defConstraints,
+                         final List<SQLNotNullConstraint> notNullConstraints) {
+    for(FieldSchema partFS: partCols) {
+      for(SQLDefaultConstraint dc:defConstraints) {
+        if(dc.getColumn_name().equals(partFS.getName())) {
+          return true;
+        }
+      }
+      for(SQLNotNullConstraint nc:notNullConstraints) {
+        if(nc.getColumn_name().equals(partFS.getName())) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+  /**
    * Analyze the create table command. If it is a regular create-table or
    * create-table-like statements, we create a DDLWork and return true. If it is
    * a create-table-as-select, we get the necessary info such as the SerDe and
@@ -12590,7 +12613,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       case HiveParser.TOK_TABLEPARTCOLS:
         partCols = getColumns(child, false, primaryKeys, foreignKeys,
             uniqueConstraints, notNullConstraints, defaultConstraints);
-        if(!notNullConstraints.isEmpty() || !defaultConstraints.isEmpty()) {
+        if(hasConstraints(partCols, defaultConstraints, notNullConstraints)) {
+          //TODO: these constraints should be supported for partition columns
           throw new SemanticException(
               ErrorMsg.INVALID_CSTR_SYNTAX.getMsg("NOT NULL and Default Constraints are not allowed with " +
                                                       "partition columns. "));

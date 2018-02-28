@@ -1535,8 +1535,7 @@ public class HiveMetaStore extends ThriftHiveMetastore {
               }
             }
           }
-          int notNullConstraintSize = 0;
-          notNullConstraintSize = notNullConstraints.size();
+          int notNullConstraintSize =  notNullConstraints.size();
           if (notNullConstraints != null) {
             for (int i = 0; i < notNullConstraints.size(); i++) {
               if (notNullConstraints.get(i).getNn_name() == null) {

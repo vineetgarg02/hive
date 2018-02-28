@@ -2307,6 +2307,9 @@ class MetaStoreDirectSql {
     if (queryText.endsWith("AND")) {
       queryText = queryText.substring(0, queryText.length()-3);
     }
+    if (LOG.isDebugEnabled()){
+      LOG.debug("getDefaultConstraints: directsql : " + queryText);
+    }
     List<String> pms = new ArrayList<String>();
     if (db_name != null) {
       pms.add(db_name);

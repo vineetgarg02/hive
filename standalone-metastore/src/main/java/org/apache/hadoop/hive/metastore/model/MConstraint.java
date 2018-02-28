@@ -164,7 +164,7 @@ public class MConstraint
   }
 
   public Integer getParentIntegerIndex() {
-    return childIntegerIndex;
+    return parentIntegerIndex;
   }
 
   public void setParentIntegerIndex(Integer parentIntegerIndex) {

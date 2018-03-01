@@ -74,7 +74,7 @@ STAGE PLANS:
                         className: VectorFilterOperator
                         native: true
                         predicateExpression: FilterDoubleColLessDoubleScalar(col 4:double, val 3.0)(children: CastStringToDouble(col 0:string) -> 4:double)
-                    predicate: (UDFToDouble(a) < 3.0) (type: boolean)
+                    predicate: (UDFToDouble(a) < 3.0D) (type: boolean)
                     Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                     Group By Operator
                       aggregations: count()
@@ -318,7 +318,7 @@ STAGE PLANS:
                         className: VectorFilterOperator
                         native: true
                         predicateExpression: FilterDoubleColLessDoubleScalar(col 4:double, val 3.0)(children: CastStringToDouble(col 0:string) -> 4:double)
-                    predicate: (UDFToDouble(a) < 3.0) (type: boolean)
+                    predicate: (UDFToDouble(a) < 3.0D) (type: boolean)
                     Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                     Group By Operator
                       aggregations: count()
@@ -593,7 +593,7 @@ STAGE PLANS:
                         className: VectorFilterOperator
                         native: true
                         predicateExpression: FilterDoubleColLessDoubleScalar(col 4:double, val 3.0)(children: CastStringToDouble(col 0:string) -> 4:double)
-                    predicate: (UDFToDouble(a) < 3.0) (type: boolean)
+                    predicate: (UDFToDouble(a) < 3.0D) (type: boolean)
                     Statistics: Num rows: 2 Data size: 736 Basic stats: COMPLETE Column stats: NONE
                     Group By Operator
                       aggregations: count()

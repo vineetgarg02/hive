@@ -60,7 +60,7 @@ Constraint Name:    	#### A masked pattern was here ####
 Column Name:d       	Default Value:9223372036854775807L	 
 	 	 
 Constraint Name:    	#### A masked pattern was here ####	 
-Column Name:e       	Default Value:3.4E38	 
+Column Name:e       	Default Value:3.4E38D	 
 	 	 
 Constraint Name:    	#### A masked pattern was here ####	 
 Column Name:f       	Default Value:1234567.89	 
@@ -99,7 +99,7 @@ STAGE PLANS:
                       Statistics: Num rows: 1 Data size: 48 Basic stats: COMPLETE Column stats: COMPLETE
                       function name: inline
                       Select Operator
-                        expressions: col1 (type: int), 32767S (type: smallint), 2147483647 (type: int), 9223372036854775807L (type: bigint), 3.4E38 (type: double), 1234567.89 (type: decimal(9,2))
+                        expressions: col1 (type: int), 32767S (type: smallint), 2147483647 (type: int), 9223372036854775807L (type: bigint), 3.4E38D (type: double), 1234567.89 (type: decimal(9,2))
                         outputColumnNames: _col0, _col1, _col2, _col3, _col4, _col5
                         Statistics: Num rows: 1 Data size: 136 Basic stats: COMPLETE Column stats: COMPLETE
                         Reduce Output Operator
@@ -1365,7 +1365,7 @@ Constraint Name:    	#### A masked pattern was here ####
 Column Name:d       	Default Value:9223372036854775807L	 
 	 	 
 Constraint Name:    	#### A masked pattern was here ####	 
-Column Name:e       	Default Value:3.4E38	 
+Column Name:e       	Default Value:3.4E38D	 
 	 	 
 Constraint Name:    	#### A masked pattern was here ####	 
 Column Name:f       	Default Value:1234567.89	 
@@ -1401,7 +1401,7 @@ STAGE PLANS:
                       Statistics: Num rows: 1 Data size: 48 Basic stats: COMPLETE Column stats: COMPLETE
                       function name: inline
                       Select Operator
-                        expressions: null (type: tinyint), col1 (type: int), 2147483647 (type: int), 9223372036854775807L (type: bigint), 3.4E38 (type: double), 1234567.89 (type: decimal(9,2))
+                        expressions: null (type: tinyint), col1 (type: int), 2147483647 (type: int), 9223372036854775807L (type: bigint), 3.4E38D (type: double), 1234567.89 (type: decimal(9,2))
                         outputColumnNames: _col0, _col1, _col2, _col3, _col4, _col5
                         Statistics: Num rows: 1 Data size: 136 Basic stats: COMPLETE Column stats: COMPLETE
                         Reduce Output Operator
@@ -1491,7 +1491,7 @@ Retention:          	0
 Table Type:         	MANAGED_TABLE       	 
 Table Parameters:	 	 
 	numFiles            	1                   
-	totalSize           	1035                
+	totalSize           	1063                
 	transactional       	true                
 	transactional_properties	default             
 #### A masked pattern was here ####
@@ -1528,7 +1528,7 @@ Constraint Name:    	#### A masked pattern was here ####
 Column Name:d       	Default Value:9223372036854775807L	 
 	 	 
 Constraint Name:    	#### A masked pattern was here ####	 
-Column Name:e       	Default Value:3.4E38	 
+Column Name:e       	Default Value:3.4E38D	 
 	 	 
 Constraint Name:    	#### A masked pattern was here ####	 
 Column Name:f       	Default Value:1234567.89	 
@@ -1564,7 +1564,7 @@ STAGE PLANS:
                       Statistics: Num rows: 1 Data size: 48 Basic stats: COMPLETE Column stats: COMPLETE
                       function name: inline
                       Select Operator
-                        expressions: null (type: tinyint), col1 (type: int), 2147483647 (type: int), 9223372036854775807L (type: bigint), 3.4E38 (type: double), 1234567.89 (type: decimal(9,2))
+                        expressions: null (type: tinyint), col1 (type: int), 2147483647 (type: int), 9223372036854775807L (type: bigint), 3.4E38D (type: double), 1234567.89 (type: decimal(9,2))
                         outputColumnNames: _col0, _col1, _col2, _col3, _col4, _col5
                         Statistics: Num rows: 1 Data size: 136 Basic stats: COMPLETE Column stats: COMPLETE
                         Reduce Output Operator
@@ -1660,7 +1660,7 @@ Table Type:         	MANAGED_TABLE
 Table Parameters:	 	 
 #### A masked pattern was here ####
 	numFiles            	2                   
-	totalSize           	2071                
+	totalSize           	2127                
 	transactional       	true                
 	transactional_properties	default             
 #### A masked pattern was here ####
@@ -1703,7 +1703,7 @@ Constraint Name:    	#### A masked pattern was here ####
 Column Name:d       	Default Value:9223372036854775807L	 
 	 	 
 Constraint Name:    	#### A masked pattern was here ####	 
-Column Name:e       	Default Value:3.4E38	 
+Column Name:e       	Default Value:3.4E38D	 
 	 	 
 Constraint Name:    	#### A masked pattern was here ####	 
 Column Name:f       	Default Value:1234567.89	 
@@ -1739,7 +1739,7 @@ Table Type:         	MANAGED_TABLE
 Table Parameters:	 	 
 #### A masked pattern was here ####
 	numFiles            	2                   
-	totalSize           	2071                
+	totalSize           	2127                
 	transactional       	true                
 	transactional_properties	default             
 #### A masked pattern was here ####
@@ -1782,7 +1782,7 @@ Constraint Name:    	#### A masked pattern was here ####
 Column Name:d       	Default Value:9223372036854775807L	 
 	 	 
 Constraint Name:    	#### A masked pattern was here ####	 
-Column Name:e       	Default Value:3.4E38	 
+Column Name:e       	Default Value:3.4E38D	 
 	 	 
 Constraint Name:    	#### A masked pattern was here ####	 
 Column Name:f       	Default Value:1234567.89	 
@@ -1821,7 +1821,7 @@ STAGE PLANS:
                       Statistics: Num rows: 1 Data size: 48 Basic stats: COMPLETE Column stats: COMPLETE
                       function name: inline
                       Select Operator
-                        expressions: 127Y (type: tinyint), 32767S (type: smallint), 2147483647 (type: int), 9223372036854775807L (type: bigint), 3.4E38 (type: double), col1 (type: decimal(5,2))
+                        expressions: 127Y (type: tinyint), 32767S (type: smallint), 2147483647 (type: int), 9223372036854775807L (type: bigint), 3.4E38D (type: double), col1 (type: decimal(5,2))
                         outputColumnNames: _col0, _col1, _col2, _col3, _col4, _col5
                         Statistics: Num rows: 1 Data size: 28 Basic stats: COMPLETE Column stats: COMPLETE
                         Filter Operator
@@ -1915,7 +1915,7 @@ Table Type:         	MANAGED_TABLE
 Table Parameters:	 	 
 #### A masked pattern was here ####
 	numFiles            	3                   
-	totalSize           	3106                
+	totalSize           	3192                
 	transactional       	true                
 	transactional_properties	default             
 #### A masked pattern was here ####
@@ -1958,7 +1958,7 @@ Constraint Name:    	#### A masked pattern was here ####
 Column Name:d       	Default Value:9223372036854775807L	 
 	 	 
 Constraint Name:    	#### A masked pattern was here ####	 
-Column Name:e       	Default Value:3.4E38	 
+Column Name:e       	Default Value:3.4E38D	 
 	 	 
 Constraint Name:    	#### A masked pattern was here ####	 
 Column Name:f       	Default Value:1234567.89	 
@@ -1993,7 +1993,7 @@ Table Type:         	MANAGED_TABLE
 Table Parameters:	 	 
 #### A masked pattern was here ####
 	numFiles            	3                   
-	totalSize           	3106                
+	totalSize           	3192                
 	transactional       	true                
 	transactional_properties	default             
 #### A masked pattern was here ####
@@ -2036,7 +2036,7 @@ Constraint Name:    	#### A masked pattern was here ####
 Column Name:d       	Default Value:9223372036854775807L	 
 	 	 
 Constraint Name:    	#### A masked pattern was here ####	 
-Column Name:e       	Default Value:3.4E38	 
+Column Name:e       	Default Value:3.4E38D	 
 	 	 
 Constraint Name:    	#### A masked pattern was here ####	 
 Column Name:f       	Default Value:1234567.89	 
@@ -2072,7 +2072,7 @@ Table Type:         	MANAGED_TABLE
 Table Parameters:	 	 
 #### A masked pattern was here ####
 	numFiles            	3                   
-	totalSize           	3106                
+	totalSize           	3192                
 	transactional       	true                
 	transactional_properties	default             
 #### A masked pattern was here ####
@@ -2115,7 +2115,7 @@ Constraint Name:    	#### A masked pattern was here ####
 Column Name:d       	Default Value:9223372036854775807L	 
 	 	 
 Constraint Name:    	#### A masked pattern was here ####	 
-Column Name:e       	Default Value:3.4E38	 
+Column Name:e       	Default Value:3.4E38D	 
 	 	 
 Constraint Name:    	#### A masked pattern was here ####	 
 Column Name:f       	Default Value:1234567.89	 
@@ -2154,7 +2154,7 @@ STAGE PLANS:
                       Statistics: Num rows: 1 Data size: 48 Basic stats: COMPLETE Column stats: COMPLETE
                       function name: inline
                       Select Operator
-                        expressions: 108Y (type: tinyint), 32767S (type: smallint), 2147483647 (type: int), 9223372036854775807L (type: bigint), 3.4E38 (type: double), col1 (type: decimal(5,2))
+                        expressions: 108Y (type: tinyint), 32767S (type: smallint), 2147483647 (type: int), 9223372036854775807L (type: bigint), 3.4E38D (type: double), col1 (type: decimal(5,2))
                         outputColumnNames: _col0, _col1, _col2, _col3, _col4, _col5
                         Statistics: Num rows: 1 Data size: 28 Basic stats: COMPLETE Column stats: COMPLETE
                         Filter Operator
@@ -2519,7 +2519,7 @@ Constraint Name:    	#### A masked pattern was here ####
 Column Name:d       	Default Value:9223372036854775807L	 
 	 	 
 Constraint Name:    	#### A masked pattern was here ####	 
-Column Name:e       	Default Value:3.4E38	 
+Column Name:e       	Default Value:3.4E38D	 
 	 	 
 Constraint Name:    	#### A masked pattern was here ####	 
 Column Name:f       	Default Value:1234567.89	 
@@ -2555,7 +2555,7 @@ STAGE PLANS:
                       Statistics: Num rows: 1 Data size: 48 Basic stats: COMPLETE Column stats: COMPLETE
                       function name: inline
                       Select Operator
-                        expressions: null (type: tinyint), col1 (type: int), 2147483647 (type: int), 9223372036854775807L (type: bigint), 3.4E38 (type: double), 1234567.89 (type: decimal(9,2))
+                        expressions: null (type: tinyint), col1 (type: int), 2147483647 (type: int), 9223372036854775807L (type: bigint), 3.4E38D (type: double), 1234567.89 (type: decimal(9,2))
                         outputColumnNames: _col0, _col1, _col2, _col3, _col4, _col5
                         Statistics: Num rows: 1 Data size: 136 Basic stats: COMPLETE Column stats: COMPLETE
                         Reduce Output Operator
@@ -2645,7 +2645,7 @@ Retention:          	0
 Table Type:         	MANAGED_TABLE       	 
 Table Parameters:	 	 
 	numFiles            	1                   
-	totalSize           	1035                
+	totalSize           	1063                
 	transactional       	true                
 	transactional_properties	default             
 #### A masked pattern was here ####
@@ -2682,7 +2682,7 @@ Constraint Name:    	#### A masked pattern was here ####
 Column Name:d       	Default Value:9223372036854775807L	 
 	 	 
 Constraint Name:    	#### A masked pattern was here ####	 
-Column Name:e       	Default Value:3.4E38	 
+Column Name:e       	Default Value:3.4E38D	 
 	 	 
 Constraint Name:    	#### A masked pattern was here ####	 
 Column Name:f       	Default Value:1234567.89	 
@@ -2718,7 +2718,7 @@ STAGE PLANS:
                       Statistics: Num rows: 1 Data size: 48 Basic stats: COMPLETE Column stats: COMPLETE
                       function name: inline
                       Select Operator
-                        expressions: null (type: tinyint), col1 (type: int), 2147483647 (type: int), 9223372036854775807L (type: bigint), 3.4E38 (type: double), 1234567.89 (type: decimal(9,2))
+                        expressions: null (type: tinyint), col1 (type: int), 2147483647 (type: int), 9223372036854775807L (type: bigint), 3.4E38D (type: double), 1234567.89 (type: decimal(9,2))
                         outputColumnNames: _col0, _col1, _col2, _col3, _col4, _col5
                         Statistics: Num rows: 1 Data size: 136 Basic stats: COMPLETE Column stats: COMPLETE
                         Reduce Output Operator

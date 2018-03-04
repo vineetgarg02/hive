@@ -12469,7 +12469,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
   }
 
   /**
-   * Checks to see if given partition columns has constraints (wheather enabled or disabled)
+   * Checks to see if given partition columns has DEFAULT constraints (whether ENABLED or DISABLED)
+   *  Or has NOT NULL constraints (only ENABLED)
    * @param partCols partition columns
    * @param defConstraints default constraints
    * @param notNullConstraints not null constraints
@@ -12484,7 +12485,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
         }
       }
       for(SQLNotNullConstraint nc:notNullConstraints) {
-        if(nc.getColumn_name().equals(partFS.getName())) {
+        if(nc.getColumn_name().equals(partFS.getName()) && nc.isEnable_cstr()) {
           return true;
         }
       }

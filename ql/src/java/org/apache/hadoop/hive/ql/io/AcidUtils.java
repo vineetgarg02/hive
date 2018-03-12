@@ -26,6 +26,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
+import org.apache.hadoop.hive.common.HiveStatsUtils;
 import org.apache.hadoop.hive.common.ValidTxnWriteIdList;
 import org.apache.hadoop.hive.common.ValidWriteIdList;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -34,6 +35,7 @@ import org.apache.hadoop.hive.metastore.TransactionalValidationListener;
 import org.apache.hadoop.hive.metastore.api.DataOperationType;
 import org.apache.hadoop.hive.metastore.api.hive_metastoreConstants;
 import org.apache.hadoop.hive.ql.ErrorMsg;
+import org.apache.hadoop.hive.ql.exec.Utilities;
 import org.apache.hadoop.hive.ql.io.orc.OrcFile;
 import org.apache.hadoop.hive.ql.io.orc.OrcInputFormat;
 import org.apache.hadoop.hive.ql.io.orc.OrcRecordUpdater;
@@ -45,6 +47,7 @@ import org.apache.hadoop.hive.ql.plan.TableScanDesc;
 import org.apache.hadoop.hive.shims.HadoopShims;
 import org.apache.hadoop.hive.shims.HadoopShims.HdfsFileStatusWithId;
 import org.apache.hadoop.hive.shims.ShimLoader;
+import org.apache.hadoop.mapred.JobConf;
 import org.apache.hive.common.util.Ref;
 import org.apache.orc.FileFormatException;
 import org.apache.orc.impl.OrcAcidUtils;
@@ -623,7 +626,7 @@ public class AcidUtils {
 
     /**
      * Get the list of obsolete directories. After filtering out bases and
-     * deltas that are not selected by the valid transaction list, return the
+     * deltas that are not selected by the valid transaction/write ids list, return the
      * list of original files, bases, and deltas that have been replaced by
      * more up to date ones.  Not {@code null}.
      */
@@ -695,7 +698,7 @@ public class AcidUtils {
     /**
      * Compactions (Major/Minor) merge deltas/bases but delete of old files
      * happens in a different process; thus it's possible to have bases/deltas with
-     * overlapping txnId boundaries.  The sort order helps figure out the "best" set of files
+     * overlapping writeId boundaries.  The sort order helps figure out the "best" set of files
      * to use to get data.
      * This sorts "wider" delta before "narrower" i.e. delta_5_20 sorts before delta_5_10 (and delta_11_20)
      */
@@ -718,7 +721,7 @@ public class AcidUtils {
         /**
          * We want deltas after minor compaction (w/o statementId) to sort
          * earlier so that getAcidState() considers compacted files (into larger ones) obsolete
-         * Before compaction, include deltas with all statementIds for a given txnId
+         * Before compaction, include deltas with all statementIds for a given writeId
          * in a {@link org.apache.hadoop.hive.ql.io.AcidUtils.Directory}
          */
         if(statementId < parsedDelta.statementId) {
@@ -749,9 +752,9 @@ public class AcidUtils {
 
   /**
    * Convert the list of deltas into an equivalent list of begin/end
-   * transaction id pairs.  Assumes {@code deltas} is sorted.
+   * write id pairs.  Assumes {@code deltas} is sorted.
    * @param deltas
-   * @return the list of transaction ids to serialize
+   * @return the list of write ids to serialize
    */
   public static List<AcidInputFormat.DeltaMetaData> serializeDeltas(List<ParsedDelta> deltas) {
     List<AcidInputFormat.DeltaMetaData> result = new ArrayList<>(deltas.size());
@@ -774,12 +777,12 @@ public class AcidUtils {
   }
 
   /**
-   * Convert the list of begin/end transaction id pairs to a list of delete delta
+   * Convert the list of begin/end write id pairs to a list of delete delta
    * directories.  Note that there may be multiple delete_delta files for the exact same txn range starting
    * with 2.2.x;
    * see {@link org.apache.hadoop.hive.ql.io.AcidUtils#deltaSubdir(long, long, int)}
    * @param root the root directory
-   * @param deleteDeltas list of begin/end transaction id pairs
+   * @param deleteDeltas list of begin/end write id pairs
    * @return the list of delta paths
    */
   public static Path[] deserializeDeleteDeltas(Path root, final List<AcidInputFormat.DeltaMetaData> deleteDeltas) throws IOException {
@@ -879,7 +882,7 @@ public class AcidUtils {
    * Get the ACID state of the given directory. It finds the minimal set of
    * base and diff directories. Note that because major compactions don't
    * preserve the history, we can't use a base directory that includes a
-   * transaction id that we must exclude.
+   * write id that we must exclude.
    * @param directory the partition directory to analyze
    * @param conf the configuration
    * @param writeIdList the list of write ids that we are reading
@@ -1034,6 +1037,7 @@ public class AcidUtils {
       return o1.getFileStatus().compareTo(o2.getFileStatus());
     });
 
+    // Note: isRawFormat is invalid for non-ORC tables. It will always return true, so we're good.
     final boolean isBaseInRawFormat = base != null && MetaDataFile.isRawFormat(base, fs);
     return new Directory() {
 
@@ -1075,7 +1079,7 @@ public class AcidUtils {
    * files within the snapshot.
    * A base produced by Insert Overwrite is different.  Logically it's a delta file but one that
    * causes anything written previously is ignored (hence the overwrite).  In this case, base_x
-   * is visible if txnid:x is committed for current reader.
+   * is visible if writeid:x is committed for current reader.
    */
   private static boolean isValidBase(long baseWriteId, ValidWriteIdList writeIdList, Path baseDir,
             FileSystem fs) throws IOException {
@@ -1098,7 +1102,13 @@ public class AcidUtils {
       FileSystem fs) throws IOException {
     Path p = child.getPath();
     String fn = p.getName();
-    if (fn.startsWith(BASE_PREFIX) && child.isDir()) {
+    if (!child.isDirectory()) {
+      if (!ignoreEmptyFiles || child.getLen() != 0) {
+        original.add(createOriginalObj(childWithId, child));
+      }
+      return;
+    }
+    if (fn.startsWith(BASE_PREFIX)) {
       long writeId = parseBase(p);
       if(bestBase.oldestBaseWriteId > writeId) {
         //keep track for error reporting
@@ -1119,28 +1129,25 @@ public class AcidUtils {
       } else {
         obsolete.add(child);
       }
-    } else if ((fn.startsWith(DELTA_PREFIX) || fn.startsWith(DELETE_DELTA_PREFIX))
-                    && child.isDir()) {
-      String deltaPrefix =
-              (fn.startsWith(DELTA_PREFIX)) ? DELTA_PREFIX : DELETE_DELTA_PREFIX;
+    } else if (fn.startsWith(DELTA_PREFIX) || fn.startsWith(DELETE_DELTA_PREFIX)) {
+      String deltaPrefix = fn.startsWith(DELTA_PREFIX)  ? DELTA_PREFIX : DELETE_DELTA_PREFIX;
       ParsedDelta delta = parseDelta(child, deltaPrefix, fs);
-      if (tblproperties != null && AcidUtils.isInsertOnlyTable(tblproperties) &&
-        ValidWriteIdList.RangeResponse.ALL == writeIdList.isWriteIdRangeAborted(delta.minWriteId, delta.maxWriteId)) {
+      // Handle aborted deltas. Currently this can only happen for MM tables.
+      if (tblproperties != null && isTransactionalTable(tblproperties) &&
+        ValidWriteIdList.RangeResponse.ALL == writeIdList.isWriteIdRangeAborted(
+            delta.minWriteId, delta.maxWriteId)) {
         aborted.add(child);
       }
-      if (writeIdList.isWriteIdRangeValid(delta.minWriteId,
-          delta.maxWriteId) !=
-              ValidWriteIdList.RangeResponse.NONE) {
+      if (writeIdList.isWriteIdRangeValid(
+          delta.minWriteId, delta.maxWriteId) != ValidWriteIdList.RangeResponse.NONE) {
         working.add(delta);
       }
-    } else if (child.isDir()) {
+    } else {
       // This is just the directory.  We need to recurse and find the actual files.  But don't
       // do this until we have determined there is no base.  This saves time.  Plus,
       // it is possible that the cleaner is running and removing these original files,
       // in which case recursing through them could cause us to get an error.
       originalDirectories.add(child);
-    } else if (!ignoreEmptyFiles || child.getLen() != 0){
-      original.add(createOriginalObj(childWithId, child));
     }
   }
 
@@ -1252,9 +1259,13 @@ public class AcidUtils {
     if (table == null || table.getTblProps() == null) {
       return false;
     }
-    String tableIsTransactional = table.getTblProps().get(hive_metastoreConstants.TABLE_IS_TRANSACTIONAL);
+    return isTransactionalTable(table.getTblProps());
+  }
+
+  public static boolean isTransactionalTable(Map<String, String> props) {
+    String tableIsTransactional = props.get(hive_metastoreConstants.TABLE_IS_TRANSACTIONAL);
     if (tableIsTransactional == null) {
-      tableIsTransactional = table.getTblProps().get(hive_metastoreConstants.TABLE_IS_TRANSACTIONAL.toUpperCase());
+      tableIsTransactional = props.get(hive_metastoreConstants.TABLE_IS_TRANSACTIONAL.toUpperCase());
     }
     return tableIsTransactional != null && tableIsTransactional.equalsIgnoreCase("true");
   }
@@ -1645,7 +1656,7 @@ public class AcidUtils {
       try {
         Reader reader = OrcFile.createReader(dataFile, OrcFile.readerOptions(fs.getConf()));
         /*
-          acid file would have schema like <op, otid, writerId, rowid, ctid, <f1, ... fn>> so could
+          acid file would have schema like <op, owid, writerId, rowid, cwid, <f1, ... fn>> so could
           check it this way once/if OrcRecordUpdater.ACID_KEY_INDEX_NAME is removed
           TypeDescription schema = reader.getSchema();
           List<String> columns = schema.getFieldNames();
@@ -1743,5 +1754,41 @@ public class AcidUtils {
         throw ex;
       }
     }
+  }
+
+  public static List<FileStatus> getAcidFilesForStats(
+      Table table, Path dir, Configuration jc, FileSystem fs) throws IOException {
+    List<FileStatus> fileList = new ArrayList<>();
+    ValidWriteIdList idList = AcidUtils.getTableValidWriteIdList(jc,
+        AcidUtils.getFullTableName(table.getDbName(), table.getTableName()));
+    if (idList == null) {
+      LOG.warn("Cannot get ACID state for " + table.getDbName() + "." + table.getTableName()
+          + " from " + jc.get(ValidTxnWriteIdList.VALID_TABLES_WRITEIDS_KEY));
+      return null;
+    }
+    Directory acidInfo = AcidUtils.getAcidState(dir, jc, idList);
+    // Assume that for an MM table, or if there's only the base directory, we are good. 
+    if (!acidInfo.getCurrentDirectories().isEmpty() && AcidUtils.isFullAcidTable(table)) {
+      Utilities.FILE_OP_LOGGER.warn(
+          "Computing stats for an ACID table; stats may be inaccurate");
+    }
+    if (fs == null) {
+      fs = dir.getFileSystem(jc);
+    }
+    for (HdfsFileStatusWithId hfs : acidInfo.getOriginalFiles()) {
+      fileList.add(hfs.getFileStatus());
+    }
+    for (ParsedDelta delta : acidInfo.getCurrentDirectories()) {
+      for (FileStatus f : HiveStatsUtils.getFileStatusRecurse(delta.getPath(), -1, fs)) {
+        fileList.add(f);
+      }
+    }
+    if (acidInfo.getBaseDirectory() != null) {
+      for (FileStatus f : HiveStatsUtils.getFileStatusRecurse(
+          acidInfo.getBaseDirectory(), -1, fs)) {
+        fileList.add(f);
+      }
+    }
+    return fileList;
   }
 }

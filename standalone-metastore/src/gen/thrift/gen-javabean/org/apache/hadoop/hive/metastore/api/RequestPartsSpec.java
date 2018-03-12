@@ -168,13 +168,13 @@ import org.slf4j.LoggerFactory;
           if (field.type == NAMES_FIELD_DESC.type) {
             List<String> names;
             {
-              org.apache.thrift.protocol.TList _list500 = iprot.readListBegin();
-              names = new ArrayList<String>(_list500.size);
-              String _elem501;
-              for (int _i502 = 0; _i502 < _list500.size; ++_i502)
+              org.apache.thrift.protocol.TList _list490 = iprot.readListBegin();
+              names = new ArrayList<String>(_list490.size);
+              String _elem491;
+              for (int _i492 = 0; _i492 < _list490.size; ++_i492)
               {
-                _elem501 = iprot.readString();
-                names.add(_elem501);
+                _elem491 = iprot.readString();
+                names.add(_elem491);
               }
               iprot.readListEnd();
             }
@@ -187,14 +187,14 @@ import org.slf4j.LoggerFactory;
           if (field.type == EXPRS_FIELD_DESC.type) {
             List<DropPartitionsExpr> exprs;
             {
-              org.apache.thrift.protocol.TList _list503 = iprot.readListBegin();
-              exprs = new ArrayList<DropPartitionsExpr>(_list503.size);
-              DropPartitionsExpr _elem504;
-              for (int _i505 = 0; _i505 < _list503.size; ++_i505)
+              org.apache.thrift.protocol.TList _list493 = iprot.readListBegin();
+              exprs = new ArrayList<DropPartitionsExpr>(_list493.size);
+              DropPartitionsExpr _elem494;
+              for (int _i495 = 0; _i495 < _list493.size; ++_i495)
               {
-                _elem504 = new DropPartitionsExpr();
-                _elem504.read(iprot);
-                exprs.add(_elem504);
+                _elem494 = new DropPartitionsExpr();
+                _elem494.read(iprot);
+                exprs.add(_elem494);
               }
               iprot.readListEnd();
             }
@@ -219,9 +219,9 @@ import org.slf4j.LoggerFactory;
         List<String> names = (List<String>)value_;
         {
           oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, names.size()));
-          for (String _iter506 : names)
+          for (String _iter496 : names)
           {
-            oprot.writeString(_iter506);
+            oprot.writeString(_iter496);
           }
           oprot.writeListEnd();
         }
@@ -230,9 +230,9 @@ import org.slf4j.LoggerFactory;
         List<DropPartitionsExpr> exprs = (List<DropPartitionsExpr>)value_;
         {
           oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, exprs.size()));
-          for (DropPartitionsExpr _iter507 : exprs)
+          for (DropPartitionsExpr _iter497 : exprs)
           {
-            _iter507.write(oprot);
+            _iter497.write(oprot);
           }
           oprot.writeListEnd();
         }
@@ -250,13 +250,13 @@ import org.slf4j.LoggerFactory;
         case NAMES:
           List<String> names;
           {
-            org.apache.thrift.protocol.TList _list508 = iprot.readListBegin();
-            names = new ArrayList<String>(_list508.size);
-            String _elem509;
-            for (int _i510 = 0; _i510 < _list508.size; ++_i510)
+            org.apache.thrift.protocol.TList _list498 = iprot.readListBegin();
+            names = new ArrayList<String>(_list498.size);
+            String _elem499;
+            for (int _i500 = 0; _i500 < _list498.size; ++_i500)
             {
-              _elem509 = iprot.readString();
-              names.add(_elem509);
+              _elem499 = iprot.readString();
+              names.add(_elem499);
             }
             iprot.readListEnd();
           }
@@ -264,14 +264,14 @@ import org.slf4j.LoggerFactory;
         case EXPRS:
           List<DropPartitionsExpr> exprs;
           {
-            org.apache.thrift.protocol.TList _list511 = iprot.readListBegin();
-            exprs = new ArrayList<DropPartitionsExpr>(_list511.size);
-            DropPartitionsExpr _elem512;
-            for (int _i513 = 0; _i513 < _list511.size; ++_i513)
+            org.apache.thrift.protocol.TList _list501 = iprot.readListBegin();
+            exprs = new ArrayList<DropPartitionsExpr>(_list501.size);
+            DropPartitionsExpr _elem502;
+            for (int _i503 = 0; _i503 < _list501.size; ++_i503)
             {
-              _elem512 = new DropPartitionsExpr();
-              _elem512.read(iprot);
-              exprs.add(_elem512);
+              _elem502 = new DropPartitionsExpr();
+              _elem502.read(iprot);
+              exprs.add(_elem502);
             }
             iprot.readListEnd();
           }
@@ -291,9 +291,9 @@ import org.slf4j.LoggerFactory;
         List<String> names = (List<String>)value_;
         {
           oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, names.size()));
-          for (String _iter514 : names)
+          for (String _iter504 : names)
           {
-            oprot.writeString(_iter514);
+            oprot.writeString(_iter504);
           }
           oprot.writeListEnd();
         }
@@ -302,9 +302,9 @@ import org.slf4j.LoggerFactory;
         List<DropPartitionsExpr> exprs = (List<DropPartitionsExpr>)value_;
         {
           oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, exprs.size()));
-          for (DropPartitionsExpr _iter515 : exprs)
+          for (DropPartitionsExpr _iter505 : exprs)
           {
-            _iter515.write(oprot);
+            _iter505.write(oprot);
           }
           oprot.writeListEnd();
         }

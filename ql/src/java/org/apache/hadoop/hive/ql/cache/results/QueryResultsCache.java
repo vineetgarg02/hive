@@ -1,4 +1,4 @@
-/**
+/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -242,7 +242,10 @@ public final class QueryResultsCache {
     }
 
     public FetchWork getFetchWork() {
-      return fetchWork;
+      // FetchWork's sink is used to hold results, so each query needs a separate copy of FetchWork
+      FetchWork fetch = new FetchWork(cachedResultsPath, fetchWork.getTblDesc(), fetchWork.getLimit());
+      fetch.setCachedResult(true);
+      return fetch;
     }
 
     public QueryInfo getQueryInfo() {

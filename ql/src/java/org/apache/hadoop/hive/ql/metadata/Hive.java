@@ -1574,10 +1574,9 @@ public class Hive {
       Path newPartPath = null;
 
       if (inheritTableSpecs) {
-        Path partPath = new Path(tbl.getDataLocation(),
-            Warehouse.makePartPath(partSpec));
-        newPartPath = new Path(tblDataLocationPath.toUri().getScheme(), tblDataLocationPath.toUri().getAuthority(),
-            partPath.toUri().getPath());
+        Path partPath = new Path(tbl.getDataLocation(), Warehouse.makePartPath(partSpec));
+        newPartPath = new Path(tblDataLocationPath.toUri().getScheme(),
+            tblDataLocationPath.toUri().getAuthority(), partPath.toUri().getPath());
 
         if(oldPart != null) {
           /*
@@ -1605,6 +1604,12 @@ public class Hive {
       if (conf.getBoolVar(ConfVars.FIRE_EVENTS_FOR_DML) && !tbl.isTemporary() && (null != oldPart)) {
         newFiles = Collections.synchronizedList(new ArrayList<Path>());
       }
+
+
+      // Note: the stats for ACID tables do not have any coordination with either Hive ACID logic
+      //       like txn commits, time outs, etc.; nor the lower level sync in metastore pertaining
+      //       to ACID updates. So the are not themselves ACID.
+
       // Note: this assumes both paths are qualified; which they are, currently.
       if (isMmTableWrite && loadPath.equals(newPartPath)) {
         // MM insert query, move itself is a no-op.
@@ -1625,7 +1630,9 @@ public class Hive {
         Path destPath = newPartPath;
         if (isMmTableWrite) {
           // We will load into MM directory, and delete from the parent if needed.
+          // TODO: this looks invalid after ACID integration. What about base dirs?
           destPath = new Path(destPath, AcidUtils.deltaSubdir(writeId, writeId, stmtId));
+          // TODO: loadFileType for MM table will no longer be REPLACE_ALL
           filter = (loadFileType == LoadFileType.REPLACE_ALL)
             ? new JavaUtils.IdPathFilter(writeId, stmtId, false, true) : filter;
         }
@@ -1640,6 +1647,7 @@ public class Hive {
           //for fullAcid tables we don't delete files for commands with OVERWRITE - we create a new
           // base_x.  (there is Insert Overwrite and Load Data Overwrite)
           boolean isAutoPurge = "true".equalsIgnoreCase(tbl.getProperty("auto.purge"));
+          // TODO: this should never run for MM tables anymore. Remove the flag, and maybe the filter?
           replaceFiles(tbl.getPath(), loadPath, destPath, oldPartPath, getConf(),
               isSrcLocal, isAutoPurge, newFiles, filter, isMmTableWrite, !tbl.isTemporary());
         } else {
@@ -1688,7 +1696,21 @@ public class Hive {
           StatsSetupConst.setStatsStateForCreateTable(newTPart.getParameters(),
               MetaStoreUtils.getColumnNames(tbl.getCols()), StatsSetupConst.TRUE);
         }
-        MetaStoreUtils.populateQuickStats(HiveStatsUtils.getFileStatusRecurse(newPartPath, -1, newPartPath.getFileSystem(conf)), newTPart.getParameters());
+        // Note: we are creating a brand new the partition, so this is going to be valid for ACID.
+        List<FileStatus> filesForStats = null;
+        if (isFullAcidTable || isMmTableWrite) {
+          filesForStats = AcidUtils.getAcidFilesForStats(
+              newTPart.getTable(), newPartPath, conf, null);
+        } else {
+          filesForStats = HiveStatsUtils.getFileStatusRecurse(
+              newPartPath, -1, newPartPath.getFileSystem(conf));
+        }
+        if (filesForStats != null) {
+          MetaStoreUtils.populateQuickStats(filesForStats, newTPart.getParameters());
+        } else {
+          // The ACID state is probably absent. Warning is logged in the get method.
+          MetaStoreUtils.clearQuickStats(newTPart.getParameters());
+        }
         try {
           LOG.debug("Adding new partition " + newTPart.getSpec());
           getSynchronizedMSC().add_partition(newTPart.getTPartition());
@@ -1739,17 +1761,17 @@ public class Hive {
    * Load Data commands for fullAcid tables write to base_x (if there is overwrite clause) or
    * delta_x_x directory - same as any other Acid write.  This method modifies the destPath to add
    * this path component.
-   * @param txnId - id of current transaction (in which this operation is running)
+   * @param writeId - write id of the operated table from current transaction (in which this operation is running)
    * @param stmtId - see {@link DbTxnManager#getStmtIdAndIncrement()}
    * @return appropriately modified path
    */
-  private Path fixFullAcidPathForLoadData(LoadFileType loadFileType, Path destPath, long txnId, int stmtId, Table tbl) throws HiveException {
+  private Path fixFullAcidPathForLoadData(LoadFileType loadFileType, Path destPath, long writeId, int stmtId, Table tbl) throws HiveException {
     switch (loadFileType) {
       case REPLACE_ALL:
-        destPath = new Path(destPath, AcidUtils.baseDir(txnId));
+        destPath = new Path(destPath, AcidUtils.baseDir(writeId));
         break;
       case KEEP_EXISTING:
-        destPath = new Path(destPath, AcidUtils.deltaSubdir(txnId, txnId, stmtId));
+        destPath = new Path(destPath, AcidUtils.deltaSubdir(writeId, writeId, stmtId));
         break;
       case OVERWRITE_EXISTING:
         //should not happen here - this is for replication
@@ -1771,9 +1793,9 @@ public class Hive {
     return conf.getBoolVar(ConfVars.FIRE_EVENTS_FOR_DML) && !tbl.isTemporary() && oldPart != null;
   }
 
-  private List<Path> listFilesCreatedByQuery(Path loadPath, long txnId, int stmtId) throws HiveException {
+  private List<Path> listFilesCreatedByQuery(Path loadPath, long writeId, int stmtId) throws HiveException {
     List<Path> newFiles = new ArrayList<Path>();
-    final String filePrefix = AcidUtils.deltaSubdir(txnId, txnId, stmtId);
+    final String filePrefix = AcidUtils.deltaSubdir(writeId, writeId, stmtId);
     FileStatus[] srcs;
     FileSystem srcFs;
     try {
@@ -1939,13 +1961,13 @@ private void constructOneLBLocationMap(FileStatus fSta,
    * @throws HiveException
    */
   private Set<Path> getValidPartitionsInPath(
-      int numDP, int numLB, Path loadPath, Long txnId, int stmtId,
+      int numDP, int numLB, Path loadPath, Long writeId, int stmtId,
       boolean isMmTable, boolean isInsertOverwrite) throws HiveException {
     Set<Path> validPartitions = new HashSet<Path>();
     try {
       FileSystem fs = loadPath.getFileSystem(conf);
       if (!isMmTable) {
-        FileStatus[] leafStatus = HiveStatsUtils.getFileStatusRecurse(loadPath, numDP, fs);
+        List<FileStatus> leafStatus = HiveStatsUtils.getFileStatusRecurse(loadPath, numDP, fs);
         // Check for empty partitions
         for (FileStatus s : leafStatus) {
           if (!s.isDirectory()) {
@@ -1963,7 +1985,7 @@ private void constructOneLBLocationMap(FileStatus fSta,
         Utilities.FILE_OP_LOGGER.trace(
             "Looking for dynamic partitions in {} ({} levels)", loadPath, numDP);
         Path[] leafStatus = Utilities.getMmDirectoryCandidates(
-            fs, loadPath, numDP, numLB, null, txnId, -1, conf, isInsertOverwrite);
+            fs, loadPath, numDP, numLB, null, writeId, -1, conf, isInsertOverwrite);
         for (Path p : leafStatus) {
           Path dpPath = p.getParent(); // Skip the MM directory that we have found.
           for (int i = 0; i < numLB; ++i) {
@@ -2167,9 +2189,13 @@ private void constructOneLBLocationMap(FileStatus fSta,
     if (conf.getBoolVar(ConfVars.FIRE_EVENTS_FOR_DML) && !tbl.isTemporary()) {
       newFiles = Collections.synchronizedList(new ArrayList<Path>());
     }
+
     // Note: this assumes both paths are qualified; which they are, currently.
     if (isMmTable && loadPath.equals(tbl.getPath())) {
-      Utilities.FILE_OP_LOGGER.debug("not moving " + loadPath + " to " + tbl.getPath());
+      if (Utilities.FILE_OP_LOGGER.isDebugEnabled()) {
+        Utilities.FILE_OP_LOGGER.debug(
+            "not moving " + loadPath + " to " + tbl.getPath() + " (MM)");
+      }
       newFiles = listFilesCreatedByQuery(loadPath, writeId, stmtId);
     } else {
       // Either a non-MM query, or a load into MM table from an external source.
@@ -2179,7 +2205,9 @@ private void constructOneLBLocationMap(FileStatus fSta,
       if (isMmTable) {
         assert !isAcidIUDoperation;
         // We will load into MM directory, and delete from the parent if needed.
+        // TODO: this looks invalid after ACID integration. What about base dirs?
         destPath = new Path(destPath, AcidUtils.deltaSubdir(writeId, writeId, stmtId));
+        // TODO: loadFileType for MM table will no longer be REPLACE_ALL
         filter = loadFileType == LoadFileType.REPLACE_ALL
             ? new JavaUtils.IdPathFilter(writeId, stmtId, false, true) : filter;
       }
@@ -2192,6 +2220,7 @@ private void constructOneLBLocationMap(FileStatus fSta,
         //for fullAcid we don't want to delete any files even for OVERWRITE see HIVE-14988/HIVE-17361
         //todo:  should probably do the same for MM IOW
         boolean isAutopurge = "true".equalsIgnoreCase(tbl.getProperty("auto.purge"));
+        // TODO: this should never run for MM tables anymore. Remove the flag, and maybe the filter?
         replaceFiles(tblPath, loadPath, destPath, tblPath,
             sessionConf, isSrcLocal, isAutopurge, newFiles, filter, isMmTable?true:false, !tbl.isTemporary());
       } else {

@@ -220,7 +220,11 @@ public class Warehouse {
   }
 
   void addToChangeManagement(Path file) throws MetaException {
-    cm.recycle(file, RecycleType.COPY, true);
+    try {
+      cm.recycle(file, RecycleType.COPY, true);
+    } catch (IOException e) {
+      throw new MetaException(org.apache.hadoop.util.StringUtils.stringifyException(e));
+    }
   }
 
   public boolean deleteDir(Path f, boolean recursive) throws MetaException {
@@ -234,15 +238,23 @@ public class Warehouse {
   public boolean deleteDir(Path f, boolean recursive, boolean ifPurge, boolean needCmRecycle) throws MetaException {
     // no need to create the CM recycle file for temporary tables
     if (needCmRecycle) {
-      cm.recycle(f, RecycleType.MOVE, ifPurge);
+
+      try {
+        cm.recycle(f, RecycleType.MOVE, ifPurge);
+      } catch (IOException e) {
+        throw new MetaException(org.apache.hadoop.util.StringUtils.stringifyException(e));
+      }
     }
     FileSystem fs = getFs(f);
     return fsHandler.deleteDir(fs, f, recursive, ifPurge, conf);
   }
 
   public void recycleDirToCmPath(Path f, boolean ifPurge) throws MetaException {
-    cm.recycle(f, RecycleType.MOVE, ifPurge);
-    return;
+    try {
+      cm.recycle(f, RecycleType.MOVE, ifPurge);
+    } catch (IOException e) {
+      throw new MetaException(org.apache.hadoop.util.StringUtils.stringifyException(e));
+    }
   }
 
   public boolean isEmpty(Path path) throws IOException, MetaException {
@@ -543,7 +555,7 @@ public class Warehouse {
    * @return array of FileStatus objects corresponding to the files
    * making up the passed storage description
    */
-  public FileStatus[] getFileStatusesForSD(StorageDescriptor desc)
+  public List<FileStatus> getFileStatusesForSD(StorageDescriptor desc)
       throws MetaException {
     return getFileStatusesForLocation(desc.getLocation());
   }
@@ -553,7 +565,7 @@ public class Warehouse {
    * @return array of FileStatus objects corresponding to the files
    * making up the passed storage description
    */
-  public FileStatus[] getFileStatusesForLocation(String location)
+  public List<FileStatus> getFileStatusesForLocation(String location)
       throws MetaException {
     try {
       Path path = new Path(location);
@@ -571,7 +583,7 @@ public class Warehouse {
    * @return array of FileStatus objects corresponding to the files making up the passed
    * unpartitioned table
    */
-  public FileStatus[] getFileStatusesForUnpartitionedTable(Database db, Table table)
+  public List<FileStatus> getFileStatusesForUnpartitionedTable(Database db, Table table)
       throws MetaException {
     Path tablePath = getDnsPath(new Path(table.getSd().getLocation()));
     try {

@@ -354,14 +354,14 @@ import org.slf4j.LoggerFactory;
           case 1: // DEFAULT_CONSTRAINT_COLS
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list402 = iprot.readListBegin();
-                struct.defaultConstraintCols = new ArrayList<SQLDefaultConstraint>(_list402.size);
-                SQLDefaultConstraint _elem403;
-                for (int _i404 = 0; _i404 < _list402.size; ++_i404)
+                org.apache.thrift.protocol.TList _list392 = iprot.readListBegin();
+                struct.defaultConstraintCols = new ArrayList<SQLDefaultConstraint>(_list392.size);
+                SQLDefaultConstraint _elem393;
+                for (int _i394 = 0; _i394 < _list392.size; ++_i394)
                 {
-                  _elem403 = new SQLDefaultConstraint();
-                  _elem403.read(iprot);
-                  struct.defaultConstraintCols.add(_elem403);
+                  _elem393 = new SQLDefaultConstraint();
+                  _elem393.read(iprot);
+                  struct.defaultConstraintCols.add(_elem393);
                 }
                 iprot.readListEnd();
               }
@@ -387,9 +387,9 @@ import org.slf4j.LoggerFactory;
         oprot.writeFieldBegin(DEFAULT_CONSTRAINT_COLS_FIELD_DESC);
         {
           oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.defaultConstraintCols.size()));
-          for (SQLDefaultConstraint _iter405 : struct.defaultConstraintCols)
+          for (SQLDefaultConstraint _iter395 : struct.defaultConstraintCols)
           {
-            _iter405.write(oprot);
+            _iter395.write(oprot);
           }
           oprot.writeListEnd();
         }
@@ -414,9 +414,9 @@ import org.slf4j.LoggerFactory;
       TTupleProtocol oprot = (TTupleProtocol) prot;
       {
         oprot.writeI32(struct.defaultConstraintCols.size());
-        for (SQLDefaultConstraint _iter406 : struct.defaultConstraintCols)
+        for (SQLDefaultConstraint _iter396 : struct.defaultConstraintCols)
         {
-          _iter406.write(oprot);
+          _iter396.write(oprot);
         }
       }
     }
@@ -425,14 +425,14 @@ import org.slf4j.LoggerFactory;
     public void read(org.apache.thrift.protocol.TProtocol prot, AddDefaultConstraintRequest struct) throws org.apache.thrift.TException {
       TTupleProtocol iprot = (TTupleProtocol) prot;
       {
-        org.apache.thrift.protocol.TList _list407 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-        struct.defaultConstraintCols = new ArrayList<SQLDefaultConstraint>(_list407.size);
-        SQLDefaultConstraint _elem408;
-        for (int _i409 = 0; _i409 < _list407.size; ++_i409)
+        org.apache.thrift.protocol.TList _list397 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+        struct.defaultConstraintCols = new ArrayList<SQLDefaultConstraint>(_list397.size);
+        SQLDefaultConstraint _elem398;
+        for (int _i399 = 0; _i399 < _list397.size; ++_i399)
         {
-          _elem408 = new SQLDefaultConstraint();
-          _elem408.read(iprot);
-          struct.defaultConstraintCols.add(_elem408);
+          _elem398 = new SQLDefaultConstraint();
+          _elem398.read(iprot);
+          struct.defaultConstraintCols.add(_elem398);
         }
       }
       struct.setDefaultConstraintColsIsSet(true);

@@ -351,13 +351,13 @@ import org.slf4j.LoggerFactory;
           case 1: // ROW
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list532 = iprot.readListBegin();
-                struct.row = new ArrayList<String>(_list532.size);
-                String _elem533;
-                for (int _i534 = 0; _i534 < _list532.size; ++_i534)
+                org.apache.thrift.protocol.TList _list522 = iprot.readListBegin();
+                struct.row = new ArrayList<String>(_list522.size);
+                String _elem523;
+                for (int _i524 = 0; _i524 < _list522.size; ++_i524)
                 {
-                  _elem533 = iprot.readString();
-                  struct.row.add(_elem533);
+                  _elem523 = iprot.readString();
+                  struct.row.add(_elem523);
                 }
                 iprot.readListEnd();
               }
@@ -383,9 +383,9 @@ import org.slf4j.LoggerFactory;
         oprot.writeFieldBegin(ROW_FIELD_DESC);
         {
           oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, struct.row.size()));
-          for (String _iter535 : struct.row)
+          for (String _iter525 : struct.row)
           {
-            oprot.writeString(_iter535);
+            oprot.writeString(_iter525);
           }
           oprot.writeListEnd();
         }
@@ -410,9 +410,9 @@ import org.slf4j.LoggerFactory;
       TTupleProtocol oprot = (TTupleProtocol) prot;
       {
         oprot.writeI32(struct.row.size());
-        for (String _iter536 : struct.row)
+        for (String _iter526 : struct.row)
         {
-          oprot.writeString(_iter536);
+          oprot.writeString(_iter526);
         }
       }
     }
@@ -421,13 +421,13 @@ import org.slf4j.LoggerFactory;
     public void read(org.apache.thrift.protocol.TProtocol prot, PartitionValuesRow struct) throws org.apache.thrift.TException {
       TTupleProtocol iprot = (TTupleProtocol) prot;
       {
-        org.apache.thrift.protocol.TList _list537 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
-        struct.row = new ArrayList<String>(_list537.size);
-        String _elem538;
-        for (int _i539 = 0; _i539 < _list537.size; ++_i539)
+        org.apache.thrift.protocol.TList _list527 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+        struct.row = new ArrayList<String>(_list527.size);
+        String _elem528;
+        for (int _i529 = 0; _i529 < _list527.size; ++_i529)
         {
-          _elem538 = iprot.readString();
-          struct.row.add(_elem538);
+          _elem528 = iprot.readString();
+          struct.row.add(_elem528);
         }
       }
       struct.setRowIsSet(true);

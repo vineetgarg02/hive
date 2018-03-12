@@ -689,14 +689,14 @@ import org.slf4j.LoggerFactory;
           case 1: // COMPONENT
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list628 = iprot.readListBegin();
-                struct.component = new ArrayList<LockComponent>(_list628.size);
-                LockComponent _elem629;
-                for (int _i630 = 0; _i630 < _list628.size; ++_i630)
+                org.apache.thrift.protocol.TList _list618 = iprot.readListBegin();
+                struct.component = new ArrayList<LockComponent>(_list618.size);
+                LockComponent _elem619;
+                for (int _i620 = 0; _i620 < _list618.size; ++_i620)
                 {
-                  _elem629 = new LockComponent();
-                  _elem629.read(iprot);
-                  struct.component.add(_elem629);
+                  _elem619 = new LockComponent();
+                  _elem619.read(iprot);
+                  struct.component.add(_elem619);
                 }
                 iprot.readListEnd();
               }
@@ -754,9 +754,9 @@ import org.slf4j.LoggerFactory;
         oprot.writeFieldBegin(COMPONENT_FIELD_DESC);
         {
           oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.component.size()));
-          for (LockComponent _iter631 : struct.component)
+          for (LockComponent _iter621 : struct.component)
           {
-            _iter631.write(oprot);
+            _iter621.write(oprot);
           }
           oprot.writeListEnd();
         }
@@ -803,9 +803,9 @@ import org.slf4j.LoggerFactory;
       TTupleProtocol oprot = (TTupleProtocol) prot;
       {
         oprot.writeI32(struct.component.size());
-        for (LockComponent _iter632 : struct.component)
+        for (LockComponent _iter622 : struct.component)
         {
-          _iter632.write(oprot);
+          _iter622.write(oprot);
         }
       }
       oprot.writeString(struct.user);
@@ -830,14 +830,14 @@ import org.slf4j.LoggerFactory;
     public void read(org.apache.thrift.protocol.TProtocol prot, LockRequest struct) throws org.apache.thrift.TException {
       TTupleProtocol iprot = (TTupleProtocol) prot;
       {
-        org.apache.thrift.protocol.TList _list633 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-        struct.component = new ArrayList<LockComponent>(_list633.size);
-        LockComponent _elem634;
-        for (int _i635 = 0; _i635 < _list633.size; ++_i635)
+        org.apache.thrift.protocol.TList _list623 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+        struct.component = new ArrayList<LockComponent>(_list623.size);
+        LockComponent _elem624;
+        for (int _i625 = 0; _i625 < _list623.size; ++_i625)
         {
-          _elem634 = new LockComponent();
-          _elem634.read(iprot);
-          struct.component.add(_elem634);
+          _elem624 = new LockComponent();
+          _elem624.read(iprot);
+          struct.component.add(_elem624);
         }
       }
       struct.setComponentIsSet(true);

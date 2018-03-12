@@ -117,6 +117,7 @@ import org.apache.hadoop.hive.metastore.api.ResourceType;
 import org.apache.hadoop.hive.metastore.api.ResourceUri;
 import org.apache.hadoop.hive.metastore.api.Role;
 import org.apache.hadoop.hive.metastore.api.RolePrincipalGrant;
+import org.apache.hadoop.hive.metastore.api.SQLCheckConstraint;
 import org.apache.hadoop.hive.metastore.api.SQLDefaultConstraint;
 import org.apache.hadoop.hive.metastore.api.SQLForeignKey;
 import org.apache.hadoop.hive.metastore.api.SQLNotNullConstraint;
@@ -1094,7 +1095,7 @@ public class ObjectStore implements RawStore, Configurable {
   public List<String> createTableWithConstraints(Table tbl,
     List<SQLPrimaryKey> primaryKeys, List<SQLForeignKey> foreignKeys,
     List<SQLUniqueConstraint> uniqueConstraints, List<SQLNotNullConstraint> notNullConstraints,
-    List<SQLDefaultConstraint> defaultConstraints)
+    List<SQLDefaultConstraint> defaultConstraints, List<SQLCheckConstraint> checkConstraints)
     throws InvalidObjectException, MetaException {
     boolean success = false;
     try {
@@ -1108,6 +1109,7 @@ public class ObjectStore implements RawStore, Configurable {
       constraintNames.addAll(addUniqueConstraints(uniqueConstraints, false));
       constraintNames.addAll(addNotNullConstraints(notNullConstraints, false));
       constraintNames.addAll(addDefaultConstraints(defaultConstraints, false));
+      constraintNames.addAll(addCheckConstraints(checkConstraints, false));
       success = commitTransaction();
       return constraintNames;
     } finally {
@@ -4506,6 +4508,75 @@ public class ObjectStore implements RawStore, Configurable {
   public List<String> addDefaultConstraints(List<SQLDefaultConstraint> nns)
       throws InvalidObjectException, MetaException {
     return addDefaultConstraints(nns, true);
+  }
+
+  @Override
+  public List<String> addCheckConstraints(List<SQLCheckConstraint> nns)
+      throws InvalidObjectException, MetaException {
+    return addCheckConstraints(nns, true);
+  }
+
+  private List<String> addCheckConstraints(List<SQLCheckConstraint> nns, boolean retrieveCD)
+      throws InvalidObjectException, MetaException {
+    List<String> nnNames = new ArrayList<>();
+    List<MConstraint> cstrs = new ArrayList<>();
+    String constraintName = null;
+
+    for (int i = 0; i < nns.size(); i++) {
+      final String tableDB = normalizeIdentifier(nns.get(i).getTable_db());
+      final String tableName = normalizeIdentifier(nns.get(i).getTable_name());
+      final String columnName = normalizeIdentifier(nns.get(i).getColumn_name());
+
+      // If retrieveCD is false, we do not need to do a deep retrieval of the Table Column Descriptor.
+      // For instance, this is the case when we are creating the table.
+      AttachedMTableInfo nParentTable = getMTable(tableDB, tableName, retrieveCD);
+      MTable parentTable = nParentTable.mtbl;
+      if (parentTable == null) {
+        throw new InvalidObjectException("Parent table not found: " + tableName);
+      }
+
+      MColumnDescriptor parentCD = retrieveCD ? nParentTable.mcd : parentTable.getSd().getCD();
+      int parentIntegerIndex = getColumnIndexFromTableColumns(parentCD == null ? null : parentCD.getCols(), columnName);
+      if (parentIntegerIndex == -1) {
+        if (parentTable.getPartitionKeys() != null) {
+          parentCD = null;
+          parentIntegerIndex = getColumnIndexFromTableColumns(parentTable.getPartitionKeys(), columnName);
+        }
+        if (parentIntegerIndex == -1) {
+          throw new InvalidObjectException("Parent column not found: " + columnName);
+        }
+      }
+      if (nns.get(i).getDc_name() == null) {
+        constraintName = generateConstraintName(tableDB, tableName, columnName, "dc");
+      } else {
+        constraintName = normalizeIdentifier(nns.get(i).getDc_name());
+        if(constraintNameAlreadyExists(constraintName)) {
+          throw new InvalidObjectException("Constraint name already exists: " + constraintName);
+        }
+      }
+      nnNames.add(constraintName);
+
+      int enableValidateRely = (nns.get(i).isEnable_cstr() ? 4 : 0) +
+          (nns.get(i).isValidate_cstr() ? 2 : 0) + (nns.get(i).isRely_cstr() ? 1 : 0);
+      String checkValue = nns.get(i).getCheck_expression();
+      MConstraint muk = new MConstraint(
+          constraintName,
+          MConstraint.CHECK_CONSTRAINT,
+          1, // Not null constraint should reference a single column
+          null,
+          null,
+          enableValidateRely,
+          parentTable,
+          null,
+          parentCD,
+          null,
+          null,
+          parentIntegerIndex,
+          checkValue);
+      cstrs.add(muk);
+    }
+    pm.makePersistentAll(cstrs);
+    return nnNames;
   }
 
   private List<String> addDefaultConstraints(List<SQLDefaultConstraint> nns, boolean retrieveCD)
@@ -9648,6 +9719,16 @@ public class ObjectStore implements RawStore, Configurable {
     }
   }
 
+  @Override
+  public List<SQLCheckConstraint> getCheckConstraints(String db_name, String tbl_name)
+      throws MetaException {
+    try {
+      return getCheckConstraintsInternal(db_name, tbl_name, true, true);
+    } catch (NoSuchObjectException e) {
+      throw new MetaException(ExceptionUtils.getStackTrace(e));
+    }
+  }
+
   protected List<SQLDefaultConstraint> getDefaultConstraintsInternal(final String db_name_input,
       final String tbl_name_input, boolean allowSql, boolean allowJdo)
           throws MetaException, NoSuchObjectException {
@@ -9667,6 +9748,68 @@ public class ObjectStore implements RawStore, Configurable {
         return getDefaultConstraintsViaJdo(db_name, tbl_name);
       }
     }.run(false);
+  }
+
+  protected List<SQLCheckConstraint> getCheckConstraintsInternal(final String db_name_input,
+                                                                     final String tbl_name_input, boolean allowSql,
+                                                                 boolean allowJdo)
+      throws MetaException, NoSuchObjectException {
+    final String db_name = normalizeIdentifier(db_name_input);
+    final String tbl_name = normalizeIdentifier(tbl_name_input);
+    return new GetListHelper<SQLCheckConstraint>(db_name, tbl_name, allowSql, allowJdo) {
+
+      @Override
+      protected List<SQLCheckConstraint> getSqlResult(GetHelper<List<SQLCheckConstraint>> ctx)
+          throws MetaException {
+        return directSql.getCheckConstraints(db_name, tbl_name);
+      }
+
+      @Override
+      protected List<SQLCheckConstraint> getJdoResult(GetHelper<List<SQLCheckConstraint>> ctx)
+          throws MetaException, NoSuchObjectException {
+        return getCheckConstraintsViaJdo(db_name, tbl_name);
+      }
+    }.run(false);
+  }
+
+  private List<SQLCheckConstraint> getCheckConstraintsViaJdo(String db_name, String tbl_name)
+      throws MetaException {
+    boolean commited = false;
+    List<SQLCheckConstraint> checkConstraints= null;
+    Query query = null;
+    try {
+      openTransaction();
+      query = pm.newQuery(MConstraint.class,
+                          "parentTable.tableName == tbl_name && parentTable.database.name == db_name &&"
+                              + " constraintType == MConstraint.CHECK_CONSTRAINT");
+      query.declareParameters("java.lang.String tbl_name, java.lang.String db_name");
+      Collection<?> constraints = (Collection<?>) query.execute(tbl_name, db_name);
+      pm.retrieveAll(constraints);
+      checkConstraints = new ArrayList<>();
+      for (Iterator<?> i = constraints.iterator(); i.hasNext();) {
+        MConstraint currConstraint = (MConstraint) i.next();
+        List<MFieldSchema> cols = currConstraint.getParentColumn() != null ?
+            currConstraint.getParentColumn().getCols() : currConstraint.getParentTable().getPartitionKeys();
+        int enableValidateRely = currConstraint.getEnableValidateRely();
+        boolean enable = (enableValidateRely & 4) != 0;
+        boolean validate = (enableValidateRely & 2) != 0;
+        boolean rely = (enableValidateRely & 1) != 0;
+        checkConstraints.add(new SQLCheckConstraint(db_name,
+                                                        tbl_name,
+                                                        cols.get(currConstraint.getParentIntegerIndex()).getName(),
+                                                        currConstraint.getDefaultOrCheckValue(),
+                                                    currConstraint.getConstraintName(), enable, validate, rely));
+      }
+      commited = commitTransaction();
+    } finally {
+      if (!commited) {
+        rollbackTransaction();
+      }
+      if (query != null) {
+        query.closeAll();
+      }
+    }
+    return checkConstraints;
   }
 
   private List<SQLDefaultConstraint> getDefaultConstraintsViaJdo(String db_name, String tbl_name)
@@ -9692,9 +9835,9 @@ public class ObjectStore implements RawStore, Configurable {
         boolean validate = (enableValidateRely & 2) != 0;
         boolean rely = (enableValidateRely & 1) != 0;
         defaultConstraints.add(new SQLDefaultConstraint(db_name,
-         tbl_name,
-         cols.get(currConstraint.getParentIntegerIndex()).getName(),
-         currConstraint.getDefaultValue(), currConstraint.getConstraintName(), enable, validate, rely));
+                                                        tbl_name,
+                                                        cols.get(currConstraint.getParentIntegerIndex()).getName(),
+                                                        currConstraint.getDefaultOrCheckValue(), currConstraint.getConstraintName(), enable, validate, rely));
       }
       commited = commitTransaction();
     } finally {

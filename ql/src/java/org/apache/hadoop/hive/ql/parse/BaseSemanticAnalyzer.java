@@ -36,20 +36,15 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 
+import javolution.io.Struct;
+import org.antlr.runtime.TokenRewriteStream;
 import org.antlr.runtime.tree.Tree;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.common.FileUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.metastore.api.Database;
-import org.apache.hadoop.hive.metastore.api.FieldSchema;
-import org.apache.hadoop.hive.metastore.api.Order;
-import org.apache.hadoop.hive.metastore.api.SQLDefaultConstraint;
-import org.apache.hadoop.hive.metastore.api.SQLForeignKey;
-import org.apache.hadoop.hive.metastore.api.SQLNotNullConstraint;
-import org.apache.hadoop.hive.metastore.api.SQLPrimaryKey;
-import org.apache.hadoop.hive.metastore.api.SQLUniqueConstraint;
+import org.apache.hadoop.hive.metastore.api.*;
 import org.apache.hadoop.hive.metastore.utils.MetaStoreUtils;
 import org.apache.hadoop.hive.ql.CompilationOpContext;
 import org.apache.hadoop.hive.ql.Context;
@@ -58,11 +53,7 @@ import org.apache.hadoop.hive.ql.QueryProperties;
 import org.apache.hadoop.hive.ql.QueryState;
 import org.apache.hadoop.hive.ql.cache.results.CacheUsage;
 import org.apache.hadoop.hive.ql.cache.results.QueryResultsCache;
-import org.apache.hadoop.hive.ql.exec.FetchTask;
-import org.apache.hadoop.hive.ql.exec.FunctionRegistry;
-import org.apache.hadoop.hive.ql.exec.Task;
-import org.apache.hadoop.hive.ql.exec.TaskFactory;
-import org.apache.hadoop.hive.ql.exec.Utilities;
+import org.apache.hadoop.hive.ql.exec.*;
 import org.apache.hadoop.hive.ql.hooks.LineageInfo;
 import org.apache.hadoop.hive.ql.hooks.ReadEntity;
 import org.apache.hadoop.hive.ql.hooks.WriteEntity;
@@ -91,6 +82,7 @@ import org.apache.hadoop.hive.ql.udf.generic.GenericUDFCurrentTimestamp;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDFCurrentUser;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDFOPNull;
 import org.apache.hadoop.hive.serde.serdeConstants;
+import org.apache.hadoop.hive.serde2.dynamic_type.Token;
 import org.apache.hadoop.hive.serde2.io.DateWritable;
 import org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
@@ -649,9 +641,9 @@ public abstract class BaseSemanticAnalyzer {
    * Get the list of FieldSchema out of the ASTNode.
    */
   public static List<FieldSchema> getColumns(ASTNode ast, boolean lowerCase) throws SemanticException {
-    return getColumns(ast, lowerCase, new ArrayList<SQLPrimaryKey>(), new ArrayList<SQLForeignKey>(),
+    return getColumns(ast, lowerCase, null,new ArrayList<SQLPrimaryKey>(), new ArrayList<SQLForeignKey>(),
             new ArrayList<SQLUniqueConstraint>(), new ArrayList<SQLNotNullConstraint>(),
-        new ArrayList<SQLDefaultConstraint>());
+        new ArrayList<SQLDefaultConstraint>(), new ArrayList<SQLCheckConstraint>());
   }
 
   private static class ConstraintInfo {
@@ -696,7 +688,7 @@ public abstract class BaseSemanticAnalyzer {
       ASTNode child, List<String> columnNames, List<SQLPrimaryKey> primaryKeys)
           throws SemanticException {
     List<ConstraintInfo> primaryKeyInfos = new ArrayList<ConstraintInfo>();
-    generateConstraintInfos(child, columnNames, primaryKeyInfos, null);
+    generateConstraintInfos(child, columnNames, primaryKeyInfos, null, null);
     constraintInfosToPrimaryKeys(databaseName, tableName, primaryKeyInfos, primaryKeys);
   }
 
@@ -724,7 +716,7 @@ public abstract class BaseSemanticAnalyzer {
       ASTNode child, List<String> columnNames, List<SQLUniqueConstraint> uniqueConstraints)
           throws SemanticException {
     List<ConstraintInfo> uniqueInfos = new ArrayList<ConstraintInfo>();
-    generateConstraintInfos(child, columnNames, uniqueInfos, null);
+    generateConstraintInfos(child, columnNames, uniqueInfos, null, null);
     constraintInfosToUniqueConstraints(databaseName, tableName, uniqueInfos, uniqueConstraints);
   }
 
@@ -737,11 +729,30 @@ public abstract class BaseSemanticAnalyzer {
     }
   }
 
+  protected static void processCheckConstraints(String databaseName, String tableName,
+                                                  ASTNode child, List<String> columnNames,
+                                                List<SQLCheckConstraint> checkConstraints, final ASTNode typeChild,
+                                                final TokenRewriteStream tokenRewriteStream)
+      throws SemanticException {
+    List<ConstraintInfo> checkInfos = new ArrayList<ConstraintInfo>();
+    generateConstraintInfos(child, columnNames, checkInfos, typeChild, tokenRewriteStream);
+    constraintInfosToCheckConstraints(databaseName, tableName, checkInfos, checkConstraints);
+  }
+
+  private static void constraintInfosToCheckConstraints(String databaseName, String tableName,
+                                                          List<ConstraintInfo> checkInfos,
+                                                        List<SQLCheckConstraint> checkConstraints) {
+    for (ConstraintInfo checkInfo : checkInfos) {
+      checkConstraints.add(new SQLCheckConstraint(databaseName, tableName, checkInfo.colName,
+                                                      checkInfo.defaultValue, checkInfo.constraintName, checkInfo.enable,
+                                                      checkInfo.validate, checkInfo.rely));
+    }
+  }
   protected static void processDefaultConstraints(String databaseName, String tableName,
       ASTNode child, List<String> columnNames, List<SQLDefaultConstraint> defaultConstraints, final ASTNode typeChild)
       throws SemanticException {
     List<ConstraintInfo> defaultInfos = new ArrayList<ConstraintInfo>();
-    generateConstraintInfos(child, columnNames, defaultInfos, typeChild);
+    generateConstraintInfos(child, columnNames, defaultInfos, typeChild, null);
     constraintInfosToDefaultConstraints(databaseName, tableName, defaultInfos, defaultConstraints);
   }
 
@@ -758,7 +769,7 @@ public abstract class BaseSemanticAnalyzer {
       ASTNode child, List<String> columnNames, List<SQLNotNullConstraint> notNullConstraints)
           throws SemanticException {
     List<ConstraintInfo> notNullInfos = new ArrayList<ConstraintInfo>();
-    generateConstraintInfos(child, columnNames, notNullInfos, null);
+    generateConstraintInfos(child, columnNames, notNullInfos, null, null);
     constraintInfosToNotNullConstraints(databaseName, tableName, notNullInfos, notNullConstraints);
   }
 
@@ -785,7 +796,7 @@ public abstract class BaseSemanticAnalyzer {
       checkColumnName(columnName.getText());
       columnNames.add(unescapeIdentifier(columnName.getText().toLowerCase()));
     }
-    generateConstraintInfos(child, columnNames.build(), cstrInfos, null);
+    generateConstraintInfos(child, columnNames.build(), cstrInfos, null, null);
   }
 
   private static boolean isDefaultValueAllowed(final ExprNodeDesc defaultValExpr) {
@@ -805,6 +816,39 @@ public abstract class BaseSemanticAnalyzer {
       }
     }
     return false;
+  }
+
+  public static void validateCheckConstraint(List<FieldSchema> cols, List<SQLCheckConstraint> checkConstraints)
+  throws SemanticException{
+
+    // create colinfo and then row resolver
+    RowResolver rr = new RowResolver();
+    for(FieldSchema col: cols) {
+      ColumnInfo ci = new ColumnInfo(col.getName(),TypeInfoUtils.getTypeInfoFromTypeString(col.getType()),null,false);
+      rr.put(null, col.getName(), ci);
+    }
+
+    TypeCheckCtx typeCheckCtx = new TypeCheckCtx(rr);
+    for(SQLCheckConstraint cc:checkConstraints) {
+      try {
+        ParseDriver parseDriver = new ParseDriver();
+        ASTNode checkExprAST = parseDriver.parseExpression(cc.getCheck_expression());
+        ExprNodeDesc checkExpr = TypeCheckProcFactory
+            .genExprNode(checkExprAST, typeCheckCtx).get(checkExprAST);
+        if(checkExpr == null || checkExpr.getTypeInfo().getTypeName() != serdeConstants.BOOLEAN_TYPE_NAME) {
+          throw new SemanticException(
+              ErrorMsg.INVALID_CSTR_SYNTAX.getMsg("Invalid type for CHECK constraint: ")
+                  + cc.getCheck_expression());
+        }
+      } catch(ParseException e) {
+          throw new SemanticException(e.getMessage());
+      }
+    }
+  }
+
+  private static String getCheckExpression(ASTNode checkExprAST, final TokenRewriteStream tokenRewriteStream)
+      throws SemanticException{
+    return tokenRewriteStream.toOriginalString(checkExprAST.getTokenStartIndex(), checkExprAST.getTokenStopIndex());
   }
 
   /**
@@ -865,7 +909,8 @@ public abstract class BaseSemanticAnalyzer {
    * @throws SemanticException
    */
   private static void generateConstraintInfos(ASTNode child, List<String> columnNames,
-      List<ConstraintInfo> cstrInfos, ASTNode typeChildForDefault) throws SemanticException {
+      List<ConstraintInfo> cstrInfos, ASTNode typeChildForDefault,
+                                              final TokenRewriteStream tokenRewriteStream) throws SemanticException {
     // The ANTLR grammar looks like :
     // 1. KW_CONSTRAINT idfr=identifier KW_PRIMARY KW_KEY pkCols=columnParenthesesList
     //  constraintOptsCreate?
@@ -882,7 +927,7 @@ public abstract class BaseSemanticAnalyzer {
     boolean enable = true;
     boolean validate = false;
     boolean rely = false;
-    String defaultValue = null;
+    String checkOrDefaultValue = null;
     for (int i = 0; i < child.getChildCount(); i++) {
       ASTNode grandChild = (ASTNode) child.getChild(i);
       int type = grandChild.getToken().getType();
@@ -908,7 +953,10 @@ public abstract class BaseSemanticAnalyzer {
         rely = false;
       } else if( child.getToken().getType() == HiveParser.TOK_DEFAULT_VALUE){
         // try to get default value only if this is DEFAULT constraint
-        defaultValue = getDefaultValue(grandChild, typeChildForDefault);
+        checkOrDefaultValue = getDefaultValue(grandChild, typeChildForDefault);
+      }
+      else if(child.getToken().getType() == HiveParser.TOK_CHECK_CONSTRAINT) {
+        checkOrDefaultValue = getCheckExpression(grandChild, tokenRewriteStream);
       }
     }
 
@@ -935,7 +983,7 @@ public abstract class BaseSemanticAnalyzer {
 
     for (String columnName : columnNames) {
       cstrInfos.add(new ConstraintInfo(columnName, constraintName,
-          enable, validate, rely, defaultValue));
+          enable, validate, rely, checkOrDefaultValue));
     }
   }
 
@@ -1026,7 +1074,8 @@ public abstract class BaseSemanticAnalyzer {
   }
 
   protected boolean hasEnabledOrValidatedConstraints(List<SQLNotNullConstraint> notNullConstraints,
-                                                     List<SQLDefaultConstraint> defaultConstraints){
+                                                     List<SQLDefaultConstraint> defaultConstraints,
+                                                     List<SQLCheckConstraint> checkConstraints){
     if(notNullConstraints != null) {
       for (SQLNotNullConstraint nnC : notNullConstraints) {
         if (nnC.isEnable_cstr() || nnC.isValidate_cstr()) {
@@ -1034,12 +1083,11 @@ public abstract class BaseSemanticAnalyzer {
         }
       }
     }
-    if(defaultConstraints!= null) {
-      for (SQLDefaultConstraint nnC : defaultConstraints) {
-        if (nnC.isEnable_cstr() || nnC.isValidate_cstr()) {
+    if(defaultConstraints!= null && !defaultConstraints.isEmpty()) {
           return true;
-        }
-      }
+    }
+    if(checkConstraints!= null && !checkConstraints.isEmpty()) {
+          return true;
     }
     return false;
   }
@@ -1055,9 +1103,11 @@ public abstract class BaseSemanticAnalyzer {
    * Additionally, populate the primaryKeys and foreignKeys if any.
    */
   public static List<FieldSchema> getColumns(ASTNode ast, boolean lowerCase,
+    TokenRewriteStream tokenRewriteStream,
     List<SQLPrimaryKey> primaryKeys, List<SQLForeignKey> foreignKeys,
     List<SQLUniqueConstraint> uniqueConstraints, List<SQLNotNullConstraint> notNullConstraints,
-                                           List<SQLDefaultConstraint> defaultConstraints)
+                                           List<SQLDefaultConstraint> defaultConstraints,
+                                             List<SQLCheckConstraint> checkConstraints)
         throws SemanticException {
     List<FieldSchema> colList = new ArrayList<FieldSchema>();
     Tree parent = ast.getParent();
@@ -1115,6 +1165,11 @@ public abstract class BaseSemanticAnalyzer {
               String[] qualifiedTabName = getQualifiedTableName((ASTNode) parent.getChild(0));
               // Process column constraint
               switch (constraintChild.getToken().getType()) {
+              case HiveParser.TOK_CHECK_CONSTRAINT:
+                processCheckConstraints(qualifiedTabName[0], qualifiedTabName[1], constraintChild,
+                                          ImmutableList.of(col.getName()), checkConstraints, typeChild,
+                                        tokenRewriteStream);
+                break;
               case HiveParser.TOK_DEFAULT_VALUE:
                 processDefaultConstraints(qualifiedTabName[0], qualifiedTabName[1], constraintChild,
                     ImmutableList.of(col.getName()), defaultConstraints, typeChild);

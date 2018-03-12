@@ -354,14 +354,14 @@ import org.slf4j.LoggerFactory;
           case 1: // TXN_TO_WRITE_IDS
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list604 = iprot.readListBegin();
-                struct.txnToWriteIds = new ArrayList<TxnToWriteId>(_list604.size);
-                TxnToWriteId _elem605;
-                for (int _i606 = 0; _i606 < _list604.size; ++_i606)
+                org.apache.thrift.protocol.TList _list620 = iprot.readListBegin();
+                struct.txnToWriteIds = new ArrayList<TxnToWriteId>(_list620.size);
+                TxnToWriteId _elem621;
+                for (int _i622 = 0; _i622 < _list620.size; ++_i622)
                 {
-                  _elem605 = new TxnToWriteId();
-                  _elem605.read(iprot);
-                  struct.txnToWriteIds.add(_elem605);
+                  _elem621 = new TxnToWriteId();
+                  _elem621.read(iprot);
+                  struct.txnToWriteIds.add(_elem621);
                 }
                 iprot.readListEnd();
               }
@@ -387,9 +387,9 @@ import org.slf4j.LoggerFactory;
         oprot.writeFieldBegin(TXN_TO_WRITE_IDS_FIELD_DESC);
         {
           oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.txnToWriteIds.size()));
-          for (TxnToWriteId _iter607 : struct.txnToWriteIds)
+          for (TxnToWriteId _iter623 : struct.txnToWriteIds)
           {
-            _iter607.write(oprot);
+            _iter623.write(oprot);
           }
           oprot.writeListEnd();
         }
@@ -414,9 +414,9 @@ import org.slf4j.LoggerFactory;
       TTupleProtocol oprot = (TTupleProtocol) prot;
       {
         oprot.writeI32(struct.txnToWriteIds.size());
-        for (TxnToWriteId _iter608 : struct.txnToWriteIds)
+        for (TxnToWriteId _iter624 : struct.txnToWriteIds)
         {
-          _iter608.write(oprot);
+          _iter624.write(oprot);
         }
       }
     }
@@ -425,14 +425,14 @@ import org.slf4j.LoggerFactory;
     public void read(org.apache.thrift.protocol.TProtocol prot, AllocateTableWriteIdsResponse struct) throws org.apache.thrift.TException {
       TTupleProtocol iprot = (TTupleProtocol) prot;
       {
-        org.apache.thrift.protocol.TList _list609 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-        struct.txnToWriteIds = new ArrayList<TxnToWriteId>(_list609.size);
-        TxnToWriteId _elem610;
-        for (int _i611 = 0; _i611 < _list609.size; ++_i611)
+        org.apache.thrift.protocol.TList _list625 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+        struct.txnToWriteIds = new ArrayList<TxnToWriteId>(_list625.size);
+        TxnToWriteId _elem626;
+        for (int _i627 = 0; _i627 < _list625.size; ++_i627)
         {
-          _elem610 = new TxnToWriteId();
-          _elem610.read(iprot);
-          struct.txnToWriteIds.add(_elem610);
+          _elem626 = new TxnToWriteId();
+          _elem626.read(iprot);
+          struct.txnToWriteIds.add(_elem626);
         }
       }
       struct.setTxnToWriteIdsIsSet(true);

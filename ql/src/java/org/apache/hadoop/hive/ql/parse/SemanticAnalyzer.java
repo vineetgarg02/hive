@@ -43,7 +43,6 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import com.google.common.collect.ImmutableSet;
 import org.antlr.runtime.ClassicToken;
 import org.antlr.runtime.CommonToken;
 import org.antlr.runtime.TokenRewriteStream;
@@ -64,18 +63,17 @@ import org.apache.hadoop.hive.common.FileUtils;
 import org.apache.hadoop.hive.common.ObjectPair;
 import org.apache.hadoop.hive.common.StatsSetupConst;
 import org.apache.hadoop.hive.common.StatsSetupConst.StatDB;
-import org.apache.hadoop.hive.common.ValidTxnList;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.conf.HiveConf.StrictChecks;
 import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.TransactionalValidationListener;
 import org.apache.hadoop.hive.metastore.Warehouse;
-import org.apache.hadoop.hive.metastore.api.CreationMetadata;
 import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.metastore.api.Order;
+import org.apache.hadoop.hive.metastore.api.SQLCheckConstraint;
 import org.apache.hadoop.hive.metastore.api.SQLDefaultConstraint;
 import org.apache.hadoop.hive.metastore.api.SQLForeignKey;
 import org.apache.hadoop.hive.metastore.api.SQLNotNullConstraint;
@@ -12469,18 +12467,25 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
   }
 
   /**
-   * Checks to see if given partition columns has DEFAULT constraints (whether ENABLED or DISABLED)
+   * Checks to see if given partition columns has DEFAULT or CHECK constraints (whether ENABLED or DISABLED)
    *  Or has NOT NULL constraints (only ENABLED)
    * @param partCols partition columns
    * @param defConstraints default constraints
    * @param notNullConstraints not null constraints
-   * @return
+   * @param checkConstraints CHECK constraints
+   * @return true or false
    */
   boolean hasConstraints(final List<FieldSchema> partCols, final List<SQLDefaultConstraint> defConstraints,
-                         final List<SQLNotNullConstraint> notNullConstraints) {
+                         final List<SQLNotNullConstraint> notNullConstraints,
+                         final List<SQLCheckConstraint> checkConstraints) {
     for(FieldSchema partFS: partCols) {
       for(SQLDefaultConstraint dc:defConstraints) {
         if(dc.getColumn_name().equals(partFS.getName())) {
+          return true;
+        }
+      }
+      for(SQLCheckConstraint cc:checkConstraints) {
+        if(cc.getColumn_name().equals(partFS.getName())) {
           return true;
         }
       }
@@ -12514,6 +12519,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     List<SQLUniqueConstraint> uniqueConstraints = new ArrayList<>();
     List<SQLNotNullConstraint> notNullConstraints = new ArrayList<>();
     List<SQLDefaultConstraint> defaultConstraints= new ArrayList<>();
+    List<SQLCheckConstraint> checkConstraints= new ArrayList<>();
     List<Order> sortCols = new ArrayList<Order>();
     int numBuckets = -1;
     String comment = null;
@@ -12606,19 +12612,19 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
         selectStmt = child;
         break;
       case HiveParser.TOK_TABCOLLIST:
-        cols = getColumns(child, true, primaryKeys, foreignKeys,
-            uniqueConstraints, notNullConstraints, defaultConstraints);
+        cols = getColumns(child, true, ctx.getTokenRewriteStream(), primaryKeys, foreignKeys,
+            uniqueConstraints, notNullConstraints, defaultConstraints, checkConstraints);
         break;
       case HiveParser.TOK_TABLECOMMENT:
         comment = unescapeSQLString(child.getChild(0).getText());
         break;
       case HiveParser.TOK_TABLEPARTCOLS:
-        partCols = getColumns(child, false, primaryKeys, foreignKeys,
-            uniqueConstraints, notNullConstraints, defaultConstraints);
-        if(hasConstraints(partCols, defaultConstraints, notNullConstraints)) {
+        partCols = getColumns(child, false, ctx.getTokenRewriteStream(),primaryKeys, foreignKeys,
+            uniqueConstraints, notNullConstraints, defaultConstraints, checkConstraints);
+        if(hasConstraints(partCols, defaultConstraints, notNullConstraints, checkConstraints)) {
           //TODO: these constraints should be supported for partition columns
           throw new SemanticException(
-              ErrorMsg.INVALID_CSTR_SYNTAX.getMsg("NOT NULL and Default Constraints are not allowed with " +
+              ErrorMsg.INVALID_CSTR_SYNTAX.getMsg("NOT NULL,DEFAULT and CHECK Constraints are not allowed with " +
                                                       "partition columns. "));
         }
         break;
@@ -12678,10 +12684,13 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       throw new SemanticException("Unrecognized command.");
     }
 
-    if(isExt && hasEnabledOrValidatedConstraints(notNullConstraints, defaultConstraints)){
+    if(isExt && hasEnabledOrValidatedConstraints(notNullConstraints, defaultConstraints, checkConstraints)){
       throw new SemanticException(
           ErrorMsg.INVALID_CSTR_SYNTAX.getMsg("Constraints are disallowed with External tables. "
               + "Only RELY is allowed."));
+    }
+    if(checkConstraints != null && !checkConstraints.isEmpty()) {
+      validateCheckConstraint(cols, checkConstraints);
     }
 
 
@@ -12736,7 +12745,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
           comment,
           storageFormat.getInputFormat(), storageFormat.getOutputFormat(), location, storageFormat.getSerde(),
           storageFormat.getStorageHandler(), storageFormat.getSerdeProps(), tblProps, ifNotExists, skewedColNames,
-          skewedValues, primaryKeys, foreignKeys, uniqueConstraints, notNullConstraints, defaultConstraints);
+          skewedValues, primaryKeys, foreignKeys, uniqueConstraints, notNullConstraints, defaultConstraints,
+                                                       checkConstraints);
       crtTblDesc.setStoredAsSubDirectories(storedAsDirs);
       crtTblDesc.setNullFormat(rowFormatParams.nullFormat);
 
@@ -12835,7 +12845,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
           storageFormat.getOutputFormat(), location, storageFormat.getSerde(),
           storageFormat.getStorageHandler(), storageFormat.getSerdeProps(), tblProps, ifNotExists,
           skewedColNames, skewedValues, true, primaryKeys, foreignKeys,
-          uniqueConstraints, notNullConstraints, defaultConstraints);
+          uniqueConstraints, notNullConstraints, defaultConstraints, checkConstraints);
       tableDesc.setMaterialization(isMaterialization);
       tableDesc.setStoredAsSubDirectories(storedAsDirs);
       tableDesc.setNullFormat(rowFormatParams.nullFormat);

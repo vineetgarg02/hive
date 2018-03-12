@@ -53,6 +53,7 @@ import org.apache.hadoop.hive.metastore.api.EnvironmentContext;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.metastore.api.Order;
+import org.apache.hadoop.hive.metastore.api.SQLCheckConstraint;
 import org.apache.hadoop.hive.metastore.api.SQLDefaultConstraint;
 import org.apache.hadoop.hive.metastore.api.SQLForeignKey;
 import org.apache.hadoop.hive.metastore.api.SQLNotNullConstraint;
@@ -3116,9 +3117,16 @@ public class DDLSemanticAnalyzer extends BaseSemanticAnalyzer {
     List<SQLUniqueConstraint> uniqueConstraints = null;
     List<SQLNotNullConstraint> notNullConstraints = null;
     List<SQLDefaultConstraint> defaultConstraints= null;
+    List<SQLCheckConstraint> checkConstraints= null;
     if (constraintChild != null) {
       // Process column constraint
       switch (constraintChild.getToken().getType()) {
+      case HiveParser.TOK_CHECK_CONSTRAINT:
+        checkConstraints = new ArrayList<>();
+        processCheckConstraints(qualified[0], qualified[1], constraintChild,
+                                  ImmutableList.of(newColName), checkConstraints, (ASTNode)ast.getChild(2),
+                                this.ctx.getTokenRewriteStream());
+        break;
       case HiveParser.TOK_DEFAULT_VALUE:
         defaultConstraints = new ArrayList<>();
         processDefaultConstraints(qualified[0], qualified[1], constraintChild,
@@ -3154,7 +3162,7 @@ public class DDLSemanticAnalyzer extends BaseSemanticAnalyzer {
     Table tab = getTable(qualified);
 
     if(tab.getTableType() == TableType.EXTERNAL_TABLE
-        && hasEnabledOrValidatedConstraints(notNullConstraints, defaultConstraints)){
+        && hasEnabledOrValidatedConstraints(notNullConstraints, defaultConstraints, checkConstraints)){
       throw new SemanticException(
           ErrorMsg.INVALID_CSTR_SYNTAX.getMsg("Constraints are disallowed with External tables. "
               + "Only RELY is allowed."));

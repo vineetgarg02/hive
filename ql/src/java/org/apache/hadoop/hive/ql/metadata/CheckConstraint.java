@@ -24,10 +24,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.apache.avro.generic.GenericData;
 import org.apache.hadoop.hive.metastore.api.SQLCheckConstraint;
 
 /**
- * DefaultConstraintInfo is a metadata structure containing the default constraints
+ * CheckConstraintInfo is a metadata structure containing the Check constraints
  * associated with a table.
  */
 @SuppressWarnings("serial")
@@ -43,10 +44,12 @@ public class CheckConstraint implements Serializable {
     }
   }
 
-  // Mapping from constraint name to list of default constraints
+  // Mapping from constraint name to list of Check constraints
   Map<String, List<CheckConstraintCol>> checkConstraints;
 
-  // Mapping from column name to default value
+  List<String> checkExpressionList;
+
+  // Mapping from column name to Check value
   Map<String, String> colNameToCheckExprMap;
   String tableName;
   String databaseName;
@@ -58,6 +61,7 @@ public class CheckConstraint implements Serializable {
     this.databaseName = databaseName;
     checkConstraints = new TreeMap<String, List<CheckConstraintCol>>();
     colNameToCheckExprMap = new TreeMap<String, String>();
+    checkExpressionList = new ArrayList<>();
     if (checkConstraintsList == null) {
       return;
     }
@@ -65,10 +69,11 @@ public class CheckConstraint implements Serializable {
       if (uk.getTable_db().equalsIgnoreCase(databaseName) &&
           uk.getTable_name().equalsIgnoreCase(tableName)) {
         String colName = uk.getColumn_name();
-        String defVal = uk.getCheck_expression();
-        colNameToCheckExprMap.put(colName, defVal);
+        String check_expression = uk.getCheck_expression();
+        colNameToCheckExprMap.put(colName, check_expression);
+        checkExpressionList.add(check_expression);
         CheckConstraintCol currCol = new CheckConstraintCol(
-                colName, defVal);
+                colName, check_expression);
         String constraintName = uk.getDc_name();
         if (checkConstraints.containsKey(constraintName)) {
           checkConstraints.get(constraintName).add(currCol);
@@ -88,6 +93,8 @@ public class CheckConstraint implements Serializable {
   public String getDatabaseName() {
     return databaseName;
   }
+
+  public List<String> getCheckExpressionList() { return checkExpressionList; }
 
   public Map<String, List<CheckConstraintCol>> getCheckConstraints() {
     return checkConstraints;

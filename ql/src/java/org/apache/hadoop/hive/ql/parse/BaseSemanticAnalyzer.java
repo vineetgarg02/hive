@@ -824,7 +824,8 @@ public abstract class BaseSemanticAnalyzer {
     // create colinfo and then row resolver
     RowResolver rr = new RowResolver();
     for(FieldSchema col: cols) {
-      ColumnInfo ci = new ColumnInfo(col.getName(),TypeInfoUtils.getTypeInfoFromTypeString(col.getType()),null,false);
+      ColumnInfo ci = new ColumnInfo(col.getName(),TypeInfoUtils.getTypeInfoFromTypeString(col.getType()),
+                                     null, false);
       rr.put(null, col.getName(), ci);
     }
 
@@ -833,15 +834,18 @@ public abstract class BaseSemanticAnalyzer {
       try {
         ParseDriver parseDriver = new ParseDriver();
         ASTNode checkExprAST = parseDriver.parseExpression(cc.getCheck_expression());
-        ExprNodeDesc checkExpr = TypeCheckProcFactory
-            .genExprNode(checkExprAST, typeCheckCtx).get(checkExprAST);
+        Map<ASTNode, ExprNodeDesc> genExprs = TypeCheckProcFactory
+            .genExprNode(checkExprAST, typeCheckCtx);
+        ExprNodeDesc checkExpr = genExprs.get(checkExprAST);
         if(checkExpr == null || checkExpr.getTypeInfo().getTypeName() != serdeConstants.BOOLEAN_TYPE_NAME) {
           throw new SemanticException(
               ErrorMsg.INVALID_CSTR_SYNTAX.getMsg("Invalid type for CHECK constraint: ")
                   + cc.getCheck_expression());
         }
-      } catch(ParseException e) {
-          throw new SemanticException(e.getMessage());
+      } catch(Exception e) {
+        throw new SemanticException(
+            ErrorMsg.INVALID_CSTR_SYNTAX.getMsg("Invalid CHECK constraint expression: ")
+                + cc.getCheck_expression() + ". " + e.getMessage());
       }
     }
   }
@@ -970,7 +974,8 @@ public abstract class BaseSemanticAnalyzer {
 
     // NOT NULL constraint could be enforced/enabled
     if (enable && child.getToken().getType() != HiveParser.TOK_NOT_NULL
-        && child.getToken().getType() != HiveParser.TOK_DEFAULT_VALUE) {
+        && child.getToken().getType() != HiveParser.TOK_DEFAULT_VALUE
+        && child.getToken().getType() != HiveParser.TOK_CHECK_CONSTRAINT) {
       throw new SemanticException(
           ErrorMsg.INVALID_CSTR_SYNTAX.getMsg("ENABLE/ENFORCED feature not supported yet. "
               + "Please use DISABLE/NOT ENFORCED instead."));

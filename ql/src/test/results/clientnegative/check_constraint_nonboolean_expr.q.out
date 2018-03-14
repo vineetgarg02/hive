@@ -1,0 +1,1 @@
+FAILED: SemanticException [Error 10326]: Invalid Constraint syntax Invalid CHECK constraint expression: i+j. Invalid Constraint syntax Invalid type for CHECK constraint: i+j

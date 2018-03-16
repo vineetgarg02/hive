@@ -12777,7 +12777,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
               + "Only RELY is allowed."));
     }
     if(checkConstraints != null && !checkConstraints.isEmpty()) {
-      validateCheckConstraint(cols, checkConstraints);
+      validateCheckConstraint(cols, checkConstraints, ctx.getConf());
     }
 
 

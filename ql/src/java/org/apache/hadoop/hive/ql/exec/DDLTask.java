@@ -4436,6 +4436,10 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
           && !alterTbl.getDefaultConstraintCols().isEmpty()) {
         db.addDefaultConstraint(alterTbl.getDefaultConstraintCols());
       }
+      if (alterTbl.getCheckConstraintCols() != null
+          && !alterTbl.getCheckConstraintCols().isEmpty()) {
+        db.addCheckConstraint(alterTbl.getCheckConstraintCols());
+      }
     } catch (NoSuchObjectException e) {
       throw new HiveException(e);
     }

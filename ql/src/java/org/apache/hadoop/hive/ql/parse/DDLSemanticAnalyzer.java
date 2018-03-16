@@ -3157,6 +3157,8 @@ public class DDLSemanticAnalyzer extends BaseSemanticAnalyzer {
     /* Validate the operation of renaming a column name. */
     Table tab = getTable(qualified);
 
+    validateCheckConstraint(tab.getCols(), checkConstraints, ctx.getConf());
+
     if(tab.getTableType() == TableType.EXTERNAL_TABLE
         && hasEnabledOrValidatedConstraints(notNullConstraints, defaultConstraints, checkConstraints)){
       throw new SemanticException(
@@ -3175,7 +3177,8 @@ public class DDLSemanticAnalyzer extends BaseSemanticAnalyzer {
     String tblName = getDotName(qualified);
     AlterTableDesc alterTblDesc;
     if (primaryKeys == null && foreignKeys == null
-            && uniqueConstraints == null && notNullConstraints == null && defaultConstraints == null) {
+            && uniqueConstraints == null && notNullConstraints == null && defaultConstraints == null
+        && checkConstraints == null) {
       alterTblDesc = new AlterTableDesc(tblName, partSpec,
           unescapeIdentifier(oldColName), unescapeIdentifier(newColName),
           newType, newComment, first, flagCol, isCascade);
@@ -3183,7 +3186,7 @@ public class DDLSemanticAnalyzer extends BaseSemanticAnalyzer {
       alterTblDesc = new AlterTableDesc(tblName, partSpec,
           unescapeIdentifier(oldColName), unescapeIdentifier(newColName),
           newType, newComment, first, flagCol, isCascade,
-          primaryKeys, foreignKeys, uniqueConstraints, notNullConstraints, defaultConstraints);
+          primaryKeys, foreignKeys, uniqueConstraints, notNullConstraints, defaultConstraints, checkConstraints);
     }
     addInputsOutputsAlterTable(tblName, partSpec, alterTblDesc);
 

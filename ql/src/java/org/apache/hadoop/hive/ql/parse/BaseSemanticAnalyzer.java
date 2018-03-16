@@ -30,6 +30,7 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.*;
 import org.apache.hadoop.hive.metastore.utils.MetaStoreUtils;
 import org.apache.hadoop.hive.ql.*;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.cache.results.CacheUsage;
 import org.apache.hadoop.hive.ql.exec.*;
 import org.apache.hadoop.hive.ql.hooks.LineageInfo;
@@ -793,10 +794,14 @@ public abstract class BaseSemanticAnalyzer {
   // recursively go through expression and make sure the following:
   // * If expression is UDF it is not permanent UDF
   private static void validateCheckExpr(ExprNodeDesc checkExpr) throws SemanticException {
-    if(checkExpr instanceof ExprNodeGenericFuncDesc
-        && FunctionRegistry.isPermanentFunction((ExprNodeGenericFuncDesc)checkExpr)){
-      throw new SemanticException(ErrorMsg.INVALID_CSTR_SYNTAX.getMsg("Permanent UDFs are not allowed "
-                                                                  + "in Check Constraints"));
+    if(checkExpr instanceof ExprNodeGenericFuncDesc){
+      ExprNodeGenericFuncDesc funcDesc = (ExprNodeGenericFuncDesc)checkExpr;
+      boolean isBuiltIn = FunctionRegistry.isBuiltInFuncExpr(funcDesc);
+      boolean isPermanent = FunctionRegistry.isPermanentFunction(funcDesc);
+      if(!isBuiltIn && !isPermanent) {
+        throw new SemanticException(ErrorMsg.INVALID_CSTR_SYNTAX.getMsg("Temporary UDFs are not allowed "
+                                                                            + "in Check Constraints"));
+      }
     }
     if(checkExpr.getChildren() == null) {
       return;
@@ -806,7 +811,8 @@ public abstract class BaseSemanticAnalyzer {
     }
   }
 
-  public static void validateCheckConstraint(List<FieldSchema> cols, List<SQLCheckConstraint> checkConstraints)
+  public static void validateCheckConstraint(List<FieldSchema> cols, List<SQLCheckConstraint> checkConstraints,
+                                             Configuration conf)
   throws SemanticException{
 
     // create colinfo and then row resolver
@@ -818,6 +824,9 @@ public abstract class BaseSemanticAnalyzer {
     }
 
     TypeCheckCtx typeCheckCtx = new TypeCheckCtx(rr);
+    // TypeCheckProcFactor expects typecheckctx to have unparse translator
+    UnparseTranslator unparseTranslator = new UnparseTranslator(conf);
+    typeCheckCtx.setUnparseTranslator(unparseTranslator);
     for(SQLCheckConstraint cc:checkConstraints) {
       try {
         ParseDriver parseDriver = new ParseDriver();

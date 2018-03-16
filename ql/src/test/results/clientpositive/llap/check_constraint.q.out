@@ -310,3 +310,85 @@ POSTHOOK: query: Drop table table2
 POSTHOOK: type: DROPTABLE
 POSTHOOK: Input: default@table2
 POSTHOOK: Output: default@table2
+PREHOOK: query: CREATE FUNCTION test_udf2 AS 'org.apache.hadoop.hive.ql.udf.generic.GenericUDFTestGetJavaString'
+PREHOOK: type: CREATEFUNCTION
+PREHOOK: Output: database:default
+PREHOOK: Output: default.test_udf2
+POSTHOOK: query: CREATE FUNCTION test_udf2 AS 'org.apache.hadoop.hive.ql.udf.generic.GenericUDFTestGetJavaString'
+POSTHOOK: type: CREATEFUNCTION
+POSTHOOK: Output: database:default
+POSTHOOK: Output: default.test_udf2
+PREHOOK: query: CREATE TABLE tudf(v string CHECK test_udf2(v) <> 'vin')
+PREHOOK: type: CREATETABLE
+PREHOOK: Output: database:default
+PREHOOK: Output: default@tudf
+POSTHOOK: query: CREATE TABLE tudf(v string CHECK test_udf2(v) <> 'vin')
+POSTHOOK: type: CREATETABLE
+POSTHOOK: Output: database:default
+POSTHOOK: Output: default@tudf
+PREHOOK: query: EXPLAIN INSERT INTO tudf values('function1')
+PREHOOK: type: QUERY
+POSTHOOK: query: EXPLAIN INSERT INTO tudf values('function1')
+POSTHOOK: type: QUERY
+STAGE DEPENDENCIES:
+  Stage-1 is a root stage
+  Stage-2 depends on stages: Stage-1
+  Stage-0 depends on stages: Stage-2
+
+STAGE PLANS:
+  Stage: Stage-1
+    Tez
+#### A masked pattern was here ####
+      Vertices:
+        Map 1 
+            Map Operator Tree:
+                TableScan
+                  alias: _dummy_table
+                  Row Limit Per Split: 1
+                  Statistics: Num rows: 1 Data size: 10 Basic stats: COMPLETE Column stats: COMPLETE
+                  Select Operator
+                    expressions: array(const struct('function1')) (type: array<struct<col1:string>>)
+                    outputColumnNames: _col0
+                    Statistics: Num rows: 1 Data size: 48 Basic stats: COMPLETE Column stats: COMPLETE
+                    UDTF Operator
+                      Statistics: Num rows: 1 Data size: 48 Basic stats: COMPLETE Column stats: COMPLETE
+                      function name: inline
+                      Select Operator
+                        expressions: col1 (type: string)
+                        outputColumnNames: _col0
+                        Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: COMPLETE
+                        Filter Operator
+                          predicate: enforce_constraint((GenericUDFTestGetJavaString(_col0) <> 'vin') is not false) (type: boolean)
+                          Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: COMPLETE
+                          File Output Operator
+                            compressed: false
+                            Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: COMPLETE
+                            table:
+                                input format: org.apache.hadoop.mapred.TextInputFormat
+                                output format: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+                                serde: org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe
+                                name: default.tudf
+            Execution mode: llap
+            LLAP IO: no inputs
+
+  Stage: Stage-2
+    Dependency Collection
+
+  Stage: Stage-0
+    Move Operator
+      tables:
+          replace: false
+          table:
+              input format: org.apache.hadoop.mapred.TextInputFormat
+              output format: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
+              serde: org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe
+              name: default.tudf
+
+PREHOOK: query: Drop table tudf
+PREHOOK: type: DROPTABLE
+PREHOOK: Input: default@tudf
+PREHOOK: Output: default@tudf
+POSTHOOK: query: Drop table tudf
+POSTHOOK: type: DROPTABLE
+POSTHOOK: Input: default@tudf
+POSTHOOK: Output: default@tudf

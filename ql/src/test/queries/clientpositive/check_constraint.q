@@ -29,4 +29,10 @@ INSERT INTO table2 values(8);
 select * from table2;
 Drop table table2;
 
+-- UDF created by users
+CREATE FUNCTION test_udf2 AS 'org.apache.hadoop.hive.ql.udf.generic.GenericUDFTestGetJavaString';
+CREATE TABLE tudf(v string CHECK test_udf2(v) <> 'vin');
+EXPLAIN INSERT INTO tudf values('function1');
+Drop table tudf;
+
 -- multiple constraints

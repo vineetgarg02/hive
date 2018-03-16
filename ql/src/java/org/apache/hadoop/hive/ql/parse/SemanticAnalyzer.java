@@ -6699,7 +6699,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
   private void replaceColumnReference(ASTNode checkExpr, Map<String, String> col2Col){
     if(checkExpr.getType() == HiveParser.TOK_TABLE_OR_COL) {
       ASTNode oldColChild = (ASTNode)(checkExpr.getChild(0));
-      String oldColRef = oldColChild.getText();
+      String oldColRef = oldColChild.getText().toLowerCase();
       assert(col2Col.containsKey(oldColRef));
       String newColRef = col2Col.get(oldColRef);
       checkExpr.deleteChild(0);
@@ -6734,7 +6734,9 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     List<ColumnInfo> colInfos = parentOp.getSchema().getSignature();
     int colIdx = 0;
     for(FieldSchema fs: tbl.getCols()) {
-      col2Cols.put(fs.getName(), colInfos.get(colIdx).getInternalName());
+      // since SQL is case insenstive just to make sure that the comparison b/w column names
+      // and check expression's column reference work convert the key to lower case
+      col2Cols.put(fs.getName().toLowerCase(), colInfos.get(colIdx).getInternalName());
       colIdx++;
     }
 

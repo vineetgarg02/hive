@@ -36,3 +36,20 @@ EXPLAIN INSERT INTO tudf values('function1');
 Drop table tudf;
 
 -- multiple constraints
+create table tmulti(url string NOT NULL ENABLE, userName string, numClicks int CHECK numClicks > 0, d date);
+alter table tmulti add constraint un1 UNIQUE (userName, numClicks) DISABLE;
+DESC formatted tmulti;
+EXPLAIN INSERT INTO tmulti values('hive.apache.com', 'user1', 48, '12-01-2018');
+INSERT INTO tmulti value('hive.apache.com', 'user1', 48, '12-01-2018');
+Select * from tmulti;
+Drop table tmulti;
+
+-- case insentivity
+create table tcase(url string NOT NULL ENABLE, userName string, d date, numClicks int CHECK numclicks > 0);
+DESC formatted tmulti;
+EXPLAIN INSERT INTO tmulti values('hive.apache.com', 'user1', 48, '12-01-2018');
+INSERT INTO tmulti value('hive.apache.com', 'user1', 48, '12-01-2018');
+Select * from tmulti;
+Drop table tmulti;
+
+

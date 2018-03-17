@@ -6731,8 +6731,17 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     // this will be used to replace column references in CHECK expression AST with corresponding column name
     // in input
     Map<String, String> col2Cols = new HashMap<>();
-    Operator parentOp = (Operator)input.getParentOperators().get(0);
-    List<ColumnInfo> colInfos = parentOp.getSchema().getSignature();
+    Operator schemaOp = null;
+    if(input.getSchema().getSignature().size() !=
+        // there could be case that input e.g. SELECT could be adding expressions resulting in different schema size
+        // then it's input. In this case we should use input's schema. RowResolver will have appropriate column ref
+        ((Operator)input.getParentOperators().get(0)).getSchema().getSignature().size()) {
+      schemaOp = input;
+    }
+    else {
+      schemaOp = (Operator)input.getParentOperators().get(0);
+    }
+    List<ColumnInfo> colInfos = schemaOp.getSchema().getSignature();
     int colIdx = 0;
     for(FieldSchema fs: tbl.getCols()) {
       // since SQL is case insenstive just to make sure that the comparison b/w column names

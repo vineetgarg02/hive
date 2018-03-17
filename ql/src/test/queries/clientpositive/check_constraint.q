@@ -4,8 +4,6 @@
  set hive.support.concurrency=true;
  set hive.txn.manager=org.apache.hadoop.hive.ql.lockmgr.DbTxnManager;
 
-
-
 CREATE TABLE table1(i int CHECK -i > -10,
     j int CHECK +j > 10,
     ij boolean CHECK ij IS NOT NULL,
@@ -19,7 +17,6 @@ EXPLAIN INSERT INTO table1 values(1,100,true, 5, 23.4, 700.5);
 INSERT INTO table1 values(1,100,true, 5, 23.4, 700.5);
 SELECT * from table1;
 DROP TABLE table1;
-
 
 -- null check constraint
 CREATE TABLE table2(i int CHECK i + NULL > 0);
@@ -40,16 +37,40 @@ create table tmulti(url string NOT NULL ENABLE, userName string, numClicks int C
 alter table tmulti add constraint un1 UNIQUE (userName, numClicks) DISABLE;
 DESC formatted tmulti;
 EXPLAIN INSERT INTO tmulti values('hive.apache.com', 'user1', 48, '12-01-2018');
-INSERT INTO tmulti value('hive.apache.com', 'user1', 48, '12-01-2018');
+INSERT INTO tmulti values('hive.apache.com', 'user1', 48, '12-01-2018');
 Select * from tmulti;
 Drop table tmulti;
 
 -- case insentivity
 create table tcase(url string NOT NULL ENABLE, userName string, d date, numClicks int CHECK numclicks > 0);
-DESC formatted tmulti;
-EXPLAIN INSERT INTO tmulti values('hive.apache.com', 'user1', 48, '12-01-2018');
-INSERT INTO tmulti value('hive.apache.com', 'user1', 48, '12-01-2018');
-Select * from tmulti;
-Drop table tmulti;
+DESC formatted tcase;
+EXPLAIN INSERT INTO tcase values('hive.apache.com', 'user1', '12-01-2018', 48);
+INSERT INTO tcase values('hive.apache.com', 'user1', '12-01-2018', 48);
+Select * from tcase ;
+Drop table tcase;
+
+-- drop constraint
+CREATE TABLE numericDataType(a TINYINT CONSTRAINT tinyint_constraint DEFAULT 127Y ENABLE,
+    b bigint CONSTRAINT check1 CHECK b in(4,5) ENABLE)
+    clustered by (b) into 2 buckets stored as orc TBLPROPERTIES ('transactional'='true');
+DESC FORMATTED numericDataType;
+ALTER TABLE numericDataType DROP CONSTRAINT check1;
+DESC FORMATTED numericDataType;
+
+EXPLAIN INSERT INTO numericDataType(b) values(456);
+INSERT INTO numericDataType(b) values(456);
+SELECT * from numericDataType;
+DROP TABLE numericDataType;
+
+-- column reference missing for column having check constraint
+-- NULL for column with check shouldn't be possible
+CREATE TABLE tcheck(a TINYINT, b bigint CONSTRAINT check1 CHECK b in(4,5) ENABLE)
+    clustered by (b) into 2 buckets stored as orc TBLPROPERTIES ('transactional'='true');
+DESC FORMATTED tcheck;
+EXPLAIN INSERT INTO tcheck(a) values(1);
+EXPLAIN INSERT INTO tcheck(b) values(4);
+INSERT INTO tcheck(b) values(4);
+SELECT * FROM tcheck;
+DROP TABLE tcheck;
 
 

@@ -3157,7 +3157,9 @@ public class DDLSemanticAnalyzer extends BaseSemanticAnalyzer {
     /* Validate the operation of renaming a column name. */
     Table tab = getTable(qualified);
 
-    validateCheckConstraint(tab.getCols(), checkConstraints, ctx.getConf());
+    if(checkConstraints != null && !checkConstraints.isEmpty()) {
+      validateCheckConstraint(tab.getCols(), checkConstraints, ctx.getConf());
+    }
 
     if(tab.getTableType() == TableType.EXTERNAL_TABLE
         && hasEnabledOrValidatedConstraints(notNullConstraints, defaultConstraints, checkConstraints)){

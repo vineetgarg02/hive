@@ -791,6 +791,20 @@ public abstract class BaseSemanticAnalyzer {
     return false;
   }
 
+
+  // given an ast node this method recursively goes over checkExpr ast. If it finds a node of type TOK_SUBQUERY_EXPR
+  // it throws an error.
+  // This method is used to validate check expression since check expression isn't allowed to have subquery
+  private static void validateCheckExprAST(ASTNode checkExpr) throws SemanticException {
+    if(checkExpr == null) return;
+    if(checkExpr.getType() == HiveParser.TOK_SUBQUERY_EXPR) {
+      throw new SemanticException(ErrorMsg.INVALID_CSTR_SYNTAX.getMsg("Subqueries are not allowed "
+                                                                          + "in Check Constraints"));
+    }
+    for(int i=0; i<checkExpr.getChildCount(); i++) {
+      validateCheckExprAST((ASTNode)checkExpr.getChild(i));
+    }
+  }
   // recursively go through expression and make sure the following:
   // * If expression is UDF it is not permanent UDF
   private static void validateCheckExpr(ExprNodeDesc checkExpr) throws SemanticException {
@@ -800,6 +814,11 @@ public abstract class BaseSemanticAnalyzer {
       boolean isPermanent = FunctionRegistry.isPermanentFunction(funcDesc);
       if(!isBuiltIn && !isPermanent) {
         throw new SemanticException(ErrorMsg.INVALID_CSTR_SYNTAX.getMsg("Temporary UDFs are not allowed "
+                                                                            + "in Check Constraints"));
+      }
+
+      if(FunctionRegistry.impliesOrder(funcDesc.getFuncText())) {
+        throw new SemanticException(ErrorMsg.INVALID_CSTR_SYNTAX.getMsg("Window functions are not allowed "
                                                                             + "in Check Constraints"));
       }
     }
@@ -831,6 +850,7 @@ public abstract class BaseSemanticAnalyzer {
       try {
         ParseDriver parseDriver = new ParseDriver();
         ASTNode checkExprAST = parseDriver.parseExpression(cc.getCheck_expression());
+        validateCheckExprAST(checkExprAST);
         Map<ASTNode, ExprNodeDesc> genExprs = TypeCheckProcFactory
             .genExprNode(checkExprAST, typeCheckCtx);
         ExprNodeDesc checkExpr = genExprs.get(checkExprAST);

@@ -6697,23 +6697,26 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
   }
 
 
-  private void replaceColumnReference(ASTNode checkExpr, Map<String, String> col2Col){
+  private void replaceColumnReference(ASTNode checkExpr, Map<String, String> col2Col,
+                                      RowResolver inputRR){
     if(checkExpr.getType() == HiveParser.TOK_TABLE_OR_COL) {
       ASTNode oldColChild = (ASTNode)(checkExpr.getChild(0));
       String oldColRef = oldColChild.getText().toLowerCase();
       assert(col2Col.containsKey(oldColRef));
-      String newColRef = col2Col.get(oldColRef);
+      String internalColRef = col2Col.get(oldColRef);
+      String fullQualColRef[] = inputRR.reverseLookup(internalColRef);
+      String newColRef = fullQualColRef[1];
       checkExpr.deleteChild(0);
       checkExpr.addChild(ASTBuilder.createAST(oldColChild.getType(), newColRef));
     }
     else {
       for(int i=0; i< ((ASTNode)checkExpr).getChildCount(); i++) {
-        replaceColumnReference((ASTNode)(checkExpr.getChild(i)), col2Col);
+        replaceColumnReference((ASTNode)(checkExpr.getChild(i)), col2Col, inputRR);
       }
     }
   }
 
-  private ExprNodeDesc getCheckConstraintExpr(Table tbl, Operator input, RowResolver inputRR)
+  private ExprNodeDesc getCheckConstraintExpr(Table tbl, Operator input, RowResolver inputRR, String dest)
       throws SemanticException{
 
     CheckConstraint cc = null;
@@ -6731,18 +6734,12 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     // this will be used to replace column references in CHECK expression AST with corresponding column name
     // in input
     Map<String, String> col2Cols = new HashMap<>();
-    Operator schemaOp = null;
-    if(input.getSchema().getSignature().size() !=
-        // there could be case that input e.g. SELECT could be adding expressions resulting in different schema size
-        // then it's input. In this case we should use input's schema. RowResolver will have appropriate column ref
-        ((Operator)input.getParentOperators().get(0)).getSchema().getSignature().size()) {
-      schemaOp = input;
-    }
-    else {
-      schemaOp = (Operator)input.getParentOperators().get(0);
-    }
-    List<ColumnInfo> colInfos = schemaOp.getSchema().getSignature();
+    List<ColumnInfo> colInfos =  input.getSchema().getSignature();
     int colIdx = 0;
+    if(updating(dest)) {
+      // if this is an update we need to skip the first col since it is row id
+      colIdx = 1;
+    }
     for(FieldSchema fs: tbl.getCols()) {
       // since SQL is case insenstive just to make sure that the comparison b/w column names
       // and check expression's column reference work convert the key to lower case
@@ -6758,7 +6755,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
         ParseDriver parseDriver = new ParseDriver();
         ASTNode checkExprAST = parseDriver.parseExpression(checkExprStr);
         //replace column references in checkExprAST with corresponding columns in input
-        replaceColumnReference(checkExprAST, col2Cols);
+        replaceColumnReference(checkExprAST, col2Cols, inputRR);
         Map<ASTNode, ExprNodeDesc> genExprs = TypeCheckProcFactory
             .genExprNode(checkExprAST, typeCheckCtx);
         ExprNodeDesc checkExpr = genExprs.get(checkExprAST);
@@ -6848,7 +6845,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
 
     RowResolver inputRR = opParseCtx.get(input).getRowResolver();
     ExprNodeDesc nullConstraintExpr = getNotNullConstraintExpr(targetTable, input, dest);
-    ExprNodeDesc checkConstraintExpr = getCheckConstraintExpr(targetTable, input, inputRR);
+    ExprNodeDesc checkConstraintExpr = getCheckConstraintExpr(targetTable, input, inputRR, dest);
 
     ExprNodeDesc combinedConstraintExpr = null;
     if(nullConstraintExpr != null && checkConstraintExpr != null) {

@@ -49,6 +49,56 @@ INSERT INTO tcase values('hive.apache.com', 'user1', '12-01-2018', 48);
 Select * from tcase ;
 Drop table tcase;
 
+-- cast
+create table tcast(url string NOT NULL ENABLE, numClicks int,
+    price FLOAT CHECK cast(numClicks as FLOAT)*price > 10.00);
+DESC FORMATTED tcast;
+EXPLAIN INSERT INTO tcast values('www.google.com', 100, cast(0.5 as float));
+INSERT INTO tcast values('www.google.com', 100, cast(0.5 as float));
+SELECT * from tcast;
+-- check shouldn't fail
+EXPLAIN INSERT INTO tcast(url, price) values('www.yahoo.com', 0.5);
+INSERT INTO tcast(url, price) values('www.yahoo.com', 0.5);
+SELECT * FROM tcast;
+DROP TABLE tcast;
+
+-- complex expression
+create table texpr(i int DEFAULT 89, f float NOT NULL ENABLE, d decimal(4,1),
+    b boolean CHECK ((cast(d as float) + f) < cast(i as float) + (i*i)));
+DESC FORMATTED texpr;
+explain insert into texpr values(3,3.4,5.6,true);
+insert into texpr values(3,3.4,5.6,true);
+SELECT * from texpr;
+DROP TABLE texpr;
+
+-- UPDATE
+create table acid_uami(i int,
+                 de decimal(5,2) constraint nn1 not null enforced,
+                 vc varchar(128) constraint ch2 CHECK de >= cast(i as decimal(5,2)) enforced)
+                 clustered by (i) into 2 buckets stored as orc TBLPROPERTIES ('transactional'='true');
+DESC FORMATTED acid_uami;
+
+-- insert as select
+explain insert into table acid_uami select cast(key as int), cast (key as decimal(5,2)), value from src;
+insert into table acid_uami select cast(key as int), cast (key as decimal(5,2)), value from src;
+
+-- update
+select * from acid_uami where de = 103.00 or de = 119.00;
+explain update acid_uami set de = 893.14 where de = 103.00 or de = 119.00;
+update acid_uami set de = 893.14 where de = 109.23 or de = 119.23;
+select * from acid_uami where de = 103.00 or de = 119.00;
+
+--ALTER table acid_uami drop constraint ch2;
+--explain update acid_uami set vc = 'apache_hive' where de = 3.14 ;
+--update acid_uami set de = 3.14159 where de = 3.14 ;
+DROP TABLE acid_uami;
+
+
+
+-- MERGE
+-- multi insert
+-- INSERT as SELECT (complicated queries)
+
 -- drop constraint
 CREATE TABLE numericDataType(a TINYINT CONSTRAINT tinyint_constraint DEFAULT 127Y ENABLE,
     b bigint CONSTRAINT check1 CHECK b in(4,5) ENABLE)

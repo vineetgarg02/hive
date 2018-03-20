@@ -1,5 +1,3 @@
--- create table
- -- numeric type
  set hive.stats.autogather=false;
  set hive.support.concurrency=true;
  set hive.txn.manager=org.apache.hadoop.hive.ql.lockmgr.DbTxnManager;
@@ -82,22 +80,75 @@ DESC FORMATTED acid_uami;
 explain insert into table acid_uami select cast(key as int), cast (key as decimal(5,2)), value from src;
 insert into table acid_uami select cast(key as int), cast (key as decimal(5,2)), value from src;
 
--- update
-select * from acid_uami where de = 103.00 or de = 119.00;
-explain update acid_uami set de = 893.14 where de = 103.00 or de = 119.00;
-update acid_uami set de = 893.14 where de = 109.23 or de = 119.23;
-select * from acid_uami where de = 103.00 or de = 119.00;
+-- insert overwrite
+explain insert overwrite table acid_uami select cast(key as int), cast (key as decimal(5,2)), value
+    from src order by cast(key as int) limit 10 ;
+insert overwrite table acid_uami select cast(key as int), cast (key as decimal(5,2)), value
+    from src order by cast(key as int) limit 10 ;
 
---ALTER table acid_uami drop constraint ch2;
---explain update acid_uami set vc = 'apache_hive' where de = 3.14 ;
---update acid_uami set de = 3.14159 where de = 3.14 ;
+-- insert as select cont
+explain insert into table acid_uami select cast(s1.key as int) as c1, cast (s2.key as decimal(5,2)) as c2, s1.value from src s1
+    left outer join src s2 on s1.key=s2.key where s1.value > 'val' limit 10 ;
+insert into table acid_uami select cast(s1.key as int) as c1, cast (s2.key as decimal(5,2)) as c2, s1.value from src s1
+    left outer join src s2 on s1.key=s2.key where s1.value > 'val' limit 10 ;
+select * from acid_uami;
+truncate table acid_uami;
+
+-- insert as select group by + agg
+explain insert into table acid_uami select min(cast(key as int)) as c1, max(cast (key as decimal(5,2))) as c2, value
+    from src group by key, value order by key, value limit 10;
+insert into table acid_uami select min(cast(key as int)) as c1, max(cast (key as decimal(5,2))) as c2, value
+    from src group by key, value order by key, value limit 10;
+select * from acid_uami;
+truncate table acid_uami;
+
+-- multi insert
+create table src_multi2 (i STRING, j STRING NOT NULL ENABLE);
+explain
+from src
+insert into table acid_uami select cast(key as int), cast(key as decimal(5,2)), value where key < 10
+insert overwrite table src_multi2 select * where key > 10 and key < 20;
+drop table src_multi2;
+
+-- update
+select * from acid_uami order by de desc limit 15;
+explain update acid_uami set de = 893.14 where de = 103.00 or de = 119.00;
+update acid_uami set de = 893.14 where de = 103.00 or de = 119.00;
+select * from acid_uami order by de desc limit 15;
+ALTER table acid_uami drop constraint ch2;
+explain update acid_uami set vc = 'apache_hive' where de = 893.14 ;
+update acid_uami set vc = 'apache_hive' where de = 893.14 ;
+select * from acid_uami order by vc limit 15;
 DROP TABLE acid_uami;
 
-
-
 -- MERGE
--- multi insert
--- INSERT as SELECT (complicated queries)
+create table tmerge(key int CHECK key > 0 AND (key < 100 OR key = 5) enable, a1 string NOT NULL, value string)
+clustered by (value) into 2 buckets stored as orc
+tblproperties ("transactional"="true");
+DESC FORMATTED tmerge;
+
+create table nonacid (key int, a1 string, value string) stored as orc;
+
+-- with cardinality check off
+set hive.merge.cardinality.check=false;
+explain MERGE INTO tmerge as t using nonacid as s ON t.key = s.key
+WHEN MATCHED AND s.key < 5 THEN DELETE
+WHEN MATCHED AND s.key < 3 THEN UPDATE set a1 = '1'
+WHEN NOT MATCHED THEN INSERT VALUES (s.key, s.a1, s.value);
+
+-- with cardinality check on
+set hive.merge.cardinality.check=true;
+explain MERGE INTO tmerge as t using nonacid as s ON t.key = s.key
+WHEN MATCHED AND s.key < 5 THEN DELETE
+WHEN MATCHED AND s.key < 3 THEN UPDATE set a1 = '1'
+WHEN NOT MATCHED THEN INSERT VALUES (s.key, s.a1, s.value);
+
+explain MERGE INTO tmerge as t using nonacid as s ON t.key = s.key
+WHEN MATCHED AND s.key < 5 THEN DELETE
+WHEN NOT MATCHED THEN INSERT VALUES (s.key, s.a1, s.value);
+
+DROP TABLE tmerge;
+DROP TABLE nonacid;
 
 -- drop constraint
 CREATE TABLE numericDataType(a TINYINT CONSTRAINT tinyint_constraint DEFAULT 127Y ENABLE,
@@ -123,4 +174,13 @@ INSERT INTO tcheck(b) values(4);
 SELECT * FROM tcheck;
 DROP TABLE tcheck;
 
-
+-- micro-managed table
+set hive.create.as.insert.only=true;
+set hive.exec.dynamic.partition.mode=nonstrict;
+create table part_mm(key int check key > 0 and key < 5000 enforced) partitioned by (key_mm int)
+    stored as orc tblproperties ("transactional"="true", "transactional_properties"="insert_only");
+explain insert into table part_mm partition(key_mm=455) select key from src order by value limit 3;
+insert into table part_mm partition(key_mm=455) select key from src order by value desc limit 3;
+select key from src order by value limit 3;
+select * from part_mm;
+drop table part_mm;

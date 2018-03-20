@@ -2008,12 +2008,6 @@ public class CachedStore implements RawStore, Configurable {
     return rawStore.addCheckConstraints(nns);
   }
 
-  @Override
-  public List<ColStatsObjWithSourceInfo> getPartitionColStatsForDatabase(String dbName)
-      throws MetaException, NoSuchObjectException {
-    return rawStore.getPartitionColStatsForDatabase(dbName);
-  }
-
   // TODO - not clear if we should cache these or not.  For now, don't bother
   @Override
   public void createISchema(ISchema schema)

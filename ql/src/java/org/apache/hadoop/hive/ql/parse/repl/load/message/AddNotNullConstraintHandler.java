@@ -72,7 +72,6 @@ public class AddNotNullConstraintHandler extends AbstractMessageHandler {
                                                            new ArrayList<SQLDefaultConstraint>(),
                                                            new ArrayList<SQLCheckConstraint>(),
                                                            context.eventOnlyReplicationSpec());
-    Task<DDLWork> addConstraintsTask = TaskFactory.get(new DDLWork(readEntitySet, writeEntitySet, addConstraintsDesc), context.hiveConf);
     tasks.add(addConstraintsTask);
     context.log.debug("Added add constrains task : {}:{}", addConstraintsTask.getId(), actualTblName);
     updatedMetadata.set(context.dmd.getEventTo().toString(), actualDbName, actualTblName, null);

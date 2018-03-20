@@ -1062,13 +1062,6 @@ public class DummyRawStoreControlledCommit implements RawStore, Configurable {
     objectStore.dropWMTriggerToPoolMapping(resourcePlanName, triggerName, poolPath);
   }
 
-  @Override
-  public List<ColStatsObjWithSourceInfo> getPartitionColStatsForDatabase(String dbName)
-      throws MetaException, NoSuchObjectException {
-    // TODO Auto-generated method stub
-    return null;
-  }
-
   public void createISchema(ISchema schema) throws AlreadyExistsException, MetaException,
       NoSuchObjectException {
     objectStore.createISchema(schema);

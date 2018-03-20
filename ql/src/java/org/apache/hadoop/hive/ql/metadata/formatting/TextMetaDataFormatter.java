@@ -222,6 +222,8 @@ class TextMetaDataFormatter implements MetaDataFormatter {
           if ((pkInfo != null && !pkInfo.getColNames().isEmpty()) ||
               (fkInfo != null && !fkInfo.getForeignKeys().isEmpty()) ||
               (ukInfo != null && !ukInfo.getUniqueConstraints().isEmpty()) ||
+              (dInfo!= null && !dInfo.getDefaultConstraints().isEmpty()) ||
+              (cInfo != null && !cInfo.getCheckConstraints().isEmpty()) ||
               (nnInfo != null && !nnInfo.getNotNullConstraints().isEmpty())) {
             outStream.write(("Constraints").getBytes("UTF-8"));
             outStream.write(separator);
@@ -239,6 +241,14 @@ class TextMetaDataFormatter implements MetaDataFormatter {
             }
             if (nnInfo != null && !nnInfo.getNotNullConstraints().isEmpty()) {
               outStream.write(nnInfo.toString().getBytes("UTF-8"));
+              outStream.write(terminator);
+            }
+            if (dInfo != null && !dInfo.getDefaultConstraints().isEmpty()) {
+              outStream.write(dInfo.toString().getBytes("UTF-8"));
+              outStream.write(terminator);
+            }
+            if (cInfo != null && !cInfo.getCheckConstraints().isEmpty()) {
+              outStream.write(cInfo.toString().getBytes("UTF-8"));
               outStream.write(terminator);
             }
           }

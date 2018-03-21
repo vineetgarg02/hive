@@ -1,9 +1,0 @@
-PREHOOK: query: CREATE FUNCTION test_udf2 AS 'org.apache.hadoop.hive.ql.udf.generic.GenericUDFTestGetJavaString'
-PREHOOK: type: CREATEFUNCTION
-PREHOOK: Output: database:default
-PREHOOK: Output: default.test_udf2
-POSTHOOK: query: CREATE FUNCTION test_udf2 AS 'org.apache.hadoop.hive.ql.udf.generic.GenericUDFTestGetJavaString'
-POSTHOOK: type: CREATEFUNCTION
-POSTHOOK: Output: database:default
-POSTHOOK: Output: default.test_udf2
-FAILED: SemanticException [Error 10326]: Invalid Constraint syntax Invalid CHECK constraint expression: test_udf2(v) <> 'vin'. Invalid Constraint syntax Only permanent UDFs are allowed in Check Constraints

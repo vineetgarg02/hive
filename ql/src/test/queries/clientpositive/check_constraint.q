@@ -184,3 +184,9 @@ insert into table part_mm partition(key_mm=455) select key from src order by val
 select key from src order by value limit 3;
 select * from part_mm;
 drop table part_mm;
+
+-- rely, novalidate
+create table trely(i int);
+ALTER TABLE trely CHANGE i i int CHECK i>0 ENABLE NOVALIDATE RELY;
+DESC FORMATTED trely;
+DROP TABLE trely;

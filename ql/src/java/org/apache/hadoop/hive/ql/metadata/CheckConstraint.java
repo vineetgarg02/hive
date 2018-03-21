@@ -49,7 +49,7 @@ public class CheckConstraint implements Serializable {
 
   List<String> checkExpressionList;
 
-  // Mapping from column name to Check value
+  // Mapping from column name to Check expr
   Map<String, String> colNameToCheckExprMap;
   String tableName;
   String databaseName;
@@ -66,22 +66,21 @@ public class CheckConstraint implements Serializable {
       return;
     }
     for (SQLCheckConstraint uk : checkConstraintsList) {
-      if (uk.getTable_db().equalsIgnoreCase(databaseName) &&
-          uk.getTable_name().equalsIgnoreCase(tableName)) {
-        String colName = uk.getColumn_name();
-        String check_expression = uk.getCheck_expression();
-        colNameToCheckExprMap.put(colName, check_expression);
-        checkExpressionList.add(check_expression);
-        CheckConstraintCol currCol = new CheckConstraintCol(
-                colName, check_expression);
-        String constraintName = uk.getDc_name();
-        if (checkConstraints.containsKey(constraintName)) {
-          checkConstraints.get(constraintName).add(currCol);
-        } else {
-          List<CheckConstraintCol> currList = new ArrayList<CheckConstraintCol>();
-          currList.add(currCol);
-          checkConstraints.put(constraintName, currList);
-        }
+      assert(uk.getTable_db().equalsIgnoreCase(databaseName) &&
+          uk.getTable_name().equalsIgnoreCase(tableName)) ;
+      String colName = uk.getColumn_name();
+      String check_expression = uk.getCheck_expression();
+      colNameToCheckExprMap.put(colName, check_expression);
+      checkExpressionList.add(check_expression);
+      CheckConstraintCol currCol = new CheckConstraintCol(
+          colName, check_expression);
+      String constraintName = uk.getDc_name();
+      if (checkConstraints.containsKey(constraintName)) {
+        checkConstraints.get(constraintName).add(currCol);
+      } else {
+        List<CheckConstraintCol> currList = new ArrayList<CheckConstraintCol>();
+        currList.add(currCol);
+        checkConstraints.put(constraintName, currList);
       }
     }
   }

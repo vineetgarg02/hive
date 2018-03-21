@@ -893,10 +893,15 @@ public abstract class BaseSemanticAnalyzer {
         Map<ASTNode, ExprNodeDesc> genExprs = TypeCheckProcFactory
             .genExprNode(checkExprAST, typeCheckCtx);
         ExprNodeDesc checkExpr = genExprs.get(checkExprAST);
-        if(checkExpr == null || checkExpr.getTypeInfo().getTypeName() != serdeConstants.BOOLEAN_TYPE_NAME) {
+        if(checkExpr == null) {
           throw new SemanticException(
               ErrorMsg.INVALID_CSTR_SYNTAX.getMsg("Invalid type for CHECK constraint: ")
                   + cc.getCheck_expression());
+        }
+        if(checkExpr.getTypeInfo().getTypeName() != serdeConstants.BOOLEAN_TYPE_NAME) {
+          throw new SemanticException(
+              ErrorMsg.INVALID_CSTR_SYNTAX.getMsg("Only boolean type is supported for CHECK constraint: ")
+                  + cc.getCheck_expression() + ". Found: " + checkExpr.getTypeInfo().getTypeName());
         }
         validateCheckExpr(checkExpr);
       } catch(Exception e) {

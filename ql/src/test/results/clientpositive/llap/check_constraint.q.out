@@ -3183,3 +3183,66 @@ POSTHOOK: query: drop table part_mm
 POSTHOOK: type: DROPTABLE
 POSTHOOK: Input: default@part_mm
 POSTHOOK: Output: default@part_mm
+PREHOOK: query: create table trely(i int)
+PREHOOK: type: CREATETABLE
+PREHOOK: Output: database:default
+PREHOOK: Output: default@trely
+POSTHOOK: query: create table trely(i int)
+POSTHOOK: type: CREATETABLE
+POSTHOOK: Output: database:default
+POSTHOOK: Output: default@trely
+PREHOOK: query: ALTER TABLE trely CHANGE i i int CHECK i>0 ENABLE NOVALIDATE RELY
+PREHOOK: type: ALTERTABLE_RENAMECOL
+PREHOOK: Input: default@trely
+PREHOOK: Output: default@trely
+POSTHOOK: query: ALTER TABLE trely CHANGE i i int CHECK i>0 ENABLE NOVALIDATE RELY
+POSTHOOK: type: ALTERTABLE_RENAMECOL
+POSTHOOK: Input: default@trely
+POSTHOOK: Output: default@trely
+PREHOOK: query: DESC FORMATTED trely
+PREHOOK: type: DESCTABLE
+PREHOOK: Input: default@trely
+POSTHOOK: query: DESC FORMATTED trely
+POSTHOOK: type: DESCTABLE
+POSTHOOK: Input: default@trely
+# col_name            	data_type           	comment             
+i                   	int                 	                    
+	 	 
+# Detailed Table Information	 	 
+Database:           	default             	 
+#### A masked pattern was here ####
+Retention:          	0                   	 
+#### A masked pattern was here ####
+Table Type:         	MANAGED_TABLE       	 
+Table Parameters:	 	 
+#### A masked pattern was here ####
+	transactional       	true                
+	transactional_properties	insert_only         
+#### A masked pattern was here ####
+	 	 
+# Storage Information	 	 
+SerDe Library:      	org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe	 
+InputFormat:        	org.apache.hadoop.mapred.TextInputFormat	 
+OutputFormat:       	org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat	 
+Compressed:         	No                  	 
+Num Buckets:        	-1                  	 
+Bucket Columns:     	[]                  	 
+Sort Columns:       	[]                  	 
+Storage Desc Params:	 	 
+	serialization.format	1                   
+	 	 
+# Constraints	 	 
+	 	 
+# Check Constraints	 	 
+Table:              	default.trely       	 
+Constraint Name:    	#### A masked pattern was here ####	 
+Column Name:i       	Check Value:i>0     	 
+	 	 
+PREHOOK: query: DROP TABLE trely
+PREHOOK: type: DROPTABLE
+PREHOOK: Input: default@trely
+PREHOOK: Output: default@trely
+POSTHOOK: query: DROP TABLE trely
+POSTHOOK: type: DROPTABLE
+POSTHOOK: Input: default@trely
+POSTHOOK: Output: default@trely

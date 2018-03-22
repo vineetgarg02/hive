@@ -4705,7 +4705,7 @@ private void constructOneLBLocationMap(FileStatus fSta,
             .filter(nnc -> nnc.isEnable_cstr())
             .collect(Collectors.toList());
       }
-      return new CheckConstraint(checkConstraints, tblName, dbName);
+      return new CheckConstraint(checkConstraints);
     } catch (Exception e) {
       throw new HiveException(e);
     }
@@ -4774,7 +4774,7 @@ private void constructOneLBLocationMap(FileStatus fSta,
         checkConstraints = checkConstraints.stream()
             .collect(Collectors.toList());
       }
-      return new CheckConstraint(checkConstraints, tblName, dbName);
+      return new CheckConstraint(checkConstraints);
     } catch (Exception e) {
       throw new HiveException(e);
     }

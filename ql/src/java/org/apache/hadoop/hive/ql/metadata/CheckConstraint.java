@@ -50,27 +50,26 @@ public class CheckConstraint implements Serializable {
   List<String> checkExpressionList;
 
   // Mapping from column name to Check expr
-  Map<String, String> colNameToCheckExprMap;
   String tableName;
   String databaseName;
 
   public CheckConstraint() {}
 
-  public CheckConstraint(List<SQLCheckConstraint> checkConstraintsList, String tableName, String databaseName) {
+  public CheckConstraint(List<SQLCheckConstraint> checkConstraintsList) {
     this.tableName = tableName;
     this.databaseName = databaseName;
     checkConstraints = new TreeMap<String, List<CheckConstraintCol>>();
-    colNameToCheckExprMap = new TreeMap<String, String>();
     checkExpressionList = new ArrayList<>();
     if (checkConstraintsList == null) {
       return;
     }
+    if(!checkConstraintsList.isEmpty()) {
+      this.tableName = checkConstraintsList.get(0).getTable_name();
+      this.databaseName= checkConstraintsList.get(0).getTable_db();
+    }
     for (SQLCheckConstraint uk : checkConstraintsList) {
-      assert(uk.getTable_db().equalsIgnoreCase(databaseName) &&
-          uk.getTable_name().equalsIgnoreCase(tableName)) ;
       String colName = uk.getColumn_name();
       String check_expression = uk.getCheck_expression();
-      colNameToCheckExprMap.put(colName, check_expression);
       checkExpressionList.add(check_expression);
       CheckConstraintCol currCol = new CheckConstraintCol(
           colName, check_expression);
@@ -97,9 +96,6 @@ public class CheckConstraint implements Serializable {
 
   public Map<String, List<CheckConstraintCol>> getCheckConstraints() {
     return checkConstraints;
-  }
-  public Map<String, String> getColNameToCheckExprMap() {
-    return colNameToCheckExprMap;
   }
 
   @Override

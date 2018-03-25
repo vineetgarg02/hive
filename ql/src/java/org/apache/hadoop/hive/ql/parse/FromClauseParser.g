@@ -317,9 +317,9 @@ valueRowConstructor
 @after { gParent.popMsg(state); }
     :
     LPAREN!
-        (expressionsNotInParenthesis[true, true] )
-        | KW_DEFAULT (COMMA KW_DEFAULT)*
-        RPAREN!
+        ( expressionsNotInParenthesis[true, true] )
+        | (KW_DEFAULT (COMMA KW_DEFAULT)* )
+    RPAREN!
     ;
 
 /*

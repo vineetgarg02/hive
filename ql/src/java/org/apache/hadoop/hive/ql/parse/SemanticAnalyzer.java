@@ -611,8 +611,42 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     return aggregationTrees;
   }
 
+  private boolean isInsertInto(QBParseInfo qbp, String dest) {
+    // get the destination and check if it is TABLE
+    ASTNode destNode = qbp.getDestForClause(dest);
+    if(destNode != null && destNode.getType() == HiveParser.TOK_TAB) {
+      String fullTableName = getUnescapedName((ASTNode)destNode.getChild(0));
+      if(qbp.isInsertIntoTable(fullTableName)){
+        return true;
+      }
+    }
+    return false;
+  }
+  private boolean isValueClause(ASTNode select) {
+    if(select.getChildCount() == 1) {
+      ASTNode selectExpr = (ASTNode)select.getChild(0);
+      if(selectExpr.getChildCount() == 1 ) {
+        ASTNode selectChildExpr = (ASTNode)selectExpr.getChild(0);
+        if(selectChildExpr.getType() == HiveParser.TOK_FUNCTION) {
+          ASTNode inline = (ASTNode)selectChildExpr.getChild(0);
+          ASTNode func = (ASTNode)selectChildExpr.getChild(0);
+          if(inline.getText().equals("inline") && func.getType() == HiveParser.TOK_FUNCTION) {
+            ASTNode arrayNode = (ASTNode)func.getChild(0);
+            ASTNode funcNode= (ASTNode)func.getChild(1);
+            if(arrayNode.getText().equals("array")  && funcNode.getType() == HiveParser.TOK_FUNCTION) {
+              return true;
+            }
+          }
+        }
+      }
+    }
+    return false;
+  }
   private void doPhase1GetColumnAliasesFromSelect(
-      ASTNode selectExpr, QBParseInfo qbp) {
+      ASTNode selectExpr, QBParseInfo qbp, String dest) {
+    if(isInsertInto(qbp, dest) && isValueClause(selectExpr)) {
+      //
+    }
     for (int i = 0; i < selectExpr.getChildCount(); ++i) {
       ASTNode selExpr = (ASTNode) selectExpr.getChild(i);
       if ((selExpr.getToken().getType() == HiveParser.TOK_SELEXPR)

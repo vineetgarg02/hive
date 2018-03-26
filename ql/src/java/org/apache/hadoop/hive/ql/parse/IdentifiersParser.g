@@ -417,7 +417,10 @@ expression
 @init { gParent.pushMsg("expression specification", state); }
 @after { gParent.popMsg(state); }
     :
-    precedenceOrExpression
+    expr=precedenceOrExpression
+    -> {$expr.tree.getText() == "default"}?
+            ^(TOK_DEFAULT_VALUE)
+    -> {$expr.tree}
     ;
 
 atomExpression

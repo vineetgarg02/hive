@@ -316,10 +316,7 @@ valueRowConstructor
 @init { gParent.pushMsg("value row constructor", state); }
 @after { gParent.popMsg(state); }
     :
-    LPAREN!
-        ( expressionsNotInParenthesis[true, true] )
-        | (KW_DEFAULT (COMMA KW_DEFAULT)* )
-    RPAREN!
+    expressionsInParenthesis[true, true]
     ;
 
 /*

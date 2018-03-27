@@ -552,6 +552,41 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     return defaultConstraints;
   }
 
+  private ASTNode getNodeReplacementforDefault(String newValue) throws SemanticException {
+    ASTNode newNode = null;
+    if(newValue== null) {
+      newNode = ASTBuilder.construct(HiveParser.TOK_NULL, "TOK_NULL").node();
+    }
+    else {
+      ParseDriver parseDriver = new ParseDriver();
+      try {
+        newNode = parseDriver.parseExpression(newValue);
+      } catch(Exception e) {
+        throw new SemanticException("Error while parsing default value for DEFAULT keyword: " + newValue
+                                        + ". Error message: " + e.getMessage());
+      }
+    }
+    return newNode;
+  }
+
+  private void replaceDefaultKeywordForUpdate(ASTNode selectExprs, Table targetTable) throws SemanticException{
+    List<String> defaultConstraints = null;
+    for(int i=1; i< selectExprs.getChildCount(); i++) {
+      //skip first child since it will rowid
+      ASTNode selectExpr = (ASTNode)selectExprs.getChild(i);
+      if(selectExpr.getChildCount() == 1 && selectExpr.getChild(0).getType() == HiveParser.TOK_TABLE_OR_COL) {
+        if(selectExpr.getChild(0).getChild(0).getText().toLowerCase().equals("default")) {
+          if(defaultConstraints == null) {
+            defaultConstraints = getDefaultConstraints(targetTable, null);
+          }
+          ASTNode newNode = getNodeReplacementforDefault(defaultConstraints.get(i-1));
+          // replace the node in place
+          selectExpr.replaceChildren(0, 0, newNode);
+        }
+
+      }
+    }
+  }
   private void replaceDefaultKeyword(ASTNode valueArrClause, Table targetTable, List<String> targetSchema) throws SemanticException{
     List<String> defaultConstraints = null;
     for(int i=1; i<valueArrClause.getChildCount(); i++) {
@@ -563,20 +598,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
           if(defaultConstraints == null) {
             defaultConstraints = getDefaultConstraints(targetTable, targetSchema);
           }
-          String defaultCstr = defaultConstraints.get(j-1);
-          ASTNode newNode = null;
-          if(defaultCstr == null) {
-            newNode = ASTBuilder.construct(HiveParser.TOK_NULL, "TOK_NULL").node();
-          }
-          else {
-            ParseDriver parseDriver = new ParseDriver();
-            try {
-              newNode = parseDriver.parseExpression(defaultCstr);
-            } catch(Exception e) {
-              throw new SemanticException("Error while parsing default value: " + defaultCstr
-                                              + ". Error message: " + e.getMessage());
-            }
-          }
+          ASTNode newNode = getNodeReplacementforDefault(defaultConstraints.get(j-1));
           // replace the node in place
           valueClause.replaceChildren(j, j, newNode);
         }
@@ -585,15 +607,20 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
   }
   private void doPhase1GetColumnAliasesFromSelect(
       ASTNode selectExpr, QBParseInfo qbp, String dest) {
-    if(isInsertInto(qbp, dest) && isValueClause(selectExpr)) {
-      //
+    if(isInsertInto(qbp, dest) && (isValueClause(selectExpr) || updating(dest))) {
       ASTNode tblAst = qbp.getDestForClause(dest);
       //TODO could be partition
       String tableName = getUnescapedName((ASTNode)tblAst.getChild(0));
       Table targetTable = null;
       try {
-        targetTable = db.getTable(tableName, false);
-        replaceDefaultKeyword((ASTNode)selectExpr.getChild(0).getChild(0).getChild(1), targetTable, qbp.getDestSchemaForClause(dest));
+        if(isValueClause(selectExpr)) {
+          targetTable = db.getTable(tableName, false);
+          replaceDefaultKeyword((ASTNode) selectExpr.getChild(0).getChild(0).getChild(1), targetTable, qbp.getDestSchemaForClause(dest));
+        }
+        else if(updating(dest)) {
+          targetTable = db.getTable(tableName, false);
+          replaceDefaultKeywordForUpdate(selectExpr, targetTable);
+        }
       }
       catch(Exception e) {
 

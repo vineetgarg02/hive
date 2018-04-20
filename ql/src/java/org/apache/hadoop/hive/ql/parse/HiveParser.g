@@ -2225,11 +2225,11 @@ alterConstraintWithName
     ;
 
 tableLevelConstraint
-    : PkUkConstraint
+    : pkUkConstraint
     | checkConstraint
     ;
 
-PkUkConstraint
+pkUkConstraint
 @init { pushMsg("pk or uk table level constraint", state); }
 @after { popMsg(state); }
     : tableConstraintType pkCols=columnParenthesesList

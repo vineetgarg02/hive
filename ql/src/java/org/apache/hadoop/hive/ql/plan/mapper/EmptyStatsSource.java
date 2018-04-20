@@ -18,12 +18,18 @@
 
 package org.apache.hadoop.hive.ql.plan.mapper;
 
+import java.util.Map;
 import java.util.Optional;
 
 import org.apache.hadoop.hive.ql.optimizer.signature.OpTreeSignature;
 import org.apache.hadoop.hive.ql.stats.OperatorStats;
 
 public class EmptyStatsSource implements StatsSource {
+
+  public static StatsSource INSTANCE = new EmptyStatsSource();
+
+  private EmptyStatsSource() {
+  }
 
   @Override
   public boolean canProvideStatsFor(Class<?> class1) {
@@ -33,6 +39,11 @@ public class EmptyStatsSource implements StatsSource {
   @Override
   public Optional<OperatorStats> lookup(OpTreeSignature treeSig) {
     return Optional.empty();
+  }
+
+  @Override
+  public void putAll(Map<OpTreeSignature, OperatorStats> map) {
+    throw new RuntimeException("This is an empty source!");
   }
 
 }

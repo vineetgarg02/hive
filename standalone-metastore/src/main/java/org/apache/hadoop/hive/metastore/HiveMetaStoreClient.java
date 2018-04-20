@@ -72,7 +72,6 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.thrift.TApplicationException;
-import org.apache.thrift.TBase;
 import org.apache.thrift.TException;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TCompactProtocol;
@@ -650,7 +649,7 @@ public class HiveMetaStoreClient implements IMetaStoreClient, AutoCloseable {
 
   public Partition add_partition(Partition new_part, EnvironmentContext envContext)
       throws TException {
-    if (!new_part.isSetCatName()) new_part.setCatName(getDefaultCatalog(conf));
+    if (new_part != null && !new_part.isSetCatName()) new_part.setCatName(getDefaultCatalog(conf));
     Partition p = client.add_partition_with_environment_context(new_part, envContext);
     return deepCopy(p);
   }
@@ -665,6 +664,9 @@ public class HiveMetaStoreClient implements IMetaStoreClient, AutoCloseable {
    */
   @Override
   public int add_partitions(List<Partition> new_parts) throws TException {
+    if (new_parts == null || new_parts.contains(null)) {
+      throw new MetaException("Partitions cannot be null.");
+    }
     if (new_parts != null && !new_parts.isEmpty() && !new_parts.get(0).isSetCatName()) {
       final String defaultCat = getDefaultCatalog(conf);
       new_parts.forEach(p -> p.setCatName(defaultCat));
@@ -675,6 +677,9 @@ public class HiveMetaStoreClient implements IMetaStoreClient, AutoCloseable {
   @Override
   public List<Partition> add_partitions(
       List<Partition> parts, boolean ifNotExists, boolean needResults) throws TException {
+    if (parts == null || parts.contains(null)) {
+      throw new MetaException("Partitions cannot be null.");
+    }
     if (parts.isEmpty()) {
       return needResults ? new ArrayList<>() : null;
     }
@@ -689,6 +694,9 @@ public class HiveMetaStoreClient implements IMetaStoreClient, AutoCloseable {
 
   @Override
   public int add_partitions_pspec(PartitionSpecProxy partitionSpec) throws TException {
+    if (partitionSpec == null) {
+      throw new MetaException("PartitionSpec cannot be null.");
+    }
     if (partitionSpec.getCatName() == null) partitionSpec.setCatName(getDefaultCatalog(conf));
     return client.add_partitions_pspec(partitionSpec.toPartitionSpec());
   }
@@ -2034,7 +2042,7 @@ public class HiveMetaStoreClient implements IMetaStoreClient, AutoCloseable {
    * @param partition
    * @return
    */
-  private Partition deepCopy(Partition partition) {
+  protected Partition deepCopy(Partition partition) {
     Partition copy = null;
     if (partition != null) {
       copy = new Partition(partition);
@@ -2436,9 +2444,22 @@ public class HiveMetaStoreClient implements IMetaStoreClient, AutoCloseable {
   @Override
   public List<TxnToWriteId> allocateTableWriteIdsBatch(List<Long> txnIds, String dbName, String tableName)
           throws TException {
-    AllocateTableWriteIdsRequest rqst = new AllocateTableWriteIdsRequest(txnIds, dbName, tableName);
-    AllocateTableWriteIdsResponse writeIds = client.allocate_table_write_ids(rqst);
-    return writeIds.getTxnToWriteIds();
+    AllocateTableWriteIdsRequest rqst = new AllocateTableWriteIdsRequest(dbName, tableName);
+    rqst.setTxnIds(txnIds);
+    return allocateTableWriteIdsBatchIntr(rqst);
+  }
+
+  @Override
+  public List<TxnToWriteId> replAllocateTableWriteIdsBatch(String dbName, String tableName,
+                                 String replPolicy, List<TxnToWriteId> srcTxnToWriteIdList) throws TException {
+    AllocateTableWriteIdsRequest rqst = new AllocateTableWriteIdsRequest(dbName, tableName);
+    rqst.setReplPolicy(replPolicy);
+    rqst.setSrcTxnToWriteIdList(srcTxnToWriteIdList);
+    return allocateTableWriteIdsBatchIntr(rqst);
+  }
+
+  private List<TxnToWriteId> allocateTableWriteIdsBatchIntr(AllocateTableWriteIdsRequest rqst) throws TException {
+    return client.allocate_table_write_ids(rqst).getTxnToWriteIds();
   }
 
   @Override
@@ -2575,19 +2596,25 @@ public class HiveMetaStoreClient implements IMetaStoreClient, AutoCloseable {
     rqst.setMaxEvents(maxEvents);
     NotificationEventResponse rsp = client.get_next_notification(rqst);
     LOG.debug("Got back " + rsp.getEventsSize() + " events");
-    if (filter == null) {
-      return rsp;
-    } else {
-      NotificationEventResponse filtered = new NotificationEventResponse();
-      if (rsp != null && rsp.getEvents() != null) {
-        for (NotificationEvent e : rsp.getEvents()) {
-          if (filter.accept(e)) {
-            filtered.addToEvents(e);
-          }
+    NotificationEventResponse filtered = new NotificationEventResponse();
+    if (rsp != null && rsp.getEvents() != null) {
+      long nextEventId = lastEventId + 1;
+      for (NotificationEvent e : rsp.getEvents()) {
+        if (e.getEventId() != nextEventId) {
+          LOG.error("Requested events are found missing in NOTIFICATION_LOG table. Expected: {}, Actual: {}. "
+                  + "Probably, cleaner would've cleaned it up. "
+                  + "Try setting higher value for hive.metastore.event.db.listener.timetolive. "
+                  + "Also, bootstrap the system again to get back the consistent replicated state.",
+                  nextEventId, e.getEventId());
+          throw new IllegalStateException("Notification events are missing.");
         }
+        if ((filter != null) && filter.accept(e)) {
+          filtered.addToEvents(e);
+        }
+        nextEventId++;
       }
-      return filtered;
     }
+    return (filter != null) ? filtered : rsp;
   }
 
   @InterfaceAudience.LimitedPrivate({"HCatalog"})

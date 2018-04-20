@@ -689,12 +689,15 @@ public class Driver implements IDriver {
         }
       }
 
-      if (conf.getBoolVar(ConfVars.HIVE_LOG_EXPLAIN_OUTPUT)) {
+      if (conf.getBoolVar(ConfVars.HIVE_LOG_EXPLAIN_OUTPUT)
+          || conf.getBoolVar(ConfVars.HIVE_SERVER2_WEBUI_EXPLAIN_OUTPUT)) {
         String explainOutput = getExplainOutput(sem, plan, tree);
         if (explainOutput != null) {
-          LOG.info("EXPLAIN output for queryid " + queryId + " : "
-            + explainOutput);
-          if (conf.isWebUiQueryInfoCacheEnabled()) {
+          if (conf.getBoolVar(ConfVars.HIVE_LOG_EXPLAIN_OUTPUT)) {
+            LOG.info("EXPLAIN output for queryid " + queryId + " : " + explainOutput);
+          }
+          if (conf.isWebUiQueryInfoCacheEnabled()
+              && conf.getBoolVar(ConfVars.HIVE_SERVER2_WEBUI_EXPLAIN_OUTPUT)) {
             queryDisplay.setExplainPlan(explainOutput);
           }
         }
@@ -1977,9 +1980,14 @@ public class Driver implements IDriver {
         PerfLogger perfLogger = SessionState.getPerfLogger();
         perfLogger.PerfLogBegin(CLASS_NAME, PerfLogger.SAVE_TO_RESULTS_CACHE);
 
+        ValidTxnWriteIdList txnWriteIdList = null;
+        if (plan.hasAcidResourcesInQuery()) {
+          txnWriteIdList = AcidUtils.getValidTxnWriteIdList(conf);
+        }
         boolean savedToCache = QueryResultsCache.getInstance().setEntryValid(
             cacheUsage.getCacheEntry(),
-            plan.getFetchTask().getWork());
+            plan.getFetchTask().getWork(),
+            txnWriteIdList);
         LOG.info("savedToCache: {}", savedToCache);
         if (savedToCache) {
           useFetchFromCache(cacheUsage.getCacheEntry());
@@ -2738,6 +2746,10 @@ public class Driver implements IDriver {
 
   public void setStatsSource(StatsSource runtimeStatsSource) {
     this.statsSource = runtimeStatsSource;
+  }
+
+  public StatsSource getStatsSource() {
+    return statsSource;
   }
 
   @Override

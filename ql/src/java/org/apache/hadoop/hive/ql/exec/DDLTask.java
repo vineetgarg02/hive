@@ -3181,6 +3181,8 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
       os.write(separator);
       os.writeBytes("State");
       os.write(separator);
+      os.writeBytes("Hostname");
+      os.write(separator);
       os.writeBytes("Worker");
       os.write(separator);
       os.writeBytes("Start Time");
@@ -3206,7 +3208,9 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
           os.writeBytes(e.getState());
           os.write(separator);
           String wid = e.getWorkerid();
-          os.writeBytes(wid == null ? noVal : wid);
+          os.writeBytes(wid == null ? noVal : wid.split("-")[0]);
+          os.write(separator);
+          os.writeBytes(wid == null ? noVal : wid.split("-")[1]);
           os.write(separator);
           os.writeBytes(e.isSetStart() ? Long.toString(e.getStart()) : noVal);
           os.write(separator);
@@ -3965,7 +3969,7 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
    * how this is desirable.
    *
    * As of HIVE-14993, WriteEntity with different WriteType must be considered different.
-   * So WriteEntity create in DDLTask cause extra output in golden files, but only because
+   * So WriteEntity created in DDLTask cause extra output in golden files, but only because
    * DDLTask sets a different WriteType for the same Entity.
    *
    * In the spirit of bug-for-bug compatibility, this method ensures we only add new

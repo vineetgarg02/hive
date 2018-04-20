@@ -2821,9 +2821,8 @@ public class HiveConf extends Configuration {
         " drawbacks."),
 
     HIVE_LOG_EXPLAIN_OUTPUT("hive.log.explain.output", false,
-        "Whether to log explain output for every query.\n" +
-        "When enabled, will log EXPLAIN EXTENDED output for the query at INFO log4j log level\n" +
-        "and in WebUI / Drilldown / Show Query."),
+        "Whether to log explain output for every query.\n"
+            + "When enabled, will log EXPLAIN EXTENDED output for the query at INFO log4j log level."),
     HIVE_EXPLAIN_USER("hive.explain.user", true,
         "Whether to show explain result at user level.\n" +
         "When enabled, will log EXPLAIN output for the query at user level. Tez only."),
@@ -2987,6 +2986,9 @@ public class HiveConf extends Configuration {
         "The maximum number of past queries to show in HiverSever2 WebUI."),
     HIVE_SERVER2_WEBUI_USE_PAM("hive.server2.webui.use.pam", false,
         "If true, the HiveServer2 WebUI will be secured with PAM."),
+    HIVE_SERVER2_WEBUI_EXPLAIN_OUTPUT("hive.server2.webui.explain.output", false,
+        "When set to true, the EXPLAIN output for every query is displayed"
+            + " in the HS2 WebUI / Drilldown / Query Plan tab.\n"),
 
     // Tez session settings
     HIVE_SERVER2_ACTIVE_PASSIVE_HA_ENABLE("hive.server2.active.passive.ha.enable", false,
@@ -4261,14 +4263,27 @@ public class HiveConf extends Configuration {
         "comma separated list of plugin can be used:\n"
             + "  overlay: hiveconf subtree 'reexec.overlay' is used as an overlay in case of an execution errors out\n"
             + "  reoptimize: collects operator statistics during execution and recompile the query after a failure"),
+    HIVE_QUERY_REEXECUTION_STATS_PERSISTENCE("hive.query.reexecution.stats.persist.scope", "query",
+        new StringSet("query", "hiveserver", "metastore"),
+        "Sets the persistence scope of runtime statistics\n"
+            + "  query: runtime statistics are only used during re-execution\n"
+            + "  hiveserver: runtime statistics are persisted in the hiveserver - all sessions share it"),
+
     HIVE_QUERY_MAX_REEXECUTION_COUNT("hive.query.reexecution.max.count", 1,
         "Maximum number of re-executions for a single query."),
     HIVE_QUERY_REEXECUTION_ALWAYS_COLLECT_OPERATOR_STATS("hive.query.reexecution.always.collect.operator.stats", false,
-        "Used during testing"),
+        "If sessionstats are enabled; this option can be used to collect statistics all the time"),
+    HIVE_QUERY_REEXECUTION_STATS_CACHE_SIZE("hive.query.reexecution.stats.cache.size", 100_000,
+        "Size of the runtime statistics cache. Unit is: OperatorStat entry; a query plan consist ~100"),
+
 
     HIVE_QUERY_RESULTS_CACHE_ENABLED("hive.query.results.cache.enabled", true,
         "If the query results cache is enabled. This will keep results of previously executed queries " +
         "to be reused if the same query is executed again."),
+
+    HIVE_QUERY_RESULTS_CACHE_NONTRANSACTIONAL_TABLES_ENABLED("hive.query.results.cache.nontransactional.tables.enabled", false,
+        "If the query results cache is enabled for queries involving non-transactional tables." +
+        "Users who enable this setting should be willing to tolerate some amount of stale results in the cache."),
 
     HIVE_QUERY_RESULTS_CACHE_WAIT_FOR_PENDING_RESULTS("hive.query.results.cache.wait.for.pending.results", true,
         "Should a query wait for the pending results of an already running query, " +
@@ -4290,6 +4305,16 @@ public class HiveConf extends Configuration {
     HIVE_QUERY_RESULTS_CACHE_MAX_ENTRY_SIZE("hive.query.results.cache.max.entry.size",
         (long) 10 * 1024 * 1024,
         "Maximum size in bytes that a single query result is allowed to use in the results cache directory"),
+
+    HIVE_NOTFICATION_EVENT_POLL_INTERVAL("hive.notification.event.poll.interval", "60s",
+        new TimeValidator(TimeUnit.SECONDS),
+        "How often the notification log is polled for new NotificationEvents from the metastore." +
+        "A nonpositive value means the notification log is never polled."),
+
+    HIVE_NOTFICATION_EVENT_CONSUMERS("hive.notification.event.consumers",
+        "org.apache.hadoop.hive.ql.cache.results.QueryResultsCache$InvalidationEventConsumer",
+        "Comma-separated list of class names extending EventConsumer," +
+         "to handle the NotificationEvents retreived by the notification event poll."),
 
     /* BLOBSTORE section */
 

@@ -91,12 +91,14 @@ import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveMaterializedViewsRegistry;
 import org.apache.hadoop.hive.ql.metadata.InvalidTableException;
 import org.apache.hadoop.hive.ql.metadata.Table;
+import org.apache.hadoop.hive.ql.metadata.events.NotificationEventPoll;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.BaseSemanticAnalyzer;
 import org.apache.hadoop.hive.ql.parse.ParseDriver;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.SemanticAnalyzer;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
+import org.apache.hadoop.hive.ql.plan.mapper.StatsSources;
 import org.apache.hadoop.hive.ql.processors.CommandProcessor;
 import org.apache.hadoop.hive.ql.processors.CommandProcessorFactory;
 import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
@@ -207,7 +209,7 @@ public class QTestUtil {
     getSrcTables().add(table);
     storeSrcTables();
   }
-  
+
   public static Set<String> initSrcTables() {
     if (srcTables == null){
       initSrcTablesFromSystemProperty();
@@ -1050,6 +1052,7 @@ public class QTestUtil {
     }
 
     // Remove any cached results from the previous test.
+    NotificationEventPoll.shutdown();
     QueryResultsCache.cleanupInstance();
 
     // allocate and initialize a new conf since a test can
@@ -1064,13 +1067,14 @@ public class QTestUtil {
     clearTablesCreatedDuringTests();
     clearUDFsCreatedDuringTests();
     clearKeysCreatedInTests();
+    StatsSources.clearAllStats();
   }
-  
+
   protected void clearSettingsCreatedInTests() throws IOException {
     getCliDriver().processLine(String.format("set hive.security.authorization.enabled=false;"));
     getCliDriver().processLine(String.format("set user.name=%s;",
         System.getProperty(TEST_HIVE_USER_PROPERTY, "hive_test_user")));
-    
+
     getCliDriver().processLine("set hive.metastore.partition.name.whitelist.pattern=;");
     getCliDriver().processLine("set hive.test.mode=false;");
     getCliDriver().processLine("set hive.mapred.mode=nonstrict;");
@@ -1096,7 +1100,7 @@ public class QTestUtil {
     clearTablesCreatedDuringTests();
     clearUDFsCreatedDuringTests();
     clearKeysCreatedInTests();
-    
+
     cleanupFromFile();
 
     // delete any contents in the warehouse dir
@@ -1610,6 +1614,32 @@ public class QTestUtil {
 
     QTestProcessExecResult result = executeDiffCommand(outf.getPath(), expf, false,
                                      qSortSet.contains(qf.getName()));
+    if (overWrite) {
+      overwriteResults(outf.getPath(), expf);
+      return QTestProcessExecResult.createWithoutOutput(0);
+    }
+
+    return result;
+  }
+
+  public QTestProcessExecResult checkNegativeResults(String tname, Error e) throws Exception {
+
+    String outFileExtension = getOutFileExtension(tname);
+
+    File qf = new File(outDir, tname);
+    String expf = outPath(outDir.toString(), tname.concat(outFileExtension));
+
+    File outf = null;
+    outf = new File(logDir);
+    outf = new File(outf, qf.getName().concat(outFileExtension));
+
+    FileWriter outfd = new FileWriter(outf, true);
+
+    outfd
+        .write("FAILED: " + e.getClass().getSimpleName() + " " + e.getClass().getName() + ": " + e.getMessage() + "\n");
+    outfd.close();
+
+    QTestProcessExecResult result = executeDiffCommand(outf.getPath(), expf, false, qSortSet.contains(qf.getName()));
     if (overWrite) {
       overwriteResults(outf.getPath(), expf);
       return QTestProcessExecResult.createWithoutOutput(0);
@@ -2235,5 +2265,9 @@ public class QTestUtil {
 
   public QOutProcessor getQOutProcessor() {
     return qOutProcessor;
+  }
+
+  public static void initEventNotificationPoll() throws Exception {
+    NotificationEventPoll.initialize(SessionState.get().getConf());
   }
 }

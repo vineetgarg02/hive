@@ -4555,11 +4555,12 @@ public class CalcitePlanner extends SemanticAnalyzer {
                     exp.getWritableObjectInspector(), tabAlias, false);
             colInfo.setSkewedCol((exp instanceof ExprNodeColumnDesc) ? ((ExprNodeColumnDesc) exp)
                     .isSkewedCol() : false);
-            if (!out_rwsch.putWithCheck(tabAlias, colAlias, null, colInfo)) {
+            out_rwsch.put(tabAlias, colAlias, colInfo);
+            /*if (!out_rwsch.putWithCheck(tabAlias, colAlias, null, colInfo)) {
               throw new CalciteSemanticException("Cannot add column to RR: " + tabAlias + "."
                       + colAlias + " => " + colInfo + " due to duplication, see previous warnings",
                       UnsupportedFeature.Duplicates_in_RR);
-            }
+            } */
 
             pos = Integer.valueOf(pos.intValue() + 1);
           }

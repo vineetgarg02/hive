@@ -1921,18 +1921,47 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
         targetColumns.remove(f.getName());
       }
       if(!targetColumns.isEmpty()) {//here we need to see if remaining columns are dynamic partition columns
+            /* We just checked the user specified schema columns among regular table column and found some which are not
+            'regular'.  Now check is they are dynamic partition columns
+              For dynamic partitioning,
+              Given "create table multipart(a int, b int) partitioned by (c int, d int);"
+              for "insert into multipart partition(c='1',d)(d,a) values(2,3);" we expect parse tree to look like this
+               (TOK_INSERT_INTO
+                (TOK_TAB
+                  (TOK_TABNAME multipart)
+                  (TOK_PARTSPEC
+                    (TOK_PARTVAL c '1')
+                    (TOK_PARTVAL d)
+                  )
+                )
+                (TOK_TABCOLNAME d a)
+               )*/
+        List<String> dynamicPartitionColumns = new ArrayList<String>();
         if(ast.getChild(0) != null && ast.getChild(0).getType() == HiveParser.TOK_TAB) {
-          ASTNode tokTab = (ASTNode) ast.getChild(0);
-          ASTNode tokPartSpec = (ASTNode) tokTab.getFirstChildWithType(HiveParser.TOK_PARTSPEC);
-          if (tokPartSpec != null) {
-            throw new SemanticException(generateErrorMessage(tokPartSpec,
-                                                             "Partition specification is not allowed if partitions are specified in column schema: "));
+          ASTNode tokTab = (ASTNode)ast.getChild(0);
+          ASTNode tokPartSpec = (ASTNode)tokTab.getFirstChildWithType(HiveParser.TOK_PARTSPEC);
+          if(tokPartSpec != null) {
+            for(Node n : tokPartSpec.getChildren()) {
+              ASTNode tokPartVal = null;
+              if(n instanceof ASTNode) {
+                tokPartVal = (ASTNode)n;
+              }
+              if(tokPartVal != null && tokPartVal.getType() == HiveParser.TOK_PARTVAL && tokPartVal.getChildCount() == 1) {
+                assert tokPartVal.getChild(0).getType() == HiveParser.Identifier :
+                    "Expected column name; found tokType=" + tokPartVal.getType();
+                dynamicPartitionColumns.add(tokPartVal.getChild(0).getText());
+              }
+            }
+            for(String colName : dynamicPartitionColumns) {
+              targetColumns.remove(colName);
+            }
+          } else  {
+            // partition spec is not specified but column schema can have partitions specified
+            for(FieldSchema f : targetTable.getPartCols()) {
+              //parser only allows foo(a,b), not foo(foo.a, foo.b)
+              targetColumns.remove(f.getName());
+            }
           }
-        }
-
-        for(FieldSchema f : targetTable.getPartCols()) {
-        //parser only allows foo(a,b), not foo(foo.a, foo.b)
-        targetColumns.remove(f.getName());
         }
 
         if(!targetColumns.isEmpty()) {
@@ -4682,16 +4711,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       targetTableColTypes.add(TypeInfoUtils.getTypeInfoFromTypeString(fs.getType()));
     }
     Map<String, String> partSpec = qb.getMetaData().getPartSpecForAlias(dest);
-    if(targetTableSchema.size() > targetTableCols.size()) {
-      // this mean column schema had partition spec specified, therefore we need to take partition colummns
-      // into account so that projection appropriately reorders them
-      // Note that target can't be NULL here since if parition spec is specified in column schema, partition clause
-      // couldn't have been specified (phase1 makes sure of this)
-      for(FieldSchema fs : target.getPartCols()) {
-        targetTableColNames.add(fs.getName());
-        targetTableColTypes.add(TypeInfoUtils.getTypeInfoFromTypeString(fs.getType()));
-      }
-    } else if(partSpec != null) {
+    if(partSpec != null) {
       //find dynamic partition columns
       //relies on consistent order via LinkedHashMap
       for(Map.Entry<String, String> partKeyVal : partSpec.entrySet()) {

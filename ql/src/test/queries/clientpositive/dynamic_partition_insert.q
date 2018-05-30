@@ -86,3 +86,11 @@ SELECT  * from table2_n10;
 
 DROP TABLE table2_n10;
 DROP TABLE table1_n15;
+
+CREATE TABLE pageviews (userid VARCHAR(64), link STRING, source STRING) PARTITIONED BY (datestamp STRING, i int)
+    CLUSTERED BY (userid) INTO 256 BUCKETS STORED AS ORC;
+INSERT INTO TABLE pageviews PARTITION (datestamp='2014-09-23',i)(userid,i,link) VALUES ('jsmith', 7, '7mail.com');
+SHOW PARTITIONS pageviews;
+select * from pageviews;
+
+drop database if exists x314n cascade;

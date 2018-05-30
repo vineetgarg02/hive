@@ -1163,3 +1163,46 @@ POSTHOOK: query: DROP TABLE table1_n15
 POSTHOOK: type: DROPTABLE
 POSTHOOK: Input: default@table1_n15
 POSTHOOK: Output: default@table1_n15
+PREHOOK: query: CREATE TABLE pageviews (userid VARCHAR(64), link STRING, source STRING) PARTITIONED BY (datestamp STRING, i int)
+    CLUSTERED BY (userid) INTO 256 BUCKETS STORED AS ORC
+PREHOOK: type: CREATETABLE
+PREHOOK: Output: database:default
+PREHOOK: Output: default@pageviews
+POSTHOOK: query: CREATE TABLE pageviews (userid VARCHAR(64), link STRING, source STRING) PARTITIONED BY (datestamp STRING, i int)
+    CLUSTERED BY (userid) INTO 256 BUCKETS STORED AS ORC
+POSTHOOK: type: CREATETABLE
+POSTHOOK: Output: database:default
+POSTHOOK: Output: default@pageviews
+PREHOOK: query: INSERT INTO TABLE pageviews PARTITION (datestamp='2014-09-23',i)(userid,i,link) VALUES ('jsmith', 7, '7mail.com')
+PREHOOK: type: QUERY
+PREHOOK: Input: _dummy_database@_dummy_table
+PREHOOK: Output: default@pageviews@datestamp=2014-09-23
+POSTHOOK: query: INSERT INTO TABLE pageviews PARTITION (datestamp='2014-09-23',i)(userid,i,link) VALUES ('jsmith', 7, '7mail.com')
+POSTHOOK: type: QUERY
+POSTHOOK: Input: _dummy_database@_dummy_table
+POSTHOOK: Output: default@pageviews@datestamp=2014-09-23/i=7
+POSTHOOK: Lineage: pageviews PARTITION(datestamp=2014-09-23,i=7).link SCRIPT []
+POSTHOOK: Lineage: pageviews PARTITION(datestamp=2014-09-23,i=7).source SIMPLE []
+POSTHOOK: Lineage: pageviews PARTITION(datestamp=2014-09-23,i=7).userid SCRIPT []
+PREHOOK: query: SHOW PARTITIONS pageviews
+PREHOOK: type: SHOWPARTITIONS
+PREHOOK: Input: default@pageviews
+POSTHOOK: query: SHOW PARTITIONS pageviews
+POSTHOOK: type: SHOWPARTITIONS
+POSTHOOK: Input: default@pageviews
+datestamp=2014-09-23/i=7
+PREHOOK: query: select * from pageviews
+PREHOOK: type: QUERY
+PREHOOK: Input: default@pageviews
+PREHOOK: Input: default@pageviews@datestamp=2014-09-23/i=7
+#### A masked pattern was here ####
+POSTHOOK: query: select * from pageviews
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@pageviews
+POSTHOOK: Input: default@pageviews@datestamp=2014-09-23/i=7
+#### A masked pattern was here ####
+jsmith	7mail.com	NULL	2014-09-23	7
+PREHOOK: query: drop database if exists x314n cascade
+PREHOOK: type: DROPDATABASE
+POSTHOOK: query: drop database if exists x314n cascade
+POSTHOOK: type: DROPDATABASE

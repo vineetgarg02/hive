@@ -4500,7 +4500,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
           if (expr.getType() == HiveParser.TOK_ALLCOLREF) {
             pos = genColListRegex(".*", expr.getChildCount() == 0 ? null : SemanticAnalyzer
                             .getUnescapedName((ASTNode) expr.getChild(0)).toLowerCase(), expr, col_list,
-                    excludedColumns, inputRR, starRR, pos, out_rwsch, qb.getAliases(), true);
+                    excludedColumns, inputRR, starRR, pos, out_rwsch, qb.getAliases(), false);
             selectStar = true;
           } else if (expr.getType() == HiveParser.TOK_TABLE_OR_COL
                   && !hasAsClause
@@ -4512,7 +4512,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
             // We don't allow this for ExprResolver - the Group By case
             pos = genColListRegex(SemanticAnalyzer.unescapeIdentifier(expr.getChild(0).getText()),
                     null, expr, col_list, excludedColumns, inputRR, starRR, pos, out_rwsch,
-                    qb.getAliases(), true);
+                    qb.getAliases(), false);
           } else if (expr.getType() == HiveParser.DOT
                   && expr.getChild(0).getType() == HiveParser.TOK_TABLE_OR_COL
                   && inputRR.hasTableAlias(SemanticAnalyzer.unescapeIdentifier(expr.getChild(0)
@@ -4528,7 +4528,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
                     SemanticAnalyzer.unescapeIdentifier(expr.getChild(1).getText()),
                     SemanticAnalyzer.unescapeIdentifier(expr.getChild(0).getChild(0).getText()
                             .toLowerCase()), expr, col_list, excludedColumns, inputRR, starRR, pos,
-                    out_rwsch, qb.getAliases(), true);
+                    out_rwsch, qb.getAliases(), false);
           } else if (ParseUtils.containsTokenOfType(expr, HiveParser.TOK_FUNCTIONDI)
                   && !(srcRel instanceof HiveAggregate)) {
             // Likely a malformed query eg, select hash(distinct c1) from t1;
@@ -4907,10 +4907,13 @@ public class CalcitePlanner extends SemanticAnalyzer {
           if ("".equals(tmp[0]) || tmp[1] == null) {
             // ast expression is not a valid column name for table
             tmp[1] = colInfo.getInternalName();
+          } else if (newRR.get(alias, tmp[1]) != null) {
+            // if it's wrapped by top-level select star query, skip ambiguity check (for backward compatibility)
+            tmp[1] = colInfo.getInternalName();
           }
-          ColumnInfo newCi = new ColumnInfo(colInfo);
-          newCi.setTabAlias(alias);
-          newRR.put(alias, tmp[1], newCi);
+          //ColumnInfo newCi = new ColumnInfo(colInfo);
+          //newCi.setTabAlias(alias);
+          newRR.put(alias, tmp[1], colInfo);
         }
         relToHiveRR.put(srcRel, newRR);
         relToHiveColNameCalcitePosMap.put(srcRel, buildHiveToCalciteColumnMap(newRR, srcRel));

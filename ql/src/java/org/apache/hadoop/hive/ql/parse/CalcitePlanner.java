@@ -3999,12 +3999,8 @@ public class CalcitePlanner extends SemanticAnalyzer {
         RelCollation canonizedCollation = traitSet.canonize(RelCollations.EMPTY);
         sortRel = new HiveSortLimit(cluster, traitSet, srcRel, canonizedCollation, offsetRN, fetchRN);
 
-        RowResolver outputRR = new RowResolver();
-        if (!RowResolver.add(outputRR, relToHiveRR.get(srcRel))) {
-          throw new CalciteSemanticException(
-              "Duplicates detected when adding columns to RR: see previous message",
-              UnsupportedFeature.Duplicates_in_RR);
-        }
+        RowResolver inputRR = relToHiveRR.get(srcRel);
+        RowResolver outputRR = inputRR.duplicate();
         ImmutableMap<String, Integer> hiveColNameCalcitePosMap = buildHiveToCalciteColumnMap(
             outputRR, sortRel);
         relToHiveRR.put(sortRel, outputRR);

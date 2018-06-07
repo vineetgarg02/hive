@@ -1282,6 +1282,11 @@ CREATE INDEX "TBLS_N50" ON "TBLS" USING btree ("SD_ID");
 
 CREATE INDEX "TBL_COL_PRIVS_N49" ON "TBL_COL_PRIVS" USING btree ("TBL_ID");
 
+--
+-- Name: TAB_COL_STATS_IDX; Type: INDEX; Schema: public; Owner: hiveuser; Tablespace:
+--
+
+CREATE INDEX "TAB_COL_STATS_IDX" ON "TAB_COL_STATS" USING btree ("CAT_NAME", "DB_NAME","TABLE_NAME","COLUMN_NAME");
 
 --
 -- Name: TBL_PRIVS_N49; Type: INDEX; Schema: public; Owner: hiveuser; Tablespace:
@@ -1647,7 +1652,8 @@ CREATE TABLE TXNS (
   TXN_HOST varchar(128) NOT NULL,
   TXN_AGENT_INFO varchar(128),
   TXN_META_INFO varchar(128),
-  TXN_HEARTBEAT_COUNT integer
+  TXN_HEARTBEAT_COUNT integer,
+  TXN_TYPE integer
 );
 
 CREATE TABLE TXN_COMPONENTS (

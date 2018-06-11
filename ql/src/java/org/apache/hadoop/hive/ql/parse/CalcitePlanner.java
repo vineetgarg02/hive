@@ -4531,11 +4531,6 @@ public class CalcitePlanner extends SemanticAnalyzer {
             colInfo.setSkewedCol((exp instanceof ExprNodeColumnDesc) ? ((ExprNodeColumnDesc) exp)
                     .isSkewedCol() : false);
             out_rwsch.put(tabAlias, colAlias, colInfo);
-            /*if (!out_rwsch.putWithCheck(tabAlias, colAlias, null, colInfo)) {
-              throw new CalciteSemanticException("Cannot add column to RR: " + tabAlias + "."
-                      + colAlias + " => " + colInfo + " due to duplication, see previous warnings",
-                      UnsupportedFeature.Duplicates_in_RR);
-            } */
 
             pos = Integer.valueOf(pos.intValue() + 1);
           }
@@ -4883,11 +4878,8 @@ public class CalcitePlanner extends SemanticAnalyzer {
             // ast expression is not a valid column name for table
             tmp[1] = colInfo.getInternalName();
           } else if (newRR.get(alias, tmp[1]) != null) {
-            // if it's wrapped by top-level select star query, skip ambiguity check (for backward compatibility)
             tmp[1] = colInfo.getInternalName();
           }
-          //ColumnInfo newCi = new ColumnInfo(colInfo);
-          //newCi.setTabAlias(alias);
           newRR.put(alias, tmp[1], colInfo);
         }
         relToHiveRR.put(srcRel, newRR);

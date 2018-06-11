@@ -4354,7 +4354,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     ASTNode trfm = null;
     Integer pos = Integer.valueOf(0);
     RowResolver inputRR = opParseCtx.get(input).getRowResolver();
-      RowResolver starRR = null;
+    RowResolver starRR = null;
     if (inputForSelectStar != null && inputForSelectStar != input) {
       starRR = opParseCtx.get(inputForSelectStar).getRowResolver();
     }

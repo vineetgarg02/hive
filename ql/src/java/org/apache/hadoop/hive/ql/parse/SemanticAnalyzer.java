@@ -2177,7 +2177,9 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
           parentInput = PlanUtils.getParentViewInfo(getAliasId(alias, qb), viewAliasToInput);
         }
         ReadEntity viewInput = new ReadEntity(tab, parentInput, !qb.isInsideView());
-        viewInput = PlanUtils.addInput(inputs, viewInput);
+        if(!qb.isInsideView()) {
+          viewInput = PlanUtils.addInput(inputs, viewInput);
+        }
         aliasToViewInfo.put(alias, new ObjectPair<String, ReadEntity>(fullViewName, viewInput));
         String aliasId = getAliasId(alias, qb);
         if (aliasId != null) {
@@ -2215,7 +2217,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
 
       ReadEntity parentViewInfo = PlanUtils.getParentViewInfo(getAliasId(alias, qb), viewAliasToInput);
       // Temporary tables created during the execution are not the input sources
-      if (!PlanUtils.isValuesTempTable(alias)) {
+      if (!PlanUtils.isValuesTempTable(alias) && !qb.isInsideView()) {
         PlanUtils.addInput(inputs,
             new ReadEntity(tab, parentViewInfo, parentViewInfo == null),mergeIsDirect);
       }

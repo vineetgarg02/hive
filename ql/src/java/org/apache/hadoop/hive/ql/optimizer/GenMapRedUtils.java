@@ -587,8 +587,6 @@ public final class GenMapRedUtils {
     TableDesc tblDesc = null;
     boolean initTableDesc = false;
 
-    PlanUtils.addPartitionInputs(parts, inputs, parentViewInfo, isDirectRead);
-
     for (Partition part: parts) {
       // Later the properties have to come from the partition as opposed
       // to from the table in order to support versioning.

@@ -645,13 +645,11 @@ POSTHOOK: Input: default@v1_n9
 213	val_213
 PREHOOK: query: create view `masking_test_view` as select key from `v0`
 PREHOOK: type: CREATEVIEW
-PREHOOK: Input: default@masking_test_n5
 PREHOOK: Input: default@v0
 PREHOOK: Output: database:default
 PREHOOK: Output: default@masking_test_view
 POSTHOOK: query: create view `masking_test_view` as select key from `v0`
 POSTHOOK: type: CREATEVIEW
-POSTHOOK: Input: default@masking_test_n5
 POSTHOOK: Input: default@v0
 POSTHOOK: Output: database:default
 POSTHOOK: Output: default@masking_test_view
@@ -699,15 +697,11 @@ STAGE PLANS:
 
 PREHOOK: query: select key from `masking_test_view`
 PREHOOK: type: QUERY
-PREHOOK: Input: default@masking_test_n5
 PREHOOK: Input: default@masking_test_view
-PREHOOK: Input: default@v0
 #### A masked pattern was here ####
 POSTHOOK: query: select key from `masking_test_view`
 POSTHOOK: type: QUERY
-POSTHOOK: Input: default@masking_test_n5
 POSTHOOK: Input: default@masking_test_view
-POSTHOOK: Input: default@v0
 #### A masked pattern was here ####
 119
 43
@@ -1279,13 +1273,11 @@ STAGE PLANS:
 
 PREHOOK: query: select `v0`.value from `v0` join `masking_test_view` on `v0`.key = `masking_test_view`.key
 PREHOOK: type: QUERY
-PREHOOK: Input: default@masking_test_n5
 PREHOOK: Input: default@masking_test_view
 PREHOOK: Input: default@v0
 #### A masked pattern was here ####
 POSTHOOK: query: select `v0`.value from `v0` join `masking_test_view` on `v0`.key = `masking_test_view`.key
 POSTHOOK: type: QUERY
-POSTHOOK: Input: default@masking_test_n5
 POSTHOOK: Input: default@masking_test_view
 POSTHOOK: Input: default@v0
 #### A masked pattern was here ####

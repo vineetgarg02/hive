@@ -92,11 +92,9 @@ public class TestReadEntityDirect {
     Driver driver = createDriver();
     int ret = driver.compile("select * from v1");
     assertEquals("Checking command success", 0, ret);
-    assertEquals(2, CheckInputReadEntityDirect.readEntities.size());
+    assertEquals(1, CheckInputReadEntityDirect.readEntities.size());
     for (ReadEntity readEntity : CheckInputReadEntityDirect.readEntities) {
-      if (readEntity.getName().equals("default@t1")) {
-        assertFalse("not direct", readEntity.isDirect());
-      } else if (readEntity.getName().equals("default@v1")) {
+      if (readEntity.getName().equals("default@v1")) {
         assertTrue("direct", readEntity.isDirect());
       } else {
         fail("unexpected entity name " + readEntity.getName());
@@ -160,11 +158,9 @@ public class TestReadEntityDirect {
     Driver driver = createDriver();
     int ret = driver.compile("select * from v1 as a join v1 as b on (a.i = b.i)");
     assertEquals("Checking command success", 0, ret);
-    assertEquals(2, CheckInputReadEntityDirect.readEntities.size());
+    assertEquals(1, CheckInputReadEntityDirect.readEntities.size());
     for (ReadEntity readEntity : CheckInputReadEntityDirect.readEntities) {
-      if (readEntity.getName().equals("default@t1")) {
-        assertFalse("not direct", readEntity.isDirect());
-      } else if (readEntity.getName().equals("default@v1")) {
+      if (readEntity.getName().equals("default@v1")) {
         assertTrue("direct", readEntity.isDirect());
       } else {
         fail("unexpected entity name " + readEntity.getName());

@@ -96,20 +96,6 @@ public class TestViewEntity {
     driver.compile("select * from " + view1 );
     // view entity
     assertEquals("default@" + view1, CheckInputReadEntity.readEntities[0].getName());
-
-    // first table in union query with view as parent
-    assertEquals("default@" + tab1, CheckInputReadEntity.readEntities[1].getName());
-    assertFalse("Table is not direct input", CheckInputReadEntity.readEntities[1].isDirect());
-    assertEquals("default@" + view1, CheckInputReadEntity.readEntities[1]
-        .getParents()
-        .iterator().next().getName());
-    // second table in union query with view as parent
-    assertEquals("default@" + tab2, CheckInputReadEntity.readEntities[2].getName());
-    assertFalse("Table is not direct input", CheckInputReadEntity.readEntities[2].isDirect());
-    assertEquals("default@" + view1, CheckInputReadEntity.readEntities[2]
-        .getParents()
-        .iterator().next().getName());
-
   }
 
 
@@ -131,11 +117,6 @@ public class TestViewEntity {
     driver.compile("select * from " + view1 );
     // view entity
     assertEquals("default@" + view1, CheckInputReadEntity.readEntities[0].getName());
-
-    // table as second read entity
-    assertEquals("default@" + tab1, CheckInputReadEntity.readEntities[1].getName());
-    assertFalse("Table is not direct input", CheckInputReadEntity.readEntities[1].isDirect());
-
   }
 
   /**
@@ -161,15 +142,6 @@ public class TestViewEntity {
     driver.compile("select * from " + view2);
     // view entity
     assertEquals("default@" + view2, CheckInputReadEntity.readEntities[0].getName());
-
-    // table1 and view1 as second read entity
-    assertEquals("default@" + view1, CheckInputReadEntity.readEntities[1].getName());
-    assertFalse("Table is not direct input", CheckInputReadEntity.readEntities[1].isDirect());
-    Set<ReadEntity> parents = CheckInputReadEntity.readEntities[1].getParents();
-    assertTrue("Table does not have parent", parents != null && parents.size() > 0);
-    assertEquals("default@" + tab1, CheckInputReadEntity.readEntities[2].getName());
-    assertFalse("Table is not direct input", CheckInputReadEntity.readEntities[2].isDirect());
-
   }
 
   /**
@@ -195,15 +167,6 @@ public class TestViewEntity {
     driver.compile("select * from " + view2);
     // view entity
     assertEquals("default@" + view2, CheckInputReadEntity.readEntities[0].getName());
-
-    // table1 and view1 as second read entity
-    assertEquals("default@" + view1, CheckInputReadEntity.readEntities[1].getName());
-    assertFalse("Table is not direct input", CheckInputReadEntity.readEntities[1].isDirect());
-    Set<ReadEntity> parents = CheckInputReadEntity.readEntities[1].getParents();
-    assertTrue("Table does not have parent", parents != null && parents.size() > 0);
-    assertEquals("default@" + tab1, CheckInputReadEntity.readEntities[2].getName());
-    assertFalse("Table is not direct input", CheckInputReadEntity.readEntities[2].isDirect());
-
   }
 
 }

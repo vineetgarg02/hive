@@ -12,11 +12,9 @@ POSTHOOK: Output: database:default
 POSTHOOK: Output: default@dependtest
 PREHOOK: query: insert into table dependtest partition (b=1) values ("hello")
 PREHOOK: type: QUERY
-PREHOOK: Input: _dummy_database@_dummy_table
 PREHOOK: Output: default@dependtest@b=1
 POSTHOOK: query: insert into table dependtest partition (b=1) values ("hello")
 POSTHOOK: type: QUERY
-POSTHOOK: Input: _dummy_database@_dummy_table
 POSTHOOK: Output: default@dependtest@b=1
 POSTHOOK: Lineage: dependtest PARTITION(b=1).a SCRIPT []
 PREHOOK: query: create view viewtest as select * from dependtest where b = 1
@@ -35,7 +33,7 @@ PREHOOK: query: explain dependency select count(*) from viewtest
 PREHOOK: type: QUERY
 POSTHOOK: query: explain dependency select count(*) from viewtest
 POSTHOOK: type: QUERY
-{"input_tables":[{"tablename":"default@viewtest","tabletype":"VIRTUAL_VIEW"},{"tablename":"default@dependtest","tabletype":"MANAGED_TABLE","tableParents":"[default@viewtest]"}],"input_partitions":[{"partitionName":"default@dependtest@b=1","partitionParents":"[default@viewtest]"}]}
+{"input_tables":[{"tablename":"default@viewtest","tabletype":"VIRTUAL_VIEW"}],"input_partitions":[]}
 PREHOOK: query: drop view viewtest
 PREHOOK: type: DROPVIEW
 PREHOOK: Input: default@viewtest

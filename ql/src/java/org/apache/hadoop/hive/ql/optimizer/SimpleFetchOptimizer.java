@@ -422,9 +422,6 @@ public class SimpleFetchOptimizer extends Transform {
     // single direct fetching, which means FS is not needed any more when conversion completed.
     // rows forwarded will be received by ListSinkOperator, which is replacing FS
     private ListSinkOperator completed(ParseContext pctx, FetchWork work) {
-      for (ReadEntity input : inputs) {
-        PlanUtils.addInput(pctx.getSemanticInputs(), input);
-      }
       return replaceFSwithLS(fileSink, work.getSerializationNullFormat());
     }
 

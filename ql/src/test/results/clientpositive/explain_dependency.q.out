@@ -28,7 +28,6 @@ PREHOOK: query: CREATE VIEW V3 AS
   JOIN src src2 ON src1.key = src2.key WHERE src1.ds IS NOT NULL
 PREHOOK: type: CREATEVIEW
 PREHOOK: Input: default@src
-PREHOOK: Input: default@srcpart
 PREHOOK: Input: default@v2_n1
 PREHOOK: Output: database:default
 PREHOOK: Output: default@V3
@@ -37,7 +36,6 @@ POSTHOOK: query: CREATE VIEW V3 AS
   JOIN src src2 ON src1.key = src2.key WHERE src1.ds IS NOT NULL
 POSTHOOK: type: CREATEVIEW
 POSTHOOK: Input: default@src
-POSTHOOK: Input: default@srcpart
 POSTHOOK: Input: default@v2_n1
 POSTHOOK: Output: database:default
 POSTHOOK: Output: default@V3
@@ -48,7 +46,6 @@ PREHOOK: query: CREATE VIEW V4 AS
   FROM V1_n6 src1 JOIN V2_n1 src2 on src1.key = src2.key JOIN src src3 ON src2.key = src3.key
 PREHOOK: type: CREATEVIEW
 PREHOOK: Input: default@src
-PREHOOK: Input: default@srcpart
 PREHOOK: Input: default@v1_n6
 PREHOOK: Input: default@v2_n1
 PREHOOK: Output: database:default
@@ -58,7 +55,6 @@ POSTHOOK: query: CREATE VIEW V4 AS
   FROM V1_n6 src1 JOIN V2_n1 src2 on src1.key = src2.key JOIN src src3 ON src2.key = src3.key
 POSTHOOK: type: CREATEVIEW
 POSTHOOK: Input: default@src
-POSTHOOK: Input: default@srcpart
 POSTHOOK: Input: default@v1_n6
 POSTHOOK: Input: default@v2_n1
 POSTHOOK: Output: database:default
@@ -72,7 +68,7 @@ PREHOOK: type: QUERY
 POSTHOOK: query: EXPLAIN DEPENDENCY 
   SELECT key, count(1) FROM srcpart WHERE ds IS NOT NULL GROUP BY key
 POSTHOOK: type: QUERY
-{"input_tables":[{"tablename":"default@srcpart","tabletype":"MANAGED_TABLE"}],"input_partitions":[{"partitionName":"default@srcpart@ds=2008-04-08/hr=11"},{"partitionName":"default@srcpart@ds=2008-04-08/hr=12"},{"partitionName":"default@srcpart@ds=2008-04-09/hr=11"},{"partitionName":"default@srcpart@ds=2008-04-09/hr=12"}]}
+{"input_tables":[{"tablename":"default@srcpart","tabletype":"MANAGED_TABLE"}],"input_partitions":[]}
 PREHOOK: query: EXPLAIN DEPENDENCY 
   SELECT key, count(1) FROM (SELECT key, value FROM src) subq1 GROUP BY key
 PREHOOK: type: QUERY
@@ -90,34 +86,34 @@ POSTHOOK: query: EXPLAIN DEPENDENCY
     SELECT key, value FROM src UNION ALL SELECT key, value FROM srcpart WHERE ds IS NOT NULL
   ) S1
 POSTHOOK: type: QUERY
-{"input_tables":[{"tablename":"default@src","tabletype":"MANAGED_TABLE"},{"tablename":"default@srcpart","tabletype":"MANAGED_TABLE"}],"input_partitions":[{"partitionName":"default@srcpart@ds=2008-04-08/hr=11"},{"partitionName":"default@srcpart@ds=2008-04-08/hr=12"},{"partitionName":"default@srcpart@ds=2008-04-09/hr=11"},{"partitionName":"default@srcpart@ds=2008-04-09/hr=12"}]}
+{"input_tables":[{"tablename":"default@src","tabletype":"MANAGED_TABLE"},{"tablename":"default@srcpart","tabletype":"MANAGED_TABLE"}],"input_partitions":[]}
 PREHOOK: query: EXPLAIN DEPENDENCY 
   SELECT S1.key, S2.value FROM src S1 JOIN srcpart S2 ON S1.key = S2.key WHERE ds IS NOT NULL
 PREHOOK: type: QUERY
 POSTHOOK: query: EXPLAIN DEPENDENCY 
   SELECT S1.key, S2.value FROM src S1 JOIN srcpart S2 ON S1.key = S2.key WHERE ds IS NOT NULL
 POSTHOOK: type: QUERY
-{"input_tables":[{"tablename":"default@src","tabletype":"MANAGED_TABLE"},{"tablename":"default@srcpart","tabletype":"MANAGED_TABLE"}],"input_partitions":[{"partitionName":"default@srcpart@ds=2008-04-08/hr=11"},{"partitionName":"default@srcpart@ds=2008-04-08/hr=12"},{"partitionName":"default@srcpart@ds=2008-04-09/hr=11"},{"partitionName":"default@srcpart@ds=2008-04-09/hr=12"}]}
+{"input_tables":[{"tablename":"default@src","tabletype":"MANAGED_TABLE"},{"tablename":"default@srcpart","tabletype":"MANAGED_TABLE"}],"input_partitions":[]}
 PREHOOK: query: EXPLAIN DEPENDENCY SELECT * FROM V1_n6
 PREHOOK: type: QUERY
 POSTHOOK: query: EXPLAIN DEPENDENCY SELECT * FROM V1_n6
 POSTHOOK: type: QUERY
-{"input_tables":[{"tablename":"default@v1_n6","tabletype":"VIRTUAL_VIEW"},{"tablename":"default@src","tabletype":"MANAGED_TABLE","tableParents":"[default@v1_n6]"}],"input_partitions":[]}
+{"input_tables":[{"tablename":"default@v1_n6","tabletype":"VIRTUAL_VIEW"},{"tablename":"default@src","tabletype":"MANAGED_TABLE"}],"input_partitions":[]}
 PREHOOK: query: EXPLAIN DEPENDENCY SELECT * FROM V2_n1
 PREHOOK: type: QUERY
 POSTHOOK: query: EXPLAIN DEPENDENCY SELECT * FROM V2_n1
 POSTHOOK: type: QUERY
-{"input_tables":[{"tablename":"default@v2_n1","tabletype":"VIRTUAL_VIEW"},{"tablename":"default@srcpart","tabletype":"MANAGED_TABLE","tableParents":"[default@v2_n1]"}],"input_partitions":[{"partitionName":"default@srcpart@ds=2008-04-08/hr=11"},{"partitionName":"default@srcpart@ds=2008-04-08/hr=12"},{"partitionName":"default@srcpart@ds=2008-04-09/hr=11"},{"partitionName":"default@srcpart@ds=2008-04-09/hr=12"}]}
+{"input_tables":[{"tablename":"default@v2_n1","tabletype":"VIRTUAL_VIEW"},{"tablename":"default@srcpart","tabletype":"MANAGED_TABLE"}],"input_partitions":[{"partitionName":"default@srcpart@ds=2008-04-08/hr=11"},{"partitionName":"default@srcpart@ds=2008-04-08/hr=12"},{"partitionName":"default@srcpart@ds=2008-04-09/hr=11"},{"partitionName":"default@srcpart@ds=2008-04-09/hr=12"}]}
 PREHOOK: query: EXPLAIN DEPENDENCY SELECT * FROM V3
 PREHOOK: type: QUERY
 POSTHOOK: query: EXPLAIN DEPENDENCY SELECT * FROM V3
 POSTHOOK: type: QUERY
-{"input_tables":[{"tablename":"default@v3","tabletype":"VIRTUAL_VIEW"},{"tablename":"default@v2_n1","tabletype":"VIRTUAL_VIEW","tableParents":"[default@v3]"},{"tablename":"default@src","tabletype":"MANAGED_TABLE","tableParents":"[default@v3]"},{"tablename":"default@srcpart","tabletype":"MANAGED_TABLE","tableParents":"[default@v2_n1]"}],"input_partitions":[{"partitionName":"default@srcpart@ds=2008-04-08/hr=11"},{"partitionName":"default@srcpart@ds=2008-04-08/hr=12"},{"partitionName":"default@srcpart@ds=2008-04-09/hr=11"},{"partitionName":"default@srcpart@ds=2008-04-09/hr=12"}]}
+{"input_tables":[{"tablename":"default@v3","tabletype":"VIRTUAL_VIEW"}],"input_partitions":[]}
 PREHOOK: query: EXPLAIN DEPENDENCY SELECT * FROM V4
 PREHOOK: type: QUERY
 POSTHOOK: query: EXPLAIN DEPENDENCY SELECT * FROM V4
 POSTHOOK: type: QUERY
-{"input_tables":[{"tablename":"default@v4","tabletype":"VIRTUAL_VIEW"},{"tablename":"default@v1_n6","tabletype":"VIRTUAL_VIEW","tableParents":"[default@v4]"},{"tablename":"default@v2_n1","tabletype":"VIRTUAL_VIEW","tableParents":"[default@v4]"},{"tablename":"default@src","tabletype":"MANAGED_TABLE","tableParents":"[default@v4, default@v1_n6]"},{"tablename":"default@srcpart","tabletype":"MANAGED_TABLE","tableParents":"[default@v2_n1]"}],"input_partitions":[{"partitionName":"default@srcpart@ds=2008-04-08/hr=11"},{"partitionName":"default@srcpart@ds=2008-04-08/hr=12"},{"partitionName":"default@srcpart@ds=2008-04-09/hr=11"},{"partitionName":"default@srcpart@ds=2008-04-09/hr=12"}]}
+{"input_tables":[{"tablename":"default@v4","tabletype":"VIRTUAL_VIEW"}],"input_partitions":[]}
 PREHOOK: query: CREATE VIEW V5 as SELECT * FROM srcpart where ds = '10'
 PREHOOK: type: CREATEVIEW
 PREHOOK: Input: default@srcpart
@@ -136,4 +132,4 @@ PREHOOK: query: EXPLAIN DEPENDENCY SELECT * FROM V5
 PREHOOK: type: QUERY
 POSTHOOK: query: EXPLAIN DEPENDENCY SELECT * FROM V5
 POSTHOOK: type: QUERY
-{"input_tables":[{"tablename":"default@v5","tabletype":"VIRTUAL_VIEW"},{"tablename":"default@srcpart","tabletype":"MANAGED_TABLE","tableParents":"[default@v5]"}],"input_partitions":[]}
+{"input_tables":[{"tablename":"default@v5","tabletype":"VIRTUAL_VIEW"},{"tablename":"default@srcpart","tabletype":"MANAGED_TABLE"}],"input_partitions":[]}

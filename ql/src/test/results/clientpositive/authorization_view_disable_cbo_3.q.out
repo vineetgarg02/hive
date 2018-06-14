@@ -24,13 +24,11 @@ POSTHOOK: Lineage: v1_n1.key SIMPLE [(src_autho_test_n0)src_autho_test_n0.FieldS
 POSTHOOK: Lineage: v1_n1.value SIMPLE [(src_autho_test_n0)src_autho_test_n0.FieldSchema(name:value, type:string, comment:null), ]
 PREHOOK: query: create view v2 as select * from v1_n1
 PREHOOK: type: CREATEVIEW
-PREHOOK: Input: default@src_autho_test_n0
 PREHOOK: Input: default@v1_n1
 PREHOOK: Output: database:default
 PREHOOK: Output: default@v2
 POSTHOOK: query: create view v2 as select * from v1_n1
 POSTHOOK: type: CREATEVIEW
-POSTHOOK: Input: default@src_autho_test_n0
 POSTHOOK: Input: default@v1_n1
 POSTHOOK: Output: database:default
 POSTHOOK: Output: default@v2
@@ -51,12 +49,10 @@ POSTHOOK: Output: default@src_autho_test_n0
 PREHOOK: query: select v2.key from v2 join (select key from src_autho_test_n0)subq on v2.value=subq.key order by key limit 10
 PREHOOK: type: QUERY
 PREHOOK: Input: default@src_autho_test_n0
-PREHOOK: Input: default@v1_n1
 PREHOOK: Input: default@v2
 #### A masked pattern was here ####
 POSTHOOK: query: select v2.key from v2 join (select key from src_autho_test_n0)subq on v2.value=subq.key order by key limit 10
 POSTHOOK: type: QUERY
 POSTHOOK: Input: default@src_autho_test_n0
-POSTHOOK: Input: default@v1_n1
 POSTHOOK: Input: default@v2
 #### A masked pattern was here ####

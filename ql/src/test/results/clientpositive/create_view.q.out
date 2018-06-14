@@ -547,14 +547,12 @@ key                 	int
 PREHOOK: query: CREATE VIEW view5 AS SELECT v1.key as key1, v2.key as key2
 FROM view4 v1 join view4 v2
 PREHOOK: type: CREATEVIEW
-PREHOOK: Input: default@table1_n4
 PREHOOK: Input: default@view4
 PREHOOK: Output: database:default
 PREHOOK: Output: default@view5
 POSTHOOK: query: CREATE VIEW view5 AS SELECT v1.key as key1, v2.key as key2
 FROM view4 v1 join view4 v2
 POSTHOOK: type: CREATEVIEW
-POSTHOOK: Input: default@table1_n4
 POSTHOOK: Input: default@view4
 POSTHOOK: Output: database:default
 POSTHOOK: Output: default@view5
@@ -564,13 +562,11 @@ Warning: Shuffle Join JOIN[6][tables = [$hdt$_0, $hdt$_1]] in Stage 'Stage-1:MAP
 PREHOOK: query: SELECT * FROM view5
 PREHOOK: type: QUERY
 PREHOOK: Input: default@table1_n4
-PREHOOK: Input: default@view4
 PREHOOK: Input: default@view5
 #### A masked pattern was here ####
 POSTHOOK: query: SELECT * FROM view5
 POSTHOOK: type: QUERY
 POSTHOOK: Input: default@table1_n4
-POSTHOOK: Input: default@view4
 POSTHOOK: Input: default@view5
 #### A masked pattern was here ####
 86	86

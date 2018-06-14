@@ -2177,7 +2177,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
           parentInput = PlanUtils.getParentViewInfo(getAliasId(alias, qb), viewAliasToInput);
         }
         ReadEntity viewInput = new ReadEntity(tab, parentInput, !qb.isInsideView());
-        if(!qb.isInsideView()) {
+        if(!qb.isInsideView() && !qb.getAliasInsideView().contains(alias)) {
           viewInput = PlanUtils.addInput(inputs, viewInput);
         }
         aliasToViewInfo.put(alias, new ObjectPair<String, ReadEntity>(fullViewName, viewInput));
@@ -2217,7 +2217,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
 
       ReadEntity parentViewInfo = PlanUtils.getParentViewInfo(getAliasId(alias, qb), viewAliasToInput);
       // Temporary tables created during the execution are not the input sources
-      if (!PlanUtils.isValuesTempTable(alias) && !qb.isInsideView()) {
+      if (!PlanUtils.isValuesTempTable(alias) && !qb.isInsideView() && !qb.getAliasInsideView().contains(alias)) {
         PlanUtils.addInput(inputs,
             new ReadEntity(tab, parentViewInfo, parentViewInfo == null),mergeIsDirect);
       }
@@ -12229,11 +12229,13 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
         ctx.setResDir(null);
         ctx.setResFile(null);
 
-        try {
+        // Not sure why underlying tables are added for authorization
+        // user privileges should be checked on view only
+        /*try {
           PlanUtils.addInputsForView(pCtx);
         } catch (HiveException e) {
           throw new SemanticException(e);
-        }
+        } */
 
         // Generate lineage info for create view statements
         // if LineageLogger hook is configured.

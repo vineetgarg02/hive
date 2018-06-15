@@ -1658,7 +1658,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
       // 1. Gen Calcite Plan
       perfLogger.PerfLogBegin(this.getClass().getName(), PerfLogger.OPTIMIZER);
       try {
-        calciteGenPlan = genLogicalPlan(getQB(), true, null, null);
+        calciteGenPlan = genLogicalPlan(getQB(), true, null, null, false);
         // if it is to create view, we do not use table alias
         resultSchema = SemanticAnalyzer.convertRowSchemaToResultSetSchema(
             relToHiveRR.get(calciteGenPlan),
@@ -3221,7 +3221,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
           getMetaData(qbSQ);
           this.subqueryId++;
           RelNode subQueryRelNode = genLogicalPlan(qbSQ, false,
-              relToHiveColNameCalcitePosMap.get(srcRel), relToHiveRR.get(srcRel));
+              relToHiveColNameCalcitePosMap.get(srcRel), relToHiveRR.get(srcRel), false);
           subQueryToRelNode.put(next, subQueryRelNode);
           //keep track of subqueries which are scalar, correlated and contains aggregate
           // subquery expression. This will later be special cased in Subquery remove rule
@@ -4742,17 +4742,21 @@ public class CalcitePlanner extends SemanticAnalyzer {
       return udtf;
     }
 
-    private RelNode genLogicalPlan(QBExpr qbexpr) throws SemanticException {
+    private RelNode genLogicalPlan(QB parentQB, QBExpr qbexpr) throws SemanticException {
       switch (qbexpr.getOpcode()) {
       case NULLOP:
-        return genLogicalPlan(qbexpr.getQB(), false, null, null);
+        // this flag determines if ambiguity for same column names coming out of a subquery should be skipped or not
+        // Ambiguity is always checked unless parent query is select * and it is not select from view
+        // e.g. select * from (select i, i from table1) subq;
+        boolean shouldSkipAmbiguityCheck = viewSelect == null && parentQB.isTopLevelSelectStarQuery();
+        return genLogicalPlan(qbexpr.getQB(), false, null, null, shouldSkipAmbiguityCheck);
       case UNION:
       case INTERSECT:
       case INTERSECTALL:
       case EXCEPT:
       case EXCEPTALL:
-        RelNode qbexpr1Ops = genLogicalPlan(qbexpr.getQBExpr1());
-        RelNode qbexpr2Ops = genLogicalPlan(qbexpr.getQBExpr2());
+        RelNode qbexpr1Ops = genLogicalPlan(parentQB, qbexpr.getQBExpr1());
+        RelNode qbexpr2Ops = genLogicalPlan(parentQB, qbexpr.getQBExpr2());
         return genSetOpLogicalPlan(qbexpr.getOpcode(), qbexpr.getAlias(), qbexpr.getQBExpr1()
             .getAlias(), qbexpr1Ops, qbexpr.getQBExpr2().getAlias(), qbexpr2Ops);
       default:
@@ -4762,7 +4766,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
 
     private RelNode genLogicalPlan(QB qb, boolean outerMostQB,
                                    ImmutableMap<String, Integer> outerNameToPosMap,
-                                   RowResolver outerRR) throws SemanticException {
+                                   RowResolver outerRR, boolean skipAmbiguityCheck) throws SemanticException {
       RelNode srcRel = null;
       RelNode filterRel = null;
       RelNode gbRel = null;
@@ -4789,7 +4793,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
       // 1.1. Recurse over the subqueries to fill the subquery part of the plan
       for (String subqAlias : qb.getSubqAliases()) {
         QBExpr qbexpr = qb.getSubqForAlias(subqAlias);
-        RelNode relNode = genLogicalPlan(qbexpr);
+        RelNode relNode = genLogicalPlan(qb, qbexpr);
         aliasToRel.put(subqAlias, relNode);
         if (qb.getViewToTabSchema().containsKey(subqAlias)) {
           if (relNode instanceof HiveProject) {
@@ -4865,8 +4869,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
       srcRel = (limitRel == null) ? srcRel : limitRel;
 
       // 8. Incase this QB corresponds to subquery then modify its RR to point
-      // to subquery alias
-      // TODO: cleanup this
+      // to subquery alias.
       if (qb.getParseInfo().getAlias() != null) {
         RowResolver rr = this.relToHiveRR.get(srcRel);
         RowResolver newRR = new RowResolver();
@@ -4878,6 +4881,10 @@ public class CalcitePlanner extends SemanticAnalyzer {
             // ast expression is not a valid column name for table
             tmp[1] = colInfo.getInternalName();
           } else if (newRR.get(alias, tmp[1]) != null) {
+            // enforce uniqueness of column names
+            if (!skipAmbiguityCheck) {
+              throw new SemanticException(ErrorMsg.AMBIGUOUS_COLUMN.getMsg(tmp[1] + " in " + alias));
+            }
             tmp[1] = colInfo.getInternalName();
           }
           newRR.put(alias, tmp[1], colInfo);

@@ -7824,7 +7824,8 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       String tName = Utilities.getDbTableName(tableDesc.getTableName())[1];
       try {
         Warehouse wh = new Warehouse(conf);
-        tlocation = wh.getDefaultTablePath(db.getDatabase(tableDesc.getDatabaseName()), tName);
+        tlocation = wh.getDefaultTablePath(db.getDatabase(tableDesc.getDatabaseName()),
+            tName, tableDesc.isExternal());
       } catch (MetaException|HiveException e) {
         throw new SemanticException(e);
       }
@@ -13144,9 +13145,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
         try {
           // Generate a unique ID for temp table path.
           // This path will be fixed for the life of the temp table.
-          Path path = new Path(SessionState.getTempTableSpace(conf), UUID.randomUUID().toString());
-          path = Warehouse.getDnsPath(path, conf);
-          location = path.toString();
+          location = SessionState.generateTempTableLocation(conf);
         } catch (MetaException err) {
           throw new SemanticException("Error while generating temp table path:", err);
         }

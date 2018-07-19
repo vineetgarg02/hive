@@ -19,7 +19,7 @@ ANALYZE TABLE sorted_mod_4 COMPUTE STATISTICS;
 ANALYZE TABLE sorted_mod_4 COMPUTE STATISTICS FOR COLUMNS;
 
 create table small_table stored
-as orc as select ctinyint, cbigint from alltypesorc limit 100;
+as orc as select ctinyint as ctinyint1, cbigint from alltypesorc limit 100;
 
 ANALYZE TABLE small_table COMPUTE STATISTICS;
 ANALYZE TABLE small_table COMPUTE STATISTICS FOR COLUMNS;
@@ -28,67 +28,69 @@ explain vectorization detail formatted
 select count(*) from (select s.*, st.*
 from sorted_mod_4 s
 left outer join small_table st
-on s.ctinyint = st.ctinyint
+on s.ctinyint = st.ctinyint1
 ) t1;
 
 select count(*) from (select s.*, st.*
 from sorted_mod_4 s
 left outer join small_table st
-on s.ctinyint = st.ctinyint
+on s.ctinyint = st.ctinyint1
 ) t1;
 
 explain vectorization detail formatted
 select count(*) from (select s.ctinyint, s.cmodint, sm.cbigint 
 from sorted_mod_4 s
 left outer join small_table sm
-on s.ctinyint = sm.ctinyint and s.cmodint = 2
+on s.ctinyint = sm.ctinyint1 and s.cmodint = 2
 ) t1;
 
 select count(*) from (select s.ctinyint, s.cmodint, sm.cbigint 
 from sorted_mod_4 s
 left outer join small_table sm
-on s.ctinyint = sm.ctinyint and s.cmodint = 2
+on s.ctinyint = sm.ctinyint1 and s.cmodint = 2
 ) t1;
 
 explain vectorization detail formatted
 select count(*) from (select s.ctinyint, s.cmodint, sm.cbigint 
 from sorted_mod_4 s
 left outer join small_table sm
-on s.ctinyint = sm.ctinyint and pmod(s.ctinyint, 4) = s.cmodint
+on s.ctinyint = sm.ctinyint1 and pmod(s.ctinyint, 4) = s.cmodint
 ) t1;
 
 select count(*) from (select s.ctinyint, s.cmodint, sm.cbigint 
 from sorted_mod_4 s
 left outer join small_table sm
-on s.ctinyint = sm.ctinyint and pmod(s.ctinyint, 4) = s.cmodint
+on s.ctinyint = sm.ctinyint1 and pmod(s.ctinyint, 4) = s.cmodint
 ) t1;
 
 explain vectorization detail formatted
 select count(*) from (select s.ctinyint, s.cmodint, sm.cbigint 
 from sorted_mod_4 s
 left outer join small_table sm
-on s.ctinyint = sm.ctinyint and s.ctinyint < 100
+on s.ctinyint = sm.ctinyint1 and s.ctinyint < 100
 ) t1;
 
 select count(*) from (select s.ctinyint, s.cmodint, sm.cbigint 
 from sorted_mod_4 s
 left outer join small_table sm
-on s.ctinyint = sm.ctinyint and s.ctinyint < 100
+on s.ctinyint = sm.ctinyint1 and s.ctinyint < 100
 ) t1;
 
 explain vectorization detail formatted
-select count(*) from (select s.*, sm.*, s2.* 
+select count(*) from (select s.ctinyint as ctinyint, s.cmodint as cmodint, sm.*, s2.cmodint as cmodint1, s2.ctinyint
+    as ctinyint_1
 from sorted_mod_4 s
 left outer join small_table sm
-  on pmod(sm.cbigint, 8) = s.cmodint 
+  on pmod(sm.cbigint, 8) = s.cmodint
 left outer join sorted_mod_4 s2
   on s2.ctinyint = s.ctinyint
 ) t1;
 
-select count(*) from (select s.*, sm.*, s2.* 
+select count(*) from (select s.ctinyint as ctinyint, s.cmodint as cmodint, sm.*, s2.cmodint as cmodint1, s2.ctinyint
+    as ctinyint_1
 from sorted_mod_4 s
 left outer join small_table sm
-  on pmod(sm.cbigint, 8) = s.cmodint 
+  on pmod(sm.cbigint, 8) = s.cmodint
 left outer join sorted_mod_4 s2
   on s2.ctinyint = s.ctinyint
 ) t1;
@@ -102,7 +104,7 @@ ANALYZE TABLE mod_8_mod_4 COMPUTE STATISTICS;
 ANALYZE TABLE mod_8_mod_4 COMPUTE STATISTICS FOR COLUMNS;
 
 create table small_table2 stored
-as orc as select pmod(ctinyint, 16) as cmodtinyint, cbigint from alltypesorc limit 100;
+as orc as select pmod(ctinyint, 16) as cmodtinyint1, cbigint from alltypesorc limit 100;
 
 ANALYZE TABLE small_table2 COMPUTE STATISTICS;
 ANALYZE TABLE small_table2 COMPUTE STATISTICS FOR COLUMNS;
@@ -111,56 +113,57 @@ explain vectorization detail formatted
 select count(*) from (select s.*, st.*
 from mod_8_mod_4 s
 left outer join small_table2 st
-on s.cmodtinyint = st.cmodtinyint
+on s.cmodtinyint = st.cmodtinyint1
 ) t1;
 
 select count(*) from (select s.*, st.*
 from mod_8_mod_4 s
 left outer join small_table2 st
-on s.cmodtinyint = st.cmodtinyint
+on s.cmodtinyint = st.cmodtinyint1
 ) t1;
 
 explain vectorization detail formatted
 select count(*) from (select s.cmodtinyint, s.cmodint, sm.cbigint 
 from mod_8_mod_4 s
 left outer join small_table2 sm
-on s.cmodtinyint = sm.cmodtinyint and s.cmodint = 2
+on s.cmodtinyint = sm.cmodtinyint1 and s.cmodint = 2
 ) t1;
 
 select count(*) from (select s.cmodtinyint, s.cmodint, sm.cbigint 
 from mod_8_mod_4 s
 left outer join small_table2 sm
-on s.cmodtinyint = sm.cmodtinyint and s.cmodint = 2
+on s.cmodtinyint = sm.cmodtinyint1 and s.cmodint = 2
 ) t1;
 
 explain vectorization detail formatted
 select count(*) from (select s.cmodtinyint, s.cmodint, sm.cbigint 
 from mod_8_mod_4 s
 left outer join small_table2 sm
-on s.cmodtinyint = sm.cmodtinyint and pmod(s.cmodtinyint, 4) = s.cmodint
+on s.cmodtinyint = sm.cmodtinyint1 and pmod(s.cmodtinyint, 4) = s.cmodint
 ) t1;
 
 select count(*) from (select s.cmodtinyint, s.cmodint, sm.cbigint 
 from mod_8_mod_4 s
 left outer join small_table2 sm
-on s.cmodtinyint = sm.cmodtinyint and pmod(s.cmodtinyint, 4) = s.cmodint
+on s.cmodtinyint = sm.cmodtinyint1 and pmod(s.cmodtinyint, 4) = s.cmodint
 ) t1;
 
 explain vectorization detail formatted
 select count(*) from (select s.cmodtinyint, s.cmodint, sm.cbigint 
 from mod_8_mod_4 s
 left outer join small_table2 sm
-on s.cmodtinyint = sm.cmodtinyint and s.cmodtinyint < 3
+on s.cmodtinyint = sm.cmodtinyint1 and s.cmodtinyint < 3
 ) t1;
 
 select count(*) from (select s.cmodtinyint, s.cmodint, sm.cbigint 
 from mod_8_mod_4 s
 left outer join small_table2 sm
-on s.cmodtinyint = sm.cmodtinyint and s.cmodtinyint < 3
+on s.cmodtinyint = sm.cmodtinyint1 and s.cmodtinyint < 3
 ) t1;
 
 explain vectorization detail formatted
-select count(*) from (select s.*, sm.*, s2.* 
+select count(*) from (select s.cmodtinyint as cmodtinyint, s.cmodint as cmodint, sm.*,
+s2.cmodint as cmodint_1, s2.cmodtinyint as cmodtinyint_1
 from mod_8_mod_4 s
 left outer join small_table2 sm
   on pmod(sm.cbigint, 8) = s.cmodint 
@@ -168,7 +171,8 @@ left outer join mod_8_mod_4 s2
   on s2.cmodtinyint = s.cmodtinyint
 ) t1;
 
-select count(*) from (select s.*, sm.*, s2.* 
+select count(*) from (select s.cmodtinyint as cmodtinyint, s.cmodint as cmodint, sm.*,
+s2.cmodint as cmodint_1, s2.cmodtinyint as cmodtinyint_1
 from mod_8_mod_4 s
 left outer join small_table2 sm
   on pmod(sm.cbigint, 8) = s.cmodint 

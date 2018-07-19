@@ -1,6 +1,11 @@
 --! qt:dataset:src1
 --! qt:dataset:src
 
+CREATE TABLE nyz_1 (key1 STRING COMMENT 'default', value1 STRING COMMENT 'default') STORED AS TEXTFILE;
+insert overwrite table nyz_1 select key, value from src;
+ANALYZE TABLE nyz_1 COMPUTE STATISTICS;
+ANALYZE TABLE nyz_1 COMPUTE STATISTICS FOR COLUMNS key1,value1;
+
 SET hive.vectorized.execution.enabled=false;
 set hive.mapred.mode=nonstrict;
 set hive.optimize.limittranspose=false;
@@ -51,16 +56,16 @@ explain
 select *
 from src src1 right outer join (
   select *
-  from src src2 left outer join src src3
-  on src2.value = src3.value) src2
+  from src src2 left outer join nyz_1 src3
+  on src2.value = src3.value1) src2
 on src1.key = src2.key
 limit 1;
 
 select *
 from src src1 right outer join (
   select *
-  from src src2 left outer join src src3
-  on src2.value = src3.value) src2
+  from src src2 left outer join nyz_1 src3
+  on src2.value = src3.value1) src2
 on src1.key = src2.key
 limit 1;
 
@@ -72,16 +77,16 @@ explain
 select *
 from src src1 right outer join (
   select *
-  from src src2 left outer join src src3
-  on src2.value = src3.value) src2
+  from src src2 left outer join nyz_1 src3
+  on src2.value = src3.value1) src2
 on src1.key = src2.key
 limit 1;
 
 select *
 from src src1 right outer join (
   select *
-  from src src2 left outer join src src3
-  on src2.value = src3.value) src2
+  from src src2 left outer join nyz_1 src3
+  on src2.value = src3.value1) src2
 on src1.key = src2.key
 limit 1;
 
@@ -108,16 +113,16 @@ explain
 select *
 from src src1 right outer join (
   select *
-  from src src2 left outer join src src3
-  on src2.value = src3.value) src2
+  from src src2 left outer join nyz_1 src3
+  on src2.value = src3.value1) src2
 on src1.key = src2.key
 limit 0;
 
 select *
 from src src1 right outer join (
   select *
-  from src src2 left outer join src src3
-  on src2.value = src3.value) src2
+  from src src2 left outer join nyz_1 src3
+  on src2.value = src3.value1) src2
 on src1.key = src2.key
 limit 0;
 
@@ -171,16 +176,16 @@ explain
 select *
 from src src1 right outer join (
   select *
-  from src src2 left outer join src src3
-  on src2.value = src3.value) src2
+  from src src2 left outer join nyz_1 src3
+  on src2.value = src3.value1) src2
 on src1.key = src2.key
 limit 1 offset 1;
 
 select *
 from src src1 right outer join (
   select *
-  from src src2 left outer join src src3
-  on src2.value = src3.value) src2
+  from src src2 left outer join nyz_1 src3
+  on src2.value = src3.value1) src2
 on src1.key = src2.key
 limit 1 offset 1;
 
@@ -192,16 +197,16 @@ explain
 select *
 from src src1 right outer join (
   select *
-  from src src2 left outer join src src3
-  on src2.value = src3.value) src2
+  from src src2 left outer join nyz_1 src3
+  on src2.value = src3.value1) src2
 on src1.key = src2.key
 limit 1 offset 1;
 
 select *
 from src src1 right outer join (
   select *
-  from src src2 left outer join src src3
-  on src2.value = src3.value) src2
+  from src src2 left outer join nyz_1 src3
+  on src2.value = src3.value1) src2
 on src1.key = src2.key
 limit 1 offset 1;
 

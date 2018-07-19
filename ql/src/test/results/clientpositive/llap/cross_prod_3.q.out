@@ -16,6 +16,24 @@ POSTHOOK: Input: default@src
 POSTHOOK: Output: default@x_n2
 POSTHOOK: Lineage: x_n2.key SIMPLE [(src)src.FieldSchema(name:key, type:string, comment:default), ]
 POSTHOOK: Lineage: x_n2.value SIMPLE [(src)src.FieldSchema(name:value, type:string, comment:default), ]
+PREHOOK: query: create table X_n3 (key1 string, value1 string) clustered by (key1) into 2 buckets
+PREHOOK: type: CREATETABLE
+PREHOOK: Output: database:default
+PREHOOK: Output: default@X_n3
+POSTHOOK: query: create table X_n3 (key1 string, value1 string) clustered by (key1) into 2 buckets
+POSTHOOK: type: CREATETABLE
+POSTHOOK: Output: database:default
+POSTHOOK: Output: default@X_n3
+PREHOOK: query: insert overwrite table X_n2 select distinct * from src order by key limit 10
+PREHOOK: type: QUERY
+PREHOOK: Input: default@src
+PREHOOK: Output: default@x_n2
+POSTHOOK: query: insert overwrite table X_n2 select distinct * from src order by key limit 10
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@src
+POSTHOOK: Output: default@x_n2
+POSTHOOK: Lineage: x_n2.key SIMPLE [(src)src.FieldSchema(name:key, type:string, comment:default), ]
+POSTHOOK: Lineage: x_n2.value SIMPLE [(src)src.FieldSchema(name:value, type:string, comment:default), ]
 PREHOOK: query: create table Y_n0 as
 select * from src order by key limit 1
 PREHOOK: type: CREATETABLE_AS_SELECT
@@ -30,9 +48,9 @@ POSTHOOK: Output: database:default
 POSTHOOK: Output: default@Y_n0
 POSTHOOK: Lineage: y_n0.key SIMPLE [(src)src.FieldSchema(name:key, type:string, comment:default), ]
 POSTHOOK: Lineage: y_n0.value SIMPLE [(src)src.FieldSchema(name:value, type:string, comment:default), ]
-PREHOOK: query: explain select * from Y_n0, (select * from X_n2 as A join X_n2 as B on A.key=B.key) as C where Y_n0.key=C.key
+PREHOOK: query: explain select * from Y_n0, (select * from X_n2 as A join X_n3 as B on A.key=B.key1) as C where Y_n0.key=C.key
 PREHOOK: type: QUERY
-POSTHOOK: query: explain select * from Y_n0, (select * from X_n2 as A join X_n2 as B on A.key=B.key) as C where Y_n0.key=C.key
+POSTHOOK: query: explain select * from Y_n0, (select * from X_n2 as A join X_n3 as B on A.key=B.key1) as C where Y_n0.key=C.key
 POSTHOOK: type: QUERY
 STAGE DEPENDENCIES:
   Stage-1 is a root stage
@@ -110,20 +128,20 @@ STAGE PLANS:
             Map Operator Tree:
                 TableScan
                   alias: b
-                  filterExpr: key is not null (type: boolean)
-                  Statistics: Num rows: 10 Data size: 1780 Basic stats: COMPLETE Column stats: COMPLETE
+                  filterExpr: key1 is not null (type: boolean)
+                  Statistics: Num rows: 1 Data size: 368 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
-                    predicate: key is not null (type: boolean)
-                    Statistics: Num rows: 10 Data size: 1780 Basic stats: COMPLETE Column stats: COMPLETE
+                    predicate: key1 is not null (type: boolean)
+                    Statistics: Num rows: 1 Data size: 368 Basic stats: COMPLETE Column stats: NONE
                     Select Operator
-                      expressions: key (type: string), value (type: string)
+                      expressions: key1 (type: string), value1 (type: string)
                       outputColumnNames: _col0, _col1
-                      Statistics: Num rows: 10 Data size: 1780 Basic stats: COMPLETE Column stats: COMPLETE
+                      Statistics: Num rows: 1 Data size: 368 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: _col0 (type: string)
                         sort order: +
                         Map-reduce partition columns: _col0 (type: string)
-                        Statistics: Num rows: 10 Data size: 1780 Basic stats: COMPLETE Column stats: COMPLETE
+                        Statistics: Num rows: 1 Data size: 368 Basic stats: COMPLETE Column stats: NONE
                         value expressions: _col1 (type: string)
             Execution mode: vectorized, llap
             LLAP IO: no inputs

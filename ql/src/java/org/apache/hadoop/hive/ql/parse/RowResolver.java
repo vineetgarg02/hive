@@ -50,6 +50,7 @@ public class RowResolver implements Serializable{
    */
   private final Map<String, String[]> altInvRslvMap;
   private  Map<String, ASTNode> expressionMap;
+  private LinkedHashMap<String, LinkedHashMap<String, String>> ambiguousColumns;
 
   // TODO: Refactor this and do in a more object oriented manner
   private boolean isExprResolver;
@@ -65,6 +66,7 @@ public class RowResolver implements Serializable{
     altInvRslvMap = new HashMap<String, String[]>();
     expressionMap = new HashMap<String, ASTNode>();
     isExprResolver = false;
+    ambiguousColumns = new LinkedHashMap<String, LinkedHashMap<String, String>>();
   }
 
   /**
@@ -142,6 +144,15 @@ public class RowResolver implements Serializable{
       altInvRslvMap.put(colInfo.getInternalName(), qualifiedAlias);
     }
 
+    // we keep track of duplicate <tab alias, col alias> so that get can check
+    // for ambiguity
+    LinkedHashMap<String, String> colAliases = ambiguousColumns.get(tab_alias);
+    if (colAliases == null) {
+      colAliases = new LinkedHashMap<String, String>();
+      ambiguousColumns.put(tab_alias, colAliases);
+    }
+    colAliases.put(col_alias, col_alias );
+
     return colPresent;
   }
 
@@ -171,6 +182,11 @@ public class RowResolver implements Serializable{
    */
   public ColumnInfo get(String tab_alias, String col_alias) throws SemanticException {
     ColumnInfo ret = null;
+
+    if(isAmbigousReference(tab_alias, col_alias)) {
+      String columnName = tab_alias != null? tab_alias:"" + col_alias;
+      throw new SemanticException("Ambiguous column: " + columnName);
+    }
 
     if (tab_alias != null) {
       tab_alias = tab_alias.toLowerCase();
@@ -465,6 +481,7 @@ public class RowResolver implements Serializable{
     resolver.altInvRslvMap.putAll(altInvRslvMap);
     resolver.expressionMap.putAll(expressionMap);
     resolver.isExprResolver = isExprResolver;
+    resolver.ambiguousColumns.putAll(this.ambiguousColumns);
     return resolver;
   }
 
@@ -478,5 +495,13 @@ public class RowResolver implements Serializable{
 
   public void setNamedJoinInfo(NamedJoinInfo namedJoinInfo) {
     this.namedJoinInfo = namedJoinInfo;
+  }
+
+  private boolean isAmbigousReference(String tableAlias, String colAlias) {
+    LinkedHashMap<String, String> colAliases = ambiguousColumns.get(tableAlias);
+    if(colAliases != null && colAliases.containsKey(colAlias)) {
+      return true;
+    }
+    return false;
   }
 }

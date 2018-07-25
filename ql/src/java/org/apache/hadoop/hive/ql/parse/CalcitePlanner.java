@@ -1737,7 +1737,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
       // 1. Gen Calcite Plan
       perfLogger.PerfLogBegin(this.getClass().getName(), PerfLogger.OPTIMIZER);
       try {
-        calciteGenPlan = genLogicalPlan(getQB(), true, null, null, false);
+        calciteGenPlan = genLogicalPlan(getQB(), true, null, null);
         // if it is to create view, we do not use table alias
         resultSchema = SemanticAnalyzer.convertRowSchemaToResultSetSchema(
             relToHiveRR.get(calciteGenPlan),
@@ -3309,7 +3309,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
           getMetaData(qbSQ);
           this.subqueryId++;
           RelNode subQueryRelNode = genLogicalPlan(qbSQ, false,
-              relToHiveColNameCalcitePosMap.get(srcRel), relToHiveRR.get(srcRel), false);
+              relToHiveColNameCalcitePosMap.get(srcRel), relToHiveRR.get(srcRel));
           subQueryToRelNode.put(next, subQueryRelNode);
           //keep track of subqueries which are scalar, correlated and contains aggregate
           // subquery expression. This will later be special cased in Subquery remove rule
@@ -4563,7 +4563,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
           if (expr.getType() == HiveParser.TOK_ALLCOLREF) {
             pos = genColListRegex(".*", expr.getChildCount() == 0 ? null : SemanticAnalyzer
                             .getUnescapedName((ASTNode) expr.getChild(0)).toLowerCase(), expr, col_list,
-                    excludedColumns, inputRR, starRR, pos, out_rwsch, qb.getAliases(), false);
+                    excludedColumns, inputRR, starRR, pos, out_rwsch, qb.getAliases(), true);
             selectStar = true;
           } else if (expr.getType() == HiveParser.TOK_TABLE_OR_COL
                   && !hasAsClause
@@ -4575,7 +4575,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
             // We don't allow this for ExprResolver - the Group By case
             pos = genColListRegex(SemanticAnalyzer.unescapeIdentifier(expr.getChild(0).getText()),
                     null, expr, col_list, excludedColumns, inputRR, starRR, pos, out_rwsch,
-                    qb.getAliases(), false);
+                    qb.getAliases(), true);
           } else if (expr.getType() == HiveParser.DOT
                   && expr.getChild(0).getType() == HiveParser.TOK_TABLE_OR_COL
                   && inputRR.hasTableAlias(SemanticAnalyzer.unescapeIdentifier(expr.getChild(0)
@@ -4591,7 +4591,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
                     SemanticAnalyzer.unescapeIdentifier(expr.getChild(1).getText()),
                     SemanticAnalyzer.unescapeIdentifier(expr.getChild(0).getChild(0).getText()
                             .toLowerCase()), expr, col_list, excludedColumns, inputRR, starRR, pos,
-                    out_rwsch, qb.getAliases(), false);
+                    out_rwsch, qb.getAliases(), true);
           } else if (ParseUtils.containsTokenOfType(expr, HiveParser.TOK_FUNCTIONDI)
                   && !(srcRel instanceof HiveAggregate)) {
             // Likely a malformed query eg, select hash(distinct c1) from t1;
@@ -4830,21 +4830,17 @@ public class CalcitePlanner extends SemanticAnalyzer {
       return udtf;
     }
 
-    private RelNode genLogicalPlan(QB parentQB, QBExpr qbexpr) throws SemanticException {
+    private RelNode genLogicalPlan(QBExpr qbexpr) throws SemanticException {
       switch (qbexpr.getOpcode()) {
       case NULLOP:
-        // this flag determines if ambiguity for same column names coming out of a subquery should be skipped or not
-        // Ambiguity is always checked unless parent query is select * and it is not select from view
-        // e.g. select * from (select i, i from table1) subq;
-        boolean shouldSkipAmbiguityCheck = viewSelect == null && parentQB.isTopLevelSelectStarQuery();
-        return genLogicalPlan(qbexpr.getQB(), false, null, null, shouldSkipAmbiguityCheck);
+        return genLogicalPlan(qbexpr.getQB(), false, null, null);
       case UNION:
       case INTERSECT:
       case INTERSECTALL:
       case EXCEPT:
       case EXCEPTALL:
-        RelNode qbexpr1Ops = genLogicalPlan(parentQB, qbexpr.getQBExpr1());
-        RelNode qbexpr2Ops = genLogicalPlan(parentQB, qbexpr.getQBExpr2());
+        RelNode qbexpr1Ops = genLogicalPlan(qbexpr.getQBExpr1());
+        RelNode qbexpr2Ops = genLogicalPlan(qbexpr.getQBExpr2());
         return genSetOpLogicalPlan(qbexpr.getOpcode(), qbexpr.getAlias(), qbexpr.getQBExpr1()
             .getAlias(), qbexpr1Ops, qbexpr.getQBExpr2().getAlias(), qbexpr2Ops);
       default:
@@ -4854,7 +4850,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
 
     private RelNode genLogicalPlan(QB qb, boolean outerMostQB,
                                    ImmutableMap<String, Integer> outerNameToPosMap,
-                                   RowResolver outerRR, boolean skipAmbiguityCheck) throws SemanticException {
+                                   RowResolver outerRR) throws SemanticException {
       RelNode srcRel = null;
       RelNode filterRel = null;
       RelNode gbRel = null;
@@ -4881,7 +4877,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
       // 1.1. Recurse over the subqueries to fill the subquery part of the plan
       for (String subqAlias : qb.getSubqAliases()) {
         QBExpr qbexpr = qb.getSubqForAlias(subqAlias);
-        RelNode relNode = genLogicalPlan(qb, qbexpr);
+        RelNode relNode = genLogicalPlan(qbexpr);
         aliasToRel.put(subqAlias, relNode);
         if (qb.getViewToTabSchema().containsKey(subqAlias)) {
           if (relNode instanceof HiveProject) {
@@ -4968,11 +4964,10 @@ public class CalcitePlanner extends SemanticAnalyzer {
           if ("".equals(tmp[0]) || tmp[1] == null) {
             // ast expression is not a valid column name for table
             tmp[1] = colInfo.getInternalName();
-          } else if (newRR.get(alias, tmp[1]) != null) {
-            // enforce uniqueness of column names
-            tmp[1] = colInfo.getInternalName();
           }
-          newRR.put(alias, tmp[1], colInfo);
+          ColumnInfo newCi = new ColumnInfo(colInfo);
+          newCi.setTabAlias(alias);
+          newRR.put(alias, tmp[1], newCi);
         }
         relToHiveRR.put(srcRel, newRR);
         relToHiveColNameCalcitePosMap.put(srcRel, buildHiveToCalciteColumnMap(newRR, srcRel));

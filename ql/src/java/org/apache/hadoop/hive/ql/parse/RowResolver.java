@@ -133,6 +133,14 @@ public class RowResolver implements Serializable{
     if (oldColInfo != null) {
       LOG.warn("Duplicate column info for " + tab_alias + "." + col_alias
           + " was overwritten in RowResolver map: " + oldColInfo + " by " + colInfo);
+      // we keep track of duplicate <tab alias, col alias> so that get can check
+      // for ambiguity
+      LinkedHashMap<String, String> colAliases = ambiguousColumns.get(tab_alias);
+      if (colAliases == null) {
+        colAliases = new LinkedHashMap<String, String>();
+        ambiguousColumns.put(tab_alias, colAliases);
+      }
+      colAliases.put(col_alias, col_alias );
     }
 
     String[] qualifiedAlias = new String[2];
@@ -143,15 +151,6 @@ public class RowResolver implements Serializable{
     } else {
       altInvRslvMap.put(colInfo.getInternalName(), qualifiedAlias);
     }
-
-    // we keep track of duplicate <tab alias, col alias> so that get can check
-    // for ambiguity
-    LinkedHashMap<String, String> colAliases = ambiguousColumns.get(tab_alias);
-    if (colAliases == null) {
-      colAliases = new LinkedHashMap<String, String>();
-      ambiguousColumns.put(tab_alias, colAliases);
-    }
-    colAliases.put(col_alias, col_alias );
 
     return colPresent;
   }
@@ -498,9 +497,25 @@ public class RowResolver implements Serializable{
   }
 
   private boolean isAmbigousReference(String tableAlias, String colAlias) {
-    LinkedHashMap<String, String> colAliases = ambiguousColumns.get(tableAlias);
-    if(colAliases != null && colAliases.containsKey(colAlias)) {
-      return true;
+    if(ambiguousColumns == null || ambiguousColumns.isEmpty()) {
+      return false;
+    }
+
+    if(tableAlias != null) {
+      LinkedHashMap<String, String> colAliases = ambiguousColumns.get(tableAlias.toLowerCase());
+      if(colAliases != null && colAliases.containsKey(colAlias.toLowerCase())) {
+        return true;
+      }
+    } else {
+      for (Map.Entry<String, LinkedHashMap<String, String>> ambigousColsEntry: ambiguousColumns.entrySet()) {
+        String rslvKey = ambigousColsEntry.getKey();
+        LinkedHashMap<String, String> cmap = ambigousColsEntry.getValue();
+        for (Map.Entry<String, String> cmapEnt : cmap.entrySet()) {
+          if (colAlias.equalsIgnoreCase(cmapEnt.getKey())) {
+            return true;
+          }
+        }
+      }
     }
     return false;
   }

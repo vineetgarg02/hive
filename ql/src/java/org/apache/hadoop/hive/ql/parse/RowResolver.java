@@ -114,6 +114,16 @@ public class RowResolver implements Serializable{
     }
   }
 
+  private void keepAmbiguousInfo(String col_alias, String tab_alias) {
+    // we keep track of duplicate <tab alias, col alias> so that get can check
+    // for ambiguity
+    LinkedHashMap<String, String> colAliases = ambiguousColumns.get(tab_alias);
+    if (colAliases == null) {
+      colAliases = new LinkedHashMap<String, String>();
+      ambiguousColumns.put(tab_alias, colAliases);
+    }
+    colAliases.put(col_alias, col_alias );
+  }
   public boolean addMappingOnly(String tab_alias, String col_alias, ColumnInfo colInfo) {
     if (tab_alias != null) {
       tab_alias = tab_alias.toLowerCase();
@@ -135,14 +145,7 @@ public class RowResolver implements Serializable{
     if (oldColInfo != null) {
       LOG.warn("Duplicate column info for " + tab_alias + "." + col_alias
           + " was overwritten in RowResolver map: " + oldColInfo + " by " + colInfo);
-      // we keep track of duplicate <tab alias, col alias> so that get can check
-      // for ambiguity
-      LinkedHashMap<String, String> colAliases = ambiguousColumns.get(tab_alias);
-      if (colAliases == null) {
-        colAliases = new LinkedHashMap<String, String>();
-        ambiguousColumns.put(tab_alias, colAliases);
-      }
-      colAliases.put(col_alias, col_alias );
+      keepAmbiguousInfo(col_alias, tab_alias);
     }
 
     String[] qualifiedAlias = new String[2];
@@ -431,6 +434,7 @@ public class RowResolver implements Serializable{
     if (internalName != null) {
       existing = get(tabAlias, internalName);
       if (existing == null) {
+        keepAmbiguousInfo(colAlias, tabAlias);
         put(tabAlias, internalName, newCI);
         return true;
       } else if (existing.isSameColumnForRR(newCI)) {

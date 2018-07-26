@@ -4966,13 +4966,10 @@ public class CalcitePlanner extends SemanticAnalyzer {
           if ("".equals(tmp[0]) || tmp[1] == null) {
             // ast expression is not a valid column name for table
             tmp[1] = colInfo.getInternalName();
-          } else if (newRR.get(alias, tmp[1]) != null) {
-            // if it's wrapped by top-level select star query, skip ambiguity check (for backward compatibility)
-            tmp[1] = colInfo.getInternalName();
           }
           ColumnInfo newCi = new ColumnInfo(colInfo);
           newCi.setTabAlias(alias);
-          newRR.put(alias, tmp[1], newCi);
+          newRR.putWithCheck(alias, tmp[1], colInfo.getInternalName(), newCi);
         }
         relToHiveRR.put(srcRel, newRR);
         relToHiveColNameCalcitePosMap.put(srcRel, buildHiveToCalciteColumnMap(newRR, srcRel));

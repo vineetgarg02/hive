@@ -4414,6 +4414,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
       Integer pos = Integer.valueOf(0);
       // TODO: will this also fix windowing? try
       RowResolver inputRR = this.relToHiveRR.get(srcRel), starRR = inputRR;
+      inputRR.setCheckForAmbiguity(true);
       if (starSrcRel != null) {
         starRR = this.relToHiveRR.get(starSrcRel);
       }
@@ -4714,6 +4715,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
         this.relToHiveRR.put(outputRel, groupByOutputRowResolver);
       }
 
+      inputRR.setCheckForAmbiguity(false);
       return new Pair<RelNode, RowResolver>(outputRel, null);
     }
 
@@ -4963,6 +4965,9 @@ public class CalcitePlanner extends SemanticAnalyzer {
           String[] tmp = rr.reverseLookup(name);
           if ("".equals(tmp[0]) || tmp[1] == null) {
             // ast expression is not a valid column name for table
+            tmp[1] = colInfo.getInternalName();
+          } else if (newRR.get(alias, tmp[1]) != null) {
+            // if it's wrapped by top-level select star query, skip ambiguity check (for backward compatibility)
             tmp[1] = colInfo.getInternalName();
           }
           ColumnInfo newCi = new ColumnInfo(colInfo);

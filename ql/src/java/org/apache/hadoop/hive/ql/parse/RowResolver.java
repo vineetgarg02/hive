@@ -51,6 +51,7 @@ public class RowResolver implements Serializable{
   private final Map<String, String[]> altInvRslvMap;
   private  Map<String, ASTNode> expressionMap;
   private LinkedHashMap<String, LinkedHashMap<String, String>> ambiguousColumns;
+  private boolean checkForAmbiguity;
 
   // TODO: Refactor this and do in a more object oriented manner
   private boolean isExprResolver;
@@ -67,6 +68,7 @@ public class RowResolver implements Serializable{
     expressionMap = new HashMap<String, ASTNode>();
     isExprResolver = false;
     ambiguousColumns = new LinkedHashMap<String, LinkedHashMap<String, String>>();
+    checkForAmbiguity = false;
   }
 
   /**
@@ -182,7 +184,7 @@ public class RowResolver implements Serializable{
   public ColumnInfo get(String tab_alias, String col_alias) throws SemanticException {
     ColumnInfo ret = null;
 
-    if(isAmbigousReference(tab_alias, col_alias)) {
+    if(!isExprResolver && isAmbiguousReference(tab_alias, col_alias)) {
       String columnName = tab_alias != null? tab_alias:"" + col_alias;
       throw new SemanticException("Ambiguous column: " + columnName);
     }
@@ -480,7 +482,8 @@ public class RowResolver implements Serializable{
     resolver.altInvRslvMap.putAll(altInvRslvMap);
     resolver.expressionMap.putAll(expressionMap);
     resolver.isExprResolver = isExprResolver;
-    resolver.ambiguousColumns.putAll(this.ambiguousColumns);
+    resolver.ambiguousColumns.putAll(ambiguousColumns);
+    resolver.checkForAmbiguity = checkForAmbiguity;
     return resolver;
   }
 
@@ -496,7 +499,11 @@ public class RowResolver implements Serializable{
     this.namedJoinInfo = namedJoinInfo;
   }
 
-  private boolean isAmbigousReference(String tableAlias, String colAlias) {
+  private boolean isAmbiguousReference(String tableAlias, String colAlias) {
+
+    if(!getCheckForAmbiguity()) {
+      return false;
+    }
     if(ambiguousColumns == null || ambiguousColumns.isEmpty()) {
       return false;
     }
@@ -519,4 +526,9 @@ public class RowResolver implements Serializable{
     }
     return false;
   }
+
+  public void setCheckForAmbiguity(boolean check) { this.checkForAmbiguity = check;}
+
+  public boolean getCheckForAmbiguity() { return this.checkForAmbiguity ;}
 }
+

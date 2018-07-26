@@ -3757,15 +3757,7 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
               colInfo.getTabAlias(), colInfo.getIsVirtualCol(), colInfo.isHiddenVirtualCol());
           inputColsProcessed.put(colInfo, oColInfo);
         }
-        if (ensureUniqueCols) {
-          if (!output.putWithCheck(tmp[0], tmp[1], null, oColInfo)) {
-            throw new CalciteSemanticException("Cannot add column to RR: " + tmp[0] + "." + tmp[1]
-                + " => " + oColInfo + " due to duplication, see previous warnings",
-                UnsupportedFeature.Duplicates_in_RR);
-          }
-        } else {
-          output.put(tmp[0], tmp[1], oColInfo);
-        }
+        output.put(tmp[0], tmp[1], oColInfo);
         pos = Integer.valueOf(pos.intValue() + 1);
         matched++;
 

@@ -188,8 +188,9 @@ public class RowResolver implements Serializable{
     ColumnInfo ret = null;
 
     if(!isExprResolver && isAmbiguousReference(tab_alias, col_alias)) {
-      String columnName = tab_alias != null? tab_alias:"" + col_alias;
-      throw new SemanticException("Ambiguous column: " + columnName);
+      String tableName = tab_alias != null? tab_alias:"" ;
+      String fullQualifiedName = tableName + col_alias;
+      throw new SemanticException("Ambiguous column reference: " + fullQualifiedName);
     }
 
     if (tab_alias != null) {

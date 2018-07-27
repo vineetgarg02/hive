@@ -1,11 +1,11 @@
 PREHOOK: query: FROM (SELECT key, concat(value) AS key FROM src) a SELECT a.key
 PREHOOK: type: QUERY
 PREHOOK: Input: default@src
-PREHOOK: Output: file:/Users/vgarg/repos/hive.vineet.master/itests/qtest/target/tmp/localscratchdir/b1904a6c-1437-420d-a47f-d7f4c8a9f9dc/hive_2018-07-26_17-46-29_125_5860181781117669250-1/-mr-10001
+PREHOOK: Output: file:/Users/vgarg/repos/hive.vineet.master/itests/qtest/target/tmp/localscratchdir/ed03ce3f-7ead-428b-9dce-7fa5cd807b4d/hive_2018-07-26_17-52-02_275_2997042464199129379-1/-mr-10001
 POSTHOOK: query: FROM (SELECT key, concat(value) AS key FROM src) a SELECT a.key
 POSTHOOK: type: QUERY
 POSTHOOK: Input: default@src
-POSTHOOK: Output: file:/Users/vgarg/repos/hive.vineet.master/itests/qtest/target/tmp/localscratchdir/b1904a6c-1437-420d-a47f-d7f4c8a9f9dc/hive_2018-07-26_17-46-29_125_5860181781117669250-1/-mr-10001
+POSTHOOK: Output: file:/Users/vgarg/repos/hive.vineet.master/itests/qtest/target/tmp/localscratchdir/ed03ce3f-7ead-428b-9dce-7fa5cd807b4d/hive_2018-07-26_17-52-02_275_2997042464199129379-1/-mr-10001
 238
 86
 311

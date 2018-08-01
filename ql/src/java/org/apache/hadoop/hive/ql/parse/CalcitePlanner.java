@@ -1797,10 +1797,10 @@ public class CalcitePlanner extends SemanticAnalyzer {
       calcitePreCboPlan = hepPlan(calcitePreCboPlan, true, mdProvider.getMetadataProvider(), executorProvider,
                          HepMatchOrder.BOTTOM_UP, HiveJoinProjectTransposeRule.LEFF_PROJECT_BTW_JOIN,
                          HiveJoinProjectTransposeRule.RIGHT_PROJECT_BTW_JOIN);
-      HiveRelFieldTrimmer preJoinOrderingTrimmer = new HiveRelFieldTrimmer(null,
-                                                                 HiveRelFactories.HIVE_BUILDER.create(cluster, null),
-                                                                 profilesCBO.contains(ExtendedCBOProfile.JOIN_REORDERING));
-      calcitePreCboPlan= preJoinOrderingTrimmer.trim(calcitePreCboPlan);
+      //HiveRelFieldTrimmer preJoinOrderingTrimmer = new HiveRelFieldTrimmer(null,
+       //                                                          HiveRelFactories.HIVE_BUILDER.create(cluster, null),
+        //                                                         profilesCBO.contains(ExtendedCBOProfile.JOIN_REORDERING));
+      //calcitePreCboPlan= preJoinOrderingTrimmer.trim(calcitePreCboPlan);
 
       // 4. Apply join order optimizations: reordering MST algorithm
       //    If join optimizations failed because of missing stats, we continue with

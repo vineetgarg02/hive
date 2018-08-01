@@ -1793,6 +1793,11 @@ public class CalcitePlanner extends SemanticAnalyzer {
             calcitePreCboPlan, mdProvider.getMetadataProvider(), executorProvider);
       }
 
+      // Remove Projects between Joins so that JoinToMultiJoinRule can merge them to MultiJoin.
+      calcitePreCboPlan = hepPlan(calcitePreCboPlan, true, mdProvider.getMetadataProvider(), executorProvider,
+                         HepMatchOrder.BOTTOM_UP, HiveJoinProjectTransposeRule.LEFF_PROJECT_BTW_JOIN,
+                         HiveJoinProjectTransposeRule.RIGHT_PROJECT_BTW_JOIN);
+
       // 4. Apply join order optimizations: reordering MST algorithm
       //    If join optimizations failed because of missing stats, we continue with
       //    the rest of optimizations
@@ -2142,6 +2147,7 @@ public class CalcitePlanner extends SemanticAnalyzer {
           HiveProjectFilterPullUpConstantsRule.INSTANCE);
       perfLogger.PerfLogEnd(this.getClass().getName(), PerfLogger.OPTIMIZER,
         "Calcite: Prejoin ordering transformation, Rerun PPD");
+
 
       return basePlan;
     }

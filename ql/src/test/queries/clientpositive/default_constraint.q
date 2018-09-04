@@ -168,6 +168,12 @@ INSERT INTO numericDataType_n1(b) values(456);
 SELECT * from numericDataType_n1;
 DROP TABLE numericDataType_n1;
 
+CREATE TABLE table1_n47(id INT default sequence(), item_number int, item_price double);
+DESC FORMATTED table1_n47;
+EXPLAIN INSERT INTO table1_n47(item_number, item_price) values(1, 5.6);
+INSERT INTO table1_n47(item_number, item_price) values(1, 5.6);
+SELECT * from table1_n47;
+DROP TABLE table1_n47;
 -- Following all are existing BUGS
 -- BUG1: alter table change constraint doesn't work, so following not working
 -- ALTER TABLE numericDataType_n1 change a a TINYINT CONSTRAINT default_constraint DEFAULT 1Y ENABLE; -- change default val

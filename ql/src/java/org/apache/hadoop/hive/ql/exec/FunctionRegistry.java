@@ -358,6 +358,7 @@ public final class FunctionRegistry {
     system.registerGenericUDF("current_catalog", GenericUDFCurrentCatalog.class);
     system.registerGenericUDF("current_date", GenericUDFCurrentDate.class);
     system.registerGenericUDF("current_timestamp", GenericUDFCurrentTimestamp.class);
+    system.registerGenericUDF("sequence", GenericUDFSequence.class);
     system.registerGenericUDF("current_user", GenericUDFCurrentUser.class);
     system.registerGenericUDF("current_groups", GenericUDFCurrentGroups.class);
     system.registerGenericUDF("logged_in_user", GenericUDFLoggedInUser.class);

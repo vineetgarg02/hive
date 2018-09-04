@@ -51,7 +51,6 @@ public class GenericUDFSequence extends GenericUDF {
     }
     Random r = new Random();
     sequenceSeed.set(r.nextInt(999));
-
     return PrimitiveObjectInspectorFactory.writableIntObjectInspector;
   }
 

@@ -90,6 +90,7 @@ import org.apache.hadoop.hive.ql.plan.PlanUtils;
 import org.apache.hadoop.hive.ql.plan.TableDesc;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.hive.ql.session.SessionState.LogHelper;
+import org.apache.hadoop.hive.ql.udf.UDFUUID;
 import org.apache.hadoop.hive.ql.udf.generic.*;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.hive.serde2.io.DateWritableV2;
@@ -832,6 +833,12 @@ public abstract class BaseSemanticAnalyzer {
           || defFunc.getGenericUDF() instanceof GenericUDFSequence
           || defFunc.getGenericUDF() instanceof GenericUDFCurrentUser){
         return true;
+      }
+      // allow UUID
+      if(defFunc.getGenericUDF() instanceof GenericUDFBridge){
+         if(defFunc.getGenericUDF().getUdfName().toLowerCase().equals("uuid")){
+           return true;
+         }
       }
     }
     return false;

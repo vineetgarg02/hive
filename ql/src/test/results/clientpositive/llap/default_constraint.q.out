@@ -2853,66 +2853,22 @@ Table:              	default.table1_n47
 Constraint Name:    	#### A masked pattern was here ####	 
 Column Name:id      	Default Value:sequence()	 
 	 	 
-PREHOOK: query: EXPLAIN INSERT INTO table1_n47(item_number, item_price) values(1, 5.6)
-PREHOOK: type: QUERY
-POSTHOOK: query: EXPLAIN INSERT INTO table1_n47(item_number, item_price) values(1, 5.6)
-POSTHOOK: type: QUERY
-STAGE DEPENDENCIES:
-  Stage-1 is a root stage
-  Stage-2 depends on stages: Stage-1
-  Stage-0 depends on stages: Stage-2
-
-STAGE PLANS:
-  Stage: Stage-1
-    Tez
-#### A masked pattern was here ####
-      Vertices:
-        Map 1 
-            Map Operator Tree:
-                TableScan
-                  alias: _dummy_table
-                  Row Limit Per Split: 1
-                  Statistics: Num rows: 1 Data size: ###Masked### Basic stats: COMPLETE Column stats: COMPLETE
-                  Select Operator
-                    expressions: array(const struct(1,5.6)) (type: array<struct<col1:int,col2:decimal(2,1)>>)
-                    outputColumnNames: _col0
-                    Statistics: Num rows: 1 Data size: ###Masked### Basic stats: COMPLETE Column stats: COMPLETE
-                    UDTF Operator
-                      Statistics: Num rows: 1 Data size: ###Masked### Basic stats: COMPLETE Column stats: COMPLETE
-                      function name: inline
-                      Select Operator
-                        expressions: SEQUENCE() (type: int), col1 (type: int), UDFToDouble(col2) (type: double)
-                        outputColumnNames: _col0, _col1, _col2
-                        Statistics: Num rows: 1 Data size: ###Masked### Basic stats: COMPLETE Column stats: COMPLETE
-                        File Output Operator
-                          compressed: false
-                          Statistics: Num rows: 1 Data size: ###Masked### Basic stats: COMPLETE Column stats: COMPLETE
-                          table:
-                              input format: org.apache.hadoop.mapred.TextInputFormat
-                              output format: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
-                              serde: org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe
-                              name: default.table1_n47
-            Execution mode: llap
-            LLAP IO: no inputs
-
-  Stage: Stage-2
-    Dependency Collection
-
-  Stage: Stage-0
-    Move Operator
-      tables:
-          replace: false
-          table:
-              input format: org.apache.hadoop.mapred.TextInputFormat
-              output format: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
-              serde: org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe
-              name: default.table1_n47
-
-PREHOOK: query: INSERT INTO table1_n47(item_number, item_price) values(1, 5.6)
+PREHOOK: query: INSERT INTO table1_n47(item_number, item_price) values(2, 0.6),(3, 5.6), (5, 6.7)
 PREHOOK: type: QUERY
 PREHOOK: Input: _dummy_database@_dummy_table
 PREHOOK: Output: default@table1_n47
-POSTHOOK: query: INSERT INTO table1_n47(item_number, item_price) values(1, 5.6)
+POSTHOOK: query: INSERT INTO table1_n47(item_number, item_price) values(2, 0.6),(3, 5.6), (5, 6.7)
+POSTHOOK: type: QUERY
+POSTHOOK: Input: _dummy_database@_dummy_table
+POSTHOOK: Output: default@table1_n47
+POSTHOOK: Lineage: table1_n47.id EXPRESSION []
+POSTHOOK: Lineage: table1_n47.item_number SCRIPT []
+POSTHOOK: Lineage: table1_n47.item_price SCRIPT []
+PREHOOK: query: INSERT INTO table1_n47(item_number, item_price) values(3, 5.6)
+PREHOOK: type: QUERY
+PREHOOK: Input: _dummy_database@_dummy_table
+PREHOOK: Output: default@table1_n47
+POSTHOOK: query: INSERT INTO table1_n47(item_number, item_price) values(3, 5.6)
 POSTHOOK: type: QUERY
 POSTHOOK: Input: _dummy_database@_dummy_table
 POSTHOOK: Output: default@table1_n47
@@ -2927,7 +2883,10 @@ POSTHOOK: query: SELECT * from table1_n47
 POSTHOOK: type: QUERY
 POSTHOOK: Input: default@table1_n47
 #### A masked pattern was here ####
-705	1	5.6
+886	2	0.6
+887	3	5.6
+888	5	6.7
+735	3	5.6
 PREHOOK: query: DROP TABLE table1_n47
 PREHOOK: type: DROPTABLE
 PREHOOK: Input: default@table1_n47
@@ -2936,3 +2895,96 @@ POSTHOOK: query: DROP TABLE table1_n47
 POSTHOOK: type: DROPTABLE
 POSTHOOK: Input: default@table1_n47
 POSTHOOK: Output: default@table1_n47
+PREHOOK: query: CREATE TABLE table1_n89(u string DEFAULT UUID(), sales_price double)
+PREHOOK: type: CREATETABLE
+PREHOOK: Output: database:default
+PREHOOK: Output: default@table1_n89
+POSTHOOK: query: CREATE TABLE table1_n89(u string DEFAULT UUID(), sales_price double)
+POSTHOOK: type: CREATETABLE
+POSTHOOK: Output: database:default
+POSTHOOK: Output: default@table1_n89
+PREHOOK: query: DESC FORMATTED table1_n89
+PREHOOK: type: DESCTABLE
+PREHOOK: Input: default@table1_n89
+POSTHOOK: query: DESC FORMATTED table1_n89
+POSTHOOK: type: DESCTABLE
+POSTHOOK: Input: default@table1_n89
+# col_name            	data_type           	comment             
+u                   	string              	                    
+sales_price         	double              	                    
+	 	 
+# Detailed Table Information	 	 
+Database:           	default             	 
+#### A masked pattern was here ####
+Retention:          	0                   	 
+#### A masked pattern was here ####
+Table Type:         	MANAGED_TABLE       	 
+Table Parameters:	 	 
+	bucketing_version   	2                   
+#### A masked pattern was here ####
+	 	 
+# Storage Information	 	 
+SerDe Library:      	org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe	 
+InputFormat:        	org.apache.hadoop.mapred.TextInputFormat	 
+OutputFormat:       	org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat	 
+Compressed:         	No                  	 
+Num Buckets:        	-1                  	 
+Bucket Columns:     	[]                  	 
+Sort Columns:       	[]                  	 
+Storage Desc Params:	 	 
+	serialization.format	1                   
+	 	 
+# Constraints	 	 
+	 	 
+# Default Constraints	 	 
+Table:              	default.table1_n89  	 
+Constraint Name:    	#### A masked pattern was here ####	 
+Column Name:u       	Default Value:UUID()	 
+	 	 
+PREHOOK: query: INSERT INTO table1_n89(sales_price) values(5.60)
+PREHOOK: type: QUERY
+PREHOOK: Input: _dummy_database@_dummy_table
+PREHOOK: Output: default@table1_n89
+POSTHOOK: query: INSERT INTO table1_n89(sales_price) values(5.60)
+POSTHOOK: type: QUERY
+POSTHOOK: Input: _dummy_database@_dummy_table
+POSTHOOK: Output: default@table1_n89
+POSTHOOK: Lineage: table1_n89.sales_price SCRIPT []
+POSTHOOK: Lineage: table1_n89.u EXPRESSION []
+PREHOOK: query: select * from table1_n89
+PREHOOK: type: QUERY
+PREHOOK: Input: default@table1_n89
+#### A masked pattern was here ####
+POSTHOOK: query: select * from table1_n89
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@table1_n89
+#### A masked pattern was here ####
+df45cd9b-5d57-4878-bbcd-8aaeed8de065	5.6
+PREHOOK: query: INSERT INTO table1_n89(u) values(DEFAULT)
+PREHOOK: type: QUERY
+PREHOOK: Input: _dummy_database@_dummy_table
+PREHOOK: Output: default@table1_n89
+POSTHOOK: query: INSERT INTO table1_n89(u) values(DEFAULT)
+POSTHOOK: type: QUERY
+POSTHOOK: Input: _dummy_database@_dummy_table
+POSTHOOK: Output: default@table1_n89
+POSTHOOK: Lineage: table1_n89.sales_price SIMPLE []
+POSTHOOK: Lineage: table1_n89.u SCRIPT []
+PREHOOK: query: select * from table1_n89
+PREHOOK: type: QUERY
+PREHOOK: Input: default@table1_n89
+#### A masked pattern was here ####
+POSTHOOK: query: select * from table1_n89
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@table1_n89
+#### A masked pattern was here ####
+df45cd9b-5d57-4878-bbcd-8aaeed8de065	5.6
+1162da9b-4f08-4b31-909c-a6042409f56f	NULL
+PREHOOK: query: DROP TABLE table1_n89
+PREHOOK: type: DROPTABLE
+PREHOOK: Input: default@table1_n89
+PREHOOK: Output: default@table1_n89
+POSTHOOK: query: DROP TABLE table1_n89
+POSTHOOK: type: DROPTABLE
+POSTHOOK: Input: default@table1_n89
+POSTHOOK: Output: default@table1_n89

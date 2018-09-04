@@ -170,8 +170,6 @@ DROP TABLE numericDataType_n1;
 
 CREATE TABLE table1_n47(id INT default sequence(), item_number int, item_price double);
 DESC FORMATTED table1_n47;
-EXPLAIN INSERT INTO table1_n47(item_number, item_price) values(1, 5.6);
-INSERT INTO table1_n47(item_number, item_price) values(1, 5.6);
 INSERT INTO table1_n47(item_number, item_price) values(2, 0.6),(3, 5.6), (5, 6.7);
 INSERT INTO table1_n47(item_number, item_price) values(3, 5.6);
 SELECT * from table1_n47;

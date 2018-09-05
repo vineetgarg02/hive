@@ -2883,10 +2883,10 @@ POSTHOOK: query: SELECT * from table1_n47
 POSTHOOK: type: QUERY
 POSTHOOK: Input: default@table1_n47
 #### A masked pattern was here ####
-886	2	0.6
-887	3	5.6
-888	5	6.7
-735	3	5.6
+414	2	0.6
+415	3	5.6
+416	5	6.7
+459	3	5.6
 PREHOOK: query: DROP TABLE table1_n47
 PREHOOK: type: DROPTABLE
 PREHOOK: Input: default@table1_n47
@@ -2959,7 +2959,7 @@ POSTHOOK: query: select * from table1_n89
 POSTHOOK: type: QUERY
 POSTHOOK: Input: default@table1_n89
 #### A masked pattern was here ####
-df45cd9b-5d57-4878-bbcd-8aaeed8de065	5.6
+0827c853-dfcc-44d1-b502-5a4fa8b6834b	5.6
 PREHOOK: query: INSERT INTO table1_n89(u) values(DEFAULT)
 PREHOOK: type: QUERY
 PREHOOK: Input: _dummy_database@_dummy_table
@@ -2978,8 +2978,8 @@ POSTHOOK: query: select * from table1_n89
 POSTHOOK: type: QUERY
 POSTHOOK: Input: default@table1_n89
 #### A masked pattern was here ####
-df45cd9b-5d57-4878-bbcd-8aaeed8de065	5.6
-1162da9b-4f08-4b31-909c-a6042409f56f	NULL
+0827c853-dfcc-44d1-b502-5a4fa8b6834b	5.6
+01ff65d8-5923-49ca-adf2-e2b5d941a11c	NULL
 PREHOOK: query: DROP TABLE table1_n89
 PREHOOK: type: DROPTABLE
 PREHOOK: Input: default@table1_n89

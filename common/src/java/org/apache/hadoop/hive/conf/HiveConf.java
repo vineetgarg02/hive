@@ -2302,6 +2302,8 @@ public class HiveConf extends Configuration {
         "This many percentage of rows will be estimated as number of nulls in absence of statistics."),
     HIVESTATSAUTOGATHER("hive.stats.autogather", true,
         "A flag to gather statistics (only basic) automatically during the INSERT OVERWRITE command."),
+    HIVESTATSIMPROVEDGROUPBY("hive.stats.improved.groupby", true,
+                        "A flag to enable/disable better statistics estimation for group by."),
     HIVESTATSCOLAUTOGATHER("hive.stats.column.autogather", true,
         "A flag to gather column statistics automatically."),
     HIVESTATSDBCLASS("hive.stats.dbclass", "fs", new PatternSet("custom", "fs"),

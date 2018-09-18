@@ -100,6 +100,7 @@ public class RelOptHiveTable implements RelOptTable {
   private final ImmutableList<VirtualColumn>      hiveVirtualCols;
   private final int                               noOfNonVirtualCols;
   private final List<ImmutableBitSet>             keys;
+  private List<ImmutableBitSet>             nonNullablekeys;
   private final List<RelReferentialConstraint>    referentialConstraints;
   final HiveConf                                  hiveConf;
 
@@ -133,6 +134,7 @@ public class RelOptHiveTable implements RelOptTable {
     this.partitionCache = partitionCache;
     this.colStatsCache = colStatsCache;
     this.noColsMissingStats = noColsMissingStats;
+    this.nonNullablekeys = null;
     this.keys = generateKeys();
     this.referentialConstraints = generateReferentialConstraints();
   }
@@ -166,6 +168,8 @@ public class RelOptHiveTable implements RelOptTable {
   public Expression getExpression(Class clazz) {
     throw new UnsupportedOperationException();
   }
+
+  public List<ImmutableBitSet> getNonNullableKeys() { return nonNullablekeys; }
 
   @Override
   public RelOptTable extend(List<RelDataTypeField> extendedFields) {
@@ -213,6 +217,16 @@ public class RelOptHiveTable implements RelOptTable {
         this.hiveConf, this.partitionCache, this.colStatsCache, this.noColsMissingStats);
   }
 
+  // Given a key this method returns true if all of the columns in the key are not nullable
+  public boolean isNonNullableKey(ImmutableBitSet columns) {
+    for (ImmutableBitSet key : nonNullablekeys) {
+      if (columns.contains(key)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   @Override
   public boolean isKey(ImmutableBitSet columns) {
     for (ImmutableBitSet key : keys) {
@@ -230,6 +244,7 @@ public class RelOptHiveTable implements RelOptTable {
 
   private List<ImmutableBitSet> generateKeys() {
     ImmutableList.Builder<ImmutableBitSet> builder = ImmutableList.builder();
+    ImmutableList.Builder<ImmutableBitSet> nonNullbuilder = ImmutableList.builder();
     // First PK
     final PrimaryKeyInfo pki;
     try {
@@ -254,7 +269,9 @@ public class RelOptHiveTable implements RelOptTable {
         }
         keys.set(pkPos);
       }
-      builder.add(keys.build());
+      ImmutableBitSet key = keys.build();
+      builder.add(key);
+      nonNullbuilder.add(key);
     }
     // Then UKs
     final UniqueConstraint uki;
@@ -266,11 +283,15 @@ public class RelOptHiveTable implements RelOptTable {
     }
     for (List<UniqueConstraintCol> ukCols : uki.getUniqueConstraints().values()) {
       ImmutableBitSet.Builder keys = ImmutableBitSet.builder();
+      boolean isNonNullable = true;
       for (UniqueConstraintCol ukCol : ukCols) {
         int ukPos;
         for (ukPos = 0; ukPos < rowType.getFieldNames().size(); ukPos++) {
           String colName = rowType.getFieldNames().get(ukPos);
           if (ukCol.colName.equals(colName)) {
+            if(rowType.getFieldList().get(ukPos).getType().isNullable()) {
+              isNonNullable = false;
+            }
             break;
           }
         }
@@ -280,8 +301,13 @@ public class RelOptHiveTable implements RelOptTable {
         }
         keys.set(ukPos);
       }
-      builder.add(keys.build());
+      ImmutableBitSet key = keys.build();
+      builder.add(key);
+      if(isNonNullable) {
+        nonNullbuilder.add(key);
+      }
     }
+    nonNullablekeys = nonNullbuilder.build();
     return builder.build();
   }
 

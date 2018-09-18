@@ -317,7 +317,7 @@ public class HiveRelMdRowCount extends RelMdRowCount {
         (!leftChild && joinRel.getJoinType().generatesNullsOnLeft())) {
       return 1.0;
     } else {
-      HiveTableScan tScan = HiveRelMdUniqueKeys.getTableScan(child, true);
+      HiveTableScan tScan = EstimateUniqueKeys.getTableScan(child, true);
       if (tScan != null) {
         double tRowCount = mq.getRowCount(tScan);
         return childRowCount / tRowCount;
@@ -328,8 +328,12 @@ public class HiveRelMdRowCount extends RelMdRowCount {
   }
 
   private static boolean isKey(ImmutableBitSet c, RelNode rel, RelMetadataQuery mq) {
+    RelNode currentRel = rel;
+    if (rel instanceof HepRelVertex) {
+      currentRel = ((HepRelVertex) currentRel).getCurrentRel();
+    }
     boolean isKey = false;
-    Set<ImmutableBitSet> keys = mq.getUniqueKeys(rel);
+    Set<ImmutableBitSet> keys = EstimateUniqueKeys.getUniqueKeys(currentRel, false);
     if (keys != null) {
       for (ImmutableBitSet key : keys) {
         if (key.equals(c)) {

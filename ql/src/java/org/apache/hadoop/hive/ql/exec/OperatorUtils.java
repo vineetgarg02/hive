@@ -29,12 +29,10 @@ import java.util.Set;
 import java.util.Stack;
 
 import org.apache.hadoop.hive.ql.exec.NodeUtils.Function;
+import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.parse.SemiJoinBranchInfo;
 import org.apache.hadoop.hive.ql.parse.spark.SparkPartitionPruningSinkOperator;
-import org.apache.hadoop.hive.ql.plan.BaseWork;
-import org.apache.hadoop.hive.ql.plan.MapJoinDesc;
-import org.apache.hadoop.hive.ql.plan.MapWork;
-import org.apache.hadoop.hive.ql.plan.OperatorDesc;
+import org.apache.hadoop.hive.ql.plan.*;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +40,8 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import scala.Array;
+import scala.reflect.macros.ExprUtils;
 
 public class OperatorUtils {
 
@@ -500,5 +500,38 @@ public class OperatorUtils {
       }
     }
     return;
+  }
+
+  public static  Operator<? extends OperatorDesc> findSourceRS(Operator<?> start, List<ExprNodeDesc> exprs) {
+    Operator currRS = null;
+    if(start instanceof ReduceSinkOperator) {
+      currRS = start;
+    }
+    List<Operator<? extends OperatorDesc>> parents = start.getParentOperators();
+    if(parents == null | parents.isEmpty()) {
+      // reached end e.g. TS operator
+      return null;
+    }
+
+    Operator<? extends OperatorDesc> nextOp = null;
+    ArrayList<ExprNodeDesc> backtrackedExprs = null;
+    for(int i=0; i<parents.size(); i++) {
+      try {
+        backtrackedExprs = ExprNodeDescUtils.backtrack(exprs, start, parents.get(i));
+        if(backtrackedExprs != null && backtrackedExprs.size() == exprs.size()){
+          nextOp = parents.get(i);
+          break;
+        }
+      } catch (SemanticException e) {
+        return null;
+      }
+    }
+    if(nextOp != null){
+      Operator<? extends OperatorDesc> nextRS = findSourceRS(nextOp, backtrackedExprs);
+      if(nextRS != null) {
+        currRS = nextRS;
+      }
+    }
+    return currRS;
   }
 }

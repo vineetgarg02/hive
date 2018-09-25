@@ -502,6 +502,24 @@ public class OperatorUtils {
     return;
   }
 
+  private static List<ExprNodeDesc> backtrackAll(List<ExprNodeDesc> exprs, Operator<? extends  OperatorDesc> start,
+                                                 Operator<? extends OperatorDesc> terminal) {
+    List<ExprNodeDesc> backtrackedExprs = new ArrayList<>();
+    try {
+      for (ExprNodeDesc expr : exprs) {
+        ExprNodeDesc backtrackedExpr = ExprNodeDescUtils.backtrack(expr, start, terminal);
+        if(backtrackedExpr == null) {
+          return null;
+        }
+        backtrackedExprs.add(backtrackedExpr);
+
+      }
+    } catch (SemanticException e) {
+      return null;
+    }
+    return backtrackedExprs;
+  }
+
   public static  Operator<? extends OperatorDesc> findSourceRS(Operator<?> start, List<ExprNodeDesc> exprs) {
     Operator currRS = null;
     if(start instanceof ReduceSinkOperator) {
@@ -514,18 +532,14 @@ public class OperatorUtils {
     }
 
     Operator<? extends OperatorDesc> nextOp = null;
-    ArrayList<ExprNodeDesc> backtrackedExprs = null;
+    List<ExprNodeDesc> backtrackedExprs = null;
     for(int i=0; i<parents.size(); i++) {
-      try {
-        backtrackedExprs = ExprNodeDescUtils.backtrack(exprs, start, parents.get(i));
+        backtrackedExprs = backtrackAll(exprs, start, parents.get(i));
         if(backtrackedExprs != null && backtrackedExprs.size() == exprs.size()){
           nextOp = parents.get(i);
           break;
         }
-      } catch (SemanticException e) {
-        return null;
       }
-    }
     if(nextOp != null){
       Operator<? extends OperatorDesc> nextRS = findSourceRS(nextOp, backtrackedExprs);
       if(nextRS != null) {

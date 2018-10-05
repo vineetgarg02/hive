@@ -99,7 +99,8 @@ public class RelOptHiveTable implements RelOptTable {
   private final ImmutableMap<Integer, ColumnInfo> hivePartitionColsMap;
   private final ImmutableList<VirtualColumn>      hiveVirtualCols;
   private final int                               noOfNonVirtualCols;
-  private final List<ImmutableBitSet>             keys;
+  private List<ImmutableBitSet>             keys;
+  private List<ImmutableBitSet>             nonNullablekeys;
   private final List<RelReferentialConstraint>    referentialConstraints;
   final HiveConf                                  hiveConf;
 
@@ -133,8 +134,10 @@ public class RelOptHiveTable implements RelOptTable {
     this.partitionCache = partitionCache;
     this.colStatsCache = colStatsCache;
     this.noColsMissingStats = noColsMissingStats;
-    this.keys = generateKeys();
+    this.nonNullablekeys = null;
+    this.keys = null;
     this.referentialConstraints = generateReferentialConstraints();
+    generateKeys();
   }
 
   //~ Methods ----------------------------------------------------------------
@@ -166,6 +169,8 @@ public class RelOptHiveTable implements RelOptTable {
   public Expression getExpression(Class clazz) {
     throw new UnsupportedOperationException();
   }
+
+  public List<ImmutableBitSet> getNonNullableKeys() { return nonNullablekeys; }
 
   @Override
   public RelOptTable extend(List<RelDataTypeField> extendedFields) {
@@ -213,6 +218,16 @@ public class RelOptHiveTable implements RelOptTable {
         this.hiveConf, this.partitionCache, this.colStatsCache, this.noColsMissingStats);
   }
 
+  // Given a key this method returns true if all of the columns in the key are not nullable
+  public boolean isNonNullableKey(ImmutableBitSet columns) {
+    for (ImmutableBitSet key : nonNullablekeys) {
+      if (key.contains(columns)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   @Override
   public boolean isKey(ImmutableBitSet columns) {
     for (ImmutableBitSet key : keys) {
@@ -228,8 +243,9 @@ public class RelOptHiveTable implements RelOptTable {
     return referentialConstraints;
   }
 
-  private List<ImmutableBitSet> generateKeys() {
+  private void generateKeys() {
     ImmutableList.Builder<ImmutableBitSet> builder = ImmutableList.builder();
+    ImmutableList.Builder<ImmutableBitSet> nonNullbuilder = ImmutableList.builder();
     // First PK
     final PrimaryKeyInfo pki;
     try {
@@ -250,11 +266,12 @@ public class RelOptHiveTable implements RelOptTable {
         }
         if (pkPos == rowType.getFieldNames().size()) {
           LOG.error("Column for primary key definition " + pkColName + " not found");
-          return ImmutableList.of();
         }
         keys.set(pkPos);
       }
-      builder.add(keys.build());
+      ImmutableBitSet key = keys.build();
+      builder.add(key);
+      nonNullbuilder.add(key);
     }
     // Then UKs
     final UniqueConstraint uki;
@@ -266,23 +283,32 @@ public class RelOptHiveTable implements RelOptTable {
     }
     for (List<UniqueConstraintCol> ukCols : uki.getUniqueConstraints().values()) {
       ImmutableBitSet.Builder keys = ImmutableBitSet.builder();
+      boolean isNonNullable = true;
       for (UniqueConstraintCol ukCol : ukCols) {
         int ukPos;
         for (ukPos = 0; ukPos < rowType.getFieldNames().size(); ukPos++) {
           String colName = rowType.getFieldNames().get(ukPos);
           if (ukCol.colName.equals(colName)) {
+            if(rowType.getFieldList().get(ukPos).getType().isNullable()) {
+              // they should all be nullable
+              isNonNullable = false;
+            }
             break;
           }
         }
         if (ukPos == rowType.getFieldNames().size()) {
           LOG.error("Column for unique constraint definition " + ukCol.colName + " not found");
-          return ImmutableList.of();
         }
         keys.set(ukPos);
       }
-      builder.add(keys.build());
+      ImmutableBitSet key = keys.build();
+      builder.add(key);
+      if(isNonNullable) {
+        nonNullbuilder.add(key);
+      }
     }
-    return builder.build();
+    nonNullablekeys = nonNullbuilder.build();
+    keys = builder.build();
   }
 
   private List<RelReferentialConstraint> generateReferentialConstraints() {

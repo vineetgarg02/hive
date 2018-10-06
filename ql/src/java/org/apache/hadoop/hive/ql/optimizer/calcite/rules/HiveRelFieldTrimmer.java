@@ -304,12 +304,10 @@ public class HiveRelFieldTrimmer extends RelFieldTrimmer {
   private boolean isRexLiteral(final RexNode rexNode) {
     if(rexNode instanceof RexLiteral) {
       return true;
-    }
-    else if(rexNode instanceof RexCall
+    } else if(rexNode instanceof RexCall
         && ((RexCall)rexNode).getOperator().getKind() == SqlKind.CAST){
       return isRexLiteral(((RexCall)(rexNode)).getOperands().get(0));
-    }
-    else {
+    } else {
       return false;
     }
   }
@@ -368,10 +366,9 @@ public class HiveRelFieldTrimmer extends RelFieldTrimmer {
    *  underneath aggregate
    *
    *  This is mainly done so that hive is able to push down queries with
-   *  group by 'constant key with type not supported by druid' into druid
+   *  group by 'constant key with type not supported by druid' into druid.
    *
    */
-
   private Aggregate rewriteGBConstantKeys(Aggregate aggregate, ImmutableBitSet fieldsUsed,
                                           Set<RelDataTypeField> extraFields) {
     if ((aggregate.getIndicatorCount() > 0)
@@ -515,7 +512,7 @@ public class HiveRelFieldTrimmer extends RelFieldTrimmer {
     } else {
       newGroupSets = ImmutableList.copyOf(
           Iterables.transform(aggregate.getGroupSets(),
-                              input1 -> Mappings.apply(inputMapping, input1)));
+            input1 -> Mappings.apply(inputMapping, input1)));
     }
 
     // Populate mapping of where to find the fields. System, group key and

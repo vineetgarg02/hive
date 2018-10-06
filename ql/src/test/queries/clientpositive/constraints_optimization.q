@@ -1,25 +1,25 @@
 set hive.strict.checks.cartesian.product=false;
 
 CREATE TABLE `customer_removal_n0`(
-  `c_custkey` bigint, 
-  `c_name` string, 
-  `c_address` string, 
-  `c_city` string, 
-  `c_nation` string, 
-  `c_region` string, 
-  `c_phone` string, 
+  `c_custkey` bigint,
+  `c_name` string,
+  `c_address` string,
+  `c_city` string,
+  `c_nation` string,
+  `c_region` string,
+  `c_phone` string,
   `c_mktsegment` string,
   primary key (`c_custkey`) disable rely);
 
 CREATE TABLE `dates_removal_n0`(
   `d_datekey` bigint,
   `d_id` bigint,
-  `d_date` string, 
-  `d_dayofweek` string, 
-  `d_month` string, 
-  `d_year` int, 
-  `d_yearmonthnum` int, 
-  `d_yearmonth` string, 
+  `d_date` string,
+  `d_dayofweek` string,
+  `d_month` string,
+  `d_year` int,
+  `d_yearmonthnum` int,
+  `d_yearmonth` string,
   `d_daynuminweek` int,
   `d_daynuminmonth` int,
   `d_daynuminyear` int,

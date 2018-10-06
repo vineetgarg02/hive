@@ -18,7 +18,6 @@
 package org.apache.hadoop.hive.ql.optimizer.calcite;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -35,7 +34,6 @@ import org.apache.calcite.prepare.RelOptTableImpl;
 import org.apache.calcite.rel.RelCollation;
 import org.apache.calcite.rel.RelCollationTraitDef;
 import org.apache.calcite.rel.RelDistribution;
-import org.apache.calcite.rel.RelDistributions;
 import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.calcite.rel.RelFieldCollation.Direction;
 import org.apache.calcite.rel.RelFieldCollation.NullDirection;
@@ -170,7 +168,9 @@ public class RelOptHiveTable implements RelOptTable {
     throw new UnsupportedOperationException();
   }
 
-  public List<ImmutableBitSet> getNonNullableKeys() { return nonNullablekeys; }
+  public List<ImmutableBitSet> getNonNullableKeys() {
+    return nonNullablekeys;
+  }
 
   @Override
   public RelOptTable extend(List<RelDataTypeField> extendedFields) {
@@ -394,12 +394,11 @@ public class RelOptHiveTable implements RelOptTable {
           if (sortColumn.getOrder() == BaseSemanticAnalyzer.HIVE_COLUMN_ORDER_ASC) {
             direction = Direction.ASCENDING;
             nullDirection = NullDirection.FIRST;
-          }
-          else {
+          } else {
             direction = Direction.DESCENDING;
             nullDirection = NullDirection.LAST;
           }
-          collationList.add(new RelFieldCollation(i,direction,nullDirection));
+          collationList.add(new RelFieldCollation(i, direction, nullDirection));
           break;
         }
       }

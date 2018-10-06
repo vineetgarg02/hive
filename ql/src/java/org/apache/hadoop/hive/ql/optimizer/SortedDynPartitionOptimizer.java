@@ -56,19 +56,7 @@ import org.apache.hadoop.hive.ql.metadata.VirtualColumn;
 import org.apache.hadoop.hive.ql.parse.ParseContext;
 import org.apache.hadoop.hive.ql.parse.ParseUtils;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
-import org.apache.hadoop.hive.ql.plan.DynamicPartitionCtx;
-import org.apache.hadoop.hive.ql.plan.ExprNodeColumnDesc;
-import org.apache.hadoop.hive.ql.plan.ExprNodeConstantDesc;
-import org.apache.hadoop.hive.ql.plan.ExprNodeDesc;
-import org.apache.hadoop.hive.ql.plan.ExprNodeDescUtils;
-import org.apache.hadoop.hive.ql.plan.ExprNodeGenericFuncDesc;
-import org.apache.hadoop.hive.ql.plan.FileSinkDesc;
-import org.apache.hadoop.hive.ql.plan.ListBucketingCtx;
-import org.apache.hadoop.hive.ql.plan.OperatorDesc;
-import org.apache.hadoop.hive.ql.plan.PlanUtils;
-import org.apache.hadoop.hive.ql.plan.ReduceSinkDesc;
-import org.apache.hadoop.hive.ql.plan.SelectDesc;
-import org.apache.hadoop.hive.ql.plan.TableDesc;
+import org.apache.hadoop.hive.ql.plan.*;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -175,13 +163,18 @@ public class SortedDynPartitionOptimizer extends Transform {
 
       // unlink connection between FS and its parent
       fsParent = fsOp.getParentOperators().get(0);
+      DynamicPartitionCtx dpCtx = fsOp.getConf().getDynPartCtx();
+      List<Integer> partitionPositions = getPartitionPositions(dpCtx, fsParent.getSchema());
+      if(!shouldDo(partitionPositions, fsParent)) {
+        return null;
+      }
+
       fsParent.getChildOperators().clear();
 
-      DynamicPartitionCtx dpCtx = fsOp.getConf().getDynPartCtx();
-      int numBuckets = destTable.getNumBuckets();
 
       // if enforce bucketing/sorting is disabled numBuckets will not be set.
       // set the number of buckets here to ensure creation of empty buckets
+      int numBuckets = destTable.getNumBuckets();
       dpCtx.setNumBuckets(numBuckets);
 
       // Get the positions for partition, bucket and sort columns
@@ -233,7 +226,6 @@ public class SortedDynPartitionOptimizer extends Transform {
       for (int i : sortPositions) LOG.debug("sort position " + i);
       for (int i : sortOrder) LOG.debug("sort order " + i);
       for (int i : sortNullOrder) LOG.debug("sort null order " + i);
-      List<Integer> partitionPositions = getPartitionPositions(dpCtx, fsParent.getSchema());
 
       // update file sink descriptor
       fsOp.getConf().setMultiFileSpray(false);
@@ -652,6 +644,28 @@ public class SortedDynPartitionOptimizer extends Transform {
       return cols;
     }
 
-  }
+    private boolean shouldDo(List<Integer> partitionPos, Operator<? extends OperatorDesc> fsParent) {
 
+      List<ColStatistics> colStats = fsParent.getStatistics().getColumnStats();
+      if(colStats == null || colStats.isEmpty()) {
+        return true; //TODO: if statistics are not available??
+      }
+
+      long partCardinality = 1;
+      // compute cardinality for partition columns
+
+      for(Integer idx:partitionPos) {
+        ColStatistics partStats = colStats.get(idx);
+        //TODO: should check the state of column stats (for partition only)
+        partCardinality = partCardinality * partStats.getCountDistint();
+      }
+
+      long MAX_WRITERS = 32;
+      if(partCardinality <= MAX_WRITERS) {
+        return true;
+      }
+      return false;
+    }
+
+  }
 }

@@ -1,24 +1,24 @@
 PREHOOK: query: CREATE TABLE `customer_removal_n0`(
-  `c_custkey` bigint, 
-  `c_name` string, 
-  `c_address` string, 
-  `c_city` string, 
-  `c_nation` string, 
-  `c_region` string, 
-  `c_phone` string, 
+  `c_custkey` bigint,
+  `c_name` string,
+  `c_address` string,
+  `c_city` string,
+  `c_nation` string,
+  `c_region` string,
+  `c_phone` string,
   `c_mktsegment` string,
   primary key (`c_custkey`) disable rely)
 PREHOOK: type: CREATETABLE
 PREHOOK: Output: database:default
 PREHOOK: Output: default@customer_removal_n0
 POSTHOOK: query: CREATE TABLE `customer_removal_n0`(
-  `c_custkey` bigint, 
-  `c_name` string, 
-  `c_address` string, 
-  `c_city` string, 
-  `c_nation` string, 
-  `c_region` string, 
-  `c_phone` string, 
+  `c_custkey` bigint,
+  `c_name` string,
+  `c_address` string,
+  `c_city` string,
+  `c_nation` string,
+  `c_region` string,
+  `c_phone` string,
   `c_mktsegment` string,
   primary key (`c_custkey`) disable rely)
 POSTHOOK: type: CREATETABLE
@@ -27,12 +27,12 @@ POSTHOOK: Output: default@customer_removal_n0
 PREHOOK: query: CREATE TABLE `dates_removal_n0`(
   `d_datekey` bigint,
   `d_id` bigint,
-  `d_date` string, 
-  `d_dayofweek` string, 
-  `d_month` string, 
-  `d_year` int, 
-  `d_yearmonthnum` int, 
-  `d_yearmonth` string, 
+  `d_date` string,
+  `d_dayofweek` string,
+  `d_month` string,
+  `d_year` int,
+  `d_yearmonthnum` int,
+  `d_yearmonth` string,
   `d_daynuminweek` int,
   `d_daynuminmonth` int,
   `d_daynuminyear` int,
@@ -50,12 +50,12 @@ PREHOOK: Output: default@dates_removal_n0
 POSTHOOK: query: CREATE TABLE `dates_removal_n0`(
   `d_datekey` bigint,
   `d_id` bigint,
-  `d_date` string, 
-  `d_dayofweek` string, 
-  `d_month` string, 
-  `d_year` int, 
-  `d_yearmonthnum` int, 
-  `d_yearmonth` string, 
+  `d_date` string,
+  `d_dayofweek` string,
+  `d_month` string,
+  `d_year` int,
+  `d_yearmonthnum` int,
+  `d_yearmonth` string,
   `d_daynuminweek` int,
   `d_daynuminmonth` int,
   `d_daynuminyear` int,
@@ -843,6 +843,45 @@ POSTHOOK: Input: default@dest_g21
 1
 2
 4
+PREHOOK: query: explain select key1 from dest_g21 where key1 > 1 group by key1, value1
+PREHOOK: type: QUERY
+PREHOOK: Input: default@dest_g21
+#### A masked pattern was here ####
+POSTHOOK: query: explain select key1 from dest_g21 where key1 > 1 group by key1, value1
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@dest_g21
+#### A masked pattern was here ####
+STAGE DEPENDENCIES:
+  Stage-0 is a root stage
+
+STAGE PLANS:
+  Stage: Stage-0
+    Fetch Operator
+      limit: -1
+      Processor Tree:
+        TableScan
+          alias: dest_g21
+          filterExpr: (key1 > 1) (type: boolean)
+          Filter Operator
+            predicate: (key1 > 1) (type: boolean)
+            Select Operator
+              expressions: key1 (type: int)
+              outputColumnNames: _col0
+              ListSink
+
+PREHOOK: query: select key1 from dest_g21 where key1 > 1 group by key1, value1
+PREHOOK: type: QUERY
+PREHOOK: Input: default@dest_g21
+#### A masked pattern was here ####
+POSTHOOK: query: select key1 from dest_g21 where key1 > 1 group by key1, value1
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@dest_g21
+#### A masked pattern was here ####
+2
+3
+4
+5
+6
 PREHOOK: query: -- only value1 will be removed because there is aggregate call
   explain select count(key1) from dest_g21 group by key1, value1
 PREHOOK: type: QUERY

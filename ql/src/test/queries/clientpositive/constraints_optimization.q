@@ -84,6 +84,9 @@ CREATE TABLE `dates_removal_n0`(
   explain select key1 from dest_g21 where value1 > 1 group by key1, value1;
   select key1 from dest_g21 where value1 > 1 group by key1, value1;
 
+  explain select key1 from dest_g21 where key1 > 1 group by key1, value1;
+  select key1 from dest_g21 where key1 > 1 group by key1, value1;
+
   -- only value1 will be removed because there is aggregate call
   explain select count(key1) from dest_g21 group by key1, value1;
   select count(key1) from dest_g21 group by key1, value1;

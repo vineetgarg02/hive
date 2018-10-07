@@ -47,6 +47,7 @@ import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.schema.ColumnStrategy;
 import org.apache.calcite.util.ImmutableBitSet;
+import org.apache.calcite.util.Pair;
 import org.apache.calcite.util.mapping.IntPair;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
@@ -97,8 +98,8 @@ public class RelOptHiveTable implements RelOptTable {
   private final ImmutableMap<Integer, ColumnInfo> hivePartitionColsMap;
   private final ImmutableList<VirtualColumn>      hiveVirtualCols;
   private final int                               noOfNonVirtualCols;
-  private List<ImmutableBitSet>             keys;
-  private List<ImmutableBitSet>             nonNullablekeys;
+  private final List<ImmutableBitSet>             keys;
+  private final List<ImmutableBitSet>             nonNullablekeys;
   private final List<RelReferentialConstraint>    referentialConstraints;
   final HiveConf                                  hiveConf;
 
@@ -132,8 +133,9 @@ public class RelOptHiveTable implements RelOptTable {
     this.partitionCache = partitionCache;
     this.colStatsCache = colStatsCache;
     this.noColsMissingStats = noColsMissingStats;
-    this.nonNullablekeys = null;
-    this.keys = null;
+    Pair<List<ImmutableBitSet>, List<ImmutableBitSet>> constraintKeys = generateKeys();
+    this.keys = constraintKeys.left;
+    this.nonNullablekeys = constraintKeys.right;
     this.referentialConstraints = generateReferentialConstraints();
     generateKeys();
   }
@@ -243,7 +245,7 @@ public class RelOptHiveTable implements RelOptTable {
     return referentialConstraints;
   }
 
-  private void generateKeys() {
+  private Pair<List<ImmutableBitSet>, List<ImmutableBitSet>> generateKeys() {
     ImmutableList.Builder<ImmutableBitSet> builder = ImmutableList.builder();
     ImmutableList.Builder<ImmutableBitSet> nonNullbuilder = ImmutableList.builder();
     // First PK
@@ -307,8 +309,7 @@ public class RelOptHiveTable implements RelOptTable {
         nonNullbuilder.add(key);
       }
     }
-    nonNullablekeys = nonNullbuilder.build();
-    keys = builder.build();
+    return new Pair<>(builder.build(), nonNullbuilder.build());
   }
 
   private List<RelReferentialConstraint> generateReferentialConstraints() {

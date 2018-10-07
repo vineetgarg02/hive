@@ -33,6 +33,7 @@ import org.apache.calcite.util.BitSets;
 import org.apache.calcite.util.ImmutableBitSet;
 
 import com.google.common.collect.ImmutableSet;
+import org.apache.calcite.util.Util;
 import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveAggregate;
 import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveFilter;
 import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveJoin;
@@ -187,7 +188,7 @@ public final class EstimateUniqueKeys {
     if (rel != null && rel instanceof HepRelVertex) {
       rel = ((HepRelVertex) rel).getCurrentRel();
     } else if (rel != null && rel instanceof RelSubset) {
-      rel = ((RelSubset) rel).getOriginal();
+      rel = Util.first(((RelSubset)rel).getBest(), ((RelSubset) rel).getOriginal());
     }
     return rel;
   }

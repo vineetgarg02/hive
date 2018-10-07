@@ -137,7 +137,6 @@ public class RelOptHiveTable implements RelOptTable {
     this.keys = constraintKeys.left;
     this.nonNullablekeys = constraintKeys.right;
     this.referentialConstraints = generateReferentialConstraints();
-    generateKeys();
   }
 
   //~ Methods ----------------------------------------------------------------

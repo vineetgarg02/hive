@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Order;
 import org.apache.hadoop.hive.ql.exec.ColumnInfo;
@@ -56,8 +57,22 @@ import org.apache.hadoop.hive.ql.metadata.VirtualColumn;
 import org.apache.hadoop.hive.ql.parse.ParseContext;
 import org.apache.hadoop.hive.ql.parse.ParseUtils;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
-import org.apache.hadoop.hive.ql.plan.*;
+import org.apache.hadoop.hive.ql.plan.ColStatistics;
+import org.apache.hadoop.hive.ql.plan.DynamicPartitionCtx;
+import org.apache.hadoop.hive.ql.plan.ExprNodeColumnDesc;
+import org.apache.hadoop.hive.ql.plan.ExprNodeConstantDesc;
+import org.apache.hadoop.hive.ql.plan.ExprNodeDesc;
+import org.apache.hadoop.hive.ql.plan.ExprNodeDescUtils;
+import org.apache.hadoop.hive.ql.plan.ExprNodeGenericFuncDesc;
+import org.apache.hadoop.hive.ql.plan.FileSinkDesc;
+import org.apache.hadoop.hive.ql.plan.ListBucketingCtx;
+import org.apache.hadoop.hive.ql.plan.OperatorDesc;
+import org.apache.hadoop.hive.ql.plan.PlanUtils;
+import org.apache.hadoop.hive.ql.plan.ReduceSinkDesc;
+import org.apache.hadoop.hive.ql.plan.SelectDesc;
+import org.apache.hadoop.hive.ql.plan.TableDesc;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
+import org.apache.orc.OrcConf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -644,28 +659,60 @@ public class SortedDynPartitionOptimizer extends Transform {
       return cols;
     }
 
+    // the idea is to estimate how many number of writers this insert can spun up.
+    // Writers are proportional to number of partitions being inserted i.e cardinality of the partition columns
+    //  if these writers are less than number of writers allowed within the memory pool (estimated) we go ahead with
+    //  adding extra RS
+    //  The way max number of writers allowed are computed based on
+    //  (executor/container memory) * (percentage of memory taken by orc)
+    //  and dividing that by max memory (stripe size) taken by a single writer.
+    //TODO: take number of buckets into account
     private boolean shouldDo(List<Integer> partitionPos, Operator<? extends OperatorDesc> fsParent) {
+      int threshold = HiveConf.getIntVar(this.parseCtx.getConf(),
+                                             HiveConf.ConfVars.HIVEOPTSORTDYNAMICPARTITIONTHRESHOLD);
+      long MAX_WRITERS = -1;
+      switch(threshold) {
+      case -1:
+        return false;
+      case 0:
+        break;
+      case 1:
+        return true;
+      default:
+        MAX_WRITERS = threshold;
+        break;
+      }
 
       List<ColStatistics> colStats = fsParent.getStatistics().getColumnStats();
       if(colStats == null || colStats.isEmpty()) {
-        return true; //TODO: if statistics are not available??
+        return false;
       }
-
       long partCardinality = 1;
-      // compute cardinality for partition columns
 
+      // compute cardinality for partition columns
       for(Integer idx:partitionPos) {
-        ColStatistics partStats = colStats.get(idx);
-        //TODO: should check the state of column stats (for partition only)
+        ColumnInfo ci = fsParent.getSchema().getSignature().get(idx);
+        ColStatistics partStats = fsParent.getStatistics().getColumnStatisticsFromColName(ci.getInternalName());
+        if(partStats == null) {
+          // statistics for this partition are for some reason not available
+          return false;
+        }
         partCardinality = partCardinality * partStats.getCountDistint();
       }
 
-      long MAX_WRITERS = 32;
-      if(partCardinality <= MAX_WRITERS) {
-        return true;
-      }
-      return false;
-    }
+      if(MAX_WRITERS < 0) {
+        double orcMemPool = this.parseCtx.getConf().getDouble(OrcConf.MEMORY_POOL.getHiveConfName(),
+                                                              (Double)OrcConf.MEMORY_POOL.getDefaultValue());
+        long orcStripSize = this.parseCtx.getConf().getLong(OrcConf.STRIPE_SIZE.getHiveConfName(),
+                                                            (Long)OrcConf.STRIPE_SIZE.getDefaultValue());
+        long executorMem = 4000000000L;
+        MAX_WRITERS = (long)(executorMem * orcMemPool)/orcStripSize;
 
+      }
+      if(partCardinality <= MAX_WRITERS) {
+        return false;
+      }
+      return true;
+    }
   }
 }

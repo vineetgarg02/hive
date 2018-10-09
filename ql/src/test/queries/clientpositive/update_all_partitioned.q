@@ -2,6 +2,9 @@
 set hive.mapred.mode=nonstrict;
 set hive.support.concurrency=true;
 set hive.txn.manager=org.apache.hadoop.hive.ql.lockmgr.DbTxnManager;
+-- BUG: HIVE-20719
+set hive.vectorized.execution.enabled=false;
+
 
 
 create table acid_uap(a int, b varchar(128)) partitioned by (ds string) clustered by (a) into 2 buckets stored as orc TBLPROPERTIES ('transactional'='true');

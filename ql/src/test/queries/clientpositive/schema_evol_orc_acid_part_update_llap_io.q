@@ -18,6 +18,8 @@ set hive.metastore.disallow.incompatible.col.type.changes=true;
 set hive.default.fileformat=orc;
 set hive.llap.io.enabled=true;
 set hive.llap.io.encode.enabled=true;
+-- BUG: HIVE-20719
+set hive.vectorized.execution.enabled=false;
 
 -- SORT_QUERY_RESULTS
 --

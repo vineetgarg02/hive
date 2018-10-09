@@ -13,6 +13,9 @@ set hive.exec.dynamic.partition.mode=nonstrict;
 set hive.support.concurrency=true;
 set hive.txn.manager=org.apache.hadoop.hive.ql.lockmgr.DbTxnManager;
 
+-- BUG: HIVE-20719
+set hive.vectorized.execution.enabled=false;
+
 DROP TABLE orc_llap_acid_fast;
 
 CREATE TABLE orc_llap_acid_fast (

@@ -49,46 +49,46 @@ POSTHOOK: Input: default@srcpartbucket@ds=2008-04-08/hr=12
 POSTHOOK: Input: default@srcpartbucket@ds=2008-04-09/hr=11
 POSTHOOK: Input: default@srcpartbucket@ds=2008-04-09/hr=12
 #### A masked pattern was here ####
+0	val_0	2008-04-08	11
+4	val_4	2008-04-08	11
+8	val_8	2008-04-08	11
+0	val_0	2008-04-08	11
+0	val_0	2008-04-08	11
+5	val_5	2008-04-08	11
 5	val_5	2008-04-08	11
 2	val_2	2008-04-08	11
 5	val_5	2008-04-08	11
-5	val_5	2008-04-08	11
-0	val_0	2008-04-08	11
-0	val_0	2008-04-08	11
-0	val_0	2008-04-08	11
 9	val_9	2008-04-08	11
-8	val_8	2008-04-08	11
-4	val_4	2008-04-08	11
+0	val_0	2008-04-08	12
+4	val_4	2008-04-08	12
+8	val_8	2008-04-08	12
+0	val_0	2008-04-08	12
+0	val_0	2008-04-08	12
+5	val_5	2008-04-08	12
 5	val_5	2008-04-08	12
 2	val_2	2008-04-08	12
 5	val_5	2008-04-08	12
-5	val_5	2008-04-08	12
-0	val_0	2008-04-08	12
-0	val_0	2008-04-08	12
-0	val_0	2008-04-08	12
 9	val_9	2008-04-08	12
-8	val_8	2008-04-08	12
-4	val_4	2008-04-08	12
+0	val_0	2008-04-09	11
+4	val_4	2008-04-09	11
+8	val_8	2008-04-09	11
+0	val_0	2008-04-09	11
+0	val_0	2008-04-09	11
+5	val_5	2008-04-09	11
 5	val_5	2008-04-09	11
 2	val_2	2008-04-09	11
 5	val_5	2008-04-09	11
-5	val_5	2008-04-09	11
-0	val_0	2008-04-09	11
-0	val_0	2008-04-09	11
-0	val_0	2008-04-09	11
 9	val_9	2008-04-09	11
-8	val_8	2008-04-09	11
-4	val_4	2008-04-09	11
+0	val_0	2008-04-09	12
+4	val_4	2008-04-09	12
+8	val_8	2008-04-09	12
+0	val_0	2008-04-09	12
+0	val_0	2008-04-09	12
+5	val_5	2008-04-09	12
 5	val_5	2008-04-09	12
 2	val_2	2008-04-09	12
 5	val_5	2008-04-09	12
-5	val_5	2008-04-09	12
-0	val_0	2008-04-09	12
-0	val_0	2008-04-09	12
-0	val_0	2008-04-09	12
 9	val_9	2008-04-09	12
-8	val_8	2008-04-09	12
-4	val_4	2008-04-09	12
 PREHOOK: query: explain select key from srcpartbucket tablesample (bucket 2 out of 4 on key)
 PREHOOK: type: QUERY
 PREHOOK: Input: default@srcpartbucket
@@ -154,34 +154,34 @@ POSTHOOK: Input: default@srcpartbucket@ds=2008-04-08/hr=12
 POSTHOOK: Input: default@srcpartbucket@ds=2008-04-09/hr=11
 POSTHOOK: Input: default@srcpartbucket@ds=2008-04-09/hr=12
 #### A masked pattern was here ####
+0
+0
+0
+5
 5
 2
 5
-5
 0
 0
 0
 5
-2
-5
-5
-0
-0
-0
 5
 2
 5
+0
+0
+0
 5
-0
-0
-0
 5
 2
 5
+0
+0
+0
 5
-0
-0
-0
+5
+2
+5
 PREHOOK: query: select key from srcpartbucket tablesample (bucket 3 out of 4 on key)
 PREHOOK: type: QUERY
 PREHOOK: Input: default@srcpartbucket
@@ -198,7 +198,6 @@ POSTHOOK: Input: default@srcpartbucket@ds=2008-04-08/hr=12
 POSTHOOK: Input: default@srcpartbucket@ds=2008-04-09/hr=11
 POSTHOOK: Input: default@srcpartbucket@ds=2008-04-09/hr=12
 #### A masked pattern was here ####
-9
 8
 9
 8
@@ -206,6 +205,7 @@ POSTHOOK: Input: default@srcpartbucket@ds=2008-04-09/hr=12
 8
 9
 8
+9
 PREHOOK: query: select key from srcpartbucket tablesample (bucket 4 out of 4 on key)
 PREHOOK: type: QUERY
 PREHOOK: Input: default@srcpartbucket
@@ -260,20 +260,20 @@ STAGE PLANS:
             Map Operator Tree:
                 TableScan
                   alias: srcpartbucket
-                  Statistics: Num rows: 40 Data size: 3400 Basic stats: COMPLETE Column stats: COMPLETE
+                  Statistics: Num rows: 40 Data size: 14136 Basic stats: COMPLETE Column stats: NONE
                   Filter Operator
                     predicate: (((hash(key) & 2147483647) % 4) = 1) (type: boolean)
-                    Statistics: Num rows: 20 Data size: 1700 Basic stats: COMPLETE Column stats: COMPLETE
+                    Statistics: Num rows: 20 Data size: 7068 Basic stats: COMPLETE Column stats: NONE
                     Group By Operator
                       keys: key (type: string)
                       mode: hash
                       outputColumnNames: _col0
-                      Statistics: Num rows: 6 Data size: 510 Basic stats: COMPLETE Column stats: COMPLETE
+                      Statistics: Num rows: 20 Data size: 7068 Basic stats: COMPLETE Column stats: NONE
                       Reduce Output Operator
                         key expressions: _col0 (type: string)
                         sort order: +
                         Map-reduce partition columns: _col0 (type: string)
-                        Statistics: Num rows: 6 Data size: 510 Basic stats: COMPLETE Column stats: COMPLETE
+                        Statistics: Num rows: 20 Data size: 7068 Basic stats: COMPLETE Column stats: NONE
             Execution mode: vectorized, llap
             LLAP IO: may be used (ACID table)
         Reducer 2 
@@ -283,10 +283,10 @@ STAGE PLANS:
                 keys: KEY._col0 (type: string)
                 mode: mergepartial
                 outputColumnNames: _col0
-                Statistics: Num rows: 6 Data size: 510 Basic stats: COMPLETE Column stats: COMPLETE
+                Statistics: Num rows: 10 Data size: 3534 Basic stats: COMPLETE Column stats: NONE
                 File Output Operator
                   compressed: false
-                  Statistics: Num rows: 6 Data size: 510 Basic stats: COMPLETE Column stats: COMPLETE
+                  Statistics: Num rows: 10 Data size: 3534 Basic stats: COMPLETE Column stats: NONE
                   table:
                       input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                       output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat

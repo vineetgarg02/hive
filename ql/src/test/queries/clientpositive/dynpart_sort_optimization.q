@@ -245,3 +245,5 @@ explain insert overwrite table over1k_part partition(ds="foo", t) select si,i,b,
 -- enable, will add extra RS
 set hive.optimize.sort.dynamic.partition.threshold=1;
 explain insert overwrite table over1k_part partition(ds="foo", t) select si,i,b,f,t from over1k_n3 where t is null or t=27 limit 10;
+
+drop table over1k_n3;

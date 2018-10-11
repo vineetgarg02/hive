@@ -170,17 +170,17 @@ public class SortedDynPartitionOptimizer extends Transform {
       // the reduce sink key. Since both key columns are not prefix subset
       // ReduceSinkDeDuplication will not merge them together resulting in 2 MR jobs.
       // To avoid that we will remove the RS (and EX) inserted by enforce bucketing/sorting.
-      if (!removeRSInsertedByEnforceBucketing(fsOp)) {
-        LOG.debug("Bailing out of sort dynamic partition optimization as some partition columns " +
-            "got constant folded.");
-        return null;
-      }
+      //if (!removeRSInsertedByEnforceBucketing(fsOp)) {
+       // LOG.debug("Bailing out of sort dynamic partition optimization as some partition columns " +
+        //    "got constant folded.");
+        //return null;
+      //}
 
       // unlink connection between FS and its parent
       fsParent = fsOp.getParentOperators().get(0);
       DynamicPartitionCtx dpCtx = fsOp.getConf().getDynPartCtx();
       List<Integer> partitionPositions = getPartitionPositions(dpCtx, fsParent.getSchema());
-      if(!shouldDo(partitionPositions, fsParent)) {
+      if(!shouldDo(partitionPositions, destTable.getNumBuckets(), fsParent)) {
         return null;
       }
 
@@ -667,10 +667,17 @@ public class SortedDynPartitionOptimizer extends Transform {
     //  (executor/container memory) * (percentage of memory taken by orc)
     //  and dividing that by max memory (stripe size) taken by a single writer.
     //TODO: take number of buckets into account
-    private boolean shouldDo(List<Integer> partitionPos, Operator<? extends OperatorDesc> fsParent) {
+    private boolean shouldDo(List<Integer> partitionPos, int numBuckets,
+                             Operator<? extends OperatorDesc> fsParent) {
+      if(numBuckets > 0) {
+        // if target table is bucketed, we already have inserted shuffle
+        return false;
+      }
+
       int threshold = HiveConf.getIntVar(this.parseCtx.getConf(),
                                              HiveConf.ConfVars.HIVEOPTSORTDYNAMICPARTITIONTHRESHOLD);
       long MAX_WRITERS = -1;
+
       switch(threshold) {
       case -1:
         return false;

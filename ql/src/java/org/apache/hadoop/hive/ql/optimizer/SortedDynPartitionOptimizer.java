@@ -89,6 +89,7 @@ import com.google.common.collect.Sets;
 public class SortedDynPartitionOptimizer extends Transform {
 
   private static final String BUCKET_NUMBER_COL_NAME = "_bucket_number";
+
   @Override
   public ParseContext transform(ParseContext pCtx) throws SemanticException {
 
@@ -162,6 +163,12 @@ public class SortedDynPartitionOptimizer extends Transform {
         return null;
       }
 
+      DynamicPartitionCtx dpCtx = fsOp.getConf().getDynPartCtx();
+      List<Integer> partitionPositions = getPartitionPositions(dpCtx, fsParent.getSchema());
+
+      if (!shouldDo(partitionPositions, fsParent)) {
+        return null;
+      }
       // if RS is inserted by enforce bucketing or sorting, we need to remove it
       // since ReduceSinkDeDuplication will not merge them to single RS.
       // RS inserted by enforce bucketing/sorting will have bucketing column in
@@ -170,19 +177,14 @@ public class SortedDynPartitionOptimizer extends Transform {
       // the reduce sink key. Since both key columns are not prefix subset
       // ReduceSinkDeDuplication will not merge them together resulting in 2 MR jobs.
       // To avoid that we will remove the RS (and EX) inserted by enforce bucketing/sorting.
-      //if (!removeRSInsertedByEnforceBucketing(fsOp)) {
-       // LOG.debug("Bailing out of sort dynamic partition optimization as some partition columns " +
-        //    "got constant folded.");
-        //return null;
-      //}
+      if (!removeRSInsertedByEnforceBucketing(fsOp)) {
+        LOG.debug("Bailing out of sort dynamic partition optimization as some partition columns " +
+            "got constant folded.");
+        return null;
+      }
 
       // unlink connection between FS and its parent
       fsParent = fsOp.getParentOperators().get(0);
-      DynamicPartitionCtx dpCtx = fsOp.getConf().getDynPartCtx();
-      List<Integer> partitionPositions = getPartitionPositions(dpCtx, fsParent.getSchema());
-      if(!shouldDo(partitionPositions, destTable.getNumBuckets(), fsParent)) {
-        return null;
-      }
 
       fsParent.getChildOperators().clear();
 
@@ -214,7 +216,7 @@ public class SortedDynPartitionOptimizer extends Transform {
          * which extracts bucketId from it
          * see {@link org.apache.hadoop.hive.ql.udf.UDFToInteger#evaluate(RecordIdentifier)}*/
         ColumnInfo ci = fsParent.getSchema().getSignature().get(0);
-        if(!VirtualColumn.ROWID.getTypeInfo().equals(ci.getType())) {
+        if (!VirtualColumn.ROWID.getTypeInfo().equals(ci.getType())) {
           throw new IllegalStateException("expected 1st column to be ROW__ID but got wrong type: " + ci.toString());
         }
         //add a cast(ROW__ID as int) to wrap in UDFToInteger()
@@ -255,7 +257,7 @@ public class SortedDynPartitionOptimizer extends Transform {
 
       // Create ReduceSink operator
       ReduceSinkOperator rsOp = getReduceSinkOp(partitionPositions, sortPositions, sortOrder, sortNullOrder,
-          allRSCols, bucketColumns, numBuckets, fsParent, fsOp.getConf().getWriteType());
+                                                allRSCols, bucketColumns, numBuckets, fsParent, fsOp.getConf().getWriteType());
 
       List<ExprNodeDesc> descs = new ArrayList<ExprNodeDesc>(allRSCols.size());
       List<String> colNames = new ArrayList<String>();
@@ -485,7 +487,7 @@ public class SortedDynPartitionOptimizer extends Transform {
 
       String orderStr = "";
       for (Integer i : newSortOrder) {
-        if(i == 1) {
+        if (i == 1) {
           orderStr += "+";
         } else {
           orderStr += "-";
@@ -509,7 +511,7 @@ public class SortedDynPartitionOptimizer extends Transform {
 
       String nullOrderStr = "";
       for (Integer i : newSortNullOrder) {
-        if(i == 0) {
+        if (i == 0) {
           nullOrderStr += "a";
         } else {
           nullOrderStr += "z";
@@ -606,6 +608,7 @@ public class SortedDynPartitionOptimizer extends Transform {
 
     /**
      * Get the sort positions for the sort columns
+     *
      * @param tabSortCols
      * @param tabCols
      * @return
@@ -628,6 +631,7 @@ public class SortedDynPartitionOptimizer extends Transform {
 
     /**
      * Get the sort order for the sort columns
+     *
      * @param tabSortCols
      * @param tabCols
      * @return
@@ -667,18 +671,13 @@ public class SortedDynPartitionOptimizer extends Transform {
     //  (executor/container memory) * (percentage of memory taken by orc)
     //  and dividing that by max memory (stripe size) taken by a single writer.
     //TODO: take number of buckets into account
-    private boolean shouldDo(List<Integer> partitionPos, int numBuckets,
-                             Operator<? extends OperatorDesc> fsParent) {
-      if(numBuckets > 0) {
-        // if target table is bucketed, we already have inserted shuffle
-        return false;
-      }
+    private boolean shouldDo(List<Integer> partitionPos, Operator<? extends OperatorDesc> fsParent) {
 
       int threshold = HiveConf.getIntVar(this.parseCtx.getConf(),
-                                             HiveConf.ConfVars.HIVEOPTSORTDYNAMICPARTITIONTHRESHOLD);
+                                         HiveConf.ConfVars.HIVEOPTSORTDYNAMICPARTITIONTHRESHOLD);
       long MAX_WRITERS = -1;
 
-      switch(threshold) {
+      switch (threshold) {
       case -1:
         return false;
       case 0:
@@ -691,32 +690,32 @@ public class SortedDynPartitionOptimizer extends Transform {
       }
 
       List<ColStatistics> colStats = fsParent.getStatistics().getColumnStats();
-      if(colStats == null || colStats.isEmpty()) {
-        return false;
+      if (colStats == null || colStats.isEmpty()) {
+        return true;
       }
       long partCardinality = 1;
 
       // compute cardinality for partition columns
-      for(Integer idx:partitionPos) {
+      for (Integer idx : partitionPos) {
         ColumnInfo ci = fsParent.getSchema().getSignature().get(idx);
         ColStatistics partStats = fsParent.getStatistics().getColumnStatisticsFromColName(ci.getInternalName());
-        if(partStats == null) {
+        if (partStats == null) {
           // statistics for this partition are for some reason not available
-          return false;
+          return true;
         }
         partCardinality = partCardinality * partStats.getCountDistint();
       }
 
-      if(MAX_WRITERS < 0) {
+      if (MAX_WRITERS < 0) {
         double orcMemPool = this.parseCtx.getConf().getDouble(OrcConf.MEMORY_POOL.getHiveConfName(),
-                                                              (Double)OrcConf.MEMORY_POOL.getDefaultValue());
+                                                              (Double) OrcConf.MEMORY_POOL.getDefaultValue());
         long orcStripSize = this.parseCtx.getConf().getLong(OrcConf.STRIPE_SIZE.getHiveConfName(),
-                                                            (Long)OrcConf.STRIPE_SIZE.getDefaultValue());
+                                                            (Long) OrcConf.STRIPE_SIZE.getDefaultValue());
         long executorMem = 4000000000L;
-        MAX_WRITERS = (long)(executorMem * orcMemPool)/orcStripSize;
+        MAX_WRITERS = (long) (executorMem * orcMemPool) / orcStripSize;
 
       }
-      if(partCardinality <= MAX_WRITERS) {
+      if (partCardinality <= MAX_WRITERS) {
         return false;
       }
       return true;

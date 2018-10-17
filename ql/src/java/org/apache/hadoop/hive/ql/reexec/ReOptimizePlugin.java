@@ -24,6 +24,7 @@ import java.util.List;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.ql.Driver;
 import org.apache.hadoop.hive.ql.exec.Operator;
+import org.apache.hadoop.hive.ql.exec.errors.DPFileSinkRecordWrtMemoryExhaustionError;
 import org.apache.hadoop.hive.ql.exec.mapjoin.MapJoinMemoryExhaustionError;
 import org.apache.hadoop.hive.ql.hooks.ExecuteWithHookContext;
 import org.apache.hadoop.hive.ql.hooks.HookContext;
@@ -63,6 +64,12 @@ public class ReOptimizePlugin implements IReExecutionPlugin {
                   || message.contains(OutOfMemoryError.class.getName());
               if (message.contains("Vertex failed,") && isOOM) {
                 retryPossible = true;
+              }
+              boolean isDPOOM = message.contains(DPFileSinkRecordWrtMemoryExhaustionError.class.getName());
+              if(message.contains("Vertex failed,") && isDPOOM) {
+                LOG.info("ReOptimization: Retrying with SDPO on)");
+                retryPossible = true;
+                coreDriver.getConf().setIntVar(ConfVars.HIVEOPTSORTDYNAMICPARTITIONTHRESHOLD, 1);
               }
             }
           }

@@ -49,6 +49,7 @@ import org.apache.hadoop.hive.metastore.api.hive_metastoreConstants;
 import org.apache.hadoop.hive.ql.CompilationOpContext;
 import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.exec.Utilities.MissingBucketsContext;
+import org.apache.hadoop.hive.ql.exec.errors.DPFileSinkRecordWrtMemoryExhaustionError;
 import org.apache.hadoop.hive.ql.exec.spark.SparkMetricUtils;
 import org.apache.hadoop.hive.ql.io.AcidUtils;
 import org.apache.hadoop.hive.ql.io.BucketCodec;
@@ -90,6 +91,7 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.util.ReflectionUtils;
 
 import org.apache.hive.common.util.HiveStringUtils;
+import org.apache.orc.OrcConf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -1164,6 +1166,8 @@ public class FileSinkOperator extends TerminalOperator<FileSinkDesc> implements
 
   protected FSPaths getDynOutPaths(List<String> row, String lbDir) throws HiveException {
 
+    checkMaxWriterAndThrowError();
+
     FSPaths fp;
 
     // get the path corresponding to the dynamic partition columns,
@@ -1243,6 +1247,47 @@ public class FileSinkOperator extends TerminalOperator<FileSinkDesc> implements
   // e.g., ds=2008-04-08/hr=11
   private String getDynPartDirectory(List<String> row, List<String> dpColNames) {
     return FileUtils.makePartName(dpColNames, row);
+  }
+
+
+  // for dynamic partitioning we could end up creating huge number of writers resulting in OOM.
+  // To prevent OOM we check the total writers created so far and if it is more than then the "estimated"
+  // allowed writers (MAX_WRITERS, based on executor/container mem size) we throw an error
+  //  This error is special because it triggers re-execution of the query which will have SDPO shuffle thereby
+  // preventing huge number of writers
+  private void checkMaxWriterAndThrowError() {
+    if(!conf.getDpSortState().equals(DPSortState.NONE)) {
+      return;
+    }
+
+    int totalWriters = valToPaths.size() * numFiles;
+
+    if(totalWriters <= 0) {
+      return;
+    }
+
+    // FixMe: Since estimates are based on ORC specific sizes and this problem is specific to columnar formats
+    // this should be done for only ORC formats (or columnar formats with their respective configs)
+    double orcMemPool = this.hconf.getDouble(OrcConf.MEMORY_POOL.getHiveConfName(),
+                                             (Double) OrcConf.MEMORY_POOL.getDefaultValue());
+    long orcStripSize = this.hconf.getLong(OrcConf.STRIPE_SIZE.getHiveConfName(),
+                                                        (Long) OrcConf.STRIPE_SIZE.getDefaultValue());
+    long executorMem = this.getConf().getMaxMemoryAvailable();
+
+    // if for whatever reason container/executor memory isn't available we can not estimate
+    // max number of writers, therefore don't fail the query
+    if(executorMem <= 0) {
+      return;
+    }
+    long MAX_WRITERS = (long) (executorMem * orcMemPool) / orcStripSize;
+
+    if(totalWriters >= MAX_WRITERS) {
+      //Log and throw an error
+      String msg = "FS Op failing query due to too many writers created: "
+          + "\n\ttotal writers created so far: " + totalWriters
+          + "\n\tMaximum writers estimated: " + MAX_WRITERS;
+      throw new DPFileSinkRecordWrtMemoryExhaustionError(msg);
+    }
   }
 
   @Override

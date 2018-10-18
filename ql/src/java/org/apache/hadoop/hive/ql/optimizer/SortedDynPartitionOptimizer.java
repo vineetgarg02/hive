@@ -30,16 +30,7 @@ import java.util.Stack;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Order;
-import org.apache.hadoop.hive.ql.exec.ColumnInfo;
-import org.apache.hadoop.hive.ql.exec.FileSinkOperator;
-import org.apache.hadoop.hive.ql.exec.FunctionRegistry;
-import org.apache.hadoop.hive.ql.exec.Operator;
-import org.apache.hadoop.hive.ql.exec.OperatorFactory;
-import org.apache.hadoop.hive.ql.exec.OperatorUtils;
-import org.apache.hadoop.hive.ql.exec.ReduceSinkOperator;
-import org.apache.hadoop.hive.ql.exec.RowSchema;
-import org.apache.hadoop.hive.ql.exec.SelectOperator;
-import org.apache.hadoop.hive.ql.exec.Utilities;
+import org.apache.hadoop.hive.ql.exec.*;
 import org.apache.hadoop.hive.ql.exec.Utilities.ReduceField;
 import org.apache.hadoop.hive.ql.io.AcidUtils;
 import org.apache.hadoop.hive.ql.io.RecordIdentifier;
@@ -240,9 +231,15 @@ public class SortedDynPartitionOptimizer extends Transform {
         sortNullOrder.add(order == 1 ? 0 : 1); // for asc, nulls first; for desc, nulls last
       }
       LOG.debug("Got sort order");
-      for (int i : sortPositions) LOG.debug("sort position " + i);
-      for (int i : sortOrder) LOG.debug("sort order " + i);
-      for (int i : sortNullOrder) LOG.debug("sort null order " + i);
+      for (int i : sortPositions) {
+        LOG.debug("sort position " + i);
+      }
+      for (int i : sortOrder) {
+        LOG.debug("sort order " + i);
+      }
+      for (int i : sortNullOrder) {
+        LOG.debug("sort null order " + i);
+      }
 
       // update file sink descriptor
       fsOp.getConf().setMultiFileSpray(false);
@@ -257,7 +254,8 @@ public class SortedDynPartitionOptimizer extends Transform {
 
       // Create ReduceSink operator
       ReduceSinkOperator rsOp = getReduceSinkOp(partitionPositions, sortPositions, sortOrder, sortNullOrder,
-                                                allRSCols, bucketColumns, numBuckets, fsParent, fsOp.getConf().getWriteType());
+                                                  allRSCols, bucketColumns, numBuckets,
+                                                 fsParent, fsOp.getConf().getWriteType());
 
       List<ExprNodeDesc> descs = new ArrayList<ExprNodeDesc>(allRSCols.size());
       List<String> colNames = new ArrayList<String>();
@@ -274,9 +272,11 @@ public class SortedDynPartitionOptimizer extends Transform {
       }
       RowSchema selRS = new RowSchema(fsParent.getSchema());
       if (!bucketColumns.isEmpty()) {
-        descs.add(new ExprNodeColumnDesc(TypeInfoFactory.stringTypeInfo, ReduceField.KEY.toString()+"."+BUCKET_NUMBER_COL_NAME, null, false));
+        descs.add(new ExprNodeColumnDesc(TypeInfoFactory.stringTypeInfo,
+                                         ReduceField.KEY.toString()+"."+BUCKET_NUMBER_COL_NAME, null, false));
         colNames.add(BUCKET_NUMBER_COL_NAME);
-        ColumnInfo ci = new ColumnInfo(BUCKET_NUMBER_COL_NAME, TypeInfoFactory.stringTypeInfo, selRS.getSignature().get(0).getTabAlias(), true, true);
+        ColumnInfo ci = new ColumnInfo(BUCKET_NUMBER_COL_NAME, TypeInfoFactory.stringTypeInfo,
+                                       selRS.getSignature().get(0).getTabAlias(), true, true);
         selRS.getSignature().add(ci);
         fsParent.getSchema().getSignature().add(ci);
       }
@@ -299,7 +299,7 @@ public class SortedDynPartitionOptimizer extends Transform {
       }
 
       // update partition column info in FS descriptor
-      fsOp.getConf().setPartitionCols( rsOp.getConf().getPartitionCols());
+      fsOp.getConf().setPartitionCols(rsOp.getConf().getPartitionCols());
 
       LOG.info("Inserted " + rsOp.getOperatorId() + " and " + selOp.getOperatorId()
           + " as parent of " + fsOp.getOperatorId() + " and child of " + fsParent.getOperatorId());
@@ -526,7 +526,7 @@ public class SortedDynPartitionOptimizer extends Transform {
       for (Integer idx : keyColsPosInVal) {
         if (idx < 0) {
           ExprNodeDesc bucketNumColUDF = ExprNodeGenericFuncDesc.newInstance(
-            FunctionRegistry.getFunctionInfo("bucket_number").getGenericUDF(), new ArrayList<>());
+              FunctionRegistry.getFunctionInfo("bucket_number").getGenericUDF(), new ArrayList<>());
           keyCols.add(bucketNumColUDF);
           colExprMap.put(Utilities.ReduceField.KEY + "." +BUCKET_NUMBER_COL_NAME, bucketNumColUDF);
         } else {
@@ -607,7 +607,7 @@ public class SortedDynPartitionOptimizer extends Transform {
     }
 
     /**
-     * Get the sort positions for the sort columns
+     * Get the sort positions for the sort columns.
      *
      * @param tabSortCols
      * @param tabCols
@@ -630,7 +630,7 @@ public class SortedDynPartitionOptimizer extends Transform {
     }
 
     /**
-     * Get the sort order for the sort columns
+     * Get the sort order for the sort columns.
      *
      * @param tabSortCols
      * @param tabCols
@@ -670,7 +670,6 @@ public class SortedDynPartitionOptimizer extends Transform {
     //  The way max number of writers allowed are computed based on
     //  (executor/container memory) * (percentage of memory taken by orc)
     //  and dividing that by max memory (stripe size) taken by a single writer.
-    //TODO: take number of buckets into account
     private boolean shouldDo(List<Integer> partitionPos, Operator<? extends OperatorDesc> fsParent) {
 
       int threshold = HiveConf.getIntVar(this.parseCtx.getConf(),
@@ -711,7 +710,9 @@ public class SortedDynPartitionOptimizer extends Transform {
                                                               (Double) OrcConf.MEMORY_POOL.getDefaultValue());
         long orcStripSize = this.parseCtx.getConf().getLong(OrcConf.STRIPE_SIZE.getHiveConfName(),
                                                             (Long) OrcConf.STRIPE_SIZE.getDefaultValue());
-        long executorMem = 4000000000L;
+        MemoryInfo memoryInfo = new MemoryInfo(this.parseCtx.getConf());
+        LOG.debug("Memory info during SDPO opt: {}", memoryInfo);
+        long executorMem = memoryInfo.getMaxExecutorMemory();
         MAX_WRITERS = (long) (executorMem * orcMemPool) / orcStripSize;
 
       }

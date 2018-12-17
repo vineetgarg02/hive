@@ -483,7 +483,7 @@ public class TezCompiler extends TaskCompiler {
 
       // Remove any semi join edges from Union Op
       perfLogger.PerfLogBegin(this.getClass().getName(), PerfLogger.TEZ_COMPILER);
-      removeSemiJoinEdgesForUnion(procCtx);
+      //removeSemiJoinEdgesForUnion(procCtx);
       perfLogger.PerfLogEnd(this.getClass().getName(), PerfLogger.TEZ_COMPILER,
                             "Remove any semi join edge between Union and RS");
 

@@ -18,19 +18,17 @@
 
 package org.apache.hadoop.hive.ql.parse;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Deque;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.antlr.runtime.CommonToken;
 import org.antlr.runtime.tree.CommonTreeAdaptor;
+import org.apache.calcite.rel.*;
 import org.apache.hadoop.hive.ql.Context;
 import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.exec.ColumnInfo;
 import org.apache.hadoop.hive.ql.exec.FunctionRegistry;
 import org.apache.hadoop.hive.ql.exec.Operator;
+import org.apache.hadoop.hive.ql.metadata.*;
 import org.apache.hadoop.hive.ql.parse.QBSubQuery.SubQueryType;
 import org.apache.hadoop.hive.ql.parse.QBSubQuery.SubQueryTypeDef;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDAFCount;
@@ -100,6 +98,67 @@ public class SubQueryUtils {
     node.addChild(expr);
     return node;
   }
+
+  static public void subqueryRestrictionCheck(QB qb, ASTNode subqueryExprNode, RelNode srcRel,
+      boolean forHavingClause, Set<ASTNode> corrScalarQueries, Context ctx,
+      LinkedHashMap<RelNode, RowResolver> relToHiveRR)
+      throws SemanticException {
+
+    assert(subqueryExprNode.getType() == HiveParser.TOK_SUBQUERY_EXPR);
+
+    /*
+     * Restriction : Subquery is not allowed in LHS
+     */
+    if (subqueryExprNode.getChildren().size() == 3
+        && subqueryExprNode.getChild(2).getType() == HiveParser.TOK_SUBQUERY_EXPR) {
+      throw new CalciteSubquerySemanticException(ErrorMsg.UNSUPPORTED_SUBQUERY_EXPRESSION
+          .getMsg(subqueryExprNode.getChild(2), "SubQuery on left hand side is not supported."));
+    }
+
+    // avoid subquery restrictions for SOME/ALL for now
+    if(subqueryExprNode.getChild(0).getChildCount() > 1
+        && (subqueryExprNode.getChild(0).getChild(1).getType() == HiveParser.KW_SOME
+          || subqueryExprNode.getChild(0).getChild(1).getType() == HiveParser.KW_ALL)) {
+      return;
+    }
+
+    // TOK_SUBQUERY_EXPR
+    //  0. TOK_SUBQUERY_OP
+    //     0. TYPE: IN/SOME/EXISTS
+    //     1. Comparion op: >, < etc
+    //  1. TOK_QUERY:   Subquery
+    //  2. LHS expr
+    ASTNode clonedSubExprAST = (ASTNode) SubQueryUtils.adaptor.dupTree(subqueryExprNode);
+      //we do not care about the transformation or rewriting of AST
+      // which following statement does
+      // we only care about the restriction checks they perform.
+      // We plan to get rid of these restrictions later
+      int sqIdx = qb.incrNumSubQueryPredicates();
+      ASTNode outerQueryExpr = (ASTNode) clonedSubExprAST.getChild(2);
+
+      if (outerQueryExpr != null && outerQueryExpr.getType() == HiveParser.TOK_SUBQUERY_EXPR) {
+        throw new CalciteSubquerySemanticException(
+            ErrorMsg.UNSUPPORTED_SUBQUERY_EXPRESSION.getMsg(
+                outerQueryExpr, "IN/EXISTS/SOME/ALL subqueries are not allowed in LHS"));
+      }
+
+      QBSubQuery subQuery = SubQueryUtils.buildSubQuery(qb.getId(), sqIdx, clonedSubExprAST,
+          subqueryExprNode, ctx);
+
+      RowResolver inputRR = relToHiveRR.get(srcRel);
+
+      String havingInputAlias = null;
+
+      boolean [] subqueryConfig = {false, false};
+      subQuery.subqueryRestrictionsCheck(inputRR, forHavingClause,
+          havingInputAlias, subqueryConfig);
+
+      if(subqueryConfig[0]) {
+        corrScalarQueries.add(subqueryExprNode);
+      }
+    //}
+  }
+
 
 
   /*
@@ -235,15 +294,6 @@ public class SubQueryUtils {
     ASTNode sqOp = (ASTNode) sqAST.getChild(0);
     ASTNode sq = (ASTNode) sqAST.getChild(1);
     ASTNode outerQueryExpr = (ASTNode) sqAST.getChild(2);
-
-    /*
-     * Restriction.8.m :: We allow only 1 SubQuery expression per Query.
-     */
-    if (outerQueryExpr != null && outerQueryExpr.getType() == HiveParser.TOK_SUBQUERY_EXPR ) {
-
-      throw new SemanticException(ErrorMsg.UNSUPPORTED_SUBQUERY_EXPRESSION.getMsg(
-          originalSQAST.getChild(1), "Only 1 SubQuery expression is supported."));
-    }
 
    return new QBSubQuery(outerQueryId, sqIdx, sq, outerQueryExpr,
        buildSQOperator(sqOp),

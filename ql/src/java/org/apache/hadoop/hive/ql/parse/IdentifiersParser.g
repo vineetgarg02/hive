@@ -581,10 +581,6 @@ precedenceSimilarExpressionAtom[CommonTree t]
     :
     KW_IN! precedenceSimilarExpressionIn[$t]
     |
-    op=(EQUAL|NOTEQUAL|LESSTHANOREQUALTO|LESSTHAN|GREATERTHANOREQUALTO|GREATERTHAN)
-        subType=(KW_ANY|KW_ALL|KW_SOME) subQueryExpression
-    -> ^(TOK_SUBQUERY_EXPR ^(TOK_SUBQUERY_OP {$subType} {$op}) subQueryExpression {$t})
-    |
     KW_BETWEEN (min=precedenceBitwiseOrExpression) KW_AND (max=precedenceBitwiseOrExpression)
     -> ^(TOK_FUNCTION Identifier["between"] KW_FALSE {$t} $min $max)
     |
@@ -593,6 +589,23 @@ precedenceSimilarExpressionAtom[CommonTree t]
     |
     KW_LIKE KW_ALL (expr=expressionsInParenthesis[false, false])
     -> ^(TOK_FUNCTION Identifier["likeall"] {$t} {$expr.tree})
+    |
+    precedenceSimilarExpressionQuantifierPredicate[$t]
+    ;
+
+precedenceSimilarExpressionQuantifierPredicate[CommonTree t]
+    :
+    dropPartitionOperator quantifierType subQueryExpression
+    -> ^(TOK_SUBQUERY_EXPR ^(TOK_SUBQUERY_OP quantifierType dropPartitionOperator ) subQueryExpression {$t})
+    ;
+
+quantifierType
+    :
+    KW_ANY -> KW_SOME
+    |
+    KW_SOME -> KW_SOME
+    |
+    KW_ALL -> KW_ALL
     ;
 
 precedenceSimilarExpressionIn[CommonTree t]

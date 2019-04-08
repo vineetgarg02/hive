@@ -40,8 +40,7 @@ import org.apache.calcite.sql.SqlCollation;
 import org.apache.calcite.sql.SqlIntervalQualifier;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
-import org.apache.calcite.sql.fun.SqlCastFunction;
-import org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import org.apache.calcite.sql.fun.*;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.type.SqlTypeUtil;
@@ -67,9 +66,7 @@ import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveExtractDate;
 import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveFloorDate;
 import org.apache.hadoop.hive.ql.optimizer.calcite.reloperators.HiveToDateSqlOperator;
 import org.apache.hadoop.hive.ql.optimizer.calcite.translator.RexNodeConverter.HiveNlsString.Interpretation;
-import org.apache.hadoop.hive.ql.parse.ParseUtils;
-import org.apache.hadoop.hive.ql.parse.RowResolver;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
+import org.apache.hadoop.hive.ql.parse.*;
 import org.apache.hadoop.hive.ql.plan.ExprNodeColumnDesc;
 import org.apache.hadoop.hive.ql.plan.ExprNodeConstantDesc;
 import org.apache.hadoop.hive.ql.plan.ExprNodeDesc;
@@ -191,6 +188,74 @@ public class RexNodeConverter {
     // TODO: handle ExprNodeColumnListDesc
   }
 
+  private RexNode getSomeSubquery(final RelNode subqueryRel, final RexNode lhs,
+      final SqlQuantifyOperator quantifyOperator) {
+    if(quantifyOperator == SqlStdOperatorTable.SOME_EQ) {
+      return RexSubQuery.in(subqueryRel, ImmutableList.<RexNode>of(lhs) );
+    } else if (quantifyOperator == SqlStdOperatorTable.SOME_NE) {
+      RexSubQuery subQuery = RexSubQuery.in(subqueryRel, ImmutableList.<RexNode>of(lhs));
+      return cluster.getRexBuilder().makeCall(SqlStdOperatorTable.NOT, subQuery);
+    } else {
+      return RexSubQuery.some(subqueryRel, ImmutableList.of(lhs), quantifyOperator);
+    }
+  }
+
+  private void throwInvalidSubqueryError(final ASTNode comparisonOp) throws SemanticException {
+    throw new CalciteSubquerySemanticException(ErrorMsg.INVALID_SUBQUERY_EXPRESSION.getMsg(
+        "Invalid operator:" + comparisonOp.toString()));
+  }
+
+  // <>ANY and =ALL is not supported
+  private RexNode convertSubquerySomeAll(final ExprNodeSubQueryDesc subQueryDesc)
+      throws SemanticException {
+        assert(subQueryDesc.getType() == ExprNodeSubQueryDesc.SubqueryType.SOME
+        || subQueryDesc.getType() == ExprNodeSubQueryDesc.SubqueryType.ALL);
+
+      RexNode rexNodeLhs = convert(subQueryDesc.getSubQueryLhs());
+      ASTNode comparisonOp = subQueryDesc.getComparisonOp();
+      SqlQuantifyOperator quantifyOperator = null;
+
+      switch (comparisonOp.getType()) {
+       case HiveParser.EQUAL:
+         if(subQueryDesc.getType() == ExprNodeSubQueryDesc.SubqueryType.ALL) {
+           throwInvalidSubqueryError(comparisonOp);
+         }
+        quantifyOperator = SqlStdOperatorTable.SOME_EQ;
+        break;
+      case HiveParser.LESSTHAN:
+        quantifyOperator = SqlStdOperatorTable.SOME_LT;
+        break;
+      case HiveParser.LESSTHANOREQUALTO:
+        quantifyOperator = SqlStdOperatorTable.SOME_LE;
+        break;
+      case HiveParser.GREATERTHAN:
+        quantifyOperator = SqlStdOperatorTable.SOME_GT;
+        break;
+      case HiveParser.GREATERTHANOREQUALTO:
+        quantifyOperator = SqlStdOperatorTable.SOME_GE;
+        break;
+      case HiveParser.NOTEQUAL:
+        if(subQueryDesc.getType() == ExprNodeSubQueryDesc.SubqueryType.SOME) {
+          throwInvalidSubqueryError(comparisonOp);
+        }
+        quantifyOperator = SqlStdOperatorTable.SOME_NE;
+        break;
+      default:
+        throw new CalciteSubquerySemanticException(ErrorMsg.INVALID_SUBQUERY_EXPRESSION.getMsg(
+            "Invalid operator:" + comparisonOp.toString()));
+      }
+
+      if(subQueryDesc.getType() == ExprNodeSubQueryDesc.SubqueryType.ALL) {
+        quantifyOperator = SqlStdOperatorTable.some(quantifyOperator.comparisonKind.negateNullSafe());
+      }
+      RexNode someQuery = getSomeSubquery(subQueryDesc.getRexSubQuery(), rexNodeLhs,
+          quantifyOperator);
+      if(subQueryDesc.getType() == ExprNodeSubQueryDesc.SubqueryType.ALL) {
+        return cluster.getRexBuilder().makeCall(SqlStdOperatorTable.NOT, someQuery);
+      }
+      return someQuery;
+  }
+
   private RexNode convert(final ExprNodeSubQueryDesc subQueryDesc) throws  SemanticException {
     if(subQueryDesc.getType() == ExprNodeSubQueryDesc.SubqueryType.IN ) {
      /*
@@ -221,8 +286,10 @@ public class RexNodeConverter {
       //create RexSubQuery node
       RexNode rexSubQuery = RexSubQuery.scalar(subQueryDesc.getRexSubQuery());
       return rexSubQuery;
+    } else if(subQueryDesc.getType() == ExprNodeSubQueryDesc.SubqueryType.SOME
+    || subQueryDesc.getType() == ExprNodeSubQueryDesc.SubqueryType.ALL) {
+      return convertSubquerySomeAll(subQueryDesc);
     }
-
     else {
       throw new CalciteSubquerySemanticException(ErrorMsg.INVALID_SUBQUERY_EXPRESSION.getMsg(
               "Invalid subquery: " + subQueryDesc.getType()));

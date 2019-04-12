@@ -128,13 +128,13 @@ public class SubQueryUtils {
     //     1. Comparion op: >, < etc
     //  1. TOK_QUERY:   Subquery
     //  2. LHS expr
-    ASTNode clonedSubExprAST = (ASTNode) SubQueryUtils.adaptor.dupTree(subqueryExprNode);
+    //final ASTNode clonedSubExprAST = (ASTNode) SubQueryUtils.adaptor.dupTree(subqueryExprNode);
       //we do not care about the transformation or rewriting of AST
       // which following statement does
       // we only care about the restriction checks they perform.
       // We plan to get rid of these restrictions later
       int sqIdx = qb.incrNumSubQueryPredicates();
-      ASTNode outerQueryExpr = (ASTNode) clonedSubExprAST.getChild(2);
+      ASTNode outerQueryExpr = (ASTNode) subqueryExprNode.getChild(2);
 
       if (outerQueryExpr != null && outerQueryExpr.getType() == HiveParser.TOK_SUBQUERY_EXPR) {
         throw new CalciteSubquerySemanticException(
@@ -142,7 +142,7 @@ public class SubQueryUtils {
                 outerQueryExpr, "IN/EXISTS/SOME/ALL subqueries are not allowed in LHS"));
       }
 
-      QBSubQuery subQuery = SubQueryUtils.buildSubQuery(qb.getId(), sqIdx, clonedSubExprAST,
+      QBSubQuery subQuery = SubQueryUtils.buildSubQuery(qb.getId(), sqIdx, subqueryExprNode,
           subqueryExprNode, ctx);
 
       RowResolver inputRR = relToHiveRR.get(srcRel);

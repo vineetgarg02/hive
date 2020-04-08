@@ -23,7 +23,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -54,6 +53,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.regex.Pattern;
 
+import static org.apache.hadoop.hive.metastore.MetastoreDirectSqlUtils.extractSqlInt;
 import static org.apache.hadoop.hive.metastore.MetastoreDirectSqlUtils.extractSqlLong;
 
 /**
@@ -175,14 +175,14 @@ public class PartitionProjectionEvaluator {
     this.excludeParamKeyPattern = excludeParamKeyPattern;
     this.PARTITIONS =
         fieldNameToTableName.containsKey("PARTITIONS_TABLE_NAME") ? fieldNameToTableName
-            .get("PARTITIONS_TABLE_NAME") : "PARTITIONS";
+            .get("PARTITIONS_TABLE_NAME") :"\"PARTITIONS\"";
     this.SDS = fieldNameToTableName.containsKey("SDS_TABLE_NAME") ? fieldNameToTableName
-        .get("SDS_TABLE_NAME") : "SDS";
+        .get("SDS_TABLE_NAME") : "\"SDS\"";
     this.SERDES = fieldNameToTableName.containsKey("SERDES_TABLE_NAME") ? fieldNameToTableName
-        .get("SERDES_TABLE_NAME") : "SERDES";
+        .get("SERDES_TABLE_NAME") : "\"SERDES\"";
     this.PARTITION_PARAMS =
         fieldNameToTableName.containsKey("PARTITION_PARAMS") ? fieldNameToTableName
-            .get("PARTITION_PARAMS") : "PARTITION_PARAMS";
+            .get("PARTITION_PARAMS") : "\"PARTITION_PARAMS\"";
 
     roots = parse(projectionFields);
 
@@ -410,6 +410,11 @@ public class PartitionProjectionEvaluator {
                   // string to a boolean value
                   if (node.fieldName.equals("sd.compressed") || node.fieldName.equals("sd.storedAsSubDirectories")) {
                     value = MetastoreDirectSqlUtils.extractSqlBoolean(value);
+                  }
+                  // storage descriptor's setNumBucket expect int but underlying schema could have
+                  // long/bigint
+                  if (node.fieldName.equals("sd.numBuckets")) {
+                    value = MetastoreDirectSqlUtils.extractSqlInt(value);
                   }
                   MetaStoreServerUtils.setNestedProperty(partition, node.fieldName, value, true);
                 }
@@ -851,10 +856,10 @@ public class PartitionProjectionEvaluator {
         throws MetaException {
       final String skewedStringListVals =
           fieldNameToTableName.containsKey("SKEWED_STRING_LIST_VALUES") ? fieldNameToTableName
-              .get("SKEWED_STRING_LIST_VALUES") : "SKEWED_STRING_LIST_VALUES";
+              .get("SKEWED_STRING_LIST_VALUES") : "\"SKEWED_STRING_LIST_VALUES\"";
       final String skewedColValLocMap =
           fieldNameToTableName.containsKey("SKEWED_COL_VALUE_LOC_MAP") ? fieldNameToTableName
-              .get("SKEWED_COL_VALUE_LOC_MAP") : "SKEWED_COL_VALUE_LOC_MAP";
+              .get("SKEWED_COL_VALUE_LOC_MAP") : "\"SKEWED_COL_VALUE_LOC_MAP\"";
       MetastoreDirectSqlUtils
           .setSkewedColLocationMaps(skewedColValLocMap, skewedStringListVals, pm, sds,
               Joiner.on(',').join(sds.keySet()));

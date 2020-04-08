@@ -3956,38 +3956,43 @@ public class ObjectStore implements RawStore, Configurable {
     return new GetListHelper<Partition>(table.getCatName(), table.getDbName(), table.getTableName(),
         fieldList, true, true) {
       private final SqlFilterForPushdown filter = new SqlFilterForPushdown();
-      private ExpressionTree tree;
+      private String defaultPartitionName;
+      private byte[] byteFilterExpr;
+
+      private ExpressionTree initExpressionTree() throws MetaException {
+        defaultPartitionName = filterSpec.getDefaultPartName();
+        List<Byte> filterExpr = filterSpec.getFilterExpr();
+        byteFilterExpr = org.apache.commons.lang.ArrayUtils.toPrimitive(filterExpr.toArray(new Byte[filterExpr.size()]));
+
+        return PartFilterExprUtil.makeExpressionTree(expressionProxy, byteFilterExpr,
+            getDefaultPartitionName(defaultPartitionName));
+      }
 
       @Override
       protected boolean canUseDirectSql(GetHelper<List<Partition>> ctx) throws MetaException {
-        if (filterSpec.isSetFilterMode() && filterSpec.getFilterMode().equals(PartitionFilterMode.BY_EXPR)) {
-          // if the filter mode is BY_EXPR initialize the filter and generate the expression tree
-          // if there are more than one filter string we AND them together
-          initExpressionTree();
-          return directSql.generateSqlFilterForPushdown(ctx.getTable(), tree, filter);
-        }
-        // BY_VALUES and BY_NAMES are always supported
         return true;
-      }
-
-      private void initExpressionTree() throws MetaException {
-        StringBuilder filterBuilder = new StringBuilder();
-        int len = filterSpec.getFilters().size();
-        List<String> filters = filterSpec.getFilters();
-        for (int i = 0; i < len; i++) {
-          filterBuilder.append('(');
-          filterBuilder.append(filters.get(i));
-          filterBuilder.append(')');
-          if (i + 1 < len) {
-            filterBuilder.append(" AND ");
-          }
-        }
-        String filterStr = filterBuilder.toString();
-        tree = PartFilterExprUtil.getFilterParser(filterStr).tree;
       }
 
       @Override
       protected List<Partition> getSqlResult(GetHelper<List<Partition>> ctx) throws MetaException {
+        //if expr mode, generate filter
+        if (filterSpec.isSetFilterMode() && filterSpec.getFilterMode().equals(PartitionFilterMode.BY_EXPR)) {
+          ExpressionTree exprTree = initExpressionTree();
+          if (exprTree != null) {
+            SqlFilterForPushdown filter = new SqlFilterForPushdown();
+            if (directSql.generateSqlFilterForPushdown(ctx.getTable(), exprTree,
+                defaultPartitionName, filter)) {
+              return directSql
+                  .getPartitionsUsingProjectionAndFilterSpec(ctx.getTable(), ctx.partitionFields,
+                      includeParamKeyPattern, excludeParamKeyPattern, filterSpec, filter);
+            }
+          }
+          // We couldn't do SQL filter pushdown. Get names via normal means.
+          List<String> partNames = new LinkedList<>();
+          getPartitionNamesPrunedByExprNoTxn(
+              ctx.getTable(), byteFilterExpr, defaultPartitionName, (short)-1 , partNames);
+          return directSql.getPartitionsViaSqlFilter(catName, dbName, tblName, partNames);
+        }
         return directSql
             .getPartitionsUsingProjectionAndFilterSpec(ctx.getTable(), ctx.partitionFields,
                 includeParamKeyPattern, excludeParamKeyPattern, filterSpec, filter);
@@ -4006,17 +4011,22 @@ public class ObjectStore implements RawStore, Configurable {
             // generate the JDO filter string
             switch(filterSpec.getFilterMode()) {
             case BY_EXPR:
-              if (tree == null) {
-                // tree could be null when directSQL is disabled
-                initExpressionTree();
+              ExpressionTree exprTree = initExpressionTree();
+              if(exprTree == null) {
+                // We couldn't do JDOQL filter pushdown. Get names via normal means.
+                List<String> partNames = new ArrayList<>();
+                getPartitionNamesPrunedByExprNoTxn(
+                    ctx.getTable(), byteFilterExpr, defaultPartitionName, (short)-1, partNames);
+                return getPartitionsViaOrmFilter(catName, dbName, tblName, partNames);
+              } else {
+                jdoFilter =
+                    makeQueryFilterString(table.getCatName(), table.getDbName(), table, exprTree, params,
+                        true);
+                if (jdoFilter == null) {
+                  throw new MetaException("Could not generate JDO filter from given expression");
+                }
+                break;
               }
-              jdoFilter =
-                  makeQueryFilterString(table.getCatName(), table.getDbName(), table, tree, params,
-                      true);
-              if (jdoFilter == null) {
-                throw new MetaException("Could not generate JDO filter from given expression");
-              }
-              break;
             case BY_NAMES:
               jdoFilter = getJDOFilterStrForPartitionNames(table.getCatName(), table.getDbName(),
                   table.getTableName(), filterSpec.getFilters(), params);

@@ -26213,6 +26213,8 @@ class GetPartitionsFilterSpec:
   Attributes:
    - filterMode
    - filters
+   - filterExpr
+   - defaultPartName
   """
 
   thrift_spec = (
@@ -26225,11 +26227,15 @@ class GetPartitionsFilterSpec:
     None, # 6
     (7, TType.I32, 'filterMode', None, None, ), # 7
     (8, TType.LIST, 'filters', (TType.STRING,None), None, ), # 8
+    (9, TType.LIST, 'filterExpr', (TType.BYTE,None), None, ), # 9
+    (10, TType.STRING, 'defaultPartName', None, None, ), # 10
   )
 
-  def __init__(self, filterMode=None, filters=None,):
+  def __init__(self, filterMode=None, filters=None, filterExpr=None, defaultPartName=None,):
     self.filterMode = filterMode
     self.filters = filters
+    self.filterExpr = filterExpr
+    self.defaultPartName = defaultPartName
 
   def read(self, iprot):
     if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
@@ -26255,6 +26261,21 @@ class GetPartitionsFilterSpec:
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
+      elif fid == 9:
+        if ftype == TType.LIST:
+          self.filterExpr = []
+          (_etype1035, _size1032) = iprot.readListBegin()
+          for _i1036 in xrange(_size1032):
+            _elem1037 = iprot.readByte()
+            self.filterExpr.append(_elem1037)
+          iprot.readListEnd()
+        else:
+          iprot.skip(ftype)
+      elif fid == 10:
+        if ftype == TType.STRING:
+          self.defaultPartName = iprot.readString()
+        else:
+          iprot.skip(ftype)
       else:
         iprot.skip(ftype)
       iprot.readFieldEnd()
@@ -26272,9 +26293,20 @@ class GetPartitionsFilterSpec:
     if self.filters is not None:
       oprot.writeFieldBegin('filters', TType.LIST, 8)
       oprot.writeListBegin(TType.STRING, len(self.filters))
-      for iter1032 in self.filters:
-        oprot.writeString(iter1032)
+      for iter1038 in self.filters:
+        oprot.writeString(iter1038)
       oprot.writeListEnd()
+      oprot.writeFieldEnd()
+    if self.filterExpr is not None:
+      oprot.writeFieldBegin('filterExpr', TType.LIST, 9)
+      oprot.writeListBegin(TType.BYTE, len(self.filterExpr))
+      for iter1039 in self.filterExpr:
+        oprot.writeByte(iter1039)
+      oprot.writeListEnd()
+      oprot.writeFieldEnd()
+    if self.defaultPartName is not None:
+      oprot.writeFieldBegin('defaultPartName', TType.STRING, 10)
+      oprot.writeString(self.defaultPartName)
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
@@ -26287,6 +26319,8 @@ class GetPartitionsFilterSpec:
     value = 17
     value = (value * 31) ^ hash(self.filterMode)
     value = (value * 31) ^ hash(self.filters)
+    value = (value * 31) ^ hash(self.filterExpr)
+    value = (value * 31) ^ hash(self.defaultPartName)
     return value
 
   def __repr__(self):
@@ -26326,11 +26360,11 @@ class GetPartitionsResponse:
       if fid == 1:
         if ftype == TType.LIST:
           self.partitionSpec = []
-          (_etype1036, _size1033) = iprot.readListBegin()
-          for _i1037 in xrange(_size1033):
-            _elem1038 = PartitionSpec()
-            _elem1038.read(iprot)
-            self.partitionSpec.append(_elem1038)
+          (_etype1043, _size1040) = iprot.readListBegin()
+          for _i1044 in xrange(_size1040):
+            _elem1045 = PartitionSpec()
+            _elem1045.read(iprot)
+            self.partitionSpec.append(_elem1045)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -26347,8 +26381,8 @@ class GetPartitionsResponse:
     if self.partitionSpec is not None:
       oprot.writeFieldBegin('partitionSpec', TType.LIST, 1)
       oprot.writeListBegin(TType.STRUCT, len(self.partitionSpec))
-      for iter1039 in self.partitionSpec:
-        iter1039.write(oprot)
+      for iter1046 in self.partitionSpec:
+        iter1046.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
@@ -26452,10 +26486,10 @@ class GetPartitionsRequest:
       elif fid == 6:
         if ftype == TType.LIST:
           self.groupNames = []
-          (_etype1043, _size1040) = iprot.readListBegin()
-          for _i1044 in xrange(_size1040):
-            _elem1045 = iprot.readString()
-            self.groupNames.append(_elem1045)
+          (_etype1050, _size1047) = iprot.readListBegin()
+          for _i1051 in xrange(_size1047):
+            _elem1052 = iprot.readString()
+            self.groupNames.append(_elem1052)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -26474,10 +26508,10 @@ class GetPartitionsRequest:
       elif fid == 9:
         if ftype == TType.LIST:
           self.processorCapabilities = []
-          (_etype1049, _size1046) = iprot.readListBegin()
-          for _i1050 in xrange(_size1046):
-            _elem1051 = iprot.readString()
-            self.processorCapabilities.append(_elem1051)
+          (_etype1056, _size1053) = iprot.readListBegin()
+          for _i1057 in xrange(_size1053):
+            _elem1058 = iprot.readString()
+            self.processorCapabilities.append(_elem1058)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -26519,8 +26553,8 @@ class GetPartitionsRequest:
     if self.groupNames is not None:
       oprot.writeFieldBegin('groupNames', TType.LIST, 6)
       oprot.writeListBegin(TType.STRING, len(self.groupNames))
-      for iter1052 in self.groupNames:
-        oprot.writeString(iter1052)
+      for iter1059 in self.groupNames:
+        oprot.writeString(iter1059)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.projectionSpec is not None:
@@ -26534,8 +26568,8 @@ class GetPartitionsRequest:
     if self.processorCapabilities is not None:
       oprot.writeFieldBegin('processorCapabilities', TType.LIST, 9)
       oprot.writeListBegin(TType.STRING, len(self.processorCapabilities))
-      for iter1053 in self.processorCapabilities:
-        oprot.writeString(iter1053)
+      for iter1060 in self.processorCapabilities:
+        oprot.writeString(iter1060)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.processorIdentifier is not None:

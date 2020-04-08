@@ -571,7 +571,7 @@ class MetaStoreDirectSql {
    *                               When this pattern is set, all the partition parameters where key is NOT LIKE the pattern
    *                               are returned. This is applied in conjunction with the includeParamKeyPattern if it is set.
    * @param filterSpec             The filterSpec from <code>GetPartitionsRequest</code> which includes the filter mode (BY_EXPR, BY_VALUES or BY_NAMES)
-   *                               and the list of filter strings to be used to filter the results
+   *                               and the list of filter strings or serialized filter expression to be used to filter the results
    * @param filter                 SqlFilterForPushDown which is set in the <code>canUseDirectSql</code> method before this method is called.
    *                               The filter is used only when the mode is BY_EXPR
    * @return
@@ -586,10 +586,7 @@ class MetaStoreDirectSql {
     final String catName = tbl.getCatName();
     List<Long> partitionIds = null;
     if (filterSpec.isSetFilterMode()) {
-      List<String> filters = filterSpec.getFilters();
-      if (filters == null || filters.isEmpty()) {
-        throw new MetaException("Invalid filter expressions in the filter spec");
-      }
+
       switch(filterSpec.getFilterMode()) {
       case BY_EXPR:
         partitionIds =
@@ -604,6 +601,10 @@ class MetaStoreDirectSql {
             filterSpec.getFilters(), Collections.EMPTY_LIST, null);
         break;
       case BY_VALUES:
+        List<String> filters = filterSpec.getFilters();
+        if (filters == null || filters.isEmpty()) {
+          throw new MetaException("Invalid filter expressions in the filter spec");
+        }
         // we are going to use the SQL regex pattern in the LIKE clause below. So the default string
         // is _% and not .*
         String partNameMatcher = MetaStoreUtils.makePartNameMatcher(tbl, filters, "_%");

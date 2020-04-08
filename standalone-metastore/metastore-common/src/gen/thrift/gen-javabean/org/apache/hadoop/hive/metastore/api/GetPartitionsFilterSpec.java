@@ -40,6 +40,8 @@ import org.slf4j.LoggerFactory;
 
   private static final org.apache.thrift.protocol.TField FILTER_MODE_FIELD_DESC = new org.apache.thrift.protocol.TField("filterMode", org.apache.thrift.protocol.TType.I32, (short)7);
   private static final org.apache.thrift.protocol.TField FILTERS_FIELD_DESC = new org.apache.thrift.protocol.TField("filters", org.apache.thrift.protocol.TType.LIST, (short)8);
+  private static final org.apache.thrift.protocol.TField FILTER_EXPR_FIELD_DESC = new org.apache.thrift.protocol.TField("filterExpr", org.apache.thrift.protocol.TType.LIST, (short)9);
+  private static final org.apache.thrift.protocol.TField DEFAULT_PART_NAME_FIELD_DESC = new org.apache.thrift.protocol.TField("defaultPartName", org.apache.thrift.protocol.TType.STRING, (short)10);
 
   private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
   static {
@@ -49,6 +51,8 @@ import org.slf4j.LoggerFactory;
 
   private PartitionFilterMode filterMode; // optional
   private List<String> filters; // optional
+  private List<Byte> filterExpr; // optional
+  private String defaultPartName; // optional
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -57,7 +61,9 @@ import org.slf4j.LoggerFactory;
      * @see PartitionFilterMode
      */
     FILTER_MODE((short)7, "filterMode"),
-    FILTERS((short)8, "filters");
+    FILTERS((short)8, "filters"),
+    FILTER_EXPR((short)9, "filterExpr"),
+    DEFAULT_PART_NAME((short)10, "defaultPartName");
 
     private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -76,6 +82,10 @@ import org.slf4j.LoggerFactory;
           return FILTER_MODE;
         case 8: // FILTERS
           return FILTERS;
+        case 9: // FILTER_EXPR
+          return FILTER_EXPR;
+        case 10: // DEFAULT_PART_NAME
+          return DEFAULT_PART_NAME;
         default:
           return null;
       }
@@ -116,7 +126,7 @@ import org.slf4j.LoggerFactory;
   }
 
   // isset id assignments
-  private static final _Fields optionals[] = {_Fields.FILTER_MODE,_Fields.FILTERS};
+  private static final _Fields optionals[] = {_Fields.FILTER_MODE,_Fields.FILTERS,_Fields.FILTER_EXPR,_Fields.DEFAULT_PART_NAME};
   public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
@@ -125,6 +135,11 @@ import org.slf4j.LoggerFactory;
     tmpMap.put(_Fields.FILTERS, new org.apache.thrift.meta_data.FieldMetaData("filters", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.ListMetaData(org.apache.thrift.protocol.TType.LIST, 
             new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING))));
+    tmpMap.put(_Fields.FILTER_EXPR, new org.apache.thrift.meta_data.FieldMetaData("filterExpr", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.ListMetaData(org.apache.thrift.protocol.TType.LIST, 
+            new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BYTE))));
+    tmpMap.put(_Fields.DEFAULT_PART_NAME, new org.apache.thrift.meta_data.FieldMetaData("defaultPartName", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     metaDataMap = Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(GetPartitionsFilterSpec.class, metaDataMap);
   }
@@ -143,6 +158,13 @@ import org.slf4j.LoggerFactory;
       List<String> __this__filters = new ArrayList<String>(other.filters);
       this.filters = __this__filters;
     }
+    if (other.isSetFilterExpr()) {
+      List<Byte> __this__filterExpr = new ArrayList<Byte>(other.filterExpr);
+      this.filterExpr = __this__filterExpr;
+    }
+    if (other.isSetDefaultPartName()) {
+      this.defaultPartName = other.defaultPartName;
+    }
   }
 
   public GetPartitionsFilterSpec deepCopy() {
@@ -153,6 +175,8 @@ import org.slf4j.LoggerFactory;
   public void clear() {
     this.filterMode = null;
     this.filters = null;
+    this.filterExpr = null;
+    this.defaultPartName = null;
   }
 
   /**
@@ -224,6 +248,67 @@ import org.slf4j.LoggerFactory;
     }
   }
 
+  public int getFilterExprSize() {
+    return (this.filterExpr == null) ? 0 : this.filterExpr.size();
+  }
+
+  public java.util.Iterator<Byte> getFilterExprIterator() {
+    return (this.filterExpr == null) ? null : this.filterExpr.iterator();
+  }
+
+  public void addToFilterExpr(byte elem) {
+    if (this.filterExpr == null) {
+      this.filterExpr = new ArrayList<Byte>();
+    }
+    this.filterExpr.add(elem);
+  }
+
+  public List<Byte> getFilterExpr() {
+    return this.filterExpr;
+  }
+
+  public void setFilterExpr(List<Byte> filterExpr) {
+    this.filterExpr = filterExpr;
+  }
+
+  public void unsetFilterExpr() {
+    this.filterExpr = null;
+  }
+
+  /** Returns true if field filterExpr is set (has been assigned a value) and false otherwise */
+  public boolean isSetFilterExpr() {
+    return this.filterExpr != null;
+  }
+
+  public void setFilterExprIsSet(boolean value) {
+    if (!value) {
+      this.filterExpr = null;
+    }
+  }
+
+  public String getDefaultPartName() {
+    return this.defaultPartName;
+  }
+
+  public void setDefaultPartName(String defaultPartName) {
+    this.defaultPartName = defaultPartName;
+  }
+
+  public void unsetDefaultPartName() {
+    this.defaultPartName = null;
+  }
+
+  /** Returns true if field defaultPartName is set (has been assigned a value) and false otherwise */
+  public boolean isSetDefaultPartName() {
+    return this.defaultPartName != null;
+  }
+
+  public void setDefaultPartNameIsSet(boolean value) {
+    if (!value) {
+      this.defaultPartName = null;
+    }
+  }
+
   public void setFieldValue(_Fields field, Object value) {
     switch (field) {
     case FILTER_MODE:
@@ -242,6 +327,22 @@ import org.slf4j.LoggerFactory;
       }
       break;
 
+    case FILTER_EXPR:
+      if (value == null) {
+        unsetFilterExpr();
+      } else {
+        setFilterExpr((List<Byte>)value);
+      }
+      break;
+
+    case DEFAULT_PART_NAME:
+      if (value == null) {
+        unsetDefaultPartName();
+      } else {
+        setDefaultPartName((String)value);
+      }
+      break;
+
     }
   }
 
@@ -252,6 +353,12 @@ import org.slf4j.LoggerFactory;
 
     case FILTERS:
       return getFilters();
+
+    case FILTER_EXPR:
+      return getFilterExpr();
+
+    case DEFAULT_PART_NAME:
+      return getDefaultPartName();
 
     }
     throw new IllegalStateException();
@@ -268,6 +375,10 @@ import org.slf4j.LoggerFactory;
       return isSetFilterMode();
     case FILTERS:
       return isSetFilters();
+    case FILTER_EXPR:
+      return isSetFilterExpr();
+    case DEFAULT_PART_NAME:
+      return isSetDefaultPartName();
     }
     throw new IllegalStateException();
   }
@@ -303,6 +414,24 @@ import org.slf4j.LoggerFactory;
         return false;
     }
 
+    boolean this_present_filterExpr = true && this.isSetFilterExpr();
+    boolean that_present_filterExpr = true && that.isSetFilterExpr();
+    if (this_present_filterExpr || that_present_filterExpr) {
+      if (!(this_present_filterExpr && that_present_filterExpr))
+        return false;
+      if (!this.filterExpr.equals(that.filterExpr))
+        return false;
+    }
+
+    boolean this_present_defaultPartName = true && this.isSetDefaultPartName();
+    boolean that_present_defaultPartName = true && that.isSetDefaultPartName();
+    if (this_present_defaultPartName || that_present_defaultPartName) {
+      if (!(this_present_defaultPartName && that_present_defaultPartName))
+        return false;
+      if (!this.defaultPartName.equals(that.defaultPartName))
+        return false;
+    }
+
     return true;
   }
 
@@ -319,6 +448,16 @@ import org.slf4j.LoggerFactory;
     list.add(present_filters);
     if (present_filters)
       list.add(filters);
+
+    boolean present_filterExpr = true && (isSetFilterExpr());
+    list.add(present_filterExpr);
+    if (present_filterExpr)
+      list.add(filterExpr);
+
+    boolean present_defaultPartName = true && (isSetDefaultPartName());
+    list.add(present_defaultPartName);
+    if (present_defaultPartName)
+      list.add(defaultPartName);
 
     return list.hashCode();
   }
@@ -347,6 +486,26 @@ import org.slf4j.LoggerFactory;
     }
     if (isSetFilters()) {
       lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.filters, other.filters);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = Boolean.valueOf(isSetFilterExpr()).compareTo(other.isSetFilterExpr());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetFilterExpr()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.filterExpr, other.filterExpr);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = Boolean.valueOf(isSetDefaultPartName()).compareTo(other.isSetDefaultPartName());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetDefaultPartName()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.defaultPartName, other.defaultPartName);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -387,6 +546,26 @@ import org.slf4j.LoggerFactory;
         sb.append("null");
       } else {
         sb.append(this.filters);
+      }
+      first = false;
+    }
+    if (isSetFilterExpr()) {
+      if (!first) sb.append(", ");
+      sb.append("filterExpr:");
+      if (this.filterExpr == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.filterExpr);
+      }
+      first = false;
+    }
+    if (isSetDefaultPartName()) {
+      if (!first) sb.append(", ");
+      sb.append("defaultPartName:");
+      if (this.defaultPartName == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.defaultPartName);
       }
       first = false;
     }
@@ -459,6 +638,32 @@ import org.slf4j.LoggerFactory;
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
+          case 9: // FILTER_EXPR
+            if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
+              {
+                org.apache.thrift.protocol.TList _list1171 = iprot.readListBegin();
+                struct.filterExpr = new ArrayList<Byte>(_list1171.size);
+                byte _elem1172;
+                for (int _i1173 = 0; _i1173 < _list1171.size; ++_i1173)
+                {
+                  _elem1172 = iprot.readByte();
+                  struct.filterExpr.add(_elem1172);
+                }
+                iprot.readListEnd();
+              }
+              struct.setFilterExprIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          case 10: // DEFAULT_PART_NAME
+            if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
+              struct.defaultPartName = iprot.readString();
+              struct.setDefaultPartNameIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
@@ -484,12 +689,33 @@ import org.slf4j.LoggerFactory;
           oprot.writeFieldBegin(FILTERS_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, struct.filters.size()));
-            for (String _iter1171 : struct.filters)
+            for (String _iter1174 : struct.filters)
             {
-              oprot.writeString(_iter1171);
+              oprot.writeString(_iter1174);
             }
             oprot.writeListEnd();
           }
+          oprot.writeFieldEnd();
+        }
+      }
+      if (struct.filterExpr != null) {
+        if (struct.isSetFilterExpr()) {
+          oprot.writeFieldBegin(FILTER_EXPR_FIELD_DESC);
+          {
+            oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.BYTE, struct.filterExpr.size()));
+            for (byte _iter1175 : struct.filterExpr)
+            {
+              oprot.writeByte(_iter1175);
+            }
+            oprot.writeListEnd();
+          }
+          oprot.writeFieldEnd();
+        }
+      }
+      if (struct.defaultPartName != null) {
+        if (struct.isSetDefaultPartName()) {
+          oprot.writeFieldBegin(DEFAULT_PART_NAME_FIELD_DESC);
+          oprot.writeString(struct.defaultPartName);
           oprot.writeFieldEnd();
         }
       }
@@ -517,41 +743,76 @@ import org.slf4j.LoggerFactory;
       if (struct.isSetFilters()) {
         optionals.set(1);
       }
-      oprot.writeBitSet(optionals, 2);
+      if (struct.isSetFilterExpr()) {
+        optionals.set(2);
+      }
+      if (struct.isSetDefaultPartName()) {
+        optionals.set(3);
+      }
+      oprot.writeBitSet(optionals, 4);
       if (struct.isSetFilterMode()) {
         oprot.writeI32(struct.filterMode.getValue());
       }
       if (struct.isSetFilters()) {
         {
           oprot.writeI32(struct.filters.size());
-          for (String _iter1172 : struct.filters)
+          for (String _iter1176 : struct.filters)
           {
-            oprot.writeString(_iter1172);
+            oprot.writeString(_iter1176);
           }
         }
+      }
+      if (struct.isSetFilterExpr()) {
+        {
+          oprot.writeI32(struct.filterExpr.size());
+          for (byte _iter1177 : struct.filterExpr)
+          {
+            oprot.writeByte(_iter1177);
+          }
+        }
+      }
+      if (struct.isSetDefaultPartName()) {
+        oprot.writeString(struct.defaultPartName);
       }
     }
 
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, GetPartitionsFilterSpec struct) throws org.apache.thrift.TException {
       TTupleProtocol iprot = (TTupleProtocol) prot;
-      BitSet incoming = iprot.readBitSet(2);
+      BitSet incoming = iprot.readBitSet(4);
       if (incoming.get(0)) {
         struct.filterMode = org.apache.hadoop.hive.metastore.api.PartitionFilterMode.findByValue(iprot.readI32());
         struct.setFilterModeIsSet(true);
       }
       if (incoming.get(1)) {
         {
-          org.apache.thrift.protocol.TList _list1173 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
-          struct.filters = new ArrayList<String>(_list1173.size);
-          String _elem1174;
-          for (int _i1175 = 0; _i1175 < _list1173.size; ++_i1175)
+          org.apache.thrift.protocol.TList _list1178 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+          struct.filters = new ArrayList<String>(_list1178.size);
+          String _elem1179;
+          for (int _i1180 = 0; _i1180 < _list1178.size; ++_i1180)
           {
-            _elem1174 = iprot.readString();
-            struct.filters.add(_elem1174);
+            _elem1179 = iprot.readString();
+            struct.filters.add(_elem1179);
           }
         }
         struct.setFiltersIsSet(true);
+      }
+      if (incoming.get(2)) {
+        {
+          org.apache.thrift.protocol.TList _list1181 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.BYTE, iprot.readI32());
+          struct.filterExpr = new ArrayList<Byte>(_list1181.size);
+          byte _elem1182;
+          for (int _i1183 = 0; _i1183 < _list1181.size; ++_i1183)
+          {
+            _elem1182 = iprot.readByte();
+            struct.filterExpr.add(_elem1182);
+          }
+        }
+        struct.setFilterExprIsSet(true);
+      }
+      if (incoming.get(3)) {
+        struct.defaultPartName = iprot.readString();
+        struct.setDefaultPartNameIsSet(true);
       }
     }
   }

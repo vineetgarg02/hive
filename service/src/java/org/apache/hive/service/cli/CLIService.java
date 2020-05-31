@@ -277,12 +277,14 @@ public class CLIService extends CompositeService implements ICLIService {
    */
   @Override
   public OperationHandle executeStatement(SessionHandle sessionHandle, String statement,
-      Map<String, String> confOverlay, long queryTimeout) throws HiveSQLException {
+      Map<String, String> confOverlay, long queryTimeout,
+      Map<Integer, String> stmtParameters) throws HiveSQLException {
     HiveSession session = sessionManager.getSession(sessionHandle);
     // need to reset the monitor, as operation handle is not available down stream, Ideally the
     // monitor should be associated with the operation handle.
     session.getSessionState().updateProgressMonitor(null);
-    OperationHandle opHandle = session.executeStatement(statement, confOverlay, queryTimeout);
+    OperationHandle opHandle = session.executeStatement(statement, confOverlay,
+        queryTimeout, stmtParameters);
     LOG.debug(sessionHandle + ": executeStatement()");
     return opHandle;
   }
@@ -307,12 +309,14 @@ public class CLIService extends CompositeService implements ICLIService {
    */
   @Override
   public OperationHandle executeStatementAsync(SessionHandle sessionHandle, String statement,
-      Map<String, String> confOverlay, long queryTimeout) throws HiveSQLException {
+      Map<String, String> confOverlay, long queryTimeout,
+      Map<Integer, String> stmtParameters) throws HiveSQLException {
     HiveSession session = sessionManager.getSession(sessionHandle);
     // need to reset the monitor, as operation handle is not available down stream, Ideally the
     // monitor should be associated with the operation handle.
     session.getSessionState().updateProgressMonitor(null);
-    OperationHandle opHandle = session.executeStatementAsync(statement, confOverlay, queryTimeout);
+    OperationHandle opHandle = session.executeStatementAsync(statement, confOverlay,
+        queryTimeout, stmtParameters);
     LOG.debug(sessionHandle + ": executeStatementAsync()");
     return opHandle;
   }

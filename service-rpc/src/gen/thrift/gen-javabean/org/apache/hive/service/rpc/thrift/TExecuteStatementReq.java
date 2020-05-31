@@ -43,6 +43,7 @@ import org.slf4j.LoggerFactory;
   private static final org.apache.thrift.protocol.TField CONF_OVERLAY_FIELD_DESC = new org.apache.thrift.protocol.TField("confOverlay", org.apache.thrift.protocol.TType.MAP, (short)3);
   private static final org.apache.thrift.protocol.TField RUN_ASYNC_FIELD_DESC = new org.apache.thrift.protocol.TField("runAsync", org.apache.thrift.protocol.TType.BOOL, (short)4);
   private static final org.apache.thrift.protocol.TField QUERY_TIMEOUT_FIELD_DESC = new org.apache.thrift.protocol.TField("queryTimeout", org.apache.thrift.protocol.TType.I64, (short)5);
+  private static final org.apache.thrift.protocol.TField PARAMETERS_FIELD_DESC = new org.apache.thrift.protocol.TField("parameters", org.apache.thrift.protocol.TType.MAP, (short)6);
 
   private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
   static {
@@ -55,6 +56,7 @@ import org.slf4j.LoggerFactory;
   private Map<String,String> confOverlay; // optional
   private boolean runAsync; // optional
   private long queryTimeout; // optional
+  private Map<Integer,String> parameters; // optional
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -62,7 +64,8 @@ import org.slf4j.LoggerFactory;
     STATEMENT((short)2, "statement"),
     CONF_OVERLAY((short)3, "confOverlay"),
     RUN_ASYNC((short)4, "runAsync"),
-    QUERY_TIMEOUT((short)5, "queryTimeout");
+    QUERY_TIMEOUT((short)5, "queryTimeout"),
+    PARAMETERS((short)6, "parameters");
 
     private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
 
@@ -87,6 +90,8 @@ import org.slf4j.LoggerFactory;
           return RUN_ASYNC;
         case 5: // QUERY_TIMEOUT
           return QUERY_TIMEOUT;
+        case 6: // PARAMETERS
+          return PARAMETERS;
         default:
           return null;
       }
@@ -130,7 +135,7 @@ import org.slf4j.LoggerFactory;
   private static final int __RUNASYNC_ISSET_ID = 0;
   private static final int __QUERYTIMEOUT_ISSET_ID = 1;
   private byte __isset_bitfield = 0;
-  private static final _Fields optionals[] = {_Fields.CONF_OVERLAY,_Fields.RUN_ASYNC,_Fields.QUERY_TIMEOUT};
+  private static final _Fields optionals[] = {_Fields.CONF_OVERLAY,_Fields.RUN_ASYNC,_Fields.QUERY_TIMEOUT,_Fields.PARAMETERS};
   public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
@@ -146,6 +151,10 @@ import org.slf4j.LoggerFactory;
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BOOL)));
     tmpMap.put(_Fields.QUERY_TIMEOUT, new org.apache.thrift.meta_data.FieldMetaData("queryTimeout", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
+    tmpMap.put(_Fields.PARAMETERS, new org.apache.thrift.meta_data.FieldMetaData("parameters", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.MapMetaData(org.apache.thrift.protocol.TType.MAP, 
+            new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32), 
+            new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING))));
     metaDataMap = Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(TExecuteStatementReq.class, metaDataMap);
   }
@@ -183,6 +192,10 @@ import org.slf4j.LoggerFactory;
     }
     this.runAsync = other.runAsync;
     this.queryTimeout = other.queryTimeout;
+    if (other.isSetParameters()) {
+      Map<Integer,String> __this__parameters = new HashMap<Integer,String>(other.parameters);
+      this.parameters = __this__parameters;
+    }
   }
 
   public TExecuteStatementReq deepCopy() {
@@ -198,6 +211,7 @@ import org.slf4j.LoggerFactory;
 
     this.queryTimeout = 0L;
 
+    this.parameters = null;
   }
 
   public TSessionHandle getSessionHandle() {
@@ -324,6 +338,40 @@ import org.slf4j.LoggerFactory;
     __isset_bitfield = EncodingUtils.setBit(__isset_bitfield, __QUERYTIMEOUT_ISSET_ID, value);
   }
 
+  public int getParametersSize() {
+    return (this.parameters == null) ? 0 : this.parameters.size();
+  }
+
+  public void putToParameters(int key, String val) {
+    if (this.parameters == null) {
+      this.parameters = new HashMap<Integer,String>();
+    }
+    this.parameters.put(key, val);
+  }
+
+  public Map<Integer,String> getParameters() {
+    return this.parameters;
+  }
+
+  public void setParameters(Map<Integer,String> parameters) {
+    this.parameters = parameters;
+  }
+
+  public void unsetParameters() {
+    this.parameters = null;
+  }
+
+  /** Returns true if field parameters is set (has been assigned a value) and false otherwise */
+  public boolean isSetParameters() {
+    return this.parameters != null;
+  }
+
+  public void setParametersIsSet(boolean value) {
+    if (!value) {
+      this.parameters = null;
+    }
+  }
+
   public void setFieldValue(_Fields field, Object value) {
     switch (field) {
     case SESSION_HANDLE:
@@ -366,6 +414,14 @@ import org.slf4j.LoggerFactory;
       }
       break;
 
+    case PARAMETERS:
+      if (value == null) {
+        unsetParameters();
+      } else {
+        setParameters((Map<Integer,String>)value);
+      }
+      break;
+
     }
   }
 
@@ -385,6 +441,9 @@ import org.slf4j.LoggerFactory;
 
     case QUERY_TIMEOUT:
       return getQueryTimeout();
+
+    case PARAMETERS:
+      return getParameters();
 
     }
     throw new IllegalStateException();
@@ -407,6 +466,8 @@ import org.slf4j.LoggerFactory;
       return isSetRunAsync();
     case QUERY_TIMEOUT:
       return isSetQueryTimeout();
+    case PARAMETERS:
+      return isSetParameters();
     }
     throw new IllegalStateException();
   }
@@ -469,6 +530,15 @@ import org.slf4j.LoggerFactory;
         return false;
     }
 
+    boolean this_present_parameters = true && this.isSetParameters();
+    boolean that_present_parameters = true && that.isSetParameters();
+    if (this_present_parameters || that_present_parameters) {
+      if (!(this_present_parameters && that_present_parameters))
+        return false;
+      if (!this.parameters.equals(that.parameters))
+        return false;
+    }
+
     return true;
   }
 
@@ -500,6 +570,11 @@ import org.slf4j.LoggerFactory;
     list.add(present_queryTimeout);
     if (present_queryTimeout)
       list.add(queryTimeout);
+
+    boolean present_parameters = true && (isSetParameters());
+    list.add(present_parameters);
+    if (present_parameters)
+      list.add(parameters);
 
     return list.hashCode();
   }
@@ -562,6 +637,16 @@ import org.slf4j.LoggerFactory;
         return lastComparison;
       }
     }
+    lastComparison = Boolean.valueOf(isSetParameters()).compareTo(other.isSetParameters());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetParameters()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.parameters, other.parameters);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
     return 0;
   }
 
@@ -617,6 +702,16 @@ import org.slf4j.LoggerFactory;
       if (!first) sb.append(", ");
       sb.append("queryTimeout:");
       sb.append(this.queryTimeout);
+      first = false;
+    }
+    if (isSetParameters()) {
+      if (!first) sb.append(", ");
+      sb.append("parameters:");
+      if (this.parameters == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.parameters);
+      }
       first = false;
     }
     sb.append(")");
@@ -728,6 +823,26 @@ import org.slf4j.LoggerFactory;
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
+          case 6: // PARAMETERS
+            if (schemeField.type == org.apache.thrift.protocol.TType.MAP) {
+              {
+                org.apache.thrift.protocol.TMap _map176 = iprot.readMapBegin();
+                struct.parameters = new HashMap<Integer,String>(2*_map176.size);
+                int _key177;
+                String _val178;
+                for (int _i179 = 0; _i179 < _map176.size; ++_i179)
+                {
+                  _key177 = iprot.readI32();
+                  _val178 = iprot.readString();
+                  struct.parameters.put(_key177, _val178);
+                }
+                iprot.readMapEnd();
+              }
+              struct.setParametersIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
@@ -756,10 +871,10 @@ import org.slf4j.LoggerFactory;
           oprot.writeFieldBegin(CONF_OVERLAY_FIELD_DESC);
           {
             oprot.writeMapBegin(new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRING, struct.confOverlay.size()));
-            for (Map.Entry<String, String> _iter176 : struct.confOverlay.entrySet())
+            for (Map.Entry<String, String> _iter180 : struct.confOverlay.entrySet())
             {
-              oprot.writeString(_iter176.getKey());
-              oprot.writeString(_iter176.getValue());
+              oprot.writeString(_iter180.getKey());
+              oprot.writeString(_iter180.getValue());
             }
             oprot.writeMapEnd();
           }
@@ -775,6 +890,21 @@ import org.slf4j.LoggerFactory;
         oprot.writeFieldBegin(QUERY_TIMEOUT_FIELD_DESC);
         oprot.writeI64(struct.queryTimeout);
         oprot.writeFieldEnd();
+      }
+      if (struct.parameters != null) {
+        if (struct.isSetParameters()) {
+          oprot.writeFieldBegin(PARAMETERS_FIELD_DESC);
+          {
+            oprot.writeMapBegin(new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.I32, org.apache.thrift.protocol.TType.STRING, struct.parameters.size()));
+            for (Map.Entry<Integer, String> _iter181 : struct.parameters.entrySet())
+            {
+              oprot.writeI32(_iter181.getKey());
+              oprot.writeString(_iter181.getValue());
+            }
+            oprot.writeMapEnd();
+          }
+          oprot.writeFieldEnd();
+        }
       }
       oprot.writeFieldStop();
       oprot.writeStructEnd();
@@ -805,14 +935,17 @@ import org.slf4j.LoggerFactory;
       if (struct.isSetQueryTimeout()) {
         optionals.set(2);
       }
-      oprot.writeBitSet(optionals, 3);
+      if (struct.isSetParameters()) {
+        optionals.set(3);
+      }
+      oprot.writeBitSet(optionals, 4);
       if (struct.isSetConfOverlay()) {
         {
           oprot.writeI32(struct.confOverlay.size());
-          for (Map.Entry<String, String> _iter177 : struct.confOverlay.entrySet())
+          for (Map.Entry<String, String> _iter182 : struct.confOverlay.entrySet())
           {
-            oprot.writeString(_iter177.getKey());
-            oprot.writeString(_iter177.getValue());
+            oprot.writeString(_iter182.getKey());
+            oprot.writeString(_iter182.getValue());
           }
         }
       }
@@ -821,6 +954,16 @@ import org.slf4j.LoggerFactory;
       }
       if (struct.isSetQueryTimeout()) {
         oprot.writeI64(struct.queryTimeout);
+      }
+      if (struct.isSetParameters()) {
+        {
+          oprot.writeI32(struct.parameters.size());
+          for (Map.Entry<Integer, String> _iter183 : struct.parameters.entrySet())
+          {
+            oprot.writeI32(_iter183.getKey());
+            oprot.writeString(_iter183.getValue());
+          }
+        }
       }
     }
 
@@ -832,18 +975,18 @@ import org.slf4j.LoggerFactory;
       struct.setSessionHandleIsSet(true);
       struct.statement = iprot.readString();
       struct.setStatementIsSet(true);
-      BitSet incoming = iprot.readBitSet(3);
+      BitSet incoming = iprot.readBitSet(4);
       if (incoming.get(0)) {
         {
-          org.apache.thrift.protocol.TMap _map178 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRING, iprot.readI32());
-          struct.confOverlay = new HashMap<String,String>(2*_map178.size);
-          String _key179;
-          String _val180;
-          for (int _i181 = 0; _i181 < _map178.size; ++_i181)
+          org.apache.thrift.protocol.TMap _map184 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.STRING, org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+          struct.confOverlay = new HashMap<String,String>(2*_map184.size);
+          String _key185;
+          String _val186;
+          for (int _i187 = 0; _i187 < _map184.size; ++_i187)
           {
-            _key179 = iprot.readString();
-            _val180 = iprot.readString();
-            struct.confOverlay.put(_key179, _val180);
+            _key185 = iprot.readString();
+            _val186 = iprot.readString();
+            struct.confOverlay.put(_key185, _val186);
           }
         }
         struct.setConfOverlayIsSet(true);
@@ -855,6 +998,21 @@ import org.slf4j.LoggerFactory;
       if (incoming.get(2)) {
         struct.queryTimeout = iprot.readI64();
         struct.setQueryTimeoutIsSet(true);
+      }
+      if (incoming.get(3)) {
+        {
+          org.apache.thrift.protocol.TMap _map188 = new org.apache.thrift.protocol.TMap(org.apache.thrift.protocol.TType.I32, org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+          struct.parameters = new HashMap<Integer,String>(2*_map188.size);
+          int _key189;
+          String _val190;
+          for (int _i191 = 0; _i191 < _map188.size; ++_i191)
+          {
+            _key189 = iprot.readI32();
+            _val190 = iprot.readString();
+            struct.parameters.put(_key189, _val190);
+          }
+        }
+        struct.setParametersIsSet(true);
       }
     }
   }

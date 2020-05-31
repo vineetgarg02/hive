@@ -106,7 +106,7 @@ public class SQLOperation extends ExecuteStatementOperation {
   private final Optional<MetricsScope> submittedQryScp;
 
   public SQLOperation(HiveSession parentSession, String statement, Map<String, String> confOverlay,
-      boolean runInBackground, long queryTimeout) {
+      boolean runInBackground, long queryTimeout, Map<Integer, String> stmtParams) {
     // TODO: call setRemoteUser in ExecuteStatementOperation or higher.
     super(parentSession, statement, confOverlay, runInBackground);
     this.runAsync = runInBackground;

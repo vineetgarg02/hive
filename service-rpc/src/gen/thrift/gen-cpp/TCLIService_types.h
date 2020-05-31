@@ -2620,10 +2620,11 @@ inline std::ostream& operator<<(std::ostream& out, const TGetInfoResp& obj)
 }
 
 typedef struct _TExecuteStatementReq__isset {
-  _TExecuteStatementReq__isset() : confOverlay(false), runAsync(true), queryTimeout(true) {}
+  _TExecuteStatementReq__isset() : confOverlay(false), runAsync(true), queryTimeout(true), parameters(false) {}
   bool confOverlay :1;
   bool runAsync :1;
   bool queryTimeout :1;
+  bool parameters :1;
 } _TExecuteStatementReq__isset;
 
 class TExecuteStatementReq {
@@ -2640,6 +2641,7 @@ class TExecuteStatementReq {
   std::map<std::string, std::string>  confOverlay;
   bool runAsync;
   int64_t queryTimeout;
+  std::map<int32_t, std::string>  parameters;
 
   _TExecuteStatementReq__isset __isset;
 
@@ -2652,6 +2654,8 @@ class TExecuteStatementReq {
   void __set_runAsync(const bool val);
 
   void __set_queryTimeout(const int64_t val);
+
+  void __set_parameters(const std::map<int32_t, std::string> & val);
 
   bool operator == (const TExecuteStatementReq & rhs) const
   {
@@ -2670,6 +2674,10 @@ class TExecuteStatementReq {
     if (__isset.queryTimeout != rhs.__isset.queryTimeout)
       return false;
     else if (__isset.queryTimeout && !(queryTimeout == rhs.queryTimeout))
+      return false;
+    if (__isset.parameters != rhs.__isset.parameters)
+      return false;
+    else if (__isset.parameters && !(parameters == rhs.parameters))
       return false;
     return true;
   }

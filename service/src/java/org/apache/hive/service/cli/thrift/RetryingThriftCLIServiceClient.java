@@ -135,8 +135,10 @@ public class RetryingThriftCLIServiceClient implements InvocationHandler {
 
     @Override
     public OperationHandle executeStatement(SessionHandle sessionHandle, String statement,
-        Map<String, String> confOverlay, long queryTimeout) throws HiveSQLException {
-      return cliService.executeStatement(sessionHandle, statement, confOverlay, queryTimeout);
+        Map<String, String> confOverlay, long queryTimeout,
+        Map<Integer, String> stmtParameters) throws HiveSQLException {
+      return cliService.executeStatement(sessionHandle, statement, confOverlay,
+          queryTimeout, stmtParameters);
     }
 
     @Override
@@ -147,8 +149,10 @@ public class RetryingThriftCLIServiceClient implements InvocationHandler {
 
     @Override
     public OperationHandle executeStatementAsync(SessionHandle sessionHandle, String statement,
-        Map<String, String> confOverlay, long queryTimeout) throws HiveSQLException {
-      return cliService.executeStatementAsync(sessionHandle, statement, confOverlay, queryTimeout);
+        Map<String, String> confOverlay, long queryTimeout,
+        Map<Integer, String> stmtParameters) throws HiveSQLException {
+      return cliService.executeStatementAsync(sessionHandle, statement, confOverlay,
+          queryTimeout, stmtParameters);
     }
 
     @Override

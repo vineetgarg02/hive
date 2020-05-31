@@ -564,10 +564,14 @@ public abstract class ThriftCLIService extends AbstractService implements TCLISe
       Map<String, String> confOverlay = req.getConfOverlay();
       Boolean runAsync = req.isRunAsync();
       long queryTimeout = req.getQueryTimeout();
+
+      // parameters for prepared statement, it could be NULL
+      Map<Integer, String> statementParameters = req.getParameters();
+
       OperationHandle operationHandle =
           runAsync ? cliService.executeStatementAsync(sessionHandle, statement, confOverlay,
-              queryTimeout) : cliService.executeStatement(sessionHandle, statement, confOverlay,
-              queryTimeout);
+              queryTimeout, statementParameters) : cliService.executeStatement(sessionHandle, statement, confOverlay,
+              queryTimeout, statementParameters);
       resp.setOperationHandle(operationHandle.toTOperationHandle());
       resp.setStatus(OK_STATUS);
     } catch (Exception e) {

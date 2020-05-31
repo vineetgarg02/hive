@@ -103,11 +103,11 @@ public class OperationManager extends AbstractService {
   }
 
   public ExecuteStatementOperation newExecuteStatementOperation(HiveSession parentSession,
-      String statement, Map<String, String> confOverlay, boolean runAsync, long queryTimeout)
-      throws HiveSQLException {
+      String statement, Map<String, String> confOverlay, boolean runAsync,
+      long queryTimeout, Map<Integer, String> stmtParams) throws HiveSQLException {
     ExecuteStatementOperation executeStatementOperation =
         ExecuteStatementOperation.newExecuteStatementOperation(parentSession, statement,
-            confOverlay, runAsync, queryTimeout);
+            confOverlay, runAsync, queryTimeout, stmtParams);
     addOperation(executeStatementOperation);
     return executeStatementOperation;
   }

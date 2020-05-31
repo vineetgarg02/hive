@@ -725,6 +725,8 @@ struct TExecuteStatementReq {
 
   // The number of seconds after which the query will timeout on the server
   5: optional i64 queryTimeout = 0
+
+  6: optional map <i32, string> parameters
 }
 
 struct TExecuteStatementResp {

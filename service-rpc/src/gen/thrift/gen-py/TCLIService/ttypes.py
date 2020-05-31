@@ -4357,6 +4357,7 @@ class TExecuteStatementReq:
    - confOverlay
    - runAsync
    - queryTimeout
+   - parameters
   """
 
   thrift_spec = (
@@ -4366,14 +4367,16 @@ class TExecuteStatementReq:
     (3, TType.MAP, 'confOverlay', (TType.STRING,None,TType.STRING,None), None, ), # 3
     (4, TType.BOOL, 'runAsync', None, False, ), # 4
     (5, TType.I64, 'queryTimeout', None, 0, ), # 5
+    (6, TType.MAP, 'parameters', (TType.I32,None,TType.STRING,None), None, ), # 6
   )
 
-  def __init__(self, sessionHandle=None, statement=None, confOverlay=None, runAsync=thrift_spec[4][4], queryTimeout=thrift_spec[5][4],):
+  def __init__(self, sessionHandle=None, statement=None, confOverlay=None, runAsync=thrift_spec[4][4], queryTimeout=thrift_spec[5][4], parameters=None,):
     self.sessionHandle = sessionHandle
     self.statement = statement
     self.confOverlay = confOverlay
     self.runAsync = runAsync
     self.queryTimeout = queryTimeout
+    self.parameters = parameters
 
   def read(self, iprot):
     if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
@@ -4416,6 +4419,17 @@ class TExecuteStatementReq:
           self.queryTimeout = iprot.readI64()
         else:
           iprot.skip(ftype)
+      elif fid == 6:
+        if ftype == TType.MAP:
+          self.parameters = {}
+          (_ktype160, _vtype161, _size159 ) = iprot.readMapBegin()
+          for _i163 in xrange(_size159):
+            _key164 = iprot.readI32()
+            _val165 = iprot.readString()
+            self.parameters[_key164] = _val165
+          iprot.readMapEnd()
+        else:
+          iprot.skip(ftype)
       else:
         iprot.skip(ftype)
       iprot.readFieldEnd()
@@ -4437,9 +4451,9 @@ class TExecuteStatementReq:
     if self.confOverlay is not None:
       oprot.writeFieldBegin('confOverlay', TType.MAP, 3)
       oprot.writeMapBegin(TType.STRING, TType.STRING, len(self.confOverlay))
-      for kiter159,viter160 in self.confOverlay.items():
-        oprot.writeString(kiter159)
-        oprot.writeString(viter160)
+      for kiter166,viter167 in self.confOverlay.items():
+        oprot.writeString(kiter166)
+        oprot.writeString(viter167)
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
     if self.runAsync is not None:
@@ -4449,6 +4463,14 @@ class TExecuteStatementReq:
     if self.queryTimeout is not None:
       oprot.writeFieldBegin('queryTimeout', TType.I64, 5)
       oprot.writeI64(self.queryTimeout)
+      oprot.writeFieldEnd()
+    if self.parameters is not None:
+      oprot.writeFieldBegin('parameters', TType.MAP, 6)
+      oprot.writeMapBegin(TType.I32, TType.STRING, len(self.parameters))
+      for kiter168,viter169 in self.parameters.items():
+        oprot.writeI32(kiter168)
+        oprot.writeString(viter169)
+      oprot.writeMapEnd()
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
@@ -4468,6 +4490,7 @@ class TExecuteStatementReq:
     value = (value * 31) ^ hash(self.confOverlay)
     value = (value * 31) ^ hash(self.runAsync)
     value = (value * 31) ^ hash(self.queryTimeout)
+    value = (value * 31) ^ hash(self.parameters)
     return value
 
   def __repr__(self):
@@ -5098,10 +5121,10 @@ class TGetTablesReq:
       elif fid == 5:
         if ftype == TType.LIST:
           self.tableTypes = []
-          (_etype164, _size161) = iprot.readListBegin()
-          for _i165 in xrange(_size161):
-            _elem166 = iprot.readString()
-            self.tableTypes.append(_elem166)
+          (_etype173, _size170) = iprot.readListBegin()
+          for _i174 in xrange(_size170):
+            _elem175 = iprot.readString()
+            self.tableTypes.append(_elem175)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -5134,8 +5157,8 @@ class TGetTablesReq:
     if self.tableTypes is not None:
       oprot.writeFieldBegin('tableTypes', TType.LIST, 5)
       oprot.writeListBegin(TType.STRING, len(self.tableTypes))
-      for iter167 in self.tableTypes:
-        oprot.writeString(iter167)
+      for iter176 in self.tableTypes:
+        oprot.writeString(iter176)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
@@ -7639,25 +7662,25 @@ class TProgressUpdateResp:
       if fid == 1:
         if ftype == TType.LIST:
           self.headerNames = []
-          (_etype171, _size168) = iprot.readListBegin()
-          for _i172 in xrange(_size168):
-            _elem173 = iprot.readString()
-            self.headerNames.append(_elem173)
+          (_etype180, _size177) = iprot.readListBegin()
+          for _i181 in xrange(_size177):
+            _elem182 = iprot.readString()
+            self.headerNames.append(_elem182)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
       elif fid == 2:
         if ftype == TType.LIST:
           self.rows = []
-          (_etype177, _size174) = iprot.readListBegin()
-          for _i178 in xrange(_size174):
-            _elem179 = []
-            (_etype183, _size180) = iprot.readListBegin()
-            for _i184 in xrange(_size180):
-              _elem185 = iprot.readString()
-              _elem179.append(_elem185)
+          (_etype186, _size183) = iprot.readListBegin()
+          for _i187 in xrange(_size183):
+            _elem188 = []
+            (_etype192, _size189) = iprot.readListBegin()
+            for _i193 in xrange(_size189):
+              _elem194 = iprot.readString()
+              _elem188.append(_elem194)
             iprot.readListEnd()
-            self.rows.append(_elem179)
+            self.rows.append(_elem188)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -7694,17 +7717,17 @@ class TProgressUpdateResp:
     if self.headerNames is not None:
       oprot.writeFieldBegin('headerNames', TType.LIST, 1)
       oprot.writeListBegin(TType.STRING, len(self.headerNames))
-      for iter186 in self.headerNames:
-        oprot.writeString(iter186)
+      for iter195 in self.headerNames:
+        oprot.writeString(iter195)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.rows is not None:
       oprot.writeFieldBegin('rows', TType.LIST, 2)
       oprot.writeListBegin(TType.LIST, len(self.rows))
-      for iter187 in self.rows:
-        oprot.writeListBegin(TType.STRING, len(iter187))
-        for iter188 in iter187:
-          oprot.writeString(iter188)
+      for iter196 in self.rows:
+        oprot.writeListBegin(TType.STRING, len(iter196))
+        for iter197 in iter196:
+          oprot.writeString(iter197)
         oprot.writeListEnd()
       oprot.writeListEnd()
       oprot.writeFieldEnd()

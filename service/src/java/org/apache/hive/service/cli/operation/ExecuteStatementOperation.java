@@ -41,8 +41,8 @@ public abstract class ExecuteStatementOperation extends Operation {
   }
 
   public static ExecuteStatementOperation newExecuteStatementOperation(HiveSession parentSession,
-      String statement, Map<String, String> confOverlay, boolean runAsync, long queryTimeout)
-      throws HiveSQLException {
+      String statement, Map<String, String> confOverlay, boolean runAsync,
+      long queryTimeout, Map<Integer, String> stmtParams) throws HiveSQLException {
 
     String cleanStatement = HiveStringUtils.removeComments(statement);
     String[] tokens = cleanStatement.trim().split("\\s+");
@@ -55,7 +55,8 @@ public abstract class ExecuteStatementOperation extends Operation {
     if (processor == null) {
       // runAsync, queryTimeout makes sense only for a SQLOperation
       // Pass the original statement to SQLOperation as sql parser can remove comments by itself
-      return new SQLOperation(parentSession, statement, confOverlay, runAsync, queryTimeout);
+      return new SQLOperation(parentSession, statement, confOverlay, runAsync,
+          queryTimeout, stmtParams);
     }
     return new HiveCommandOperation(parentSession, cleanStatement, processor, confOverlay);
   }

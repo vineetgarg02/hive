@@ -3431,6 +3431,8 @@ public class HiveConf extends Configuration {
         new TimeValidator(TimeUnit.SECONDS),
         "Period, specified in seconds, between successive refreshes of the registry to pull new materializations " +
         "from the metastore that may have been created by other HS2 instances."),
+    HIVE_SERVER2_SQL_PARAMETERS("hive.server2.sql.parameters", false,
+        "Support dynamic parameters (?) in sql"),
 
     // HiveServer2 WebUI
     HIVE_SERVER2_WEBUI_BIND_HOST("hive.server2.webui.host", "0.0.0.0", "The host address the HiveServer2 WebUI will listen on"),

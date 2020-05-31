@@ -46,7 +46,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
 
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.service.rpc.thrift.TCLIService;
+import org.apache.hive.service.rpc.thrift.TExecuteStatementReq;
+import org.apache.hive.service.rpc.thrift.TExecuteStatementResp;
 import org.apache.hive.service.rpc.thrift.TSessionHandle;
 
 /**
@@ -54,6 +57,8 @@ import org.apache.hive.service.rpc.thrift.TSessionHandle;
  */
 public class HivePreparedStatement extends HiveStatement implements PreparedStatement {
   private final String sql;
+  private static final boolean HS2_SQL_PARAMS =
+      HiveConf.ConfVars.HIVE_SERVER2_SQL_PARAMETERS.defaultBoolVal;
 
   /**
    * save the SQL parameters {paramLoc:paramValue}
@@ -86,7 +91,11 @@ public class HivePreparedStatement extends HiveStatement implements PreparedStat
    */
   @Override
   public boolean execute() throws SQLException {
-    return super.execute(updateSql(sql, parameters));
+    if (HS2_SQL_PARAMS) {
+      return super.execute(sql);
+    } else {
+      return super.execute(updateSql(sql, parameters));
+    }
   }
 
   /**
@@ -97,12 +106,52 @@ public class HivePreparedStatement extends HiveStatement implements PreparedStat
    */
   @Override
   public ResultSet executeQuery() throws SQLException {
-    return super.executeQuery(updateSql(sql, parameters));
+    if (HS2_SQL_PARAMS) {
+      return super.executeQuery(sql);
+    } else {
+      return super.executeQuery(updateSql(sql, parameters));
+    }
   }
 
   @Override
   public int executeUpdate() throws SQLException {
     return super.executeUpdate(updateSql(sql, parameters));
+  }
+
+  @Override
+  protected  void runAsyncOnServer(String sql) throws SQLException {
+    if (!HS2_SQL_PARAMS) {
+      super.runAsyncOnServer(sql);
+      return;
+    }
+
+    checkConnection("execute");
+
+    reInitState();
+
+    TExecuteStatementReq execReq = new TExecuteStatementReq(sessHandle, sql);
+    execReq.setParameters(parameters);
+
+    /**
+     * Run asynchronously whenever possible
+     * Currently only a SQLOperation can be run asynchronously,
+     * in a background operation thread
+     * Compilation can run asynchronously or synchronously and execution run asynchronously
+     */
+    execReq.setRunAsync(true);
+    execReq.setConfOverlay(sessConf);
+    execReq.setQueryTimeout(queryTimeout);
+    try {
+      TExecuteStatementResp execResp = client.ExecuteStatement(execReq);
+      Utils.verifySuccessWithInfo(execResp.getStatus());
+      stmtHandle = execResp.getOperationHandle();
+    } catch (SQLException eS) {
+      isLogBeingGenerated = false;
+      throw eS;
+    } catch (Exception ex) {
+      isLogBeingGenerated = false;
+      throw new SQLException("Failed to run async statement", "08S01", ex);
+    }
   }
 
   /**

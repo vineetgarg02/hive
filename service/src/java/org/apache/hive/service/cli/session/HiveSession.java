@@ -65,11 +65,12 @@ public interface HiveSession extends HiveSessionBase {
    * @param statement
    * @param confOverlay
    * @param queryTimeout
+   * @param stmtParams
    * @return
    * @throws HiveSQLException
    */
   OperationHandle executeStatement(String statement, Map<String, String> confOverlay,
-      long queryTimeout) throws HiveSQLException;
+      long queryTimeout, Map<Integer, String> stmtParams) throws HiveSQLException;
 
   /**
    * execute operation handler
@@ -85,11 +86,12 @@ public interface HiveSession extends HiveSessionBase {
    * @param statement
    * @param confOverlay
    * @param queryTimeout
+   * @param stmtParams
    * @return
    * @throws HiveSQLException
    */
   OperationHandle executeStatementAsync(String statement, Map<String, String> confOverlay,
-      long queryTimeout) throws HiveSQLException;
+      long queryTimeout, Map<Integer, String> stmtParams) throws HiveSQLException;
 
   /**
    * getTypeInfo operation handler

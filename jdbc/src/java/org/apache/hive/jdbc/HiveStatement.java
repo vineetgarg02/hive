@@ -71,9 +71,9 @@ public class HiveStatement implements java.sql.Statement {
       HiveConf.ConfVars.HIVE_SERVER2_THRIFT_RESULTSET_DEFAULT_FETCH_SIZE.defaultIntVal;
 
   private final HiveConnection connection;
-  private TCLIService.Iface client;
-  private TOperationHandle stmtHandle = null;
-  private final TSessionHandle sessHandle;
+  protected TCLIService.Iface client;
+  protected TOperationHandle stmtHandle = null;
+  protected  final TSessionHandle sessHandle;
   Map<String, String> sessConf = new HashMap<>();
   private int fetchSize;
   private final int defaultFetchSize;
@@ -119,9 +119,9 @@ public class HiveStatement implements java.sql.Statement {
   /**
    * Keep this state so we can know whether the query logs are being generated in HS2.
    */
-  private boolean isLogBeingGenerated = true;
+  protected boolean isLogBeingGenerated = true;
 
-  private int queryTimeout = 0;
+  protected  int queryTimeout = 0;
 
   private Optional<InPlaceUpdateStream> inPlaceUpdateStream;
 
@@ -278,7 +278,7 @@ public class HiveStatement implements java.sql.Statement {
     return true;
   }
 
-  private void runAsyncOnServer(String sql) throws SQLException {
+  protected  void runAsyncOnServer(String sql) throws SQLException {
     checkConnection("execute");
 
     reInitState();
@@ -393,7 +393,7 @@ public class HiveStatement implements java.sql.Statement {
     return statusResp;
   }
 
-  private void checkConnection(String action) throws SQLException {
+  protected  void checkConnection(String action) throws SQLException {
     if (isClosed) {
       throw new SQLException("Cannot " + action + " after statement has been closed");
     }
@@ -403,7 +403,7 @@ public class HiveStatement implements java.sql.Statement {
    * Close statement if needed, and reset the flags.
    * @throws SQLException
    */
-  private void reInitState() throws SQLException {
+  protected  void reInitState() throws SQLException {
     closeStatementIfNeeded();
     isCancelled = false;
     isQueryClosed = false;

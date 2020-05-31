@@ -53,7 +53,7 @@ public class TestSQLOperationMetrics {
     when(session.getUserName()).thenReturn("userName");
 
     operation = new SQLOperation(session, "select * from dummy",
-        Maps.<String, String>newHashMap(), false, 0L);
+        Maps.<String, String>newHashMap(), false, 0L, null);
 
     metrics = (CodahaleMetrics) MetricsFactory.getInstance();
   }

@@ -56,7 +56,7 @@ public class TestQueryLifeTimeHooksWithSQLOperation {
     HiveSession mockHiveSession = mock(HiveSession.class);
     when(mockHiveSession.getHiveConf()).thenReturn(conf);
     when(mockHiveSession.getSessionState()).thenReturn(SessionState.get());
-    SQLOperation sqlOperation = new SQLOperation(mockHiveSession, QUERY, ImmutableMap.of(), false, 0);
+    SQLOperation sqlOperation = new SQLOperation(mockHiveSession, QUERY, ImmutableMap.of(), false, 0, null);
     sqlOperation.run();
   }
 

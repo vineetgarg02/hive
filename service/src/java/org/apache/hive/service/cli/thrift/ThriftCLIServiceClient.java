@@ -182,35 +182,41 @@ public class ThriftCLIServiceClient extends CLIServiceClient {
   @Override
   public OperationHandle executeStatement(SessionHandle sessionHandle, String statement,
       Map<String, String> confOverlay) throws HiveSQLException {
-    return executeStatementInternal(sessionHandle, statement, confOverlay, false, 0);
+    return executeStatementInternal(sessionHandle, statement, confOverlay, false, 0, null);
   }
 
   @Override
   public OperationHandle executeStatement(SessionHandle sessionHandle, String statement,
-      Map<String, String> confOverlay, long queryTimeout) throws HiveSQLException {
-    return executeStatementInternal(sessionHandle, statement, confOverlay, false, queryTimeout);
+      Map<String, String> confOverlay, long queryTimeout,
+      Map<Integer, String> stmtParameters) throws HiveSQLException {
+    return executeStatementInternal(sessionHandle, statement, confOverlay, false,
+        queryTimeout, stmtParameters);
   }
 
   @Override
   public OperationHandle executeStatementAsync(SessionHandle sessionHandle, String statement,
       Map<String, String> confOverlay) throws HiveSQLException {
-    return executeStatementInternal(sessionHandle, statement, confOverlay, true, 0);
+    return executeStatementInternal(sessionHandle, statement, confOverlay, true, 0, null);
   }
 
   @Override
   public OperationHandle executeStatementAsync(SessionHandle sessionHandle, String statement,
-      Map<String, String> confOverlay, long queryTimeout) throws HiveSQLException {
-    return executeStatementInternal(sessionHandle, statement, confOverlay, true, queryTimeout);
+      Map<String, String> confOverlay, long queryTimeout,
+      Map<Integer, String> stmtParameters) throws HiveSQLException {
+    return executeStatementInternal(sessionHandle, statement, confOverlay, true,
+        queryTimeout, stmtParameters);
   }
 
   private OperationHandle executeStatementInternal(SessionHandle sessionHandle, String statement,
-      Map<String, String> confOverlay, boolean isAsync, long queryTimeout) throws HiveSQLException {
+      Map<String, String> confOverlay, boolean isAsync, long queryTimeout,
+      Map<Integer, String> stmtParameters) throws HiveSQLException {
     try {
       TExecuteStatementReq req =
           new TExecuteStatementReq(sessionHandle.toTSessionHandle(), statement);
       req.setConfOverlay(confOverlay);
       req.setRunAsync(isAsync);
       req.setQueryTimeout(queryTimeout);
+      req.setParameters(stmtParameters);
       TExecuteStatementResp resp = cliService.ExecuteStatement(req);
       checkStatus(resp.getStatus());
       TProtocolVersion protocol = sessionHandle.getProtocolVersion();

@@ -215,7 +215,7 @@ public class HiveSessionImpl implements HiveSession {
       OperationHandle opHandle = null;
       try {
         //execute in sync mode
-        opHandle = executeStatementInternal(cmd_trimed, null, false, 0);
+        opHandle = executeStatementInternal(cmd_trimed, null, false, 0, null);
       } catch (HiveSQLException e) {
         LOG.warn("Failed to execute command in global .hiverc file.", e);
         return -1;
@@ -521,28 +521,29 @@ public class HiveSessionImpl implements HiveSession {
 
   @Override
   public OperationHandle executeStatement(String statement, Map<String, String> confOverlay) throws HiveSQLException {
-    return executeStatementInternal(statement, confOverlay, false, 0);
+    return executeStatementInternal(statement, confOverlay, false, 0, null);
   }
 
   @Override
   public OperationHandle executeStatement(String statement, Map<String, String> confOverlay,
-      long queryTimeout) throws HiveSQLException {
-    return executeStatementInternal(statement, confOverlay, false, queryTimeout);
+      long queryTimeout, Map<Integer, String> stmtParams) throws HiveSQLException {
+    return executeStatementInternal(statement, confOverlay, false, queryTimeout, stmtParams);
   }
 
   @Override
   public OperationHandle executeStatementAsync(String statement, Map<String, String> confOverlay) throws HiveSQLException {
-    return executeStatementInternal(statement, confOverlay, true, 0);
+    return executeStatementInternal(statement, confOverlay, true, 0, null);
   }
 
   @Override
   public OperationHandle executeStatementAsync(String statement, Map<String, String> confOverlay,
-      long queryTimeout) throws HiveSQLException {
-    return executeStatementInternal(statement, confOverlay, true, queryTimeout);
+      long queryTimeout, Map<Integer, String> stmtParams) throws HiveSQLException {
+    return executeStatementInternal(statement, confOverlay, true, queryTimeout, stmtParams);
   }
 
   private OperationHandle executeStatementInternal(String statement,
-      Map<String, String> confOverlay, boolean runAsync, long queryTimeout) throws HiveSQLException {
+      Map<String, String> confOverlay, boolean runAsync, long queryTimeout,
+      Map<Integer, String> stmtParams) throws HiveSQLException {
     acquire(true, true);
     LOG.info("executing " +  statement);
 
@@ -550,7 +551,7 @@ public class HiveSessionImpl implements HiveSession {
     OperationHandle opHandle = null;
     try {
       operation = getOperationManager().newExecuteStatementOperation(getSession(), statement,
-          confOverlay, runAsync, queryTimeout);
+          confOverlay, runAsync, queryTimeout, stmtParams) ;
       opHandle = operation.getHandle();
       addOpHandle(opHandle);
       operation.run();

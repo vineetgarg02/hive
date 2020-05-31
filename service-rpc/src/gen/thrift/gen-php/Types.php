@@ -5690,6 +5690,10 @@ class TExecuteStatementReq {
    * @var int
    */
   public $queryTimeout = 0;
+  /**
+   * @var array
+   */
+  public $parameters = null;
 
   public function __construct($vals=null) {
     if (!isset(self::$_TSPEC)) {
@@ -5723,6 +5727,18 @@ class TExecuteStatementReq {
           'var' => 'queryTimeout',
           'type' => TType::I64,
           ),
+        6 => array(
+          'var' => 'parameters',
+          'type' => TType::MAP,
+          'ktype' => TType::I32,
+          'vtype' => TType::STRING,
+          'key' => array(
+            'type' => TType::I32,
+          ),
+          'val' => array(
+            'type' => TType::STRING,
+            ),
+          ),
         );
     }
     if (is_array($vals)) {
@@ -5740,6 +5756,9 @@ class TExecuteStatementReq {
       }
       if (isset($vals['queryTimeout'])) {
         $this->queryTimeout = $vals['queryTimeout'];
+      }
+      if (isset($vals['parameters'])) {
+        $this->parameters = $vals['parameters'];
       }
     }
   }
@@ -5812,6 +5831,26 @@ class TExecuteStatementReq {
             $xfer += $input->skip($ftype);
           }
           break;
+        case 6:
+          if ($ftype == TType::MAP) {
+            $this->parameters = array();
+            $_size159 = 0;
+            $_ktype160 = 0;
+            $_vtype161 = 0;
+            $xfer += $input->readMapBegin($_ktype160, $_vtype161, $_size159);
+            for ($_i163 = 0; $_i163 < $_size159; ++$_i163)
+            {
+              $key164 = 0;
+              $val165 = '';
+              $xfer += $input->readI32($key164);
+              $xfer += $input->readString($val165);
+              $this->parameters[$key164] = $val165;
+            }
+            $xfer += $input->readMapEnd();
+          } else {
+            $xfer += $input->skip($ftype);
+          }
+          break;
         default:
           $xfer += $input->skip($ftype);
           break;
@@ -5846,10 +5885,10 @@ class TExecuteStatementReq {
       {
         $output->writeMapBegin(TType::STRING, TType::STRING, count($this->confOverlay));
         {
-          foreach ($this->confOverlay as $kiter159 => $viter160)
+          foreach ($this->confOverlay as $kiter166 => $viter167)
           {
-            $xfer += $output->writeString($kiter159);
-            $xfer += $output->writeString($viter160);
+            $xfer += $output->writeString($kiter166);
+            $xfer += $output->writeString($viter167);
           }
         }
         $output->writeMapEnd();
@@ -5864,6 +5903,24 @@ class TExecuteStatementReq {
     if ($this->queryTimeout !== null) {
       $xfer += $output->writeFieldBegin('queryTimeout', TType::I64, 5);
       $xfer += $output->writeI64($this->queryTimeout);
+      $xfer += $output->writeFieldEnd();
+    }
+    if ($this->parameters !== null) {
+      if (!is_array($this->parameters)) {
+        throw new TProtocolException('Bad type in structure.', TProtocolException::INVALID_DATA);
+      }
+      $xfer += $output->writeFieldBegin('parameters', TType::MAP, 6);
+      {
+        $output->writeMapBegin(TType::I32, TType::STRING, count($this->parameters));
+        {
+          foreach ($this->parameters as $kiter168 => $viter169)
+          {
+            $xfer += $output->writeI32($kiter168);
+            $xfer += $output->writeString($viter169);
+          }
+        }
+        $output->writeMapEnd();
+      }
       $xfer += $output->writeFieldEnd();
     }
     $xfer += $output->writeFieldStop();
@@ -6715,14 +6772,14 @@ class TGetTablesReq {
         case 5:
           if ($ftype == TType::LST) {
             $this->tableTypes = array();
-            $_size161 = 0;
-            $_etype164 = 0;
-            $xfer += $input->readListBegin($_etype164, $_size161);
-            for ($_i165 = 0; $_i165 < $_size161; ++$_i165)
+            $_size170 = 0;
+            $_etype173 = 0;
+            $xfer += $input->readListBegin($_etype173, $_size170);
+            for ($_i174 = 0; $_i174 < $_size170; ++$_i174)
             {
-              $elem166 = null;
-              $xfer += $input->readString($elem166);
-              $this->tableTypes []= $elem166;
+              $elem175 = null;
+              $xfer += $input->readString($elem175);
+              $this->tableTypes []= $elem175;
             }
             $xfer += $input->readListEnd();
           } else {
@@ -6773,9 +6830,9 @@ class TGetTablesReq {
       {
         $output->writeListBegin(TType::STRING, count($this->tableTypes));
         {
-          foreach ($this->tableTypes as $iter167)
+          foreach ($this->tableTypes as $iter176)
           {
-            $xfer += $output->writeString($iter167);
+            $xfer += $output->writeString($iter176);
           }
         }
         $output->writeListEnd();
@@ -10119,14 +10176,14 @@ class TProgressUpdateResp {
         case 1:
           if ($ftype == TType::LST) {
             $this->headerNames = array();
-            $_size168 = 0;
-            $_etype171 = 0;
-            $xfer += $input->readListBegin($_etype171, $_size168);
-            for ($_i172 = 0; $_i172 < $_size168; ++$_i172)
+            $_size177 = 0;
+            $_etype180 = 0;
+            $xfer += $input->readListBegin($_etype180, $_size177);
+            for ($_i181 = 0; $_i181 < $_size177; ++$_i181)
             {
-              $elem173 = null;
-              $xfer += $input->readString($elem173);
-              $this->headerNames []= $elem173;
+              $elem182 = null;
+              $xfer += $input->readString($elem182);
+              $this->headerNames []= $elem182;
             }
             $xfer += $input->readListEnd();
           } else {
@@ -10136,24 +10193,24 @@ class TProgressUpdateResp {
         case 2:
           if ($ftype == TType::LST) {
             $this->rows = array();
-            $_size174 = 0;
-            $_etype177 = 0;
-            $xfer += $input->readListBegin($_etype177, $_size174);
-            for ($_i178 = 0; $_i178 < $_size174; ++$_i178)
+            $_size183 = 0;
+            $_etype186 = 0;
+            $xfer += $input->readListBegin($_etype186, $_size183);
+            for ($_i187 = 0; $_i187 < $_size183; ++$_i187)
             {
-              $elem179 = null;
-              $elem179 = array();
-              $_size180 = 0;
-              $_etype183 = 0;
-              $xfer += $input->readListBegin($_etype183, $_size180);
-              for ($_i184 = 0; $_i184 < $_size180; ++$_i184)
+              $elem188 = null;
+              $elem188 = array();
+              $_size189 = 0;
+              $_etype192 = 0;
+              $xfer += $input->readListBegin($_etype192, $_size189);
+              for ($_i193 = 0; $_i193 < $_size189; ++$_i193)
               {
-                $elem185 = null;
-                $xfer += $input->readString($elem185);
-                $elem179 []= $elem185;
+                $elem194 = null;
+                $xfer += $input->readString($elem194);
+                $elem188 []= $elem194;
               }
               $xfer += $input->readListEnd();
-              $this->rows []= $elem179;
+              $this->rows []= $elem188;
             }
             $xfer += $input->readListEnd();
           } else {
@@ -10209,9 +10266,9 @@ class TProgressUpdateResp {
       {
         $output->writeListBegin(TType::STRING, count($this->headerNames));
         {
-          foreach ($this->headerNames as $iter186)
+          foreach ($this->headerNames as $iter195)
           {
-            $xfer += $output->writeString($iter186);
+            $xfer += $output->writeString($iter195);
           }
         }
         $output->writeListEnd();
@@ -10226,14 +10283,14 @@ class TProgressUpdateResp {
       {
         $output->writeListBegin(TType::LST, count($this->rows));
         {
-          foreach ($this->rows as $iter187)
+          foreach ($this->rows as $iter196)
           {
             {
-              $output->writeListBegin(TType::STRING, count($iter187));
+              $output->writeListBegin(TType::STRING, count($iter196));
               {
-                foreach ($iter187 as $iter188)
+                foreach ($iter196 as $iter197)
                 {
-                  $xfer += $output->writeString($iter188);
+                  $xfer += $output->writeString($iter197);
                 }
               }
               $output->writeListEnd();

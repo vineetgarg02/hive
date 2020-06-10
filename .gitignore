@@ -5,6 +5,7 @@ build-eclipse
 .externalToolBuilders
 .project
 .settings
+.github
 .factorypath
 *.launch
 *~
